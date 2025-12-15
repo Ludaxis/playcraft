@@ -1,0 +1,70 @@
+'use client';
+
+import React from 'react';
+import { PageLayout } from '@/components/layout';
+import { List, ListItem, ListItemIcon, ListItemContent, ListItemAction, Button, Badge } from '@/components/ui';
+import { useGame, gameActions } from '@/store';
+
+export function InboxPage() {
+  const { state, dispatch } = useGame();
+  const { inbox } = state;
+
+  const handleClaim = (messageId: string) => {
+    dispatch(gameActions.claimInboxMessage(messageId));
+  };
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'reward':
+        return 'R';
+      case 'team':
+        return 'T';
+      case 'news':
+        return 'N';
+      default:
+        return 'S';
+    }
+  };
+
+  return (
+    <PageLayout title="Inbox">
+      <div className="p-4">
+        {inbox.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <div className="w-16 h-16 bg-slate-200 rounded-full mb-4" />
+            <p className="text-slate-600">No messages</p>
+          </div>
+        ) : (
+          <List>
+            {inbox.map((message) => (
+              <ListItem key={message.id}>
+                <ListItemIcon>
+                  <span className="text-sm font-bold">{getTypeIcon(message.type)}</span>
+                </ListItemIcon>
+                <ListItemContent
+                  title={message.title}
+                  subtitle={message.content}
+                />
+                <ListItemAction>
+                  {message.reward && !message.claimed ? (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleClaim(message.id)}
+                    >
+                      Claim
+                    </Button>
+                  ) : message.claimed ? (
+                    <Badge variant="default">Claimed</Badge>
+                  ) : (
+                    <Badge variant="accent">View</Badge>
+                  )}
+                </ListItemAction>
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </div>
+    </PageLayout>
+  );
+}

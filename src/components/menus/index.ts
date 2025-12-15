@@ -1,0 +1,12 @@
+export { MainMenu } from './MainMenu';
+export { ShopPage } from './ShopPage';
+export { SettingsPage } from './SettingsPage';
+export { TeamPage } from './TeamPage';
+export { InboxPage } from './InboxPage';
+export { LeaderboardPage } from './LeaderboardPage';
+export { DailyRewardsPage } from './DailyRewardsPage';
+export { ProfilePage } from './ProfilePage';
+export { FriendsPage } from './FriendsPage';
+export { BoostersPage } from './BoostersPage';
+export { AreaTasksPage } from './AreaTasksPage';
+export { GameplayPage } from './GameplayPage';

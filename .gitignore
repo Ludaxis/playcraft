@@ -1,7 +1,12 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ═══════════════════════════════════════════════════════════════════════════════
+# Next.js Project .gitignore
+# Best Practices 2025
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# dependencies
-/node_modules
+# ─────────────────────────────────────────────────────────────────────────────────
+# Dependencies
+# ─────────────────────────────────────────────────────────────────────────────────
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -9,33 +14,216 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.npm/
+.pnpm-store/
 
-# testing
-/coverage
-
-# next.js
+# ─────────────────────────────────────────────────────────────────────────────────
+# Next.js Build Output
+# ─────────────────────────────────────────────────────────────────────────────────
 /.next/
 /out/
+/build/
+/.turbo/
+.swc/
 
-# production
-/build
+# ─────────────────────────────────────────────────────────────────────────────────
+# Production / Deployment
+# ─────────────────────────────────────────────────────────────────────────────────
+/dist/
+*.tgz
 
-# misc
-.DS_Store
-*.pem
+# Vercel
+.vercel/
 
-# debug
+# Netlify
+.netlify/
+
+# AWS Amplify
+amplify/
+aws-exports.js
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Environment Variables (IMPORTANT: Never commit secrets!)
+# ─────────────────────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.template
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# TypeScript
+# ─────────────────────────────────────────────────────────────────────────────────
+*.tsbuildinfo
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Testing
+# ─────────────────────────────────────────────────────────────────────────────────
+/coverage/
+/.nyc_output/
+/test-results/
+/playwright-report/
+/playwright/.cache/
+*.lcov
+junit.xml
+
+# Cypress
+/cypress/videos/
+/cypress/screenshots/
+/cypress/downloads/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Debug Logs
+# ─────────────────────────────────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Runtime logs
+logs/
+*.log
 
-# vercel
-.vercel
+# ─────────────────────────────────────────────────────────────────────────────────
+# IDE / Editors
+# ─────────────────────────────────────────────────────────────────────────────────
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# VS Code (keep settings for team, ignore personal)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+.history/
+
+# JetBrains (WebStorm, IntelliJ)
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Vim
+*.swp
+*.swo
+*~
+.vim/
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Operating System
+# ─────────────────────────────────────────────────────────────────────────────────
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Security / Sensitive Files
+# ─────────────────────────────────────────────────────────────────────────────────
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+.secrets/
+credentials.json
+service-account*.json
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Cache
+# ─────────────────────────────────────────────────────────────────────────────────
+.cache/
+*.cache
+.eslintcache
+.stylelintcache
+.prettiercache
+.parcel-cache/
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Miscellaneous
+# ─────────────────────────────────────────────────────────────────────────────────
+
+# Storybook
+storybook-static/
+*storybook.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Bundle analyzer
+.analyzer/
+analyze/
+stats.json
+
+# Sentry
+.sentryclirc
+
+# GraphQL
+.graphqlrc.yml.local
+
+# Docker (if using containers locally)
+docker-compose.override.yml
+
+# Local database files
+*.sqlite
+*.sqlite3
+*.db
+
+# ─────────────────────────────────────────────────────────────────────────────────
+# Optional: Uncomment if needed
+# ─────────────────────────────────────────────────────────────────────────────────
+
+# Ignore all public assets (if generated)
+# /public/assets/
+
+# Ignore uploaded files (if storing locally)
+# /public/uploads/
+# /uploads/
+
+# Ignore generated API documentation
+# /docs/api/
