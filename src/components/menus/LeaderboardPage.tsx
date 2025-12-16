@@ -218,10 +218,11 @@ export function LeaderboardPage() {
             {/* Player List */}
             <div className="space-y-1">
               {weeklyContestData.players.map((player) => (
-                <div
+                <button
                   key={player.id}
-                  className={`rounded-lg p-1.5 flex items-center gap-2 ${
-                    player.isPlayer ? 'bg-primary-light border border-secondary' : 'bg-surface-light border border-surface'
+                  onClick={() => !player.isPlayer && openModal('member-profile', { memberId: player.id })}
+                  className={`w-full rounded-lg p-1.5 flex items-center gap-2 ${
+                    player.isPlayer ? 'bg-primary-light border border-secondary' : 'bg-surface-light border border-surface hover:bg-surface transition-colors'
                   }`}
                 >
                   <span className={`w-5 text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-secondary'}`}>
@@ -230,7 +231,7 @@ export function LeaderboardPage() {
                   <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border border-surface">
                     <span className="text-secondary text-[8px] font-bold">AVA</span>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-left">
                     <p className={`text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-primary-light'}`}>{player.name}</p>
                     {player.team && (
                       <p className={`text-[10px] ${player.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>{player.team}</p>
@@ -240,7 +241,7 @@ export function LeaderboardPage() {
                     <span className={`text-[10px] ${player.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>Score</span>
                     <p className={`text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-primary-light'}`}>{player.score}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
@@ -276,17 +277,18 @@ export function LeaderboardPage() {
             {/* Friends List */}
             <div className="space-y-1">
               {friendsData.map((friend) => (
-                <div
+                <button
                   key={friend.id}
-                  className={`rounded-lg p-1.5 flex items-center gap-2 ${
-                    friend.isPlayer ? 'bg-primary-light border border-secondary' : 'bg-surface-light border border-surface'
+                  onClick={() => !friend.isPlayer && openModal('member-profile', { memberId: friend.id })}
+                  className={`w-full rounded-lg p-1.5 flex items-center gap-2 ${
+                    friend.isPlayer ? 'bg-primary-light border border-secondary' : 'bg-surface-light border border-surface hover:bg-surface transition-colors'
                   }`}
                 >
                   {getRankBadge(friend.rank)}
                   <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border border-surface">
                     <span className="text-secondary text-[8px] font-bold">AVA</span>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-left">
                     <p className={`text-xs font-bold ${friend.isPlayer ? 'text-white' : 'text-primary-light'}`}>{friend.name}</p>
                     {friend.team && (
                       <p className={`text-[10px] ${friend.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>{friend.team}</p>
@@ -296,7 +298,7 @@ export function LeaderboardPage() {
                     <span className={`text-[10px] ${friend.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>Level</span>
                     <p className={`text-xs font-bold ${friend.isPlayer ? 'text-white' : 'text-primary-light'}`}>{friend.level}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
 
@@ -333,15 +335,16 @@ export function LeaderboardPage() {
             {/* Players List */}
             <div className="space-y-1">
               {playersData.map((player) => (
-                <div
+                <button
                   key={player.id}
-                  className="bg-surface-light rounded-lg p-1.5 flex items-center gap-2 border border-surface"
+                  onClick={() => openModal('member-profile', { memberId: player.id })}
+                  className="w-full bg-surface-light rounded-lg p-1.5 flex items-center gap-2 border border-surface hover:bg-surface transition-colors"
                 >
                   {getRankBadge(player.rank)}
                   <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border border-surface">
                     <span className="text-secondary text-[8px] font-bold">AVA</span>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-left">
                     <p className="text-xs font-bold text-primary-light">{player.name}</p>
                     <p className="text-[10px] text-secondary-light">{player.team}</p>
                   </div>
@@ -349,7 +352,7 @@ export function LeaderboardPage() {
                     <span className="text-[10px] text-secondary-light">Level</span>
                     <p className="text-xs font-bold text-primary-light">{player.level}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
@@ -378,15 +381,16 @@ export function LeaderboardPage() {
             {/* Teams List */}
             <div className="space-y-1">
               {teamsData.map((team) => (
-                <div
+                <button
                   key={team.id}
-                  className="bg-surface-light rounded-lg p-1.5 flex items-center gap-2 border border-surface"
+                  onClick={() => openModal('team-info', { teamId: team.id })}
+                  className="w-full bg-surface-light rounded-lg p-1.5 flex items-center gap-2 border border-surface hover:bg-surface transition-colors"
                 >
                   {getRankBadge(team.rank)}
                   <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border-2 border-surface">
                     <span className="text-secondary text-[8px] font-bold">LOGO</span>
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-left">
                     <p className="text-xs font-bold text-primary-light">{team.name}</p>
                   </div>
                   <div className="text-right mr-1">
@@ -397,7 +401,7 @@ export function LeaderboardPage() {
                     <span className="text-[10px] text-secondary-light">Score</span>
                     <p className="text-xs font-bold text-primary-light">{team.score.toLocaleString()}</p>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </div>
