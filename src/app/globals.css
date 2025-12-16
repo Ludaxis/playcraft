@@ -175,7 +175,7 @@ body {
   max-height: 844px;
   min-height: 700px;
   background: var(--color-surface-light);
-  border-radius: 40px;
+  border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   position: relative;
