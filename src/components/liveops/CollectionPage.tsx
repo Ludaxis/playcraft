@@ -33,66 +33,66 @@ export function CollectionPage() {
 
   if (!mounted) {
     return (
-      <div className="flex flex-col h-full bg-slate-600 items-center justify-center">
+      <div className="flex flex-col h-full bg-secondary items-center justify-center">
         <span className="text-white">Loading...</span>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-600">
+    <div className="flex flex-col h-full bg-secondary">
       {/* Top Bar with Info and Reward buttons */}
-      <div className="flex items-center justify-between px-2 py-1.5 bg-slate-700">
+      <div className="flex items-center justify-between px-2 py-1.5 bg-primary-light">
         <button
           onClick={() => openModal('collection-info')}
-          className="w-8 h-8 bg-slate-500 rounded-full flex items-center justify-center border border-slate-400"
+          className="w-8 h-8 bg-secondary-light rounded-full flex items-center justify-center border border-surface-dark"
         >
           <span className="text-white text-xs font-bold">i</span>
         </button>
         <button
           onClick={() => openModal('card-stars')}
-          className="w-9 h-9 bg-slate-400 rounded-full flex items-center justify-center border border-slate-300"
+          className="w-9 h-9 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
         >
           <Image src="/icons/Star-Filled.svg" alt="Card Stars" width={20} height={20} className="opacity-80" />
         </button>
       </div>
 
       {/* Title Banner */}
-      <div className="mx-2 -mt-1 bg-slate-400 rounded-lg border border-slate-300 py-1.5 px-3 text-center">
-        <h1 className="text-slate-700 text-sm font-bold">Origins Collection</h1>
+      <div className="mx-2 -mt-1 bg-surface-dark rounded-lg border border-surface py-1.5 px-3 text-center">
+        <h1 className="text-primary-light text-sm font-bold">Origins Collection</h1>
       </div>
 
       {/* Grand Prize Section */}
-      <div className="mx-2 mt-1.5 bg-slate-300 rounded-lg border border-slate-400 p-2">
+      <div className="mx-2 mt-1.5 bg-surface rounded-lg border border-surface-dark p-2">
         <button
           onClick={() => openModal('grand-prize')}
           className="w-full"
         >
           <div className="flex items-center justify-center gap-3 mb-1.5">
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-slate-400 rounded-full flex items-center justify-center">
-                <span className="text-slate-600 text-sm font-bold">$</span>
+              <div className="w-10 h-10 bg-surface-dark rounded-full flex items-center justify-center">
+                <span className="text-secondary text-sm font-bold">$</span>
               </div>
-              <span className="text-slate-600 text-[10px] font-bold mt-0.5">10000</span>
+              <span className="text-secondary text-[10px] font-bold mt-0.5">10000</span>
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-slate-400 rounded-lg flex items-center justify-center">
-                <span className="text-slate-600 text-sm font-bold">TRP</span>
+              <div className="w-12 h-12 bg-surface-dark rounded-lg flex items-center justify-center">
+                <span className="text-secondary text-sm font-bold">TRP</span>
               </div>
             </div>
 
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-slate-400 rounded-full flex items-center justify-center">
-                <span className="text-slate-600 text-[8px] font-bold">TNT</span>
+              <div className="w-10 h-10 bg-surface-dark rounded-full flex items-center justify-center">
+                <span className="text-secondary text-[8px] font-bold">TNT</span>
               </div>
-              <span className="text-slate-600 text-[10px] font-bold mt-0.5">x10</span>
+              <span className="text-secondary text-[10px] font-bold mt-0.5">x10</span>
             </div>
           </div>
 
           <div className="flex justify-center mb-1.5">
-            <div className="bg-slate-400 rounded px-3 py-0.5">
-              <span className="text-slate-600 text-xs font-bold">Grand Prize</span>
+            <div className="bg-surface-dark rounded px-3 py-0.5">
+              <span className="text-secondary text-xs font-bold">Grand Prize</span>
             </div>
           </div>
         </button>
@@ -104,14 +104,14 @@ export function CollectionPage() {
               setShowInfoMessage(!showInfoMessage);
               if (showRewardTooltip) setShowRewardTooltip(false);
             }}
-            className="w-6 h-6 bg-slate-500 rounded flex items-center justify-center"
+            className="w-6 h-6 bg-secondary-light rounded flex items-center justify-center"
           >
             <Image src="/icons/Category.svg" alt="Cards" width={14} height={14} className="invert opacity-80" />
           </button>
           <div className="flex-1 relative">
-            <div className="h-4 bg-slate-500 rounded-full overflow-hidden">
+            <div className="h-4 bg-secondary-light rounded-full overflow-hidden">
               <div
-                className="h-full bg-slate-400 rounded-full transition-all"
+                className="h-full bg-surface-dark rounded-full transition-all"
                 style={{ width: `${(totalCollected / totalCards) * 100}%` }}
               />
             </div>
@@ -124,40 +124,40 @@ export function CollectionPage() {
               setShowRewardTooltip(!showRewardTooltip);
               if (showInfoMessage) setShowInfoMessage(false);
             }}
-            className="w-7 h-7 bg-slate-400 rounded flex items-center justify-center border border-slate-300"
+            className="w-7 h-7 bg-surface-dark rounded flex items-center justify-center border border-surface"
           >
-            <span className="text-slate-600 text-[8px] font-bold">CHT</span>
+            <span className="text-secondary text-[8px] font-bold">CHT</span>
           </button>
         </div>
 
         {/* Timer */}
         <div className="flex justify-center">
-          <div className="flex items-center gap-1 bg-slate-400 rounded-full px-2 py-0.5">
-            <span className="text-slate-600 text-[10px] font-bold">16d 19h</span>
+          <div className="flex items-center gap-1 bg-surface-dark rounded-full px-2 py-0.5">
+            <span className="text-secondary text-[10px] font-bold">16d 19h</span>
           </div>
         </div>
       </div>
 
       {/* Reward Tooltip */}
       {showRewardTooltip && (
-        <div className="mx-2 mt-1.5 bg-slate-200 rounded-lg border border-slate-300 p-2">
+        <div className="mx-2 mt-1.5 bg-surface-light rounded-lg border border-surface p-2">
           <div className="flex items-center justify-center gap-1.5 flex-wrap">
-            <div className="w-6 h-6 bg-slate-400 rounded flex items-center justify-center">
-              <span className="text-slate-600 text-[6px] font-bold">TRP</span>
+            <div className="w-6 h-6 bg-surface-dark rounded flex items-center justify-center">
+              <span className="text-secondary text-[6px] font-bold">TRP</span>
             </div>
-            <span className="text-slate-500 text-xs">+</span>
+            <span className="text-secondary-light text-xs">+</span>
             <div className="flex flex-col items-center">
-              <div className="w-6 h-6 bg-slate-400 rounded-full flex items-center justify-center">
-                <span className="text-slate-600 text-[6px] font-bold">$</span>
+              <div className="w-6 h-6 bg-surface-dark rounded-full flex items-center justify-center">
+                <span className="text-secondary text-[6px] font-bold">$</span>
               </div>
-              <span className="text-slate-600 text-[8px] font-bold">10k</span>
+              <span className="text-secondary text-[8px] font-bold">10k</span>
             </div>
-            <span className="text-slate-500 text-xs">+</span>
+            <span className="text-secondary-light text-xs">+</span>
             <div className="flex flex-col items-center">
-              <div className="w-6 h-6 bg-slate-400 rounded-full flex items-center justify-center">
-                <span className="text-slate-600 text-[6px] font-bold">BST</span>
+              <div className="w-6 h-6 bg-surface-dark rounded-full flex items-center justify-center">
+                <span className="text-secondary text-[6px] font-bold">BST</span>
               </div>
-              <span className="text-slate-600 text-[8px] font-bold">x10</span>
+              <span className="text-secondary text-[8px] font-bold">x10</span>
             </div>
           </div>
         </div>
@@ -165,8 +165,8 @@ export function CollectionPage() {
 
       {/* Info Text */}
       {showInfoMessage && (
-        <div className="mx-2 mt-1.5 bg-slate-200 rounded-lg border border-slate-300 p-2">
-          <p className="text-slate-600 text-xs text-center font-medium">
+        <div className="mx-2 mt-1.5 bg-surface-light rounded-lg border border-surface p-2">
+          <p className="text-secondary text-xs text-center font-medium">
             Collect all cards to complete Origins Collection!
           </p>
         </div>
@@ -210,30 +210,30 @@ function CollectionSetCard({ set, onPress }: CollectionSetCardProps) {
   return (
     <button
       onClick={onPress}
-      className="bg-slate-500 rounded-lg border border-slate-400 overflow-hidden w-full text-left"
+      className="bg-secondary-light rounded-lg border border-surface-dark overflow-hidden w-full text-left"
     >
       <div className="p-1.5 flex justify-center">
-        <div className="w-10 h-10 bg-slate-400 rounded-full border border-slate-300 flex items-center justify-center">
-          <span className="text-slate-600 text-[8px] font-bold">{set.abbr}</span>
+        <div className="w-10 h-10 bg-surface-dark rounded-full border border-surface flex items-center justify-center">
+          <span className="text-secondary text-[8px] font-bold">{set.abbr}</span>
         </div>
       </div>
 
-      <div className="bg-slate-400 mx-1 rounded px-1 py-0.5 mb-1">
-        <p className="text-slate-700 text-[8px] font-bold text-center truncate">{set.name}</p>
+      <div className="bg-surface-dark mx-1 rounded px-1 py-0.5 mb-1">
+        <p className="text-primary-light text-[8px] font-bold text-center truncate">{set.name}</p>
       </div>
 
       <div className="px-1.5 pb-0.5">
-        <div className="h-1.5 bg-slate-600 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
           <div
-            className="h-full bg-slate-300 rounded-full transition-all"
+            className="h-full bg-surface rounded-full transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between px-1.5 pb-1.5">
-        <span className="text-slate-300 text-[8px] font-bold">{set.collected}/{set.total}</span>
-        <span className="text-slate-300 text-[8px] font-bold">{set.reward}</span>
+        <span className="text-surface text-[8px] font-bold">{set.collected}/{set.total}</span>
+        <span className="text-surface text-[8px] font-bold">{set.reward}</span>
       </div>
     </button>
   );

@@ -108,30 +108,30 @@ export function LeaderboardPage() {
   const getRankBadge = (rank: number) => {
     return (
       <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-        rank <= 3 ? 'bg-slate-400 border border-slate-300' : ''
+        rank <= 3 ? 'bg-surface-dark border border-surface' : ''
       }`}>
-        <span className="text-xs font-bold text-slate-700">{rank}</span>
+        <span className="text-xs font-bold text-primary-light">{rank}</span>
       </div>
     );
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-600">
+    <div className="flex flex-col h-full bg-secondary">
       {/* Header */}
-      <div className="bg-slate-700 py-3 px-4">
+      <div className="bg-primary-light py-3 px-4">
         <h1 className="text-white text-base font-bold text-center">Leaderboard</h1>
       </div>
 
       {/* Divider */}
-      <div className="h-0.5 bg-slate-500" />
+      <div className="h-0.5 bg-secondary-light" />
 
       {/* Main Tab Bar */}
-      <div className="bg-slate-500 px-2 py-1.5">
-        <div className="relative flex bg-slate-600 rounded border border-slate-500 overflow-hidden">
+      <div className="bg-secondary-light px-2 py-1.5">
+        <div className="relative flex bg-secondary rounded border border-secondary-light overflow-hidden">
           {/* Sliding indicator */}
           <div
             ref={indicatorRef}
-            className="absolute top-0 bottom-0 bg-slate-400 rounded"
+            className="absolute top-0 bottom-0 bg-surface-dark rounded"
             style={{ width: `${100 / mainTabs.length}%` }}
           />
 
@@ -142,12 +142,12 @@ export function LeaderboardPage() {
               ref={(el) => setTabRef(tab.id, el)}
               onClick={() => handleTabChange(tab.id)}
               className={`flex-1 py-1.5 text-center text-xs font-bold transition-colors relative z-10 ${
-                activeTab === tab.id ? 'text-slate-700' : 'text-slate-300'
+                activeTab === tab.id ? 'text-primary-light' : 'text-surface'
               }`}
             >
               {tab.label}
               {tab.id === 'weekly' && activeTab === 'weekly' && (
-                <div className="absolute -bottom-1 left-1 bg-slate-700 rounded-full px-1.5 py-0.5 text-[8px] text-white z-20">
+                <div className="absolute -bottom-1 left-1 bg-primary-light rounded-full px-1.5 py-0.5 text-[8px] text-white z-20">
                   {weeklyContestData.isFinished ? 'Finished' : weeklyContestData.timeRemaining}
                 </div>
               )}
@@ -160,56 +160,56 @@ export function LeaderboardPage() {
       <div ref={contentRef} className="flex-1 overflow-y-auto">
         {/* Weekly Tab */}
         {activeTab === 'weekly' && (
-          <div className="bg-slate-500 p-2">
+          <div className="bg-secondary-light p-2">
             {/* Weekly Contest Banner */}
             <div className="flex justify-center mb-3">
-              <div className="bg-slate-400 rounded px-6 py-1.5 border border-slate-300">
-                <span className="text-slate-700 font-bold text-sm">Weekly Contest</span>
+              <div className="bg-surface-dark rounded px-6 py-1.5 border border-surface">
+                <span className="text-primary-light font-bold text-sm">Weekly Contest</span>
               </div>
             </div>
 
             {/* Info button */}
             <button
               onClick={() => openModal('weekly-contest-info')}
-              className="absolute left-4 top-36 w-6 h-6 bg-slate-400 rounded-full flex items-center justify-center border border-slate-300"
+              className="absolute left-4 top-36 w-6 h-6 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
             >
-              <span className="text-slate-700 font-bold text-xs">i</span>
+              <span className="text-primary-light font-bold text-xs">i</span>
             </button>
 
             {/* Podium */}
             <div className="flex justify-center items-end gap-1.5 mb-3 px-1">
               {/* 2nd Place */}
               <div className="flex flex-col items-center w-[90px]">
-                <div className="w-10 h-10 bg-slate-400 rounded-lg border border-slate-300 flex items-center justify-center mb-1">
-                  <span className="text-slate-600 text-[10px] font-bold">2nd</span>
+                <div className="w-10 h-10 bg-surface-dark rounded-lg border border-surface flex items-center justify-center mb-1">
+                  <span className="text-secondary text-[10px] font-bold">2nd</span>
                 </div>
-                <div className="bg-slate-400 rounded-lg p-1.5 w-full border border-slate-300">
-                  <p className="text-slate-700 font-bold text-xs text-center truncate">{weeklyContestData.topThree[1].name}</p>
-                  <p className="text-slate-600 text-[8px] text-center truncate">{weeklyContestData.topThree[1].team}</p>
-                  <p className="text-slate-700 font-bold text-[10px] text-center mt-1">Score: {weeklyContestData.topThree[1].score}</p>
+                <div className="bg-surface-dark rounded-lg p-1.5 w-full border border-surface">
+                  <p className="text-primary-light font-bold text-xs text-center truncate">{weeklyContestData.topThree[1].name}</p>
+                  <p className="text-secondary text-[8px] text-center truncate">{weeklyContestData.topThree[1].team}</p>
+                  <p className="text-primary-light font-bold text-[10px] text-center mt-1">Score: {weeklyContestData.topThree[1].score}</p>
                 </div>
               </div>
 
               {/* 1st Place */}
               <div className="flex flex-col items-center w-[95px] -mt-3">
-                <div className="w-11 h-11 bg-slate-300 rounded-lg border border-slate-200 flex items-center justify-center mb-1">
-                  <span className="text-slate-600 text-xs font-bold">1st</span>
+                <div className="w-11 h-11 bg-surface rounded-lg border border-surface-light flex items-center justify-center mb-1">
+                  <span className="text-secondary text-xs font-bold">1st</span>
                 </div>
-                <div className="bg-slate-300 rounded-lg p-1.5 w-full border border-slate-200">
-                  <p className="text-slate-700 font-bold text-xs text-center truncate">{weeklyContestData.topThree[0].name}</p>
-                  <p className="text-slate-600 text-[8px] text-center truncate">{weeklyContestData.topThree[0].team}</p>
-                  <p className="text-slate-700 font-bold text-[10px] text-center mt-1">Score: {weeklyContestData.topThree[0].score}</p>
+                <div className="bg-surface rounded-lg p-1.5 w-full border border-surface-light">
+                  <p className="text-primary-light font-bold text-xs text-center truncate">{weeklyContestData.topThree[0].name}</p>
+                  <p className="text-secondary text-[8px] text-center truncate">{weeklyContestData.topThree[0].team}</p>
+                  <p className="text-primary-light font-bold text-[10px] text-center mt-1">Score: {weeklyContestData.topThree[0].score}</p>
                 </div>
               </div>
 
               {/* 3rd Place */}
               <div className="flex flex-col items-center w-[90px]">
-                <div className="w-10 h-10 bg-slate-500 rounded-lg border border-slate-400 flex items-center justify-center mb-1">
-                  <span className="text-slate-300 text-[10px] font-bold">3rd</span>
+                <div className="w-10 h-10 bg-secondary-light rounded-lg border border-surface-dark flex items-center justify-center mb-1">
+                  <span className="text-surface text-[10px] font-bold">3rd</span>
                 </div>
-                <div className="bg-slate-500 rounded-lg p-1.5 w-full border border-slate-400">
+                <div className="bg-secondary-light rounded-lg p-1.5 w-full border border-surface-dark">
                   <p className="text-white font-bold text-xs text-center truncate">{weeklyContestData.topThree[2].name}</p>
-                  <p className="text-slate-300 text-[8px] text-center truncate">{weeklyContestData.topThree[2].team}</p>
+                  <p className="text-surface text-[8px] text-center truncate">{weeklyContestData.topThree[2].team}</p>
                   <p className="text-white font-bold text-[10px] text-center mt-1">Score: {weeklyContestData.topThree[2].score}</p>
                 </div>
               </div>
@@ -221,24 +221,24 @@ export function LeaderboardPage() {
                 <div
                   key={player.id}
                   className={`rounded-lg p-1.5 flex items-center gap-2 ${
-                    player.isPlayer ? 'bg-slate-700 border border-slate-600' : 'bg-slate-200 border border-slate-300'
+                    player.isPlayer ? 'bg-primary-light border border-secondary' : 'bg-surface-light border border-surface'
                   }`}
                 >
-                  <span className={`w-5 text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-slate-600'}`}>
+                  <span className={`w-5 text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-secondary'}`}>
                     {player.rank}
                   </span>
-                  <div className="w-8 h-8 bg-slate-400 rounded flex items-center justify-center border border-slate-300">
-                    <span className="text-slate-600 text-[8px] font-bold">AVA</span>
+                  <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border border-surface">
+                    <span className="text-secondary text-[8px] font-bold">AVA</span>
                   </div>
                   <div className="flex-1">
-                    <p className={`text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-slate-700'}`}>{player.name}</p>
+                    <p className={`text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-primary-light'}`}>{player.name}</p>
                     {player.team && (
-                      <p className={`text-[10px] ${player.isPlayer ? 'text-slate-400' : 'text-slate-500'}`}>{player.team}</p>
+                      <p className={`text-[10px] ${player.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>{player.team}</p>
                     )}
                   </div>
                   <div className="text-right">
-                    <span className={`text-[10px] ${player.isPlayer ? 'text-slate-400' : 'text-slate-500'}`}>Score</span>
-                    <p className={`text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-slate-700'}`}>{player.score}</p>
+                    <span className={`text-[10px] ${player.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>Score</span>
+                    <p className={`text-xs font-bold ${player.isPlayer ? 'text-white' : 'text-primary-light'}`}>{player.score}</p>
                   </div>
                 </div>
               ))}
@@ -246,8 +246,8 @@ export function LeaderboardPage() {
 
             {/* Continue Button */}
             <div className="mt-3">
-              <button className="w-full bg-slate-400 border-2 border-slate-300 rounded-lg py-2">
-                <span className="text-slate-700 font-bold text-sm">Continue</span>
+              <button className="w-full bg-surface-dark border-2 border-surface rounded-lg py-2">
+                <span className="text-primary-light font-bold text-sm">Continue</span>
               </button>
             </div>
           </div>
@@ -255,7 +255,7 @@ export function LeaderboardPage() {
 
         {/* Friends Tab */}
         {activeTab === 'friends' && (
-          <div className="bg-slate-500 p-2">
+          <div className="bg-secondary-light p-2">
             {/* Sub Tabs */}
             <div className="flex gap-1.5 mb-3">
               {(['list', 'add'] as const).map((tab) => (
@@ -264,8 +264,8 @@ export function LeaderboardPage() {
                   onClick={() => setFriendsSubTab(tab)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${
                     friendsSubTab === tab
-                      ? 'bg-slate-700 text-white border border-slate-600'
-                      : 'bg-slate-400 text-slate-600 border border-slate-300'
+                      ? 'bg-primary-light text-white border border-secondary'
+                      : 'bg-surface-dark text-secondary border border-surface'
                   }`}
                 >
                   {tab === 'list' ? 'Friends List' : 'Add Friends'}
@@ -279,22 +279,22 @@ export function LeaderboardPage() {
                 <div
                   key={friend.id}
                   className={`rounded-lg p-1.5 flex items-center gap-2 ${
-                    friend.isPlayer ? 'bg-slate-700 border border-slate-600' : 'bg-slate-200 border border-slate-300'
+                    friend.isPlayer ? 'bg-primary-light border border-secondary' : 'bg-surface-light border border-surface'
                   }`}
                 >
                   {getRankBadge(friend.rank)}
-                  <div className="w-8 h-8 bg-slate-400 rounded flex items-center justify-center border border-slate-300">
-                    <span className="text-slate-600 text-[8px] font-bold">AVA</span>
+                  <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border border-surface">
+                    <span className="text-secondary text-[8px] font-bold">AVA</span>
                   </div>
                   <div className="flex-1">
-                    <p className={`text-xs font-bold ${friend.isPlayer ? 'text-white' : 'text-slate-700'}`}>{friend.name}</p>
+                    <p className={`text-xs font-bold ${friend.isPlayer ? 'text-white' : 'text-primary-light'}`}>{friend.name}</p>
                     {friend.team && (
-                      <p className={`text-[10px] ${friend.isPlayer ? 'text-slate-400' : 'text-slate-500'}`}>{friend.team}</p>
+                      <p className={`text-[10px] ${friend.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>{friend.team}</p>
                     )}
                   </div>
                   <div className="text-right">
-                    <span className={`text-[10px] ${friend.isPlayer ? 'text-slate-400' : 'text-slate-500'}`}>Level</span>
-                    <p className={`text-xs font-bold ${friend.isPlayer ? 'text-white' : 'text-slate-700'}`}>{friend.level}</p>
+                    <span className={`text-[10px] ${friend.isPlayer ? 'text-surface-dark' : 'text-secondary-light'}`}>Level</span>
+                    <p className={`text-xs font-bold ${friend.isPlayer ? 'text-white' : 'text-primary-light'}`}>{friend.level}</p>
                   </div>
                 </div>
               ))}
@@ -302,9 +302,9 @@ export function LeaderboardPage() {
 
             {/* Connect Button */}
             <div className="mt-4">
-              <button className="w-full bg-slate-400 border-2 border-slate-300 rounded-lg py-2 flex items-center justify-center gap-2">
-                <span className="text-slate-700 font-bold text-sm">f</span>
-                <span className="text-slate-700 font-bold text-sm">Connect</span>
+              <button className="w-full bg-surface-dark border-2 border-surface rounded-lg py-2 flex items-center justify-center gap-2">
+                <span className="text-primary-light font-bold text-sm">f</span>
+                <span className="text-primary-light font-bold text-sm">Connect</span>
               </button>
             </div>
           </div>
@@ -312,7 +312,7 @@ export function LeaderboardPage() {
 
         {/* Players Tab */}
         {activeTab === 'players' && (
-          <div className="bg-slate-500 p-2">
+          <div className="bg-secondary-light p-2">
             {/* Region Filter */}
             <div className="flex gap-1.5 mb-3">
               {(['world', 'local'] as const).map((region) => (
@@ -321,8 +321,8 @@ export function LeaderboardPage() {
                   onClick={() => setRegionFilter(region)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${
                     regionFilter === region
-                      ? 'bg-slate-700 text-white border border-slate-600'
-                      : 'bg-slate-400 text-slate-600 border border-slate-300'
+                      ? 'bg-primary-light text-white border border-secondary'
+                      : 'bg-surface-dark text-secondary border border-surface'
                   }`}
                 >
                   {region.charAt(0).toUpperCase() + region.slice(1)}
@@ -335,19 +335,19 @@ export function LeaderboardPage() {
               {playersData.map((player) => (
                 <div
                   key={player.id}
-                  className="bg-slate-200 rounded-lg p-1.5 flex items-center gap-2 border border-slate-300"
+                  className="bg-surface-light rounded-lg p-1.5 flex items-center gap-2 border border-surface"
                 >
                   {getRankBadge(player.rank)}
-                  <div className="w-8 h-8 bg-slate-400 rounded flex items-center justify-center border border-slate-300">
-                    <span className="text-slate-600 text-[8px] font-bold">AVA</span>
+                  <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border border-surface">
+                    <span className="text-secondary text-[8px] font-bold">AVA</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-slate-700">{player.name}</p>
-                    <p className="text-[10px] text-slate-500">{player.team}</p>
+                    <p className="text-xs font-bold text-primary-light">{player.name}</p>
+                    <p className="text-[10px] text-secondary-light">{player.team}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-slate-500">Level</span>
-                    <p className="text-xs font-bold text-slate-700">{player.level}</p>
+                    <span className="text-[10px] text-secondary-light">Level</span>
+                    <p className="text-xs font-bold text-primary-light">{player.level}</p>
                   </div>
                 </div>
               ))}
@@ -357,7 +357,7 @@ export function LeaderboardPage() {
 
         {/* Teams Tab */}
         {activeTab === 'teams' && (
-          <div className="bg-slate-500 p-2">
+          <div className="bg-secondary-light p-2">
             {/* Region Filter */}
             <div className="flex gap-1.5 mb-3">
               {(['world', 'local'] as const).map((region) => (
@@ -366,8 +366,8 @@ export function LeaderboardPage() {
                   onClick={() => setRegionFilter(region)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-bold ${
                     regionFilter === region
-                      ? 'bg-slate-700 text-white border border-slate-600'
-                      : 'bg-slate-400 text-slate-600 border border-slate-300'
+                      ? 'bg-primary-light text-white border border-secondary'
+                      : 'bg-surface-dark text-secondary border border-surface'
                   }`}
                 >
                   {region.charAt(0).toUpperCase() + region.slice(1)}
@@ -380,22 +380,22 @@ export function LeaderboardPage() {
               {teamsData.map((team) => (
                 <div
                   key={team.id}
-                  className="bg-slate-200 rounded-lg p-1.5 flex items-center gap-2 border border-slate-300"
+                  className="bg-surface-light rounded-lg p-1.5 flex items-center gap-2 border border-surface"
                 >
                   {getRankBadge(team.rank)}
-                  <div className="w-8 h-8 bg-slate-400 rounded flex items-center justify-center border-2 border-slate-300">
-                    <span className="text-slate-600 text-[8px] font-bold">LOGO</span>
+                  <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center border-2 border-surface">
+                    <span className="text-secondary text-[8px] font-bold">LOGO</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-slate-700">{team.name}</p>
+                    <p className="text-xs font-bold text-primary-light">{team.name}</p>
                   </div>
                   <div className="text-right mr-1">
-                    <span className="text-[10px] text-slate-500">Capacity</span>
-                    <p className="text-xs font-bold text-slate-600">{team.capacity}</p>
+                    <span className="text-[10px] text-secondary-light">Capacity</span>
+                    <p className="text-xs font-bold text-secondary">{team.capacity}</p>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] text-slate-500">Score</span>
-                    <p className="text-xs font-bold text-slate-700">{team.score.toLocaleString()}</p>
+                    <span className="text-[10px] text-secondary-light">Score</span>
+                    <p className="text-xs font-bold text-primary-light">{team.score.toLocaleString()}</p>
                   </div>
                 </div>
               ))}

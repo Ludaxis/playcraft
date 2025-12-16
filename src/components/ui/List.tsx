@@ -29,8 +29,8 @@ export function ListItem({ children, onClick, className = '', active = false }: 
     <Component
       className={`
         flex items-center gap-3 p-3 rounded-lg
-        ${active ? 'bg-slate-200' : 'bg-slate-100'}
-        ${onClick ? 'hover:bg-slate-200 cursor-pointer transition-colors w-full text-left' : ''}
+        ${active ? 'bg-surface-light' : 'bg-surface-lighter'}
+        ${onClick ? 'hover:bg-surface-light cursor-pointer transition-colors w-full text-left' : ''}
         ${className}
       `}
       onClick={onClick}
@@ -46,7 +46,7 @@ interface ListItemIconProps {
 
 export function ListItemIcon({ children }: ListItemIconProps) {
   return (
-    <div className="flex items-center justify-center w-10 h-10 bg-slate-200 rounded-lg text-slate-600">
+    <div className="flex items-center justify-center w-10 h-10 bg-surface-light rounded-lg text-secondary">
       {children}
     </div>
   );
@@ -60,8 +60,8 @@ interface ListItemContentProps {
 export function ListItemContent({ title, subtitle }: ListItemContentProps) {
   return (
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-slate-800 truncate">{title}</p>
-      {subtitle && <p className="text-xs text-slate-600 truncate">{subtitle}</p>}
+      <p className="text-sm font-medium text-primary truncate">{title}</p>
+      {subtitle && <p className="text-xs text-secondary truncate">{subtitle}</p>}
     </div>
   );
 }

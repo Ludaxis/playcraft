@@ -89,12 +89,12 @@ export function AnimatedTabs({
   return (
     <div className={className}>
       {/* Tab Bar */}
-      <div className={`bg-slate-500 px-2 py-1.5 ${tabBarClassName}`}>
-        <div className="relative flex bg-slate-600 rounded border border-slate-500 overflow-hidden">
+      <div className={`bg-secondary-light px-2 py-1.5 ${tabBarClassName}`}>
+        <div className="relative flex bg-secondary rounded border border-secondary-light overflow-hidden">
           {/* Sliding indicator */}
           <div
             ref={indicatorRef}
-            className="absolute top-0 bottom-0 bg-slate-400 rounded transition-none"
+            className="absolute top-0 bottom-0 bg-surface-dark rounded transition-none"
             style={{ width: `${100 / tabs.length}%` }}
           />
 
@@ -105,7 +105,7 @@ export function AnimatedTabs({
               ref={(el) => setTabRef(tab.id, el)}
               onClick={() => handleTabClick(tab.id)}
               className={`flex-1 py-1.5 text-center text-xs font-bold transition-colors relative z-10 ${
-                activeTab === tab.id ? 'text-slate-700' : 'text-slate-300'
+                activeTab === tab.id ? 'text-primary-light' : 'text-surface'
               }`}
             >
               {tab.label}
@@ -155,12 +155,12 @@ export function AnimatedTabBar({ tabs, activeTab, onTabChange, className = '' }:
   }, []);
 
   return (
-    <div className={`bg-slate-500 px-2 py-1.5 ${className}`}>
-      <div className="relative flex bg-slate-600 rounded border border-slate-500 overflow-hidden">
+    <div className={`bg-secondary-light px-2 py-1.5 ${className}`}>
+      <div className="relative flex bg-secondary rounded border border-secondary-light overflow-hidden">
         {/* Sliding indicator */}
         <div
           ref={indicatorRef}
-          className="absolute top-0 bottom-0 bg-slate-400 rounded"
+          className="absolute top-0 bottom-0 bg-surface-dark rounded"
           style={{ width: `${100 / tabs.length}%` }}
         />
 
@@ -171,7 +171,7 @@ export function AnimatedTabBar({ tabs, activeTab, onTabChange, className = '' }:
             ref={(el) => setTabRef(tab.id, el)}
             onClick={() => onTabChange(tab.id)}
             className={`flex-1 py-1.5 text-center text-xs font-bold transition-colors relative z-10 ${
-              activeTab === tab.id ? 'text-slate-700' : 'text-slate-300'
+              activeTab === tab.id ? 'text-primary-light' : 'text-surface'
             }`}
           >
             {tab.label}

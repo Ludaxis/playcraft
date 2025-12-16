@@ -37,9 +37,9 @@ export function GameplayPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-100">
+    <div className="flex flex-col h-full bg-surface-lighter">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-surface-light">
         <IconButton label="Pause" onClick={() => navigate('main-menu')} variant="ghost">
           <PauseIcon />
         </IconButton>
@@ -47,20 +47,20 @@ export function GameplayPage() {
         <div className="flex items-center gap-4">
           {/* Moves */}
           <div className="text-center">
-            <p className="text-xs text-slate-600">Moves</p>
-            <p className="text-lg font-bold text-slate-800">{moves}</p>
+            <p className="text-xs text-secondary">Moves</p>
+            <p className="text-lg font-bold text-primary">{moves}</p>
           </div>
 
           {/* Level */}
           <div className="text-center">
-            <p className="text-xs text-slate-600">Level</p>
-            <p className="text-lg font-bold text-slate-800">{player.currentLevel}</p>
+            <p className="text-xs text-secondary">Level</p>
+            <p className="text-lg font-bold text-primary">{player.currentLevel}</p>
           </div>
 
           {/* Score */}
           <div className="text-center">
-            <p className="text-xs text-slate-600">Score</p>
-            <p className="text-lg font-bold text-slate-800">{score}</p>
+            <p className="text-xs text-secondary">Score</p>
+            <p className="text-lg font-bold text-primary">{score}</p>
           </div>
         </div>
 
@@ -70,11 +70,11 @@ export function GameplayPage() {
       </div>
 
       {/* Objectives */}
-      <div className="flex gap-4 px-4 py-2 bg-slate-50 border-b border-slate-200">
+      <div className="flex gap-4 px-4 py-2 bg-surface-lightest border-b border-surface-light">
         {objectives.map((obj) => (
           <div key={obj.id} className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-slate-300 rounded" />
-            <span className="text-sm font-medium text-slate-800">
+            <div className="w-6 h-6 bg-surface rounded" />
+            <span className="text-sm font-medium text-primary">
               {obj.current}/{obj.target}
             </span>
           </div>
@@ -85,8 +85,8 @@ export function GameplayPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <Panel variant="elevated" className="w-full max-w-sm aspect-square flex items-center justify-center">
           <div className="text-center">
-            <p className="text-slate-500 mb-4">[Match-3 Game Board]</p>
-            <p className="text-xs text-slate-400">
+            <p className="text-secondary-light mb-4">[Match-3 Game Board]</p>
+            <p className="text-xs text-surface-dark">
               Tap tiles to match 3 or more
             </p>
 
@@ -108,7 +108,7 @@ export function GameplayPage() {
       </div>
 
       {/* Bottom Boosters */}
-      <div className="px-4 py-3 bg-white border-t border-slate-200">
+      <div className="px-4 py-3 bg-white border-t border-surface-light">
         <div className="flex justify-center gap-4 mb-3">
           {inGameBoosters.map((booster) => (
             <button
@@ -117,11 +117,11 @@ export function GameplayPage() {
               disabled={booster.count === 0}
               className={`
                 flex flex-col items-center p-2 rounded-lg transition-colors
-                ${booster.count > 0 ? 'bg-slate-100 hover:bg-slate-200' : 'bg-slate-50 opacity-50'}
+                ${booster.count > 0 ? 'bg-surface-lighter hover:bg-surface-light' : 'bg-surface-lightest opacity-50'}
               `}
             >
-              <div className="w-10 h-10 bg-slate-200 rounded-lg mb-1" />
-              <span className="text-xs font-medium text-slate-800">{booster.count}</span>
+              <div className="w-10 h-10 bg-surface-light rounded-lg mb-1" />
+              <span className="text-xs font-medium text-primary">{booster.count}</span>
             </button>
           ))}
         </div>

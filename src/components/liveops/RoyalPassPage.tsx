@@ -36,8 +36,8 @@ export function RoyalPassPage() {
         <Panel variant="elevated" className="mb-4">
           <div className="flex justify-between items-center mb-3">
             <div>
-              <p className="text-sm text-slate-600">Season Progress</p>
-              <p className="text-lg font-bold text-slate-800">
+              <p className="text-sm text-secondary">Season Progress</p>
+              <p className="text-lg font-bold text-primary">
                 {event.progress} / {event.maxProgress}
               </p>
             </div>
@@ -61,22 +61,22 @@ export function RoyalPassPage() {
               <div
                 className={`
                   w-10 h-10 rounded-full flex items-center justify-center font-bold
-                  ${reward.unlocked ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-600'}
+                  ${reward.unlocked ? 'bg-primary text-white' : 'bg-surface-light text-secondary'}
                 `}
               >
                 {reward.level}
               </div>
 
               {/* Free Reward */}
-              <div className="flex-1 p-2 bg-slate-100 rounded-lg">
-                <p className="text-xs text-slate-600">Free</p>
-                <p className="text-sm font-medium text-slate-800">{reward.free}</p>
+              <div className="flex-1 p-2 bg-surface-lighter rounded-lg">
+                <p className="text-xs text-secondary">Free</p>
+                <p className="text-sm font-medium text-primary">{reward.free}</p>
               </div>
 
               {/* Premium Reward */}
-              <div className="flex-1 p-2 bg-slate-200 rounded-lg border border-slate-300">
-                <p className="text-xs text-slate-600">Premium</p>
-                <p className="text-sm font-medium text-slate-800">{reward.premium}</p>
+              <div className="flex-1 p-2 bg-surface-light rounded-lg border border-surface">
+                <p className="text-xs text-secondary">Premium</p>
+                <p className="text-sm font-medium text-primary">{reward.premium}</p>
               </div>
 
               {/* Claim Button */}
@@ -85,7 +85,7 @@ export function RoyalPassPage() {
                   Claim
                 </Button>
               ) : (
-                <div className="w-16 text-center text-xs text-slate-500">
+                <div className="w-16 text-center text-xs text-secondary-light">
                   Locked
                 </div>
               )}

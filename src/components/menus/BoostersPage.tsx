@@ -39,15 +39,15 @@ export function BoostersPage() {
               </Badge>
 
               {/* Booster Icon */}
-              <div className="aspect-square bg-slate-100 rounded-lg mb-3 flex items-center justify-center">
-                <span className="text-slate-400 text-xs">[{booster.name}]</span>
+              <div className="aspect-square bg-surface-lighter rounded-lg mb-3 flex items-center justify-center">
+                <span className="text-surface-dark text-xs">[{booster.name}]</span>
               </div>
 
               {/* Booster Info */}
-              <h3 className="text-sm font-medium text-slate-800 mb-1">
+              <h3 className="text-sm font-medium text-primary mb-1">
                 {booster.name}
               </h3>
-              <p className="text-xs text-slate-600 mb-3">{booster.description}</p>
+              <p className="text-xs text-secondary mb-3">{booster.description}</p>
 
               {/* Get More Button */}
               <Button
@@ -64,7 +64,7 @@ export function BoostersPage() {
 
         {/* Info Panel */}
         <Panel variant="outlined" className="mt-4">
-          <p className="text-xs text-slate-600 text-center">
+          <p className="text-xs text-secondary text-center">
             {activeTab === 'pre-game'
               ? 'Pre-game boosters are activated before starting a level'
               : 'In-game boosters can be used during gameplay'}

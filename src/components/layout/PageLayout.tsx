@@ -24,10 +24,10 @@ export function PageLayout({
   const { goBack, canGoBack } = useNavigation();
 
   return (
-    <div className="flex flex-col h-full bg-slate-50">
+    <div className="flex flex-col h-full bg-surface-lightest">
       {/* Page Header */}
       {showHeader && (
-        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-surface-light">
           <div className="flex items-center gap-3">
             {showBack && canGoBack && (
               <IconButton label="Back" onClick={goBack} variant="ghost">
@@ -35,7 +35,7 @@ export function PageLayout({
               </IconButton>
             )}
             {title && (
-              <h1 className="text-lg font-semibold text-slate-800">{title}</h1>
+              <h1 className="text-lg font-semibold text-primary">{title}</h1>
             )}
           </div>
           {headerActions && (

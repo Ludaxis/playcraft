@@ -11,10 +11,10 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-slate-200 text-slate-700',
-  primary: 'bg-slate-800 text-white',
-  accent: 'bg-slate-600 text-white',
-  notification: 'bg-red-500 text-white',
+  default: 'bg-surface-light text-primary-light',
+  primary: 'bg-primary text-white',
+  accent: 'bg-secondary text-white',
+  notification: 'bg-error text-white',
 };
 
 export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
@@ -41,7 +41,7 @@ export function NotificationDot({ count, show = true }: NotificationDotProps) {
   if (!show) return null;
 
   return (
-    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-500 rounded-full">
+    <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-error rounded-full">
       {count && count > 0 ? (count > 99 ? '99+' : count) : ''}
     </span>
   );

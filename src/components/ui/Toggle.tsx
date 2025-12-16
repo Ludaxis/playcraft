@@ -21,8 +21,8 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
           relative inline-flex h-6 w-11 shrink-0
           rounded-full border-2 border-transparent
           transition-colors duration-200
-          focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2
-          ${checked ? 'bg-slate-800' : 'bg-slate-300'}
+          focus:outline-none focus:ring-2 focus:ring-secondary-light focus:ring-offset-2
+          ${checked ? 'bg-primary' : 'bg-surface'}
           ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}
         `}
       >
@@ -35,7 +35,7 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
           `}
         />
       </button>
-      {label && <span className="text-sm text-slate-800">{label}</span>}
+      {label && <span className="text-sm text-primary">{label}</span>}
     </label>
   );
 }

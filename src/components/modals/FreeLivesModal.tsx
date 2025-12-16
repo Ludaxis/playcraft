@@ -45,28 +45,28 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
   };
 
   return (
-    <div className="w-[320px] bg-slate-500 rounded-2xl border-2 border-slate-400 overflow-hidden">
+    <div className="w-[320px] bg-secondary-light rounded-2xl border-2 border-surface-dark overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-600 py-2.5 px-3 flex items-center justify-center relative">
+      <div className="bg-secondary py-2.5 px-3 flex items-center justify-center relative">
         <h2 className="text-white text-base font-bold">Free Lives</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center border border-red-400 hover:bg-red-400 transition-colors"
+          className="absolute right-2 w-7 h-7 bg-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
         >
           <span className="text-white text-sm font-bold">X</span>
         </button>
       </div>
 
       {/* Divider */}
-      <div className="h-0.5 bg-slate-400" />
+      <div className="h-0.5 bg-surface-dark" />
 
       {/* Content */}
-      <div className="bg-slate-200 m-1.5 rounded-lg border border-slate-300 p-2">
+      <div className="bg-surface-light m-1.5 rounded-lg border border-surface p-2">
         {/* Total free lives counter */}
-        <div className="bg-slate-100 rounded px-3 py-1.5 mb-2 flex items-center justify-between border border-slate-300">
-          <span className="text-slate-600 text-xs font-medium">Total free lives:</span>
-          <div className="bg-slate-300 rounded px-3 py-0.5">
-            <span className="text-slate-700 font-bold text-sm">{unclaimedCount}</span>
+        <div className="bg-surface-lighter rounded px-3 py-1.5 mb-2 flex items-center justify-between border border-surface">
+          <span className="text-secondary text-xs font-medium">Total free lives:</span>
+          <div className="bg-surface rounded px-3 py-0.5">
+            <span className="text-primary-light font-bold text-sm">{unclaimedCount}</span>
           </div>
         </div>
 
@@ -94,7 +94,7 @@ interface LifeGiftRowProps {
 
 function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
   return (
-    <div className="bg-slate-100 rounded-lg px-2 py-1.5 flex items-center gap-2 border border-slate-300">
+    <div className="bg-surface-lighter rounded-lg px-2 py-1.5 flex items-center gap-2 border border-surface">
       {/* Heart icon */}
       <div className="w-8 h-8 flex items-center justify-center">
         <Image
@@ -108,19 +108,19 @@ function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
 
       {/* Sender info */}
       <div className="flex-1">
-        <p className="text-slate-700 text-xs font-bold">{senderName}</p>
-        <p className="text-slate-500 text-[10px]">Sent you a life!</p>
+        <p className="text-primary-light text-xs font-bold">{senderName}</p>
+        <p className="text-secondary-light text-[10px]">Sent you a life!</p>
       </div>
 
       {/* Add button */}
       {claimed ? (
-        <div className="bg-slate-300 rounded px-3 py-1">
-          <span className="text-slate-500 text-xs font-bold">Added</span>
+        <div className="bg-surface rounded px-3 py-1">
+          <span className="text-secondary-light text-xs font-bold">Added</span>
         </div>
       ) : (
         <button
           onClick={onAdd}
-          className="bg-slate-400 hover:bg-slate-500 border border-slate-300 rounded px-3 py-1 transition-colors"
+          className="bg-surface-dark hover:bg-secondary-light border border-surface rounded px-3 py-1 transition-colors"
         >
           <span className="text-white text-xs font-bold">Add</span>
         </button>

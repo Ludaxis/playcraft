@@ -11,12 +11,12 @@ export function RewardClaimModal() {
     <Modal isOpen onClose={closeModal} size="sm">
       <div className="text-center">
         {/* Reward Icon */}
-        <div className="w-24 h-24 bg-slate-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
+        <div className="w-24 h-24 bg-surface-light rounded-lg mx-auto mb-4 flex items-center justify-center">
           <GiftIcon />
         </div>
 
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Reward!</h2>
-        <p className="text-sm text-slate-600 mb-4">
+        <h2 className="text-xl font-bold text-primary mb-2">Reward!</h2>
+        <p className="text-sm text-secondary mb-4">
           You received a reward
         </p>
 
@@ -24,18 +24,18 @@ export function RewardClaimModal() {
         <Panel variant="elevated" className="mb-4">
           <div className="flex justify-center gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-slate-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                <span className="font-bold text-slate-600">$</span>
+              <div className="w-12 h-12 bg-surface-light rounded-lg mx-auto mb-2 flex items-center justify-center">
+                <span className="font-bold text-secondary">$</span>
               </div>
-              <p className="text-lg font-bold text-slate-800">+500</p>
-              <p className="text-xs text-slate-600">Coins</p>
+              <p className="text-lg font-bold text-primary">+500</p>
+              <p className="text-xs text-secondary">Coins</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-slate-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                <span className="font-bold text-slate-600">B</span>
+              <div className="w-12 h-12 bg-surface-light rounded-lg mx-auto mb-2 flex items-center justify-center">
+                <span className="font-bold text-secondary">B</span>
               </div>
-              <p className="text-lg font-bold text-slate-800">+2</p>
-              <p className="text-xs text-slate-600">Boosters</p>
+              <p className="text-lg font-bold text-primary">+2</p>
+              <p className="text-xs text-secondary">Boosters</p>
             </div>
           </div>
         </Panel>
@@ -50,7 +50,7 @@ export function RewardClaimModal() {
 
 function GiftIcon() {
   return (
-    <svg className="w-12 h-12 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className="w-12 h-12 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="8" width="18" height="13" rx="2" />
       <path d="M12 8V21" />
       <path d="M3 12H21" />

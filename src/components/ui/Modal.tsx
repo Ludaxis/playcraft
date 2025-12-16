@@ -51,7 +51,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-slate-900/50"
+        className="absolute inset-0 bg-primary-dark/50"
         onClick={onClose}
       />
 
@@ -65,11 +65,11 @@ export function Modal({
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-surface-light">
+            <h2 className="text-lg font-semibold text-primary">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded"
+              className="p-1 text-secondary hover:text-primary hover:bg-surface-lighter rounded"
             >
               <svg
                 className="w-5 h-5"

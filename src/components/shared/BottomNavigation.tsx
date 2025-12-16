@@ -21,7 +21,7 @@ export function BottomNavigation({ activePage }: BottomNavigationProps) {
   ];
 
   return (
-    <div className="bg-slate-700 border-t-2 border-slate-600">
+    <div className="bg-primary-light border-t-2 border-secondary">
       <div className="flex justify-around py-2">
         {navItems.map((item) => (
           <NavButton

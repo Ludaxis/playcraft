@@ -32,18 +32,18 @@ export function TeamChestPage() {
       <div className="p-4">
         {/* Chest Progress */}
         <Panel variant="elevated" className="mb-4 text-center">
-          <div className="w-20 h-20 bg-slate-200 rounded-lg mx-auto mb-3 flex items-center justify-center">
-            <span className="text-slate-400 text-xs">[Chest]</span>
+          <div className="w-20 h-20 bg-surface-light rounded-lg mx-auto mb-3 flex items-center justify-center">
+            <span className="text-surface-dark text-xs">[Chest]</span>
           </div>
-          <p className="text-lg font-bold text-slate-800">
+          <p className="text-lg font-bold text-primary">
             {team.chestProgress} / {team.chestGoal}
           </p>
-          <p className="text-sm text-slate-600 mb-3">Stars Collected</p>
+          <p className="text-sm text-secondary mb-3">Stars Collected</p>
           <ProgressBar current={team.chestProgress} max={team.chestGoal} size="lg" />
         </Panel>
 
         {/* Milestones */}
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">Milestones</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">Milestones</h3>
         <div className="space-y-2 mb-4">
           {milestones.map((milestone, index) => (
             <Panel
@@ -55,14 +55,14 @@ export function TeamChestPage() {
               <div
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center
-                  ${milestone.reached ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-600'}
+                  ${milestone.reached ? 'bg-primary text-white' : 'bg-surface-light text-secondary'}
                 `}
               >
                 {milestone.reached ? <CheckIcon /> : index + 1}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-slate-800">{milestone.stars} Stars</p>
-                <p className="text-xs text-slate-600">{milestone.reward}</p>
+                <p className="text-sm font-medium text-primary">{milestone.stars} Stars</p>
+                <p className="text-xs text-secondary">{milestone.reward}</p>
               </div>
               {milestone.reached && (
                 <Button size="sm" variant="primary">
@@ -74,14 +74,14 @@ export function TeamChestPage() {
         </div>
 
         {/* Top Contributors */}
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">Top Contributors</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">Top Contributors</h3>
         <List>
           {team.members
             .sort((a, b) => b.contributedStars - a.contributedStars)
             .slice(0, 5)
             .map((member, index) => (
               <ListItem key={member.id}>
-                <div className="w-6 text-center text-sm font-bold text-slate-600">
+                <div className="w-6 text-center text-sm font-bold text-secondary">
                   {index + 1}
                 </div>
                 <ListItemContent
@@ -89,7 +89,7 @@ export function TeamChestPage() {
                   subtitle={`Level ${member.level}`}
                 />
                 <ListItemAction>
-                  <span className="font-bold text-slate-800">
+                  <span className="font-bold text-primary">
                     {member.contributedStars}
                   </span>
                 </ListItemAction>

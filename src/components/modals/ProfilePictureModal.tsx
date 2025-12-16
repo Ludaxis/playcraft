@@ -49,32 +49,32 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
   };
 
   return (
-    <div className="relative w-[320px] bg-slate-500 rounded-2xl border-4 border-slate-400 overflow-hidden">
+    <div className="relative w-[320px] bg-secondary-light rounded-2xl border-4 border-surface-dark overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-600 py-3 px-4 flex items-center justify-center relative">
+      <div className="bg-secondary py-3 px-4 flex items-center justify-center relative">
         <h2 className="text-white text-xl font-bold">Edit Profile</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center border-2 border-red-400"
+          className="absolute right-2 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light"
         >
           <span className="text-white font-bold">X</span>
         </button>
       </div>
 
         {/* Profile Preview Section */}
-        <div className="bg-slate-400 mx-3 mt-3 rounded-xl p-3 border-2 border-slate-300">
+        <div className="bg-surface-dark mx-3 mt-3 rounded-xl p-3 border-2 border-surface">
           <div className="flex items-center gap-3">
             {/* Current Avatar */}
-            <div className="w-16 h-16 bg-slate-500 rounded-xl border-2 border-slate-400 flex items-center justify-center">
-              <span className="text-slate-300 text-lg font-bold">A{selectedAvatar}</span>
+            <div className="w-16 h-16 bg-secondary-light rounded-xl border-2 border-surface-dark flex items-center justify-center">
+              <span className="text-surface text-lg font-bold">A{selectedAvatar}</span>
             </div>
 
             {/* Username with Edit */}
-            <div className="flex-1 bg-slate-300 rounded-lg px-3 py-2 flex items-center justify-between border-2 border-slate-200">
-              <span className="text-slate-700 font-bold">{player.username}</span>
+            <div className="flex-1 bg-surface rounded-lg px-3 py-2 flex items-center justify-between border-2 border-surface-light">
+              <span className="text-primary-light font-bold">{player.username}</span>
               <button
                 onClick={handleEditUsername}
-                className="w-7 h-7 bg-slate-400 rounded flex items-center justify-center border border-slate-300"
+                className="w-7 h-7 bg-surface-dark rounded flex items-center justify-center border border-surface"
               >
                 <Image src="/icons/Edit.svg" alt="Edit" width={14} height={14} className="opacity-70" />
               </button>
@@ -83,7 +83,7 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
         </div>
 
         {/* Tabs */}
-        <div className="mx-3 mt-3 bg-slate-400 rounded-xl border-2 border-slate-300 overflow-hidden">
+        <div className="mx-3 mt-3 bg-surface-dark rounded-xl border-2 border-surface overflow-hidden">
           {/* Tab Headers */}
           <div className="flex">
             {(['avatar', 'frame', 'name', 'badge'] as TabType[]).map((tab) => (
@@ -92,8 +92,8 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2 text-sm font-bold capitalize transition-colors ${
                   activeTab === tab
-                    ? 'bg-slate-500 text-white'
-                    : 'bg-slate-400 text-slate-600'
+                    ? 'bg-secondary-light text-white'
+                    : 'bg-surface-dark text-secondary'
                 }`}
               >
                 {tab}
@@ -102,10 +102,10 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
           </div>
 
           {/* Divider */}
-          <div className="h-0.5 bg-slate-500" />
+          <div className="h-0.5 bg-secondary-light" />
 
           {/* Tab Content - Avatar Grid */}
-          <div className="p-3 bg-slate-300 max-h-[240px] overflow-y-auto">
+          <div className="p-3 bg-surface max-h-[240px] overflow-y-auto">
             <div className="grid grid-cols-3 gap-2">
               {avatarOptions.map((avatar) => (
                 <button
@@ -113,10 +113,10 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
                   onClick={() => avatar.type === 'avatar' && setSelectedAvatar(avatar.id as number)}
                   className={`relative aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
                     avatar.type === 'facebook'
-                      ? 'bg-slate-500 border-slate-400'
+                      ? 'bg-secondary-light border-surface-dark'
                       : selectedAvatar === avatar.id
-                      ? 'bg-slate-400 border-slate-300 ring-2 ring-slate-200'
-                      : 'bg-slate-400 border-slate-350'
+                      ? 'bg-surface-dark border-surface ring-2 ring-surface-light'
+                      : 'bg-surface-dark border-surface'
                   }`}
                 >
                   {avatar.type === 'facebook' ? (
@@ -128,15 +128,15 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
                         height={28}
                         className="opacity-80 mb-1"
                       />
-                      <span className="text-slate-300 text-[10px] font-bold">{avatar.label}</span>
+                      <span className="text-surface text-[10px] font-bold">{avatar.label}</span>
                     </>
                   ) : (
-                    <span className="text-slate-600 text-lg font-bold">{avatar.abbr}</span>
+                    <span className="text-secondary text-lg font-bold">{avatar.abbr}</span>
                   )}
 
                   {/* Selected Checkmark */}
                   {avatar.type === 'avatar' && selectedAvatar === avatar.id && (
-                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-slate-300 rounded-full flex items-center justify-center border-2 border-slate-200">
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-surface rounded-full flex items-center justify-center border-2 border-surface-light">
                       <Image
                         src="/icons/Check-Circle.svg"
                         alt="Selected"
@@ -156,9 +156,9 @@ export function ProfilePictureModal({ onAnimatedClose }: ProfilePictureModalProp
       <div className="p-3">
         <button
           onClick={handleSave}
-          className="w-full bg-slate-400 hover:bg-slate-350 rounded-xl py-3 border-2 border-slate-300"
+          className="w-full bg-surface-dark hover:bg-surface rounded-xl py-3 border-2 border-surface"
         >
-          <span className="text-slate-700 text-lg font-bold">Save</span>
+          <span className="text-primary-light text-lg font-bold">Save</span>
         </button>
       </div>
     </div>

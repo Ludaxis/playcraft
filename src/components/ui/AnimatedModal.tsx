@@ -97,7 +97,7 @@ export function AnimatedModal({
     >
       <div
         ref={contentRef}
-        className={`${width} bg-slate-600 rounded-2xl border-2 border-slate-500 overflow-hidden ${className}`}
+        className={`${width} bg-secondary rounded-2xl border-2 border-secondary-light overflow-hidden ${className}`}
       >
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
@@ -122,18 +122,18 @@ interface ModalHeaderProps {
 export function ModalHeader({ title, onClose, showCloseButton = true }: ModalHeaderProps) {
   return (
     <>
-      <div className="bg-slate-700 py-2.5 px-3 flex items-center justify-center relative">
+      <div className="bg-primary-light py-2.5 px-3 flex items-center justify-center relative">
         <h2 className="text-white text-base font-bold">{title}</h2>
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-2 w-7 h-7 bg-red-500 rounded-full flex items-center justify-center border border-red-400 hover:bg-red-400 transition-colors"
+            className="absolute right-2 w-7 h-7 bg-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
           >
             <span className="text-white text-sm font-bold">X</span>
           </button>
         )}
       </div>
-      <div className="h-0.5 bg-slate-500" />
+      <div className="h-0.5 bg-secondary-light" />
     </>
   );
 }

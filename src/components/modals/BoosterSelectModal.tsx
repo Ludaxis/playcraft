@@ -30,13 +30,13 @@ export function BoosterSelectModal() {
             className={`
               p-3 rounded-lg text-center transition-colors
               ${booster.count > 0
-                ? 'bg-slate-100 hover:bg-slate-200'
-                : 'bg-slate-50 opacity-50 cursor-not-allowed'
+                ? 'bg-surface-lighter hover:bg-surface-light'
+                : 'bg-surface-lightest opacity-50 cursor-not-allowed'
               }
             `}
           >
             <div className="relative inline-block mb-2">
-              <div className="w-12 h-12 bg-slate-200 rounded-lg" />
+              <div className="w-12 h-12 bg-surface-light rounded-lg" />
               <Badge
                 variant={booster.count > 0 ? 'accent' : 'default'}
                 className="absolute -top-1 -right-1"
@@ -44,8 +44,8 @@ export function BoosterSelectModal() {
                 {booster.count}
               </Badge>
             </div>
-            <p className="text-sm font-medium text-slate-800">{booster.name}</p>
-            <p className="text-xs text-slate-600 mt-1">{booster.description}</p>
+            <p className="text-sm font-medium text-primary">{booster.name}</p>
+            <p className="text-xs text-secondary mt-1">{booster.description}</p>
           </button>
         ))}
       </div>

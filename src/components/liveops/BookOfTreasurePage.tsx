@@ -36,8 +36,8 @@ export function BookOfTreasurePage() {
         {/* Overall Progress */}
         <Panel variant="elevated" className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-slate-600">Overall Progress</span>
-            <span className="font-bold text-slate-800">
+            <span className="text-sm text-secondary">Overall Progress</span>
+            <span className="font-bold text-primary">
               {completedObjectives}/{totalObjectives}
             </span>
           </div>
@@ -45,7 +45,7 @@ export function BookOfTreasurePage() {
         </Panel>
 
         {/* Chapters */}
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">Chapters</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">Chapters</h3>
         <div className="space-y-3">
           {chapters.map((chapter) => {
             const isComplete = chapter.completed === chapter.objectives;
@@ -60,15 +60,15 @@ export function BookOfTreasurePage() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{chapter.name}</p>
-                    <p className="text-xs text-slate-600">Reward: {chapter.reward}</p>
+                    <p className="text-sm font-medium text-primary">{chapter.name}</p>
+                    <p className="text-xs text-secondary">Reward: {chapter.reward}</p>
                   </div>
                   {isComplete ? (
                     <Badge variant="primary">Complete</Badge>
                   ) : isLocked ? (
                     <Badge variant="default">Locked</Badge>
                   ) : (
-                    <span className="text-xs text-slate-600">
+                    <span className="text-xs text-secondary">
                       {chapter.completed}/{chapter.objectives}
                     </span>
                   )}

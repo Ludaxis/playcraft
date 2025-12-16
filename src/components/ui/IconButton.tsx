@@ -21,9 +21,9 @@ const sizeStyles: Record<IconButtonSize, string> = {
 };
 
 const variantStyles: Record<IconButtonVariant, string> = {
-  default: 'bg-slate-100 text-slate-800 hover:bg-slate-200',
-  primary: 'bg-slate-800 text-white hover:bg-slate-700',
-  ghost: 'bg-transparent text-slate-800 hover:bg-slate-100',
+  default: 'bg-surface-lighter text-primary hover:bg-surface-light',
+  primary: 'bg-primary text-white hover:bg-primary-light',
+  ghost: 'bg-transparent text-primary hover:bg-surface-lighter',
 };
 
 export function IconButton({

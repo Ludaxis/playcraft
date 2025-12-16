@@ -22,18 +22,18 @@ export function LevelFailedModal() {
     <Modal isOpen onClose={handleQuit} size="sm">
       <div className="text-center">
         {/* Failed Icon */}
-        <div className="w-20 h-20 bg-slate-300 rounded-full mx-auto mb-4 flex items-center justify-center">
+        <div className="w-20 h-20 bg-surface rounded-full mx-auto mb-4 flex items-center justify-center">
           <XIcon />
         </div>
 
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Level Failed</h2>
-        <p className="text-sm text-slate-600 mb-4">
+        <h2 className="text-xl font-bold text-primary mb-2">Level Failed</h2>
+        <p className="text-sm text-secondary mb-4">
           You ran out of moves!
         </p>
 
         {/* Lives Display */}
         <Panel variant="outlined" className="mb-4">
-          <p className="text-sm text-slate-600 mb-2">Lives Remaining</p>
+          <p className="text-sm text-secondary mb-2">Lives Remaining</p>
           <div className="flex justify-center gap-1">
             {Array.from({ length: player.maxLives }).map((_, i) => (
               <HeartIcon
@@ -46,8 +46,8 @@ export function LevelFailedModal() {
 
         {/* Extra Moves Offer */}
         <Panel variant="elevated" className="mb-4">
-          <p className="text-sm font-medium text-slate-800 mb-1">Need More Moves?</p>
-          <p className="text-xs text-slate-600 mb-2">
+          <p className="text-sm font-medium text-primary mb-1">Need More Moves?</p>
+          <p className="text-xs text-secondary mb-2">
             Continue with 5 extra moves
           </p>
           <Button variant="primary" fullWidth>
@@ -76,7 +76,7 @@ export function LevelFailedModal() {
 
 function XIcon() {
   return (
-    <svg className="w-10 h-10 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <svg className="w-10 h-10 text-secondary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M6 18L18 6M6 6l12 12" />
     </svg>
   );
@@ -85,7 +85,7 @@ function XIcon() {
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg
-      className={`w-6 h-6 ${filled ? 'text-slate-800' : 'text-slate-300'}`}
+      className={`w-6 h-6 ${filled ? 'text-primary' : 'text-surface'}`}
       viewBox="0 0 24 24"
       fill="currentColor"
     >

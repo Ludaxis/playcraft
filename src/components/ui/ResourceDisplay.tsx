@@ -19,12 +19,12 @@ export function ResourceDisplay({
 }: ResourceDisplayProps) {
   const content = (
     <>
-      <span className="flex items-center justify-center w-6 h-6 bg-slate-200 rounded text-xs">
+      <span className="flex items-center justify-center w-6 h-6 bg-surface-light rounded text-xs">
         {icon}
       </span>
-      <span className="text-sm font-semibold text-slate-800">{value}</span>
+      <span className="text-sm font-semibold text-primary">{value}</span>
       {showAdd && (
-        <span className="flex items-center justify-center w-5 h-5 bg-slate-800 text-white rounded-full text-xs font-bold">
+        <span className="flex items-center justify-center w-5 h-5 bg-primary text-white rounded-full text-xs font-bold">
           +
         </span>
       )}
@@ -37,8 +37,8 @@ export function ResourceDisplay({
         onClick={onClick}
         className={`
           inline-flex items-center gap-1.5 px-2 py-1
-          bg-slate-100 rounded-full
-          hover:bg-slate-200 transition-colors
+          bg-surface-lighter rounded-full
+          hover:bg-surface-light transition-colors
           ${className}
         `}
       >
@@ -51,7 +51,7 @@ export function ResourceDisplay({
     <div
       className={`
         inline-flex items-center gap-1.5 px-2 py-1
-        bg-slate-100 rounded-full
+        bg-surface-lighter rounded-full
         ${className}
       `}
     >

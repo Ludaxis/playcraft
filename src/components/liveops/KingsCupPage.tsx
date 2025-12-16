@@ -37,9 +37,9 @@ export function KingsCupPage() {
       <div className="p-4">
         {/* Current Standing */}
         <Panel variant="elevated" className="mb-4 text-center">
-          <p className="text-sm text-slate-600">Your Rank</p>
-          <p className="text-3xl font-bold text-slate-800">#156</p>
-          <p className="text-sm text-slate-600 mt-2">
+          <p className="text-sm text-secondary">Your Rank</p>
+          <p className="text-3xl font-bold text-primary">#156</p>
+          <p className="text-sm text-secondary mt-2">
             {event.progress.toLocaleString()} points
           </p>
           <ProgressBar
@@ -47,13 +47,13 @@ export function KingsCupPage() {
             max={event.maxProgress}
             className="mt-3"
           />
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-secondary-light mt-1">
             {(event.maxProgress - event.progress).toLocaleString()} to next tier
           </p>
         </Panel>
 
         {/* Reward Tiers */}
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">Reward Tiers</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">Reward Tiers</h3>
         <div className="space-y-2 mb-4">
           {tournamentTiers.map((tier) => (
             <Panel
@@ -63,8 +63,8 @@ export function KingsCupPage() {
               className="flex justify-between items-center"
             >
               <div>
-                <p className="text-sm font-medium text-slate-800">Rank {tier.rank}</p>
-                <p className="text-xs text-slate-600">{tier.points.toLocaleString()}+ pts</p>
+                <p className="text-sm font-medium text-primary">Rank {tier.rank}</p>
+                <p className="text-xs text-secondary">{tier.points.toLocaleString()}+ pts</p>
               </div>
               <Badge variant="accent">{tier.reward}</Badge>
             </Panel>
@@ -72,21 +72,21 @@ export function KingsCupPage() {
         </div>
 
         {/* Top Players */}
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">Top Players</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">Top Players</h3>
         <List>
           {topPlayers.map((player) => (
             <ListItem key={player.id} active={player.isPlayer}>
               <div
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                  ${player.rank <= 3 ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-600'}
+                  ${player.rank <= 3 ? 'bg-primary text-white' : 'bg-surface-light text-secondary'}
                 `}
               >
                 {player.rank}
               </div>
               <ListItemContent title={player.username} />
               <ListItemAction>
-                <span className="font-bold text-slate-800">
+                <span className="font-bold text-primary">
                   {player.points.toLocaleString()}
                 </span>
               </ListItemAction>

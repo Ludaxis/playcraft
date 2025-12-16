@@ -43,15 +43,15 @@ export function ShopPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-slate-600">
+    <div className="flex flex-col h-full bg-secondary">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 bg-slate-700">
+      <div className="flex items-center justify-between px-2 py-2 bg-primary-light">
         {/* Coins display */}
-        <div className="flex items-center gap-1 bg-slate-200 rounded-full px-2 py-0.5">
-          <div className="w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
-            <span className="text-yellow-700 text-[10px] font-bold">$</span>
+        <div className="flex items-center gap-1 bg-surface-light rounded-full px-2 py-0.5">
+          <div className="w-5 h-5 bg-gold rounded-full flex items-center justify-center">
+            <span className="text-gold-darker text-[10px] font-bold">$</span>
           </div>
-          <span className="text-slate-700 text-xs font-bold">{state.player.coins.toLocaleString()}</span>
+          <span className="text-primary-light text-xs font-bold">{state.player.coins.toLocaleString()}</span>
         </div>
 
         {/* Title */}
@@ -60,7 +60,7 @@ export function ShopPage() {
         {/* Close button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center border border-red-400"
+          className="w-8 h-8 bg-error rounded-full flex items-center justify-center border border-error-light"
         >
           <span className="text-white text-sm font-bold">X</span>
         </button>
@@ -120,12 +120,12 @@ export function ShopPage() {
         {/* More Offers Button */}
         <button
           onClick={() => setShowMoreOffers(!showMoreOffers)}
-          className="w-full bg-slate-200 rounded-full py-2 flex items-center justify-center gap-2 border border-slate-300"
+          className="w-full bg-surface-light rounded-full py-2 flex items-center justify-center gap-2 border border-surface"
         >
-          <span className="text-slate-600 text-xs font-bold">
+          <span className="text-secondary text-xs font-bold">
             {showMoreOffers ? 'Show Less' : 'More Offers!'}
           </span>
-          <div className="w-5 h-5 bg-slate-400 rounded-full flex items-center justify-center">
+          <div className="w-5 h-5 bg-surface-dark rounded-full flex items-center justify-center">
             <span className={`text-white text-xs transition-transform ${showMoreOffers ? 'rotate-180' : ''}`}>
               v
             </span>
@@ -134,7 +134,7 @@ export function ShopPage() {
       </div>
 
       {/* Bottom Navigation (visible behind) */}
-      <div className="bg-slate-700 border-t border-slate-600 opacity-50">
+      <div className="bg-primary-light border-t border-secondary opacity-50">
         <div className="flex justify-around py-1.5">
           <NavPlaceholder icon="TRP" />
           <NavPlaceholder icon="CUP" />
@@ -150,10 +150,10 @@ export function ShopPage() {
 function NavPlaceholder({ icon, label }: { icon: string; label?: string }) {
   return (
     <div className="flex flex-col items-center px-2 py-0.5">
-      <div className="w-8 h-8 bg-slate-600 rounded-lg flex items-center justify-center">
-        <span className="text-slate-400 text-[8px] font-bold">{icon}</span>
+      <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
+        <span className="text-surface-dark text-[8px] font-bold">{icon}</span>
       </div>
-      {label && <span className="text-slate-400 text-[8px] mt-0.5">{label}</span>}
+      {label && <span className="text-surface-dark text-[8px] mt-0.5">{label}</span>}
     </div>
   );
 }

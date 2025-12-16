@@ -13,7 +13,7 @@ export function Header() {
   const unreadMessages = inbox.filter((m) => !m.claimed).length;
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-200">
+    <header className="flex items-center justify-between px-4 py-3 bg-white border-b border-surface-light">
       {/* Left Section - Shop & Level */}
       <div className="flex items-center gap-3">
         <IconButton
@@ -23,7 +23,7 @@ export function Header() {
         >
           <CrownIcon />
         </IconButton>
-        <div className="text-sm font-medium text-slate-600">
+        <div className="text-sm font-medium text-secondary">
           Lv. {player.currentLevel}
         </div>
       </div>
@@ -80,7 +80,7 @@ function CrownIcon() {
 }
 
 function CoinIcon() {
-  return <span className="font-bold text-slate-600">$</span>;
+  return <span className="font-bold text-secondary">$</span>;
 }
 
 function HeartIcon() {

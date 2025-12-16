@@ -93,17 +93,17 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
       {/* Close button - Above panel top-right */}
       <button
         onClick={handleClose}
-        className="absolute -top-12 -right-2 w-10 h-10 bg-red-500 rounded-full flex items-center justify-center border-2 border-red-400 z-10"
+        className="absolute -top-12 -right-2 w-10 h-10 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
       >
         <span className="text-white font-bold text-lg">X</span>
       </button>
 
-        <div className="w-[320px] bg-slate-500 rounded-2xl border-4 border-slate-400 overflow-hidden">
+        <div className="w-[320px] bg-secondary-light rounded-2xl border-4 border-surface-dark overflow-hidden">
         {/* Header */}
-        <div className="bg-slate-600 py-3 px-4 flex items-center justify-between">
+        <div className="bg-secondary py-3 px-4 flex items-center justify-between">
           <button
             onClick={goToPrevious}
-            className="w-8 h-8 bg-slate-500 rounded-full flex items-center justify-center border-2 border-slate-400"
+            className="w-8 h-8 bg-secondary-light rounded-full flex items-center justify-center border-2 border-surface-dark"
           >
             <Image src="/icons/Chevron-Right.svg" alt="Previous" width={16} height={16} className="invert opacity-80 rotate-180" />
           </button>
@@ -112,19 +112,19 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
 
           <button
             onClick={goToNext}
-            className="w-8 h-8 bg-slate-500 rounded-full flex items-center justify-center border-2 border-slate-400"
+            className="w-8 h-8 bg-secondary-light rounded-full flex items-center justify-center border-2 border-surface-dark"
           >
             <Image src="/icons/Chevron-Right.svg" alt="Next" width={16} height={16} className="invert opacity-80" />
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-slate-500 px-4 py-2">
+        <div className="bg-secondary-light px-4 py-2">
           <div className="flex items-center gap-2">
             <div className="flex-1 relative">
-              <div className="h-4 bg-slate-600 rounded-full overflow-hidden">
+              <div className="h-4 bg-secondary rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-slate-400 rounded-full transition-all"
+                  className="h-full bg-surface-dark rounded-full transition-all"
                   style={{ width: `${(collectedCount / totalCards) * 100}%` }}
                 />
               </div>
@@ -132,14 +132,14 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
                 {collectedCount}/{totalCards}
               </span>
             </div>
-            <div className="flex items-center gap-1 bg-slate-400 rounded px-2 py-1">
-              <span className="text-slate-600 text-xs font-bold">{currentSet.reward}</span>
+            <div className="flex items-center gap-1 bg-surface-dark rounded px-2 py-1">
+              <span className="text-secondary text-xs font-bold">{currentSet.reward}</span>
             </div>
           </div>
         </div>
 
         {/* Cards Grid */}
-        <div className="bg-slate-300 p-4">
+        <div className="bg-surface p-4">
           <div className="grid grid-cols-3 gap-3">
             {currentSet.cards.map((card) => (
               <button
@@ -147,23 +147,23 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
                 onClick={() => handleCardClick(card)}
                 className={`aspect-square rounded-xl border-2 flex flex-col items-center justify-center transition-transform active:scale-95 ${
                   card.collected
-                    ? 'bg-slate-400 border-slate-300'
-                    : 'bg-slate-500 border-slate-400'
+                    ? 'bg-surface-dark border-surface'
+                    : 'bg-secondary-light border-surface-dark'
                 }`}
               >
                 {card.collected ? (
                   <>
-                    <div className="w-10 h-10 bg-slate-300 rounded-lg flex items-center justify-center mb-1">
-                      <span className="text-slate-500 text-[8px] font-bold">{card.name.slice(0, 3).toUpperCase()}</span>
+                    <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center mb-1">
+                      <span className="text-secondary-light text-[8px] font-bold">{card.name.slice(0, 3).toUpperCase()}</span>
                     </div>
-                    <span className="text-slate-600 text-[8px] font-bold">{card.name}</span>
+                    <span className="text-secondary text-[8px] font-bold">{card.name}</span>
                   </>
                 ) : (
                   <>
-                    <div className="w-10 h-10 bg-slate-600 rounded-lg flex items-center justify-center mb-1">
-                      <span className="text-slate-400 text-lg font-bold">?</span>
+                    <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mb-1">
+                      <span className="text-surface-dark text-lg font-bold">?</span>
                     </div>
-                    <span className="text-slate-400 text-[8px] font-bold">???</span>
+                    <span className="text-surface-dark text-[8px] font-bold">???</span>
                   </>
                 )}
               </button>
@@ -172,28 +172,28 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
         </div>
 
         {/* Page Dots */}
-        <div className="bg-slate-500 py-3 flex justify-center gap-2">
+        <div className="bg-secondary-light py-3 flex justify-center gap-2">
           {setsData.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentSetIndex(index)}
               className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentSetIndex ? 'bg-slate-300' : 'bg-slate-600'
+                index === currentSetIndex ? 'bg-surface' : 'bg-secondary'
               }`}
             />
           ))}
         </div>
 
         {/* Reward Section */}
-        <div className="bg-slate-400 p-3 flex items-center justify-between border-t-2 border-slate-300">
+        <div className="bg-surface-dark p-3 flex items-center justify-between border-t-2 border-surface">
           <div className="flex items-center gap-2">
-            <span className="text-slate-600 text-sm font-bold">Set Reward:</span>
+            <span className="text-secondary text-sm font-bold">Set Reward:</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-slate-300 rounded flex items-center justify-center">
-              <span className="text-slate-500 text-xs font-bold">BST</span>
+            <div className="w-8 h-8 bg-surface rounded flex items-center justify-center">
+              <span className="text-secondary-light text-xs font-bold">BST</span>
             </div>
-            <span className="text-slate-700 font-bold">{currentSet.reward}</span>
+            <span className="text-primary-light font-bold">{currentSet.reward}</span>
           </div>
         </div>
       </div>

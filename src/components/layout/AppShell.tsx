@@ -119,7 +119,7 @@ function PageRenderer() {
   }, [state.currentPage]);
 
   return (
-    <div ref={containerRef} className="flex flex-col h-full bg-slate-200">
+    <div ref={containerRef} className="flex flex-col h-full bg-surface-light">
       <main ref={(el) => {
         contentRef.current = el;
         if (swipeContentRef) swipeContentRef.current = el;

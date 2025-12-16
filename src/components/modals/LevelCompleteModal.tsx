@@ -18,12 +18,12 @@ export function LevelCompleteModal() {
     <Modal isOpen onClose={handleContinue} size="sm">
       <div className="text-center">
         {/* Success Icon */}
-        <div className="w-20 h-20 bg-slate-800 rounded-full mx-auto mb-4 flex items-center justify-center">
+        <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center">
           <StarIcon />
         </div>
 
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Level Complete!</h2>
-        <p className="text-sm text-slate-600 mb-4">
+        <h2 className="text-xl font-bold text-primary mb-2">Level Complete!</h2>
+        <p className="text-sm text-secondary mb-4">
           You earned 1 star
         </p>
 
@@ -33,27 +33,27 @@ export function LevelCompleteModal() {
             <div
               key={star}
               className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                star <= 3 ? 'bg-slate-800' : 'bg-slate-200'
+                star <= 3 ? 'bg-primary' : 'bg-surface-light'
               }`}
             >
-              <StarIcon className={star <= 3 ? 'text-white' : 'text-slate-400'} />
+              <StarIcon className={star <= 3 ? 'text-white' : 'text-surface-dark'} />
             </div>
           ))}
         </div>
 
         {/* Rewards */}
         <Panel variant="outlined" className="mb-4">
-          <p className="text-sm text-slate-600 mb-2">Rewards</p>
+          <p className="text-sm text-secondary mb-2">Rewards</p>
           <div className="flex justify-center gap-4">
             <div className="text-center">
-              <div className="w-8 h-8 bg-slate-200 rounded mx-auto mb-1" />
-              <span className="text-sm font-bold text-slate-800">+50</span>
-              <p className="text-xs text-slate-600">Coins</p>
+              <div className="w-8 h-8 bg-surface-light rounded mx-auto mb-1" />
+              <span className="text-sm font-bold text-primary">+50</span>
+              <p className="text-xs text-secondary">Coins</p>
             </div>
             <div className="text-center">
-              <div className="w-8 h-8 bg-slate-200 rounded mx-auto mb-1" />
-              <span className="text-sm font-bold text-slate-800">+1</span>
-              <p className="text-xs text-slate-600">Star</p>
+              <div className="w-8 h-8 bg-surface-light rounded mx-auto mb-1" />
+              <span className="text-sm font-bold text-primary">+1</span>
+              <p className="text-xs text-secondary">Star</p>
             </div>
           </div>
         </Panel>

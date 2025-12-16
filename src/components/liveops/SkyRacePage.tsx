@@ -32,12 +32,12 @@ export function SkyRacePage() {
       <div className="p-4">
         {/* Race Info */}
         <Panel variant="elevated" className="mb-4">
-          <p className="text-sm text-slate-600 text-center mb-2">
+          <p className="text-sm text-secondary text-center mb-2">
             Complete 15 levels as fast as you can!
           </p>
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-slate-600">Your Progress</span>
-            <span className="font-bold text-slate-800">
+            <span className="text-sm text-secondary">Your Progress</span>
+            <span className="font-bold text-primary">
               {event.progress}/{event.maxProgress}
             </span>
           </div>
@@ -46,8 +46,8 @@ export function SkyRacePage() {
 
         {/* Rewards Preview */}
         <Panel variant="outlined" className="mb-4">
-          <h3 className="text-sm font-semibold text-slate-800 mb-2">Rewards</h3>
-          <div className="flex justify-between text-xs text-slate-600">
+          <h3 className="text-sm font-semibold text-primary mb-2">Rewards</h3>
+          <div className="flex justify-between text-xs text-secondary">
             <span>1st: 1000 coins</span>
             <span>2nd: 500 coins</span>
             <span>3rd: 250 coins</span>
@@ -55,14 +55,14 @@ export function SkyRacePage() {
         </Panel>
 
         {/* Leaderboard */}
-        <h3 className="text-sm font-semibold text-slate-800 mb-3">Race Standing</h3>
+        <h3 className="text-sm font-semibold text-primary mb-3">Race Standing</h3>
         <List>
           {participants.map((p) => (
             <ListItem key={p.id} active={p.isPlayer}>
               <div
                 className={`
                   w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                  ${p.position <= 3 ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-600'}
+                  ${p.position <= 3 ? 'bg-primary text-white' : 'bg-surface-light text-secondary'}
                 `}
               >
                 {p.position}

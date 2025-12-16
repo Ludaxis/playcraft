@@ -25,13 +25,13 @@ export function ChangeUsernameModal({ onAnimatedClose }: ChangeUsernameModalProp
   };
 
   return (
-    <div className="relative w-[300px] bg-slate-500 rounded-2xl border-4 border-slate-400 overflow-hidden">
+    <div className="relative w-[300px] bg-secondary-light rounded-2xl border-4 border-surface-dark overflow-hidden">
       {/* Header */}
-      <div className="bg-slate-600 py-3 px-4 flex items-center justify-center relative">
+      <div className="bg-secondary py-3 px-4 flex items-center justify-center relative">
         <h2 className="text-white text-xl font-bold">Change Username</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center border-2 border-red-400"
+          className="absolute right-2 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light"
         >
           <span className="text-white font-bold">X</span>
         </button>
@@ -50,7 +50,7 @@ export function ChangeUsernameModal({ onAnimatedClose }: ChangeUsernameModalProp
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Type your new username..."
-            className="w-full bg-slate-300 rounded-xl px-4 py-3 text-slate-700 placeholder-slate-500 border-2 border-slate-200 focus:outline-none focus:border-slate-100 mb-4"
+            className="w-full bg-surface rounded-xl px-4 py-3 text-primary-light placeholder-secondary-light border-2 border-surface-light focus:outline-none focus:border-surface-lighter mb-4"
           />
 
           {/* Continue Button */}
@@ -59,11 +59,11 @@ export function ChangeUsernameModal({ onAnimatedClose }: ChangeUsernameModalProp
             disabled={!username.trim()}
             className={`w-full rounded-xl py-4 border-2 transition-colors ${
               username.trim()
-                ? 'bg-slate-400 border-slate-300 hover:bg-slate-350'
-                : 'bg-slate-600 border-slate-500 cursor-not-allowed'
+                ? 'bg-surface-dark border-surface hover:bg-surface'
+                : 'bg-secondary border-secondary-light cursor-not-allowed'
             }`}
           >
-          <span className={`text-lg font-bold ${username.trim() ? 'text-slate-700' : 'text-slate-400'}`}>
+          <span className={`text-lg font-bold ${username.trim() ? 'text-primary-light' : 'text-surface-dark'}`}>
             Continue
           </span>
         </button>
