@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from 'next';
+import { Lilita_One } from 'next/font/google';
 import './globals.css';
+
+const lilitaOne = Lilita_One({
+  weight: '400',
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-lilita',
+});
 
 export const metadata: Metadata = {
   title: 'Puzzle Kit',
@@ -19,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={lilitaOne.variable}>
       <body className="antialiased">
         <div className="phone-frame">
           {children}
