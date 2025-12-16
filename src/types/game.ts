@@ -1,4 +1,4 @@
-// Core game types for Royal Match prototype
+// Core game types for Puzzle Kit prototype
 
 export interface PlayerState {
   coins: number;

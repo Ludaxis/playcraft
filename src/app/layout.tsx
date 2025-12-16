@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Royal Match Prototype',
-  description: 'Low-fi prototype for Royal Match main menu and features',
+  title: 'Puzzle Kit',
+  description: 'High-fidelity interactive prototype for puzzle game UI/UX',
 };
 
 export const viewport: Viewport = {

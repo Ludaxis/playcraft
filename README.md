@@ -1,8 +1,8 @@
 <div align="center">
 
-# 👑 Royal Match Prototype
+# 🧩 Puzzle Kit
 
-**A high-fidelity, interactive prototype of Royal Match's UI/UX**
+**A high-fidelity, interactive prototype for puzzle game UI/UX**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
@@ -18,12 +18,12 @@
 
 ## 📖 Overview
 
-A modular, production-ready prototype replicating Royal Match's complete UI/UX experience. Built with modern web technologies, featuring smooth GSAP animations, swipe navigation, and a comprehensive component library. Perfect for game design reference, UI/UX studies, or as a foundation for similar projects.
+A modular, production-ready prototype for puzzle game UI/UX. Built with modern web technologies, featuring smooth GSAP animations, swipe navigation, and a comprehensive component library. Perfect for game design reference, UI/UX studies, or as a foundation for similar projects.
 
 ### Why This Project?
 
 - 🎮 **Complete Game UI** — All major screens and flows implemented
-- 🎨 **Pixel-Perfect Design** — Faithful recreation of Royal Match aesthetics
+- 🎨 **Pixel-Perfect Design** — Professional puzzle game aesthetics
 - ⚡ **Smooth Animations** — GSAP-powered transitions and interactions
 - 📱 **Mobile-First** — Touch gestures, swipe navigation, responsive design
 - 🧩 **Modular Architecture** — Easy to extend, modify, or use as reference
@@ -80,8 +80,8 @@ A modular, production-ready prototype replicating Royal Match's complete UI/UX e
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/royal-match-prototype.git
-cd royal-match-prototype
+git clone https://github.com/mohammadreza87/webpuzzlekit.git
+cd webpuzzlekit
 
 # Install dependencies
 npm install
@@ -340,7 +340,7 @@ Contributions are welcome! Please follow these steps:
 
 ## 📄 License
 
-This project is for **educational and demonstration purposes only**. Royal Match is a trademark of Dream Games. This prototype is not affiliated with or endorsed by Dream Games.
+This project is for **educational and demonstration purposes only**. Puzzle Kit is an open-source UI/UX toolkit for puzzle games.
 
 ---
 
@@ -348,6 +348,6 @@ This project is for **educational and demonstration purposes only**. Royal Match
 
 **Built with ❤️ for the game development community**
 
-[⬆ Back to Top](#-royal-match-prototype)
+[⬆ Back to Top](#-puzzle-kit)
 
 </div>
