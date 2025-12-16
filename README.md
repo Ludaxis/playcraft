@@ -59,6 +59,15 @@ A modular, production-ready prototype for puzzle game UI/UX. Built with modern w
 | 🌋 **Lava Quest** | Progressive milestones |
 | 📖 **Album** | Card collection system |
 
+### Admin Panel
+
+| Feature | Description |
+|---------|-------------|
+| 🎛️ **Tab Manager** | Add, remove, and reorder bottom navigation tabs (max 5) |
+| 🎮 **Event Manager** | Toggle LiveOps events on/off |
+| 🎨 **Theme Editor** | Customize all colors with live preview |
+| 💾 **Auto-Save** | All settings persist to localStorage |
+
 ### UI/UX Features
 
 - **🔄 Swipe Navigation** — Swipe left/right between main tabs
@@ -66,6 +75,7 @@ A modular, production-ready prototype for puzzle game UI/UX. Built with modern w
 - **🎭 Modal System** — Animated modals with stack support
 - **📱 Touch Optimized** — Native-feeling touch interactions
 - **🎯 Tab Animations** — Sliding indicator on tab switches
+- **⚙️ Dynamic Tabs** — Configure navigation tabs via Admin Panel
 
 ---
 
@@ -155,6 +165,12 @@ src/
 │   │   ├── ProfileModal.tsx
 │   │   └── ...
 │   │
+│   ├── admin/                # Admin panel components
+│   │   ├── AdminPage.tsx     # Admin dashboard
+│   │   ├── TabManager.tsx    # Navigation tab configuration
+│   │   ├── EventManager.tsx  # LiveOps event toggles
+│   │   └── ThemeEditor.tsx   # Color customization
+│   │
 │   └── shared/               # Shared components
 │       ├── BottomNavigation.tsx
 │       └── NavButton.tsx
@@ -166,7 +182,8 @@ src/
 │
 ├── store/                    # State management (React Context)
 │   ├── GameContext.tsx       # Game state & actions
-│   └── NavigationContext.tsx # Navigation & modals
+│   ├── NavigationContext.tsx # Navigation & modals
+│   └── AdminContext.tsx      # Admin config & localStorage
 │
 ├── types/                    # TypeScript definitions
 │   ├── game.ts               # Game entities & state
@@ -182,18 +199,18 @@ src/
 ### State Management
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      AppShell                           │
-│  ┌───────────────────┐  ┌───────────────────────────┐  │
-│  │   GameProvider    │  │   NavigationProvider      │  │
-│  │  ┌─────────────┐  │  │  ┌─────────────────────┐  │  │
-│  │  │ Player      │  │  │  │ Current Page        │  │  │
-│  │  │ Resources   │  │  │  │ Modal Stack         │  │  │
-│  │  │ Progress    │  │  │  │ Navigation History  │  │  │
-│  │  │ Events      │  │  │  │ Page Params         │  │  │
-│  │  └─────────────┘  │  │  └─────────────────────┘  │  │
-│  └───────────────────┘  └───────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                           AppShell                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐   │
+│  │  AdminProvider  │  │  GameProvider   │  │ NavigationProvider│  │
+│  │ ┌─────────────┐ │  │ ┌─────────────┐ │  │ ┌─────────────┐  │  │
+│  │ │ Tabs Config │ │  │ │ Player      │ │  │ │ Current Page│  │  │
+│  │ │ Events      │ │  │ │ Resources   │ │  │ │ Modal Stack │  │  │
+│  │ │ Theme       │ │  │ │ Progress    │ │  │ │ Nav History │  │  │
+│  │ │ localStorage│ │  │ │ Events      │ │  │ │ Page Params │  │  │
+│  │ └─────────────┘ │  │ └─────────────┘ │  │ └─────────────┘  │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘   │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -214,6 +231,27 @@ openModal('profile');
 openModal('level-start', { level: 47 });
 closeModal();
 ```
+
+### Admin Panel
+
+Access via **Settings → Admin Panel** to configure:
+
+```typescript
+// Tab configuration
+const { enabledTabs, toggleTab, reorderTabs } = useAdmin();
+toggleTab('shop', true);  // Enable shop tab
+
+// Event toggles
+const { isEventEnabled, toggleEvent } = useAdmin();
+if (isEventEnabled('lava-quest')) { /* show event */ }
+toggleEvent('royal-pass', false);  // Disable event
+
+// Theme customization
+const { updateTheme } = useAdmin();
+updateTheme({ primary: '#ff0000', accent: '#00ff00' });
+```
+
+All settings are automatically saved to localStorage.
 
 ### Animation System
 
@@ -290,17 +328,17 @@ const modalComponents = {
 
 ### Color Palette
 
-The prototype uses a cohesive slate-based palette:
+The prototype uses a semantic color system (Periwinkle Dream theme):
 
-| Color | Tailwind | Usage |
+| Color | Variable | Usage |
 |-------|----------|-------|
-| ![#1e293b](https://via.placeholder.com/15/1e293b/1e293b.png) | `slate-800` | Headers, primary text |
-| ![#334155](https://via.placeholder.com/15/334155/334155.png) | `slate-700` | Navigation, containers |
-| ![#475569](https://via.placeholder.com/15/475569/475569.png) | `slate-600` | Secondary elements |
-| ![#64748b](https://via.placeholder.com/15/64748b/64748b.png) | `slate-500` | Borders, dividers |
-| ![#94a3b8](https://via.placeholder.com/15/94a3b8/94a3b8.png) | `slate-400` | Muted text, icons |
-| ![#cbd5e1](https://via.placeholder.com/15/cbd5e1/cbd5e1.png) | `slate-300` | Backgrounds |
-| ![#e2e8f0](https://via.placeholder.com/15/e2e8f0/e2e8f0.png) | `slate-200` | Light backgrounds |
+| ![#6b5bc7](https://via.placeholder.com/15/6b5bc7/6b5bc7.png) | `primary` | Headers, important elements |
+| ![#8578d9](https://via.placeholder.com/15/8578d9/8578d9.png) | `secondary` | Navigation, containers |
+| ![#9381ff](https://via.placeholder.com/15/9381ff/9381ff.png) | `accent` | Highlights, CTAs |
+| ![#d4d4ff](https://via.placeholder.com/15/d4d4ff/d4d4ff.png) | `surface` | Backgrounds |
+| ![#ffd966](https://via.placeholder.com/15/ffd966/ffd966.png) | `gold` | Premium, rewards |
+
+All colors are customizable via the Admin Panel's Theme Editor.
 
 ### Component Variants
 

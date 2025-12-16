@@ -1,35 +1,27 @@
 'use client';
 
 import React from 'react';
-import { useNavigation } from '@/store';
+import { useNavigation, useAdmin } from '@/store';
 import { NavButton } from './NavButton';
-import type { PageId } from '@/types';
 
 interface BottomNavigationProps {
-  activePage: 'areas' | 'leaderboard' | 'home' | 'team' | 'collection';
+  activePage: string;
 }
 
 export function BottomNavigation({ activePage }: BottomNavigationProps) {
   const { navigate } = useNavigation();
-
-  const navItems: { id: string; icon: string; label: string; page: PageId }[] = [
-    { id: 'areas', icon: '/icons/Star-Filled.svg', label: 'Areas', page: 'area-tasks' },
-    { id: 'leaderboard', icon: '/icons/Medal.svg', label: 'Leaderboard', page: 'leaderboard' },
-    { id: 'home', icon: '/icons/Home.svg', label: 'Home', page: 'main-menu' },
-    { id: 'team', icon: '/icons/2User.svg', label: 'Team', page: 'team' },
-    { id: 'collection', icon: '/icons/Category.svg', label: 'Collection', page: 'collection' },
-  ];
+  const { enabledTabs } = useAdmin();
 
   return (
     <div className="bg-primary-light border-t-2 border-secondary">
       <div className="flex justify-around py-2">
-        {navItems.map((item) => (
+        {enabledTabs.map((tab) => (
           <NavButton
-            key={item.id}
-            icon={item.icon}
-            label={item.label}
-            active={activePage === item.id}
-            onClick={() => activePage !== item.id && navigate(item.page)}
+            key={tab.id}
+            icon={tab.icon}
+            label={tab.label}
+            active={activePage === tab.id}
+            onClick={() => activePage !== tab.id && navigate(tab.page)}
           />
         ))}
       </div>

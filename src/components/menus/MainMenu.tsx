@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { useGame, useNavigation } from '@/store';
+import { useGame, useNavigation, useAdmin } from '@/store';
 import { ProgressBar } from '@/components/ui';
 import { BottomNavigation } from '@/components/shared';
 import { useTimer } from '@/hooks';
@@ -10,14 +10,15 @@ import { useTimer } from '@/hooks';
 export function MainMenu() {
   const { state } = useGame();
   const { navigate, openModal } = useNavigation();
+  const { isEventEnabled } = useAdmin();
   const { player, areas, events } = state;
 
   const currentArea = areas.find((a) => a.id === player.currentArea);
   const completedTasks = currentArea?.tasks.filter((t) => t.completed).length || 0;
   const totalTasks = currentArea?.tasks.length || 0;
 
-  // Get active events
-  const lavaQuest = events.find((e) => e.type === 'lava-quest');
+  // Get active events (filtered by admin config)
+  const lavaQuest = isEventEnabled('lava-quest') ? events.find((e) => e.type === 'lava-quest') : null;
 
   return (
     <div className="relative flex flex-col h-full bg-surface-light overflow-hidden">

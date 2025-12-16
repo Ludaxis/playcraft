@@ -5,6 +5,7 @@ export type PageId =
   | 'gameplay'
   | 'shop'
   | 'settings'
+  | 'admin'
   | 'team'
   | 'inbox'
   | 'leaderboard'

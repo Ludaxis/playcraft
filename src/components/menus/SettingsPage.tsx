@@ -101,9 +101,17 @@ export function SettingsPage() {
           onClick={() => openModal('privacy-policy')}
         />
 
+        {/* Admin Panel */}
+        <SettingsButton
+          icon="/icons/Setting-2.svg"
+          label="Admin Panel"
+          variant="primary"
+          onClick={() => navigate('admin')}
+        />
+
         {/* Version */}
         <div className="text-center text-xs text-surface-dark mt-4">
-          Version 1.0.0
+          Puzzle Kit v1.0.0
         </div>
       </div>
     </div>

@@ -1,11 +1,9 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect, useCallback, useMemo } from 'react';
 import gsap from 'gsap';
+import { useAdmin } from '@/store';
 import type { PageId } from '@/types';
-
-// Define the main navigation tabs in order
-const NAV_TABS: PageId[] = ['area-tasks', 'leaderboard', 'main-menu', 'team', 'collection'];
 
 interface SwipeConfig {
   threshold?: number; // Minimum swipe distance to trigger navigation
@@ -24,6 +22,10 @@ export function useSwipeNavigation(
   config: SwipeConfig = {}
 ): UseSwipeNavigationReturn {
   const { threshold = 80, onSwipeStart, onSwipeEnd } = config;
+  const { enabledTabs } = useAdmin();
+
+  // Get dynamic NAV_TABS from admin config
+  const NAV_TABS = useMemo(() => enabledTabs.map(tab => tab.page), [enabledTabs]);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const contentRef = useRef<HTMLElement | null>(null);

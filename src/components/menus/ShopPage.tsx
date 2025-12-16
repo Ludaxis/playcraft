@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useGame, useNavigation } from '@/store';
 import { ShopPanel, CoinPackGrid } from '@/components/ui/ShopPanel';
+import { BottomNavigation } from '@/components/shared';
 
 export function ShopPage() {
   const { state } = useGame();
@@ -133,27 +134,8 @@ export function ShopPage() {
         </button>
       </div>
 
-      {/* Bottom Navigation (visible behind) */}
-      <div className="bg-primary-light border-t border-secondary opacity-50">
-        <div className="flex justify-around py-1.5">
-          <NavPlaceholder icon="TRP" />
-          <NavPlaceholder icon="CUP" />
-          <NavPlaceholder icon="HOME" label="Home" />
-          <NavPlaceholder icon="TEAM" />
-          <NavPlaceholder icon="CARD" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NavPlaceholder({ icon, label }: { icon: string; label?: string }) {
-  return (
-    <div className="flex flex-col items-center px-2 py-0.5">
-      <div className="w-8 h-8 bg-secondary rounded-lg flex items-center justify-center">
-        <span className="text-surface-dark text-[8px] font-bold">{icon}</span>
-      </div>
-      {label && <span className="text-surface-dark text-[8px] mt-0.5">{label}</span>}
+      {/* Bottom Navigation */}
+      <BottomNavigation activePage="shop" />
     </div>
   );
 }

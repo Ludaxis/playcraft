@@ -2,7 +2,7 @@
 
 import React from 'react';
 import gsap from 'gsap';
-import { GameProvider, NavigationProvider, useNavigation } from '@/store';
+import { GameProvider, NavigationProvider, AdminProvider, useNavigation, useAdmin } from '@/store';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 // All page imports
@@ -32,6 +32,9 @@ import { CollectionPage } from '@/components/liveops/CollectionPage';
 // Gameplay
 import { GameplayPage } from '@/components/menus/GameplayPage';
 
+// Admin
+import { AdminPage } from '@/components/admin';
+
 // Modal manager
 import { ModalManager } from '@/components/modals/ModalManager';
 
@@ -41,6 +44,7 @@ const pageComponents: Record<PageId, React.ComponentType> = {
   'main-menu': MainMenu,
   shop: ShopPage,
   settings: SettingsPage,
+  admin: AdminPage,
   team: TeamPage,
   inbox: InboxPage,
   leaderboard: LeaderboardPage,
@@ -61,14 +65,15 @@ const pageComponents: Record<PageId, React.ComponentType> = {
   gameplay: GameplayPage,
 };
 
-// Define the main navigation tabs in order for animation direction
-const NAV_TABS: PageId[] = ['area-tasks', 'leaderboard', 'main-menu', 'team', 'collection'];
-
 function PageRenderer() {
   const { state, navigate } = useNavigation();
+  const { enabledTabs } = useAdmin();
   const PageComponent = pageComponents[state.currentPage];
   const contentRef = React.useRef<HTMLElement>(null);
   const prevPageRef = React.useRef<PageId>(state.currentPage);
+
+  // Get dynamic NAV_TABS from admin config
+  const NAV_TABS = enabledTabs.map(tab => tab.page);
 
   // Enable swipe navigation between main tabs
   const { containerRef, contentRef: swipeContentRef } = useSwipeNavigation(state.currentPage, navigate);
@@ -116,7 +121,7 @@ function PageRenderer() {
     }
 
     prevPageRef.current = state.currentPage;
-  }, [state.currentPage]);
+  }, [state.currentPage, NAV_TABS]);
 
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-surface-light">
@@ -133,10 +138,12 @@ function PageRenderer() {
 
 export function AppShell() {
   return (
-    <GameProvider>
-      <NavigationProvider>
-        <PageRenderer />
-      </NavigationProvider>
-    </GameProvider>
+    <AdminProvider>
+      <GameProvider>
+        <NavigationProvider>
+          <PageRenderer />
+        </NavigationProvider>
+      </GameProvider>
+    </AdminProvider>
   );
 }
