@@ -111,6 +111,11 @@
   --color-info-dark: #3b82f6;
 
   /* ─────────────────────────────────────────────────────────────────────────────
+     PAGE BACKGROUND - Behind the phone frame
+     ───────────────────────────────────────────────────────────────────────────── */
+  --color-page-bg: #141514;
+
+  /* ─────────────────────────────────────────────────────────────────────────────
      ANIMATIONS
      ───────────────────────────────────────────────────────────────────────────── */
   --animate-fade-in: fadeIn 0.2s ease-out;
@@ -148,7 +153,7 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: var(--color-primary);
+  background: var(--color-page-bg);
   color: var(--color-primary);
   font-family: var(--font-sans);
 }
