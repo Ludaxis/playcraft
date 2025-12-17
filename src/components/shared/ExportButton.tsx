@@ -99,7 +99,45 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
   };
 
   const handleExport = useCallback(async (format: ExportFormat, target?: HTMLElement | null) => {
-    const node = target || document.getElementById(targetId);
+    // For full page export, use the app container but check for modals
+    let node: HTMLElement | null = target || document.getElementById(targetId);
+
+    // If no specific target and there are modals open, capture the whole app content
+    // We need to handle fixed positioning for modals
+    const appContent = document.getElementById(targetId);
+    const hasModals = appContent?.querySelector('.fixed.inset-0');
+
+    if (!target && hasModals && appContent) {
+      // Temporarily convert fixed modals to absolute for capture
+      const fixedElements = appContent.querySelectorAll('.fixed');
+      fixedElements.forEach((el) => {
+        if (el instanceof HTMLElement && !el.classList.contains('export-button-container')) {
+          el.dataset.originalPosition = el.style.position;
+          el.style.position = 'absolute';
+        }
+      });
+
+      // Also ensure the container can contain absolute elements
+      const originalPosition = appContent.style.position;
+      const originalOverflow = appContent.style.overflow;
+      appContent.style.position = 'relative';
+      appContent.style.overflow = 'hidden';
+
+      node = appContent;
+
+      // Restore after a short delay (will be done in finally block)
+      setTimeout(() => {
+        fixedElements.forEach((el) => {
+          if (el instanceof HTMLElement && !el.classList.contains('export-button-container')) {
+            el.style.position = el.dataset.originalPosition || '';
+            delete el.dataset.originalPosition;
+          }
+        });
+        appContent.style.position = originalPosition;
+        appContent.style.overflow = originalOverflow;
+      }, 100);
+    }
+
     if (!node) {
       console.error('Export target not found');
       return;
@@ -116,9 +154,9 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
           transform: 'scale(1)',
           transformOrigin: 'top left',
         },
-        filter: (node: Element) => {
-          if (node instanceof HTMLElement) {
-            return !node.classList.contains('export-button-container');
+        filter: (filterNode: Element) => {
+          if (filterNode instanceof HTMLElement) {
+            return !filterNode.classList.contains('export-button-container');
           }
           return true;
         },
