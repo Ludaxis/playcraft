@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { toSvg, toPng } from 'html-to-image';
+import { toSvg, toPng, toBlob } from 'html-to-image';
 import { useNavigation } from '@/store';
 
-type ExportFormat = 'svg' | 'png';
+type ExportFormat = 'svg' | 'png' | 'clipboard';
 type ExportMode = 'page' | 'component';
 
 interface ExportButtonProps {
@@ -17,7 +17,14 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
   const [exportMode, setExportMode] = useState<ExportMode | null>(null);
   const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
+  const [notification, setNotification] = useState<string | null>(null);
   const { state } = useNavigation();
+
+  // Show notification
+  const showNotification = (message: string) => {
+    setNotification(message);
+    setTimeout(() => setNotification(null), 2000);
+  };
 
   // Handle component selection mode
   useEffect(() => {
@@ -29,7 +36,6 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
 
     const handleMouseMove = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      // Find the nearest meaningful element (button, div with specific classes, etc.)
       const exportable = findExportableParent(target);
       if (exportable && exportable.id !== 'app-content') {
         setHoveredElement(exportable);
@@ -72,7 +78,6 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
     let current: HTMLElement | null = element;
 
     while (current && current.id !== 'app-content') {
-      // Check if this is a meaningful component to export
       const isButton = current.tagName === 'BUTTON';
       const isCard = current.classList.contains('rounded-xl') ||
                      current.classList.contains('rounded-2xl') ||
@@ -105,14 +110,13 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
     try {
       const options = {
         quality: 1,
-        pixelRatio: 2,
-        backgroundColor: format === 'png' ? '#ffffff' : undefined,
+        pixelRatio: 3, // Higher quality for Figma
+        backgroundColor: '#ffffff',
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left',
         },
         filter: (node: Element) => {
-          // Exclude the export button itself from the export
           if (node instanceof HTMLElement) {
             return !node.classList.contains('export-button-container');
           }
@@ -120,31 +124,42 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
         },
       };
 
-      let dataUrl: string;
-
-      if (format === 'svg') {
-        dataUrl = await toSvg(node, options);
+      if (format === 'clipboard') {
+        // Copy to clipboard as PNG
+        const blob = await toBlob(node, options);
+        if (blob) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          showNotification('Copied to clipboard! Paste in Figma with Cmd/Ctrl+V');
+        }
+      } else if (format === 'svg') {
+        const dataUrl = await toSvg(node, options);
+        downloadFile(dataUrl, 'svg', target);
       } else {
-        dataUrl = await toPng(node, options);
+        const dataUrl = await toPng(node, options);
+        downloadFile(dataUrl, 'png', target);
       }
-
-      // Create download link
-      const link = document.createElement('a');
-      const pageName = state.currentPage || 'page';
-      const timestamp = new Date().toISOString().slice(0, 10);
-      const componentName = target ? 'component' : pageName;
-      link.download = `${componentName}-${timestamp}.${format}`;
-      link.href = dataUrl;
-      link.click();
 
       setIsOpen(false);
       setSelectedElement(null);
     } catch (error) {
       console.error('Export failed:', error);
+      showNotification('Export failed. Try PNG format.');
     } finally {
       setIsExporting(false);
     }
   }, [targetId, state.currentPage]);
+
+  const downloadFile = (dataUrl: string, format: string, target?: HTMLElement | null) => {
+    const link = document.createElement('a');
+    const pageName = state.currentPage || 'page';
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const componentName = target ? 'component' : pageName;
+    link.download = `${componentName}-${timestamp}.${format}`;
+    link.href = dataUrl;
+    link.click();
+  };
 
   const startComponentSelection = () => {
     setExportMode('component');
@@ -159,15 +174,20 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
 
   return (
     <>
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[102] bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-pulse">
+          {notification}
+        </div>
+      )}
+
       {/* Selection Mode Overlay */}
       {exportMode === 'component' && (
         <div className="fixed inset-0 z-[99] pointer-events-none">
-          {/* Instruction banner */}
           <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full text-sm pointer-events-none">
             Click on any component to select it (ESC to cancel)
           </div>
 
-          {/* Highlight hovered element */}
           {hoveredElement && (
             <div
               className="absolute border-2 border-purple-500 bg-purple-500/10 rounded pointer-events-none transition-all duration-75"
@@ -185,36 +205,39 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
       {/* Selected Component Export Dialog */}
       {selectedElement && (
         <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl p-4 min-w-[280px]">
+          <div className="bg-white rounded-xl shadow-2xl p-4 min-w-[300px]">
             <h3 className="font-bold text-gray-800 mb-3">Export Component</h3>
 
-            {/* Preview */}
-            <div className="bg-gray-100 rounded-lg p-3 mb-4 max-h-[200px] overflow-hidden">
-              <div className="text-xs text-gray-500 mb-2">Preview:</div>
-              <div className="text-sm text-gray-700 truncate">
+            <div className="bg-gray-100 rounded-lg p-3 mb-4">
+              <div className="text-xs text-gray-500 mb-1">Selected:</div>
+              <div className="text-sm text-gray-700 truncate font-mono">
                 {selectedElement.tagName.toLowerCase()}
                 {selectedElement.className && (
                   <span className="text-gray-400">.{selectedElement.className.split(' ')[0]}</span>
                 )}
               </div>
               <div className="text-xs text-gray-400 mt-1">
-                {Math.round(selectedElement.getBoundingClientRect().width)}x
-                {Math.round(selectedElement.getBoundingClientRect().height)}px
+                {Math.round(selectedElement.getBoundingClientRect().width)} x {Math.round(selectedElement.getBoundingClientRect().height)} px
               </div>
             </div>
 
-            {/* Export buttons */}
             <div className="space-y-2">
+              {/* Recommended: Copy to clipboard */}
               <button
-                onClick={() => handleExport('svg', selectedElement)}
+                onClick={() => handleExport('clipboard', selectedElement)}
                 disabled={isExporting}
-                className="w-full px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L18.6 7 12 9.2 5.4 7 12 4.8zM4 8.5l7 3.5v7.5l-7-3.5V8.5zm9 11V12l7-3.5v7.5l-7 3.5z"/>
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2"/>
+                  <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
                 </svg>
-                Export as SVG
+                <div className="text-left">
+                  <div>Copy to Clipboard</div>
+                  <div className="text-xs opacity-75">Recommended for Figma</div>
+                </div>
               </button>
+
               <button
                 onClick={() => handleExport('png', selectedElement)}
                 disabled={isExporting}
@@ -223,11 +246,23 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                 </svg>
-                Export as PNG
+                Download PNG (3x)
               </button>
+
+              <button
+                onClick={() => handleExport('svg', selectedElement)}
+                disabled={isExporting}
+                className="w-full px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L18.6 7 12 9.2 5.4 7 12 4.8z"/>
+                </svg>
+                Download SVG
+              </button>
+
               <button
                 onClick={cancelSelection}
-                className="w-full px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium"
+                className="w-full px-4 py-2 text-gray-500 hover:text-gray-700 font-medium"
               >
                 Cancel
               </button>
@@ -238,41 +273,57 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
 
       {/* Main Export Button */}
       <div className="export-button-container fixed bottom-20 right-3 z-[100]">
-        {/* Export Options Menu */}
         {isOpen && (
-          <div className="absolute bottom-14 right-0 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden min-w-[200px]">
-            {/* Page Export */}
+          <div className="absolute bottom-14 right-0 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
+            {/* Full Page Section */}
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
               <span className="text-xs font-semibold text-gray-500 uppercase">Full Page</span>
             </div>
+
             <button
-              onClick={() => handleExport('svg')}
+              onClick={() => handleExport('clipboard')}
               disabled={isExporting}
-              className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3 disabled:opacity-50"
+              className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-green-50 flex items-center gap-3 disabled:opacity-50"
             >
-              <svg className="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L18.6 7 12 9.2 5.4 7 12 4.8zM4 8.5l7 3.5v7.5l-7-3.5V8.5zm9 11V12l7-3.5v7.5l-7 3.5z"/>
+              <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
               </svg>
               <div>
-                <div>SVG</div>
-                <div className="text-xs text-gray-400">Editable in Figma</div>
+                <div>Copy to Clipboard</div>
+                <div className="text-xs text-green-600">Best for Figma</div>
               </div>
             </button>
+
             <button
               onClick={() => handleExport('png')}
               disabled={isExporting}
-              className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3 disabled:opacity-50 border-b border-gray-200"
+              className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3 disabled:opacity-50"
             >
               <svg className="w-5 h-5 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
               </svg>
               <div>
-                <div>PNG</div>
-                <div className="text-xs text-gray-400">High quality image</div>
+                <div>PNG (3x quality)</div>
+                <div className="text-xs text-gray-400">High resolution image</div>
               </div>
             </button>
 
-            {/* Component Export */}
+            <button
+              onClick={() => handleExport('svg')}
+              disabled={isExporting}
+              className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3 disabled:opacity-50 border-b border-gray-200"
+            >
+              <svg className="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L18.6 7 12 9.2 5.4 7 12 4.8z"/>
+              </svg>
+              <div>
+                <div>SVG</div>
+                <div className="text-xs text-gray-400">Limited Figma support</div>
+              </div>
+            </button>
+
+            {/* Component Section */}
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
               <span className="text-xs font-semibold text-gray-500 uppercase">Component</span>
             </div>
@@ -280,7 +331,7 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
               onClick={startComponentSelection}
               className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3"
             >
-              <svg className="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg className="w-5 h-5 text-orange-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="3" width="7" height="7" rx="1"/>
                 <rect x="14" y="3" width="7" height="7" rx="1"/>
                 <rect x="3" y="14" width="7" height="7" rx="1"/>
@@ -288,7 +339,7 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
               </svg>
               <div>
                 <div>Select Component</div>
-                <div className="text-xs text-gray-400">Click to choose element</div>
+                <div className="text-xs text-gray-400">Export individual element</div>
               </div>
             </button>
           </div>
