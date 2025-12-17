@@ -76,7 +76,7 @@ export function SettingsPage() {
         <SettingsButton
           icon="/icons/Login.svg"
           label="Save your progress"
-          variant="primary"
+          variant="secondary"
           onClick={() => openModal('sign-in')}
         />
 
@@ -105,7 +105,7 @@ export function SettingsPage() {
         <SettingsButton
           icon="/icons/Category.svg"
           label="Admin Panel"
-          variant="primary"
+          variant="secondary"
           onClick={() => navigate('admin')}
         />
 
