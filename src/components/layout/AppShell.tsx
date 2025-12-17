@@ -39,6 +39,9 @@ import { AdminPage } from '@/components/admin';
 // Modal manager
 import { ModalManager } from '@/components/modals/ModalManager';
 
+// Export button
+import { ExportButton } from '@/components/shared';
+
 import type { PageId } from '@/types';
 
 const pageComponents: Record<PageId, React.ComponentType> = {
@@ -126,7 +129,7 @@ function PageRenderer() {
   }, [state.currentPage, NAV_TABS]);
 
   return (
-    <div ref={containerRef} className="flex flex-col h-full bg-surface-light">
+    <div ref={containerRef} id="app-content" className="flex flex-col h-full bg-surface-light">
       <main ref={(el) => {
         contentRef.current = el;
         if (swipeContentRef) swipeContentRef.current = el;
@@ -134,6 +137,7 @@ function PageRenderer() {
         <PageComponent />
       </main>
       <ModalManager />
+      <ExportButton />
     </div>
   );
 }
