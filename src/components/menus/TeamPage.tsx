@@ -95,22 +95,22 @@ export function TeamPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-secondary">
+    <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="bg-primary-light py-3 px-4">
-        <h1 className="text-white text-base font-bold text-center">Teams</h1>
+      <div className="bg-brand-hover py-3 px-4">
+        <h1 className="text-text-inverse text-h4 text-center">Teams</h1>
       </div>
 
       {/* Divider */}
-      <div className="h-0.5 bg-secondary-light" />
+      <div className="h-0.5 bg-brand-muted" />
 
       {/* Tab Bar */}
-      <div className="bg-secondary-light px-2 py-1.5">
-        <div className="relative flex bg-secondary rounded border border-secondary-light overflow-hidden">
+      <div className="bg-brand-muted px-2 py-1.5">
+        <div className="relative flex bg-bg-inverse rounded border border-brand-muted overflow-hidden">
           {/* Sliding indicator */}
           <div
             ref={indicatorRef}
-            className="absolute top-0 bottom-0 bg-surface-dark rounded"
+            className="absolute top-0 bottom-0 bg-border-strong rounded"
             style={{ width: `${100 / tabs.length}%` }}
           />
 
@@ -120,8 +120,8 @@ export function TeamPage() {
               key={tab.id}
               ref={(el) => setTabRef(tab.id, el)}
               onClick={() => handleTabChange(tab.id)}
-              className={`flex-1 py-1.5 text-center text-xs font-bold transition-colors relative z-10 ${
-                activeTab === tab.id ? 'text-primary-light' : 'text-surface'
+              className={`flex-1 py-1.5 text-center text-value-sm transition-colors relative z-10 ${
+                activeTab === tab.id ? 'text-text-primary' : 'text-text-muted'
               }`}
             >
               {tab.label}
@@ -131,7 +131,7 @@ export function TeamPage() {
       </div>
 
       {/* Content Area */}
-      <div ref={contentRef} className="flex-1 overflow-y-auto bg-secondary">
+      <div ref={contentRef} className="flex-1 overflow-y-auto bg-bg-inverse">
         {/* Join Tab */}
         {activeTab === 'join' && (
           <div className="p-2 space-y-1.5">
@@ -146,41 +146,41 @@ export function TeamPage() {
           <div className="p-3">
             {/* Search Input */}
             <div className="flex gap-2 mb-3">
-              <div className="flex-1 flex items-center bg-secondary-light rounded px-2 py-1.5 border border-surface-dark">
+              <div className="flex-1 flex items-center bg-brand-muted rounded px-2 py-1.5 border border-border-strong">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Enter team name..."
-                  className="flex-1 bg-transparent text-surface-light text-xs placeholder-surface-dark outline-none"
+                  className="flex-1 bg-transparent text-text-inverse text-caption placeholder-text-muted outline-none"
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="text-surface-dark ml-1">
-                    <span className="text-sm">×</span>
+                  <button onClick={() => setSearchQuery('')} className="text-text-muted ml-1">
+                    <span className="text-body-sm">×</span>
                   </button>
                 )}
               </div>
               <button
                 onClick={handleSearch}
-                className="bg-surface-dark border border-surface rounded px-3 py-1.5"
+                className="bg-border-strong border border-border rounded px-3 py-1.5"
               >
-                <span className="text-primary-light text-xs font-bold">Search</span>
+                <span className="text-text-primary text-value-sm">Search</span>
               </button>
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-secondary-light mb-3" />
+            <div className="h-px bg-brand-muted mb-3" />
 
             {!showSearchResults ? (
               <div className="text-center">
-                <p className="text-surface-light text-xs font-medium mb-2">
+                <p className="text-text-inverse text-caption mb-2">
                   Check suggested teams for you
                 </p>
                 <button
                   onClick={() => setShowSearchResults(true)}
-                  className="bg-surface-dark border border-surface rounded px-6 py-1.5"
+                  className="bg-border-strong border border-border rounded px-6 py-1.5"
                 >
-                  <span className="text-primary-light text-xs font-bold">Show</span>
+                  <span className="text-text-primary text-value-sm">Show</span>
                 </button>
               </div>
             ) : (
@@ -198,109 +198,109 @@ export function TeamPage() {
           <div className="p-3 space-y-3">
             {/* Team Logo */}
             <div className="flex items-center gap-3">
-              <span className="text-surface-light text-xs font-bold w-20">Team Logo</span>
-              <div className="w-10 h-10 bg-surface-dark rounded border border-surface flex items-center justify-center">
-                <span className="text-secondary text-[8px] font-bold">LOGO</span>
+              <span className="text-text-inverse text-value-sm w-20">Team Logo</span>
+              <div className="w-10 h-10 bg-border-strong rounded border border-border flex items-center justify-center">
+                <span className="text-text-secondary text-mini">LOGO</span>
               </div>
-              <button className="bg-surface-dark border border-surface rounded px-3 py-1">
-                <span className="text-primary-light text-xs font-bold">Choose</span>
+              <button className="bg-border-strong border border-border rounded px-3 py-1">
+                <span className="text-text-primary text-value-sm">Choose</span>
               </button>
             </div>
 
             {/* Team Name */}
             <div className="flex items-center gap-3">
-              <span className="text-surface-light text-xs font-bold w-20">Team Name</span>
+              <span className="text-text-inverse text-value-sm w-20">Team Name</span>
               <input
                 type="text"
                 value={teamName}
                 onChange={(e) => setTeamName(e.target.value)}
                 placeholder="Enter team name..."
-                className="flex-1 bg-surface-light rounded px-2 py-1.5 text-xs text-primary-light placeholder-surface-dark outline-none"
+                className="flex-1 bg-bg-page rounded px-2 py-1.5 text-caption text-text-primary placeholder-text-muted outline-none"
               />
             </div>
 
             {/* Description */}
             <div className="flex items-start gap-3">
-              <span className="text-surface-light text-xs font-bold w-20 pt-1">Description</span>
+              <span className="text-text-inverse text-xs font-bold w-20 pt-1">Description</span>
               <textarea
                 value={teamDescription}
                 onChange={(e) => setTeamDescription(e.target.value)}
                 placeholder="Enter team description..."
-                className="flex-1 bg-surface-light rounded px-2 py-1.5 text-xs text-primary-light placeholder-surface-dark outline-none resize-none h-16"
+                className="flex-1 bg-bg-page rounded px-2 py-1.5 text-caption text-text-primary placeholder-text-muted outline-none resize-none h-16"
               />
             </div>
 
             {/* Team Type */}
             <div className="flex items-center gap-3">
-              <span className="text-surface-light text-xs font-bold w-20">Team Type</span>
+              <span className="text-text-inverse text-value-sm w-20">Team Type</span>
               <div className="flex-1 flex items-center gap-1">
                 <button
                   onClick={() => setTeamTypeIndex((prev) => (prev > 0 ? prev - 1 : teamTypes.length - 1))}
-                  className="w-7 h-7 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
+                  className="w-7 h-7 bg-border-strong rounded-full flex items-center justify-center border border-border"
                 >
-                  <span className="text-primary-light text-sm">‹</span>
+                  <span className="text-text-primary text-body-sm">‹</span>
                 </button>
-                <div className="flex-1 bg-secondary-light rounded py-1.5 border border-surface-dark">
-                  <span className="text-surface-light text-xs font-bold text-center block">{teamTypes[teamTypeIndex]}</span>
+                <div className="flex-1 bg-brand-muted rounded py-1.5 border border-border-strong">
+                  <span className="text-text-inverse text-value-sm text-center block">{teamTypes[teamTypeIndex]}</span>
                 </div>
                 <button
                   onClick={() => setTeamTypeIndex((prev) => (prev < teamTypes.length - 1 ? prev + 1 : 0))}
-                  className="w-7 h-7 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
+                  className="w-7 h-7 bg-border-strong rounded-full flex items-center justify-center border border-border"
                 >
-                  <span className="text-primary-light text-sm">›</span>
+                  <span className="text-text-primary text-body-sm">›</span>
                 </button>
               </div>
             </div>
 
             {/* Required Level */}
             <div className="flex items-center gap-3">
-              <span className="text-surface-light text-xs font-bold w-20">Req. Level</span>
+              <span className="text-text-inverse text-value-sm w-20">Req. Level</span>
               <div className="flex-1 flex items-center gap-1">
                 <button
                   onClick={() => setRequiredLevel((prev) => Math.max(0, prev - 100))}
-                  className="w-7 h-7 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
+                  className="w-7 h-7 bg-border-strong rounded-full flex items-center justify-center border border-border"
                 >
-                  <span className="text-primary-light text-sm">‹</span>
+                  <span className="text-text-primary text-body-sm">‹</span>
                 </button>
-                <div className="flex-1 bg-secondary-light rounded py-1.5 border border-surface-dark">
-                  <span className="text-surface-light text-xs font-bold text-center block">{requiredLevel}</span>
+                <div className="flex-1 bg-brand-muted rounded py-1.5 border border-border-strong">
+                  <span className="text-text-inverse text-value-sm text-center block">{requiredLevel}</span>
                 </div>
                 <button
                   onClick={() => setRequiredLevel((prev) => prev + 100)}
-                  className="w-7 h-7 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
+                  className="w-7 h-7 bg-border-strong rounded-full flex items-center justify-center border border-border"
                 >
-                  <span className="text-primary-light text-sm">›</span>
+                  <span className="text-text-primary text-body-sm">›</span>
                 </button>
               </div>
             </div>
 
             {/* Required Crown */}
             <div className="flex items-center gap-3">
-              <span className="text-surface-light text-xs font-bold w-20">Req. Crown</span>
+              <span className="text-text-inverse text-value-sm w-20">Req. Crown</span>
               <div className="flex-1 flex items-center gap-1">
                 <button
                   onClick={() => setRequiredCrown((prev) => Math.max(0, prev - 100))}
-                  className="w-7 h-7 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
+                  className="w-7 h-7 bg-border-strong rounded-full flex items-center justify-center border border-border"
                 >
-                  <span className="text-primary-light text-sm">‹</span>
+                  <span className="text-text-primary text-body-sm">‹</span>
                 </button>
-                <div className="flex-1 bg-secondary-light rounded py-1.5 border border-surface-dark">
-                  <span className="text-surface-light text-xs font-bold text-center block">{requiredCrown}</span>
+                <div className="flex-1 bg-brand-muted rounded py-1.5 border border-border-strong">
+                  <span className="text-text-inverse text-value-sm text-center block">{requiredCrown}</span>
                 </div>
                 <button
                   onClick={() => setRequiredCrown((prev) => prev + 100)}
-                  className="w-7 h-7 bg-surface-dark rounded-full flex items-center justify-center border border-surface"
+                  className="w-7 h-7 bg-border-strong rounded-full flex items-center justify-center border border-border"
                 >
-                  <span className="text-primary-light text-sm">›</span>
+                  <span className="text-text-primary text-body-sm">›</span>
                 </button>
               </div>
             </div>
 
             {/* Create Button */}
             <div className="pt-2">
-              <button className="w-full bg-surface-dark border-2 border-surface rounded-lg py-2 flex items-center justify-center gap-2">
-                <span className="text-primary-light text-sm font-bold">Create</span>
-                <span className="text-secondary text-sm font-bold">100</span>
+              <button className="w-full bg-border-strong border-2 border-border rounded-lg py-2 flex items-center justify-center gap-2">
+                <span className="text-text-primary text-value">Create</span>
+                <span className="text-text-secondary text-value">100</span>
               </button>
             </div>
           </div>
@@ -326,29 +326,29 @@ interface TeamCardProps {
 
 function TeamCard({ team, onView }: TeamCardProps) {
   return (
-    <div className="bg-surface-light rounded-lg border border-surface p-2 flex items-center gap-2">
+    <div className="bg-bg-page rounded-lg border border-border p-2 flex items-center gap-2">
       {/* Team Logo */}
-      <div className="w-10 h-10 bg-surface-dark rounded border-2 border-surface flex items-center justify-center">
-        <span className="text-secondary text-[8px] font-bold">LOGO</span>
+      <div className="w-10 h-10 bg-border-strong rounded border-2 border-border flex items-center justify-center">
+        <span className="text-text-secondary text-mini">LOGO</span>
       </div>
 
       {/* Team Name */}
       <div className="flex-1">
-        <h3 className="text-primary-light font-bold text-xs">{team.name}</h3>
+        <h3 className="text-text-primary text-value-sm">{team.name}</h3>
       </div>
 
       {/* Capacity */}
       <div className="text-right mr-1">
-        <span className="text-secondary-light text-[10px]">Capacity</span>
-        <p className="text-secondary text-xs font-bold">{team.capacity}/{team.maxCapacity}</p>
+        <span className="text-text-muted text-mini">Capacity</span>
+        <p className="text-text-secondary text-value-sm">{team.capacity}/{team.maxCapacity}</p>
       </div>
 
       {/* View Button */}
       <button
         onClick={onView}
-        className="bg-surface-dark border border-surface rounded px-3 py-1"
+        className="bg-border-strong border border-border rounded px-3 py-1"
       >
-        <span className="text-primary-light text-xs font-bold">View</span>
+        <span className="text-text-primary text-value-sm">View</span>
       </button>
     </div>
   );

@@ -122,18 +122,18 @@ interface ModalHeaderProps {
 export function ModalHeader({ title, onClose, showCloseButton = true }: ModalHeaderProps) {
   return (
     <>
-      <div className="bg-primary-light py-2.5 px-3 flex items-center justify-center relative">
-        <h2 className="text-white text-base font-bold">{title}</h2>
+      <div className="bg-brand-hover py-2.5 px-3 flex items-center justify-center relative">
+        <h2 className="text-text-inverse text-h4">{title}</h2>
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-2 w-7 h-7 bg-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
+            className="absolute right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light hover:opacity-90 transition-opacity"
           >
-            <span className="text-white text-sm font-bold">X</span>
+            <span className="text-text-inverse text-value">X</span>
           </button>
         )}
       </div>
-      <div className="h-0.5 bg-secondary-light" />
+      <div className="h-0.5 bg-brand-muted" />
     </>
   );
 }

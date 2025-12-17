@@ -47,9 +47,9 @@ export function LightningRushPage() {
   // Check if event is enabled
   if (!isEventEnabled('lightning-rush')) {
     return (
-      <div className="flex flex-col h-full bg-secondary items-center justify-center">
-        <p className="text-white text-lg">Event not available</p>
-        <button onClick={() => navigate('main-menu')} className="mt-4 text-accent underline">
+      <div className="flex flex-col h-full bg-bg-inverse items-center justify-center">
+        <p className="text-text-inverse text-lg">Event not available</p>
+        <button onClick={() => navigate('main-menu')} className="mt-4 text-brand-primary underline">
           Go Back
         </button>
       </div>
@@ -69,39 +69,39 @@ export function LightningRushPage() {
   // Render leaderboard (active game screen)
   if (isStarted) {
     return (
-      <div className="flex flex-col h-full bg-primary overflow-hidden" onClick={handleBackgroundClick}>
+      <div className="flex flex-col h-full bg-bg-inverse overflow-hidden" onClick={handleBackgroundClick}>
         {/* Header */}
-        <div className="relative bg-primary pt-2 pb-3 px-3">
+        <div className="relative bg-bg-inverse pt-2 pb-3 px-3">
           <button
             onClick={() => navigate('main-menu')}
-            className="absolute top-2 right-2 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+            className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
           >
-            <span className="text-white font-bold">X</span>
+            <span className="text-text-inverse font-bold">X</span>
           </button>
 
           <button
             onClick={(e) => { e.stopPropagation(); setShowInfoModal(true); }}
-            className="absolute top-2 left-2 w-8 h-8 bg-surface-dark rounded-full flex items-center justify-center border-2 border-surface z-10"
+            className="absolute top-2 left-2 w-8 h-8 bg-border-strong rounded-full flex items-center justify-center border-2 border-border z-10"
           >
-            <span className="text-primary text-sm font-bold">i</span>
+            <span className="text-text-primary text-value">i</span>
           </button>
 
-          <h1 className="text-white text-2xl font-bold text-center mt-1">Lightning Rush</h1>
+          <h1 className="text-text-inverse text-h1 text-center mt-1">Lightning Rush</h1>
         </div>
 
         {/* Scene with rewards */}
         <div className="mx-3 mb-3">
-          <div className="bg-secondary rounded-xl p-4 border-2 border-secondary-light">
+          <div className="bg-bg-inverse rounded-xl p-4 border-2 border-brand-muted">
             {/* Scene Placeholder */}
-            <div className="h-32 bg-accent/30 rounded-lg flex items-center justify-center mb-3 border border-accent">
-              <span className="text-accent text-sm">[Scene]</span>
+            <div className="h-32 bg-brand-primary/30 rounded-lg flex items-center justify-center mb-3 border border-brand-primary">
+              <span className="text-brand-primary text-sm">[Scene]</span>
             </div>
 
             {/* Rewards Row */}
-            <div className="bg-surface-light rounded-xl p-2 flex justify-center gap-2">
+            <div className="bg-bg-page rounded-xl p-2 flex justify-center gap-2">
               {lightningRushData.rewards.map((reward, idx) => (
-                <div key={idx} className="w-12 h-12 bg-surface rounded-lg flex flex-col items-center justify-center border border-surface-dark">
-                  <span className="text-secondary text-[8px] font-bold">{reward.icon}</span>
+                <div key={idx} className="w-12 h-12 bg-bg-muted rounded-lg flex flex-col items-center justify-center border border-border-strong">
+                  <span className="text-text-primary text-mini font-bold">{reward.icon}</span>
                 </div>
               ))}
             </div>
@@ -109,49 +109,49 @@ export function LightningRushPage() {
         </div>
 
         {/* Leaderboard */}
-        <div className="flex-1 mx-3 bg-secondary rounded-xl border-2 border-secondary-light overflow-hidden">
+        <div className="flex-1 mx-3 bg-bg-inverse rounded-xl border-2 border-brand-muted overflow-hidden">
           <div className="space-y-0">
             {lightningRushData.players.map((player, idx) => (
               <div
                 key={player.rank}
                 className={`flex items-center gap-3 px-3 py-2 ${
                   player.isPlayer
-                    ? 'bg-success'
+                    ? 'bg-status-success'
                     : idx % 2 === 0
-                      ? 'bg-surface-light'
-                      : 'bg-surface'
+                      ? 'bg-bg-page'
+                      : 'bg-bg-muted'
                 }`}
               >
                 {/* Rank */}
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                  player.rank === 1 ? 'bg-gold' : player.rank === 2 ? 'bg-surface-dark' : player.rank === 3 ? 'bg-gold-dark' : 'bg-surface-dark'
+                  player.rank === 1 ? 'bg-gold' : player.rank === 2 ? 'bg-border-strong' : player.rank === 3 ? 'bg-gold-dark' : 'bg-border-strong'
                 }`}>
-                  <span className={`text-xs font-bold ${player.rank <= 3 ? 'text-primary' : 'text-white'}`}>{player.rank}</span>
+                  <span className={`text-value-sm ${player.rank <= 3 ? 'text-text-primary' : 'text-text-inverse'}`}>{player.rank}</span>
                 </div>
 
                 {/* Avatar */}
-                <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold">{player.avatar}</span>
+                <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center">
+                  <span className="text-text-inverse font-bold">{player.avatar}</span>
                 </div>
 
                 {/* Name */}
-                <span className={`flex-1 font-bold ${player.isPlayer ? 'text-white' : 'text-primary'}`}>
+                <span className={`flex-1 font-bold ${player.isPlayer ? 'text-text-inverse' : 'text-text-primary'}`}>
                   {player.name}
                 </span>
 
                 {/* Cards collected indicator */}
                 {player.score > 0 && (
-                  <div className="bg-accent/30 rounded px-2 py-1">
-                    <span className="text-accent text-[8px] font-bold">CARDS</span>
+                  <div className="bg-brand-primary/30 rounded px-2 py-1">
+                    <span className="text-brand-primary text-mini font-bold">CARDS</span>
                   </div>
                 )}
 
                 {/* Score */}
                 <div className="flex items-center gap-1">
                   <div className="w-6 h-6 bg-gold rounded flex items-center justify-center">
-                    <span className="text-primary text-[10px] font-bold">Z</span>
+                    <span className="text-text-inverse text-mini font-bold">Z</span>
                   </div>
-                  <span className={`font-bold ${player.isPlayer ? 'text-white' : 'text-primary'}`}>{player.score}</span>
+                  <span className={`font-bold ${player.isPlayer ? 'text-text-inverse' : 'text-text-primary'}`}>{player.score}</span>
                 </div>
               </div>
             ))}
@@ -159,7 +159,7 @@ export function LightningRushPage() {
         </div>
 
         {/* Bottom padding */}
-        <div className="h-3 bg-primary" />
+        <div className="h-3 bg-bg-inverse" />
 
         {/* Info Modal */}
         {showInfoModal && <InfoModal onClose={() => setShowInfoModal(false)} />}
@@ -169,41 +169,41 @@ export function LightningRushPage() {
 
   // Render start screen
   return (
-    <div className="flex flex-col h-full bg-primary overflow-hidden" onClick={handleBackgroundClick}>
+    <div className="flex flex-col h-full bg-bg-inverse overflow-hidden" onClick={handleBackgroundClick}>
       {/* Header */}
-      <div className="relative bg-primary pt-2 pb-3 px-3">
+      <div className="relative bg-bg-inverse pt-2 pb-3 px-3">
         <button
           onClick={() => navigate('main-menu')}
-          className="absolute top-2 right-2 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+          className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
         >
-          <span className="text-white font-bold">X</span>
+          <span className="text-text-inverse font-bold">X</span>
         </button>
 
-        <h1 className="text-white text-2xl font-bold text-center mt-1">Lightning Rush</h1>
+        <h1 className="text-text-inverse text-h1 text-center mt-1">Lightning Rush</h1>
       </div>
 
       {/* Main Content Card */}
       <div className="flex-1 mx-3 mb-3">
-        <div className="bg-secondary rounded-xl p-4 border-2 border-secondary-light h-full flex flex-col">
+        <div className="bg-bg-inverse rounded-xl p-4 border-2 border-brand-muted h-full flex flex-col">
           {/* Scene with Info Button */}
           <div className="relative mb-3">
             <button
               onClick={(e) => { e.stopPropagation(); setShowInfoModal(true); }}
-              className="absolute top-2 left-2 w-8 h-8 bg-surface-dark rounded-full flex items-center justify-center border-2 border-surface z-10"
+              className="absolute top-2 left-2 w-8 h-8 bg-border-strong rounded-full flex items-center justify-center border-2 border-border z-10"
             >
-              <span className="text-primary text-sm font-bold">i</span>
+              <span className="text-text-primary text-value">i</span>
             </button>
 
-            <div className="h-40 bg-accent/30 rounded-xl flex items-center justify-center border-2 border-accent">
-              <span className="text-accent">[Scene Placeholder]</span>
+            <div className="h-40 bg-brand-primary/30 rounded-xl flex items-center justify-center border-2 border-brand-primary">
+              <span className="text-brand-primary">[Scene Placeholder]</span>
             </div>
 
             {/* Timer */}
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-surface-light rounded-full px-4 py-1 flex items-center gap-2 border-2 border-surface">
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-bg-page rounded-full px-4 py-1 flex items-center gap-2 border-2 border-border">
               <div className="w-5 h-5 bg-gold rounded-full flex items-center justify-center">
-                <span className="text-primary text-[8px] font-bold">T</span>
+                <span className="text-text-inverse text-mini font-bold">T</span>
               </div>
-              <span className="text-primary font-bold">{timer.hours}:{String(timer.minutes).padStart(2, '0')}:{String(timer.seconds).padStart(2, '0')}</span>
+              <span className="text-text-primary font-bold">{timer.hours}:{String(timer.minutes).padStart(2, '0')}:{String(timer.seconds).padStart(2, '0')}</span>
             </div>
           </div>
 
@@ -214,12 +214,12 @@ export function LightningRushPage() {
               onClick={() => setSelectedLeague('current')}
               className={`flex-1 p-3 rounded-xl border-2 ${
                 selectedLeague === 'current'
-                  ? 'bg-accent/20 border-gold'
-                  : 'bg-surface-dark border-surface'
+                  ? 'bg-brand-primary/20 border-gold'
+                  : 'bg-border-strong border-border'
               }`}
             >
-              <div className="w-12 h-12 mx-auto bg-accent rounded-xl flex items-center justify-center mb-1">
-                <span className="text-white text-lg font-bold">Z</span>
+              <div className="w-12 h-12 mx-auto bg-brand-primary rounded-xl flex items-center justify-center mb-1">
+                <span className="text-text-inverse text-h3">Z</span>
               </div>
             </button>
 
@@ -229,18 +229,18 @@ export function LightningRushPage() {
               className={`flex-1 p-3 rounded-xl border-2 flex flex-col items-center ${
                 selectedLeague === 'gold'
                   ? 'bg-gold/20 border-gold'
-                  : 'bg-surface-dark border-surface'
+                  : 'bg-border-strong border-border'
               }`}
             >
               <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center mb-1">
-                <span className="text-primary text-lg font-bold">Z</span>
+                <span className="text-text-inverse text-h3">Z</span>
               </div>
-              <span className="text-primary text-sm font-bold">Gold</span>
+              <span className="text-text-primary text-value">Gold</span>
             </button>
           </div>
 
           {/* Description */}
-          <p className="text-surface-light text-center text-sm mb-4">
+          <p className="text-text-muted text-center text-sm mb-4">
             Compete with players for 30 minutes! Win amazing rewards and advance to Gold Lightning Rush!
           </p>
 
@@ -250,11 +250,11 @@ export function LightningRushPage() {
           {/* Start Button */}
           <button
             onClick={handleStart}
-            className="w-full py-4 bg-success rounded-xl border-2 border-success-light flex items-center justify-center gap-2"
+            className="w-full py-4 bg-status-success rounded-xl border-2 border-success-light flex items-center justify-center gap-2"
           >
-            <span className="text-white text-xl font-bold">Start</span>
-            <div className="w-8 h-8 bg-error rounded-full flex items-center justify-center">
-              <span className="text-white text-xs font-bold">INF</span>
+            <span className="text-text-inverse text-h2">Start</span>
+            <div className="w-8 h-8 bg-status-error rounded-full flex items-center justify-center">
+              <span className="text-text-inverse text-value-sm">INF</span>
             </div>
           </button>
         </div>
@@ -274,31 +274,31 @@ function InfoModal({ onClose }: { onClose: () => void }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute -top-1 -right-1 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
+          className="absolute -top-1 -right-1 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
         >
-          <span className="text-white font-bold text-sm">X</span>
+          <span className="text-text-inverse font-bold text-sm">X</span>
         </button>
 
         {/* Header */}
-        <div className="bg-primary-light rounded-t-2xl py-3 px-3">
-          <h1 className="text-white text-xl font-bold text-center">Lightning Rush</h1>
+        <div className="bg-brand-hover rounded-t-2xl py-3 px-3">
+          <h1 className="text-text-inverse text-h2 text-center">Lightning Rush</h1>
         </div>
 
         {/* Divider */}
-        <div className="h-0.5 bg-secondary-light" />
+        <div className="h-0.5 bg-brand-muted" />
 
         {/* Content */}
-        <div className="bg-secondary-light p-4">
+        <div className="bg-brand-muted p-4">
           {/* Step 1: Activate Light Balls */}
           <div className="text-center mb-4">
-            <div className="w-20 h-20 mx-auto bg-surface-light rounded-xl mb-2 flex items-center justify-center border-2 border-surface">
+            <div className="w-20 h-20 mx-auto bg-bg-page rounded-xl mb-2 flex items-center justify-center border-2 border-border">
               <div className="grid grid-cols-3 gap-1">
                 {[...Array(9)].map((_, i) => (
-                  <div key={i} className={`w-4 h-4 rounded ${i === 0 ? 'bg-gold' : 'bg-accent'}`} />
+                  <div key={i} className={`w-4 h-4 rounded ${i === 0 ? 'bg-gold' : 'bg-brand-primary'}`} />
                 ))}
               </div>
             </div>
-            <p className="text-primary text-lg font-bold">Activate Light Balls!</p>
+            <p className="text-text-primary text-h3">Activate Light Balls!</p>
           </div>
 
           {/* Arrow */}
@@ -306,21 +306,21 @@ function InfoModal({ onClose }: { onClose: () => void }) {
 
           {/* Step 2: Collect Lightning Bolts */}
           <div className="text-center mb-4">
-            <div className="w-40 mx-auto bg-surface-light rounded-xl p-2 mb-2 border-2 border-surface">
+            <div className="w-40 mx-auto bg-bg-page rounded-xl p-2 mb-2 border-2 border-border">
               <div className="space-y-1">
                 {[{ name: 'Robert', score: 200 }, { name: 'Duke', score: 80 }, { name: 'Butler', score: 10 }].map((p, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
-                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${i === 0 ? 'bg-gold' : 'bg-surface-dark'}`}>
-                      <span className="text-primary text-[8px] font-bold">{i + 1}</span>
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center ${i === 0 ? 'bg-gold' : 'bg-border-strong'}`}>
+                      <span className="text-text-primary text-mini font-bold">{i + 1}</span>
                     </span>
-                    <span className="text-primary flex-1">{p.name}</span>
+                    <span className="text-text-primary flex-1">{p.name}</span>
                     <span className="text-gold font-bold">Z</span>
-                    <span className="text-primary font-bold">{p.score}</span>
+                    <span className="text-text-primary font-bold">{p.score}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <p className="text-primary text-sm font-bold">Collect more Lightning Bolts than other players!</p>
+            <p className="text-text-primary text-value">Collect more Lightning Bolts than other players!</p>
           </div>
 
           {/* Arrow */}
@@ -328,25 +328,25 @@ function InfoModal({ onClose }: { onClose: () => void }) {
 
           {/* Step 3: Win Rewards */}
           <div className="text-center mb-4">
-            <p className="text-primary text-sm font-bold mb-2">Win amazing rewards and advance to Gold Lightning Rush!</p>
+            <p className="text-text-primary text-value mb-2">Win amazing rewards and advance to Gold Lightning Rush!</p>
             <div className="flex justify-center items-center gap-2">
-              <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-bold">Z</span>
+              <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center">
+                <span className="text-text-inverse text-value-sm">Z</span>
               </div>
-              <span className="text-primary font-bold">&gt;</span>
+              <span className="text-text-primary font-bold">&gt;</span>
               <div className="w-12 h-12 bg-gold rounded-lg flex items-center justify-center">
-                <span className="text-primary text-lg font-bold">Z</span>
+                <span className="text-text-inverse text-h3">Z</span>
               </div>
             </div>
           </div>
 
           {/* Unlimited Lives Note */}
-          <div className="bg-surface-dark rounded-xl p-3 border-2 border-surface">
+          <div className="bg-border-strong rounded-xl p-3 border-2 border-border">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-error rounded-full flex items-center justify-center flex-shrink-0">
-                <span className="text-white text-xs font-bold">INF</span>
+              <div className="w-10 h-10 bg-status-error rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-text-inverse text-value-sm">INF</span>
               </div>
-              <p className="text-primary text-sm">
+              <p className="text-text-primary text-sm">
                 You will have unlimited lives during 30 minutes long competition!
               </p>
             </div>
@@ -354,12 +354,12 @@ function InfoModal({ onClose }: { onClose: () => void }) {
         </div>
 
         {/* Bottom section */}
-        <div className="bg-secondary px-4 pb-4 rounded-b-2xl">
+        <div className="bg-bg-inverse px-4 pb-4 rounded-b-2xl">
           <button
             onClick={onClose}
             className="w-full py-3 bg-gold rounded-xl border-2 border-gold-light"
           >
-            <span className="text-primary text-lg font-bold">Tap to Continue</span>
+            <span className="text-text-inverse text-h3">Tap to Continue</span>
           </button>
         </div>
       </div>

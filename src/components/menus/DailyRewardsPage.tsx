@@ -19,8 +19,8 @@ export function DailyRewardsPage() {
     <PageLayout title="Daily Rewards">
       <div className="p-4">
         <Panel variant="elevated" className="mb-4 text-center">
-          <p className="text-sm text-secondary mb-1">Current Streak</p>
-          <p className="text-3xl font-bold text-primary">
+          <p className="text-sm text-text-secondary mb-1">Current Streak</p>
+          <p className="text-3xl font-bold text-text-primary">
             Day {currentDay?.day || 1}
           </p>
         </Panel>
@@ -60,10 +60,10 @@ function DailyRewardCard({ day, reward, claimed, current, onClaim }: DailyReward
         ${claimed ? 'opacity-60' : ''}
       `}
     >
-      <p className="text-xs text-secondary mb-1">Day {day}</p>
-      <div className="w-8 h-8 bg-surface-light rounded mx-auto mb-1" />
-      <p className="text-xs font-medium text-primary">{reward.amount}</p>
-      <p className="text-[10px] text-secondary truncate">{reward.name || reward.type}</p>
+      <p className="text-xs text-text-secondary mb-1">Day {day}</p>
+      <div className="w-8 h-8 bg-bg-page rounded mx-auto mb-1" />
+      <p className="text-xs font-medium text-text-primary">{reward.amount}</p>
+      <p className="text-mini text-text-secondary truncate">{reward.name || reward.type}</p>
 
       {claimed && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 rounded-lg">

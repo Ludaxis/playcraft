@@ -13,7 +13,7 @@ export function BottomNavigation({ activePage }: BottomNavigationProps) {
   const { enabledTabs } = useAdmin();
 
   return (
-    <div className="bg-primary-light border-t-2 border-secondary">
+    <div className="bg-brand-hover border-t-2 border-bg-inverse">
       <div className="flex justify-around py-2">
         {enabledTabs.map((tab) => (
           <NavButton

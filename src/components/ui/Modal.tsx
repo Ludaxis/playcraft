@@ -66,10 +66,10 @@ export function Modal({
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-4 py-3 border-b border-surface-light">
-            <h2 className="text-lg font-semibold text-primary">{title}</h2>
+            <h2 className="text-h3 text-text-primary">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 text-secondary hover:text-primary hover:bg-surface-lighter rounded"
+              className="p-1 text-text-secondary hover:text-text-primary hover:bg-surface-lighter rounded"
             >
               <svg
                 className="w-5 h-5"

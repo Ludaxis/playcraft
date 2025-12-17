@@ -31,31 +31,31 @@ export function CardDetailModal({ onAnimatedClose }: CardDetailModalProps) {
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute -top-10 -right-2 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light"
+        className="absolute -top-10 -right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
       >
-        <span className="text-white font-bold text-sm">X</span>
+        <span className="text-text-inverse font-bold text-sm">X</span>
       </button>
 
-        <div className="w-[200px] bg-secondary-light rounded-2xl border-4 border-surface-dark overflow-hidden">
+        <div className="w-[200px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
           {/* Card Header */}
-          <div className="bg-secondary py-2 px-3 text-center">
-            <span className="text-surface text-xs font-bold">{setName}</span>
+          <div className="bg-bg-inverse py-2 px-3 text-center">
+            <span className="text-text-muted text-value-sm">{setName}</span>
           </div>
 
           {/* Card Image Area */}
           <div className="p-4 flex flex-col items-center">
             {card.collected ? (
-              <div className="w-20 h-20 bg-surface rounded-xl flex items-center justify-center mb-3 border-2 border-surface-dark">
-                <span className="text-secondary text-lg font-bold">{card.name.slice(0, 3).toUpperCase()}</span>
+              <div className="w-20 h-20 bg-bg-muted rounded-xl flex items-center justify-center mb-3 border-2 border-border-strong">
+                <span className="text-text-secondary text-h3">{card.name.slice(0, 3).toUpperCase()}</span>
               </div>
             ) : (
-              <div className="w-20 h-20 bg-secondary rounded-xl flex items-center justify-center mb-3 border-2 border-secondary-light">
-                <span className="text-surface-dark text-3xl font-bold">?</span>
+              <div className="w-20 h-20 bg-bg-inverse rounded-xl flex items-center justify-center mb-3 border-2 border-brand-muted">
+                <span className="text-border-strong text-h1">?</span>
               </div>
             )}
 
             {/* Card Name */}
-            <h3 className="text-white text-lg font-bold mb-1">
+            <h3 className="text-text-inverse text-h3 mb-1">
               {card.collected ? card.name : '???'}
             </h3>
 
@@ -64,15 +64,15 @@ export function CardDetailModal({ onAnimatedClose }: CardDetailModalProps) {
               {[1, 2, 3].map((star) => (
                 <div
                   key={star}
-                  className={`w-4 h-4 ${card.collected ? 'bg-gold' : 'bg-secondary'} rounded-sm`}
+                  className={`w-4 h-4 ${card.collected ? 'bg-gold' : 'bg-bg-inverse'} rounded-sm`}
                   style={{ clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' }}
                 />
               ))}
             </div>
 
             {/* Status */}
-            <div className={`px-3 py-1 rounded-full ${card.collected ? 'bg-success' : 'bg-secondary'}`}>
-              <span className="text-white text-xs font-bold">
+            <div className={`px-3 py-1 rounded-full ${card.collected ? 'bg-status-success' : 'bg-bg-inverse'}`}>
+              <span className="text-text-inverse text-value-sm">
                 {card.collected ? 'Collected' : 'Not Found'}
               </span>
             </div>
@@ -80,8 +80,8 @@ export function CardDetailModal({ onAnimatedClose }: CardDetailModalProps) {
 
         {/* Card Info */}
         {!card.collected && (
-          <div className="bg-surface-dark p-3 text-center">
-            <p className="text-primary-light text-xs font-medium">
+          <div className="bg-border-strong p-3 text-center">
+            <p className="text-text-primary text-xs font-medium">
               Play levels to find this card!
             </p>
           </div>

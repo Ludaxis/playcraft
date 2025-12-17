@@ -10,3 +10,4 @@ export { FriendsPage } from './FriendsPage';
 export { BoostersPage } from './BoostersPage';
 export { AreaTasksPage } from './AreaTasksPage';
 export { GameplayPage } from './GameplayPage';
+export { LevelRoadmap } from './LevelRoadmap';

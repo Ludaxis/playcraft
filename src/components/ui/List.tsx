@@ -46,7 +46,7 @@ interface ListItemIconProps {
 
 export function ListItemIcon({ children }: ListItemIconProps) {
   return (
-    <div className="flex items-center justify-center w-10 h-10 bg-surface-light rounded-lg text-secondary">
+    <div className="flex items-center justify-center w-10 h-10 bg-surface-light rounded-lg text-text-secondary">
       {children}
     </div>
   );
@@ -60,8 +60,8 @@ interface ListItemContentProps {
 export function ListItemContent({ title, subtitle }: ListItemContentProps) {
   return (
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-primary truncate">{title}</p>
-      {subtitle && <p className="text-xs text-secondary truncate">{subtitle}</p>}
+      <p className="text-label text-text-primary truncate">{title}</p>
+      {subtitle && <p className="text-caption text-text-secondary truncate">{subtitle}</p>}
     </div>
   );
 }

@@ -48,29 +48,29 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute top-2 right-2 w-10 h-10 bg-primary rounded-full flex items-center justify-center border-2 border-primary-light z-10"
+        className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
       >
-        <span className="text-white font-bold text-lg">X</span>
+        <span className="text-text-inverse text-value">X</span>
       </button>
 
       {/* Header */}
-      <div className="bg-primary rounded-t-2xl py-3 px-4">
-        <h1 className="text-white text-xl font-bold text-center">Profile</h1>
+      <div className="bg-bg-inverse rounded-t-2xl py-3 px-4">
+        <h1 className="text-text-inverse text-h2 text-center">Profile</h1>
       </div>
 
       {/* Profile Card */}
-      <div className="bg-secondary p-3">
-        <div className="bg-surface-light rounded-xl border-2 border-surface p-3">
+      <div className="bg-bg-inverse p-3">
+        <div className="bg-bg-page rounded-xl border-2 border-border p-3">
           <div className="flex items-start gap-3">
             {/* Avatar */}
-            <div className="w-20 h-20 bg-surface rounded-xl border-4 border-surface-dark flex items-center justify-center">
+            <div className="w-20 h-20 bg-bg-muted rounded-xl border-4 border-border-strong flex items-center justify-center">
               <Image src="/icons/Profile.svg" alt="Avatar" width={40} height={40} className="opacity-60" />
             </div>
 
             {/* Info */}
             <div className="flex-1">
               {/* Name */}
-              <h2 className="text-primary text-lg font-bold">{memberData.name}</h2>
+              <h2 className="text-primary text-h3">{memberData.name}</h2>
 
               {/* Team */}
               <div className="flex items-center gap-1 mb-1">
@@ -80,52 +80,52 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
 
               {/* Join Date */}
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-surface-dark rounded flex items-center justify-center">
+                <div className="w-5 h-5 bg-border-strong rounded flex items-center justify-center">
                   <Image src="/icons/Clock.svg" alt="Date" width={12} height={12} className="opacity-60" />
                 </div>
-                <span className="text-muted-foreground text-sm font-bold">{memberData.joinDate}</span>
+                <span className="text-muted-foreground text-value">{memberData.joinDate}</span>
               </div>
             </div>
 
             {/* Level & Crown Badge */}
             <div className="flex flex-col items-center">
-              <div className="bg-accent rounded-t-lg px-3 pt-1 pb-0.5 border-2 border-accent-light border-b-0">
-                <div className="text-accent-muted text-[10px] font-bold text-center">Level</div>
-                <div className="text-white text-lg font-bold text-center">{memberData.level}</div>
+              <div className="bg-brand-primary rounded-t-lg px-3 pt-1 pb-0.5 border-2 border-accent-light border-b-0">
+                <div className="text-accent-muted text-mini font-bold text-center">Level</div>
+                <div className="text-text-inverse text-h3 text-center">{memberData.level}</div>
               </div>
-              <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[10px] border-l-transparent border-r-transparent border-t-accent" />
+              <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[10px] border-l-transparent border-r-transparent border-t-brand-primary" />
 
-              <div className="bg-secondary rounded-lg px-3 py-1 mt-1 border-2 border-secondary-light">
+              <div className="bg-bg-inverse rounded-lg px-3 py-1 mt-1 border-2 border-brand-muted">
                 <div className="flex items-center gap-1">
                   <Image src="/icons/Medal.svg" alt="Crowns" width={14} height={14} className="opacity-70" />
-                  <span className="text-white font-bold">{memberData.crowns}</span>
+                  <span className="text-text-inverse font-bold">{memberData.crowns}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Add Friend Button */}
-          <button className="w-full bg-accent border-2 border-accent-light rounded-xl py-2 mt-3">
-            <span className="text-white font-bold">Add Friend</span>
+          <button className="w-full bg-brand-primary border-2 border-accent-light rounded-xl py-2 mt-3">
+            <span className="text-text-inverse font-bold">Add Friend</span>
           </button>
         </div>
       </div>
 
       {/* Royal League Stats */}
-      <div className="bg-secondary px-3 pb-3">
+      <div className="bg-bg-inverse px-3 pb-3">
         {/* Ribbon Title */}
         <div className="flex justify-center -mt-1 mb-3">
           <div className="relative">
-            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-surface" />
-            <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-surface" />
-            <div className="bg-surface rounded px-4 py-1.5 border-2 border-surface-dark">
+            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-bg-muted" />
+            <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-bg-muted" />
+            <div className="bg-bg-muted rounded px-4 py-1.5 border-2 border-border-strong">
               <span className="text-primary font-bold text-sm">Royal League Stats</span>
             </div>
           </div>
         </div>
 
         {/* Stats Card */}
-        <div className="bg-surface-lighter rounded-xl border-2 border-surface p-3">
+        <div className="bg-bg-card rounded-xl border-2 border-border p-3">
           <div className="grid grid-cols-3 gap-2">
             <StatItem
               icon="/icons/Medal.svg"
@@ -147,20 +147,20 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
       </div>
 
       {/* General Stats */}
-      <div className="bg-secondary px-3 pb-4 rounded-b-2xl">
+      <div className="bg-bg-inverse px-3 pb-4 rounded-b-2xl">
         {/* Ribbon Title */}
         <div className="flex justify-center mb-3">
           <div className="relative">
-            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-surface" />
-            <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-surface" />
-            <div className="bg-surface rounded px-4 py-1.5 border-2 border-surface-dark">
+            <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-bg-muted" />
+            <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-bg-muted" />
+            <div className="bg-bg-muted rounded px-4 py-1.5 border-2 border-border-strong">
               <span className="text-primary font-bold text-sm">General Stats</span>
             </div>
           </div>
         </div>
 
         {/* Stats Card */}
-        <div className="bg-surface-lighter rounded-xl border-2 border-surface p-3">
+        <div className="bg-bg-card rounded-xl border-2 border-border p-3">
           {/* Row 1 */}
           <div className="grid grid-cols-3 gap-2 mb-3">
             <StatItem
@@ -215,16 +215,16 @@ function StatItem({ icon, label, value }: StatItemProps) {
   return (
     <div className="flex flex-col items-center">
       {/* Icon */}
-      <div className="w-10 h-10 bg-surface-dark rounded-xl flex items-center justify-center mb-1">
+      <div className="w-10 h-10 bg-border-strong rounded-xl flex items-center justify-center mb-1">
         <Image src={icon} alt={label} width={20} height={20} className="opacity-70" />
       </div>
       {/* Label */}
-      <p className="text-muted-foreground text-[9px] font-bold text-center whitespace-nowrap mb-1">
+      <p className="text-muted-foreground text-mini font-bold text-center whitespace-nowrap mb-1">
         {label}
       </p>
       {/* Value */}
-      <div className="bg-surface rounded-lg px-2 py-0.5 w-full">
-        <p className="text-primary text-sm font-bold text-center">{value.toLocaleString()}</p>
+      <div className="bg-bg-muted rounded-lg px-2 py-0.5 w-full">
+        <p className="text-primary text-value text-center">{value.toLocaleString()}</p>
       </div>
     </div>
   );

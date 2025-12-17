@@ -71,9 +71,9 @@ export function RoyalPassPage() {
   // Check if event is enabled
   if (!isEventEnabled('royal-pass')) {
     return (
-      <div className="flex flex-col h-full bg-secondary items-center justify-center">
-        <p className="text-white text-lg">Event not available</p>
-        <button onClick={() => navigate('main-menu')} className="mt-4 text-accent underline">
+      <div className="flex flex-col h-full bg-bg-inverse items-center justify-center">
+        <p className="text-text-inverse text-lg">Event not available</p>
+        <button onClick={() => navigate('main-menu')} className="mt-4 text-brand-primary underline">
           Go Back
         </button>
       </div>
@@ -90,87 +90,87 @@ export function RoyalPassPage() {
   };
 
   const getRewardBgColor = (type: RewardType, isPremium: boolean) => {
-    if (isPremium && !isActivated) return 'bg-surface-dark';
+    if (isPremium && !isActivated) return 'bg-border-strong';
     switch (type) {
       case 'coins': return 'bg-gold/20';
-      case 'booster': return 'bg-accent/20';
-      case 'lives': return 'bg-error/20';
-      case 'chest': return 'bg-secondary/20';
-      case 'card': return 'bg-primary/20';
-      case 'gift': return 'bg-success/20';
-      default: return 'bg-surface-light';
+      case 'booster': return 'bg-brand-primary/20';
+      case 'lives': return 'bg-status-error/20';
+      case 'chest': return 'bg-bg-inverse/20';
+      case 'card': return 'bg-bg-inverse/20';
+      case 'gift': return 'bg-status-success/20';
+      default: return 'bg-bg-page';
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-secondary overflow-hidden" onClick={handleBackgroundClick}>
+    <div className="flex flex-col h-full bg-bg-inverse overflow-hidden" onClick={handleBackgroundClick}>
       {/* Header Background */}
-      <div className="relative bg-primary pt-2 pb-4">
+      <div className="relative bg-bg-inverse pt-2 pb-4">
         {/* Close Button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="absolute top-2 right-2 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+          className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
         >
-          <span className="text-white font-bold">X</span>
+          <span className="text-text-inverse font-bold">X</span>
         </button>
 
         {/* Info Button */}
         <button
           onClick={() => setShowInfoModal(true)}
-          className="absolute top-2 left-2 w-8 h-8 bg-surface-dark rounded-full flex items-center justify-center border-2 border-surface z-10"
+          className="absolute top-2 left-2 w-8 h-8 bg-border-strong rounded-full flex items-center justify-center border-2 border-border z-10"
         >
-          <span className="text-primary text-sm font-bold">i</span>
+          <span className="text-text-primary text-value">i</span>
         </button>
 
         {/* Decorative Scene Placeholder */}
         <div className="h-24 flex items-center justify-center mb-2">
           <div className="flex gap-2">
-            <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-              <span className="text-surface text-[8px]">CHEST</span>
+            <div className="w-12 h-12 bg-bg-inverse rounded-lg flex items-center justify-center">
+              <span className="text-text-muted text-mini">CHEST</span>
             </div>
             <div className="w-14 h-14 bg-gold rounded-lg flex items-center justify-center border-2 border-gold-light">
-              <span className="text-primary text-[8px]">PRIZE</span>
+              <span className="text-text-inverse text-mini">PRIZE</span>
             </div>
-            <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-              <span className="text-surface text-[8px]">CHEST</span>
+            <div className="w-12 h-12 bg-bg-inverse rounded-lg flex items-center justify-center">
+              <span className="text-text-muted text-mini">CHEST</span>
             </div>
           </div>
         </div>
 
         {/* Title and Timer */}
         <div className="text-center mb-3">
-          <h1 className="text-white text-2xl font-bold">{passData.name}</h1>
+          <h1 className="text-text-inverse text-h1">{passData.name}</h1>
           <div className="flex items-center justify-center gap-2 mt-1">
             <div className="w-5 h-5 bg-gold rounded-full flex items-center justify-center">
-              <span className="text-primary text-[8px] font-bold">K</span>
+              <span className="text-text-inverse text-mini font-bold">K</span>
             </div>
-            <span className="text-surface-light text-sm">{timer.days}d {timer.hours}h</span>
+            <span className="text-text-muted text-body-sm">{timer.days}d {timer.hours}h</span>
           </div>
         </div>
 
         {/* Progress Bar and Activate */}
-        <div className="mx-3 bg-secondary rounded-xl p-2 flex items-center gap-2 border-2 border-secondary-light">
+        <div className="mx-3 bg-bg-inverse rounded-xl p-2 flex items-center gap-2 border-2 border-brand-muted">
           {/* Key Icon */}
           <div className="w-8 h-8 bg-gold rounded-lg flex items-center justify-center">
-            <span className="text-primary text-xs font-bold">K</span>
+            <span className="text-text-inverse text-value-sm">K</span>
           </div>
 
           {/* Progress */}
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <div className="flex-1 h-3 bg-surface-dark rounded-full overflow-hidden">
+              <div className="flex-1 h-3 bg-border-strong rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gold rounded-full"
                   style={{ width: `${(passData.currentKeys / passData.maxKeys) * 100}%` }}
                 />
               </div>
-              <span className="text-white text-xs font-bold">{passData.currentKeys}/{passData.maxKeys}</span>
+              <span className="text-text-inverse text-value-sm">{passData.currentKeys}/{passData.maxKeys}</span>
             </div>
           </div>
 
           {/* Stage Badge */}
-          <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center border-2 border-accent-light">
-            <span className="text-white text-sm font-bold">{passData.currentStage}</span>
+          <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center border-2 border-accent-light">
+            <span className="text-text-inverse text-value">{passData.currentStage}</span>
           </div>
 
           {/* Activate Button */}
@@ -179,8 +179,8 @@ export function RoyalPassPage() {
             disabled={isActivated}
             className={`px-4 py-2 rounded-xl font-bold text-sm ${
               isActivated
-                ? 'bg-success text-white'
-                : 'bg-success text-white border-2 border-success-light'
+                ? 'bg-status-success text-text-inverse'
+                : 'bg-status-success text-text-inverse border-2 border-success-light'
             }`}
           >
             {isActivated ? 'Active' : 'Activate'}
@@ -194,8 +194,8 @@ export function RoyalPassPage() {
           onClick={() => setActiveTab('free')}
           className={`flex-1 py-2 rounded-t-xl font-bold text-sm border-2 border-b-0 ${
             activeTab === 'free'
-              ? 'bg-surface-light text-primary border-surface'
-              : 'bg-secondary text-surface-light border-secondary-light'
+              ? 'bg-bg-page text-text-primary border-border'
+              : 'bg-bg-inverse text-text-muted border-brand-muted'
           }`}
         >
           Free
@@ -205,7 +205,7 @@ export function RoyalPassPage() {
           className={`flex-1 py-2 rounded-t-xl font-bold text-sm border-2 border-b-0 ${
             activeTab === 'premium'
               ? 'bg-gold/20 text-gold border-gold'
-              : 'bg-secondary text-surface-light border-secondary-light'
+              : 'bg-bg-inverse text-text-muted border-brand-muted'
           }`}
         >
           Royal Pass
@@ -213,13 +213,13 @@ export function RoyalPassPage() {
       </div>
 
       {/* Reward Track */}
-      <div className="flex-1 overflow-y-auto bg-accent mx-3 rounded-b-xl p-3 border-2 border-t-0 border-secondary-light">
+      <div className="flex-1 overflow-y-auto bg-brand-primary mx-3 rounded-b-xl p-3 border-2 border-t-0 border-brand-muted">
         <div className="space-y-0">
           {passData.stages.map((stage, index) => (
             <div key={stage.stage} className="relative">
               {/* Connector Line */}
               {index < passData.stages.length - 1 && (
-                <div className="absolute left-1/2 top-[60px] bottom-0 w-1 bg-secondary-light -translate-x-1/2 z-0" />
+                <div className="absolute left-1/2 top-[60px] bottom-0 w-1 bg-brand-muted -translate-x-1/2 z-0" />
               )}
 
               <div className="relative z-10 flex items-center gap-2 py-2">
@@ -233,19 +233,19 @@ export function RoyalPassPage() {
                   }}
                   className={`flex-1 rounded-xl p-2 border-2 relative ${
                     stage.claimed
-                      ? 'bg-surface-light border-success cursor-pointer'
+                      ? 'bg-bg-page border-status-success cursor-pointer'
                       : stage.unlocked
-                        ? 'bg-surface-light border-surface'
-                        : 'bg-surface-dark border-surface-dark opacity-60'
+                        ? 'bg-bg-page border-border'
+                        : 'bg-border-strong border-border-strong opacity-60'
                   }`}
                 >
                   <div className={`h-14 rounded-lg flex flex-col items-center justify-center ${getRewardBgColor(stage.freeReward.type, false)}`}>
-                    <span className="text-primary text-xs font-bold">{stage.freeReward.icon}</span>
-                    <span className="text-primary text-[10px]">{stage.freeReward.amount}</span>
+                    <span className="text-text-primary text-value-sm">{stage.freeReward.icon}</span>
+                    <span className="text-text-primary text-mini">{stage.freeReward.amount}</span>
                   </div>
                   {stage.claimed && (
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-success rounded-full flex items-center justify-center border-2 border-success-light">
-                      <span className="text-white text-xs font-bold">V</span>
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-status-success rounded-full flex items-center justify-center border-2 border-success-light">
+                      <span className="text-text-inverse text-value-sm">V</span>
                     </div>
                   )}
                 </div>
@@ -255,11 +255,11 @@ export function RoyalPassPage() {
                   <div
                     className={`w-8 h-8 rotate-45 flex items-center justify-center border-2 ${
                       stage.unlocked
-                        ? 'bg-accent border-accent-light'
-                        : 'bg-surface-dark border-surface'
+                        ? 'bg-brand-primary border-accent-light'
+                        : 'bg-border-strong border-border'
                     }`}
                   >
-                    <span className={`-rotate-45 text-xs font-bold ${stage.unlocked ? 'text-white' : 'text-muted'}`}>
+                    <span className={`-rotate-45 text-value-sm ${stage.unlocked ? 'text-text-inverse' : 'text-text-muted'}`}>
                       {stage.stage}
                     </span>
                   </div>
@@ -272,21 +272,21 @@ export function RoyalPassPage() {
                       ? 'bg-gold/10 border-gold'
                       : isActivated && stage.unlocked
                         ? 'bg-gold/10 border-gold/50'
-                        : 'bg-surface-dark border-surface-dark'
+                        : 'bg-border-strong border-border-strong'
                   }`}
                 >
                   <div className={`h-14 rounded-lg flex flex-col items-center justify-center ${getRewardBgColor(stage.premiumReward.type, true)}`}>
-                    <span className={`text-xs font-bold ${isActivated ? 'text-primary' : 'text-muted'}`}>
+                    <span className={`text-value-sm ${isActivated ? 'text-text-primary' : 'text-text-muted'}`}>
                       {stage.premiumReward.icon}
                     </span>
-                    <span className={`text-[10px] ${isActivated ? 'text-primary' : 'text-muted'}`}>
+                    <span className={`text-mini ${isActivated ? 'text-text-primary' : 'text-text-muted'}`}>
                       {stage.premiumReward.amount}
                     </span>
                   </div>
                   {/* Lock Icon */}
                   {!isActivated && (
                     <div className="absolute top-1 right-1 w-4 h-4 bg-gold rounded flex items-center justify-center">
-                      <span className="text-primary text-[6px] font-bold">L</span>
+                      <span className="text-text-inverse text-mini font-bold">L</span>
                     </div>
                   )}
                 </div>
@@ -294,8 +294,8 @@ export function RoyalPassPage() {
 
               {/* Tooltip for locked stages */}
               {!stage.unlocked && index === passData.stages.findIndex(s => !s.unlocked) && (
-                <div className="absolute left-1/2 -translate-x-1/2 -top-2 bg-surface-light rounded-full px-3 py-1 border border-surface z-20">
-                  <span className="text-primary text-[10px] font-medium whitespace-nowrap">
+                <div className="absolute left-1/2 -translate-x-1/2 -top-2 bg-bg-page rounded-full px-3 py-1 border border-border z-20">
+                  <span className="text-text-primary text-mini font-medium whitespace-nowrap">
                     Collect more keys to unlock!
                   </span>
                 </div>
@@ -305,13 +305,13 @@ export function RoyalPassPage() {
         </div>
 
         {/* Bonus Bank */}
-        <div className="mt-4 bg-secondary rounded-xl p-3 border-2 border-secondary-light">
-          <h3 className="text-white font-bold text-center mb-2">Bonus Bank</h3>
+        <div className="mt-4 bg-bg-inverse rounded-xl p-3 border-2 border-brand-muted">
+          <h3 className="text-text-inverse font-bold text-center mb-2">Bonus Bank</h3>
           <div className="flex items-center gap-3">
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${isActivated ? 'bg-gold/30 border-2 border-gold' : 'bg-surface-dark'}`}>
-              <span className={`text-2xl ${isActivated ? 'text-gold' : 'text-muted'}`}>$</span>
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${isActivated ? 'bg-gold/30 border-2 border-gold' : 'bg-border-strong'}`}>
+              <span className={`text-2xl ${isActivated ? 'text-gold' : 'text-text-muted'}`}>$</span>
             </div>
-            <p className="flex-1 text-surface-light text-xs">
+            <p className="flex-1 text-text-muted text-xs">
               {isActivated
                 ? 'Collect bonus coins at the end of the stages!'
                 : 'Activate the Royal Pass to unlock the Bonus Bank at the end of the stages!'}
@@ -323,11 +323,11 @@ export function RoyalPassPage() {
       {/* Tooltip for claimed rewards - rendered as fixed overlay */}
       {selectedClaimedReward !== null && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
-          <div className="bg-surface-light rounded-xl px-4 py-3 border-2 border-primary shadow-lg w-48 text-center">
-            <span className="text-primary text-sm font-bold">This reward has already been collected!</span>
+          <div className="bg-bg-page rounded-xl px-4 py-3 border-2 border-bg-inverse shadow-lg w-48 text-center">
+            <span className="text-text-primary text-value">This reward has already been collected!</span>
           </div>
           {/* Arrow pointing up */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-primary" />
+          <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-8 border-r-8 border-b-8 border-l-transparent border-r-transparent border-b-bg-inverse" />
         </div>
       )}
 
@@ -338,88 +338,88 @@ export function RoyalPassPage() {
             {/* Close button */}
             <button
               onClick={() => setShowActivateModal(false)}
-              className="absolute -top-1 -right-1 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
+              className="absolute -top-1 -right-1 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
             >
-              <span className="text-white font-bold text-sm">X</span>
+              <span className="text-text-inverse font-bold text-sm">X</span>
             </button>
 
             {/* Header */}
-            <div className="bg-primary-light rounded-t-2xl py-3 px-3 border-b-4 border-gold">
-              <h2 className="text-white text-2xl font-bold text-center">{passData.name}</h2>
+            <div className="bg-brand-hover rounded-t-2xl py-3 px-3 border-b-4 border-gold">
+              <h2 className="text-text-inverse text-h1 text-center">{passData.name}</h2>
             </div>
 
             {/* Divider line */}
-            <div className="h-0.5 bg-secondary-light" />
+            <div className="h-0.5 bg-brand-muted" />
 
             {/* Content */}
-            <div className="bg-secondary-light p-4">
-              <div className="bg-surface-dark rounded-xl p-4 mb-4 border-2 border-surface">
-                <p className="text-primary text-center text-sm mb-3">
+            <div className="bg-brand-muted p-4">
+              <div className="bg-border-strong rounded-xl p-4 mb-4 border-2 border-border">
+                <p className="text-text-primary text-center text-sm mb-3">
                   The <span className="text-gold font-bold">Royal Pass</span> will give you a chance to get special rewards!
                 </p>
 
                 {/* Rewards Preview */}
                 <div className="flex justify-center gap-2 mb-2">
-                  <div className="w-12 h-12 bg-surface rounded-lg flex items-center justify-center">
-                    <span className="text-secondary text-[8px]">CHEST</span>
+                  <div className="w-12 h-12 bg-bg-muted rounded-lg flex items-center justify-center">
+                    <span className="text-text-inverse text-mini">CHEST</span>
                   </div>
                   <div className="w-14 h-14 bg-gold rounded-lg flex items-center justify-center border-2 border-gold-light">
-                    <span className="text-primary text-[8px]">COINS</span>
+                    <span className="text-text-inverse text-mini">COINS</span>
                   </div>
-                  <div className="w-12 h-12 bg-accent rounded-lg flex items-center justify-center">
-                    <span className="text-white text-[8px]">BOOST</span>
+                  <div className="w-12 h-12 bg-brand-primary rounded-lg flex items-center justify-center">
+                    <span className="text-text-inverse text-mini">BOOST</span>
                   </div>
                 </div>
 
                 <div className="text-center">
-                  <span className="text-primary text-xs bg-surface-light px-3 py-1 rounded-full">Special Rewards</span>
+                  <span className="text-text-primary text-xs bg-bg-page px-3 py-1 rounded-full">Special Rewards</span>
                 </div>
               </div>
 
               {/* Benefits */}
-              <div className="bg-surface-dark rounded-xl p-4 mb-4 border-2 border-surface">
-                <p className="text-primary text-center text-sm font-bold mb-3">
+              <div className="bg-border-strong rounded-xl p-4 mb-4 border-2 border-border">
+                <p className="text-text-primary text-center text-value mb-3">
                   Exclusive bonuses until the event ends!
                 </p>
 
                 <div className="space-y-2">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-error rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">8</span>
+                    <div className="w-8 h-8 bg-status-error rounded-full flex items-center justify-center">
+                      <span className="text-text-inverse text-value-sm">8</span>
                     </div>
-                    <span className="text-primary text-sm">8 lives instead of 5</span>
+                    <span className="text-text-primary text-sm">8 lives instead of 5</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gold rounded-lg flex items-center justify-center">
-                      <span className="text-primary text-[8px]">VIP</span>
+                      <span className="text-text-inverse text-mini">VIP</span>
                     </div>
-                    <span className="text-primary text-sm">Golden profile frame</span>
+                    <span className="text-text-primary text-sm">Golden profile frame</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-success rounded-lg flex items-center justify-center">
-                      <span className="text-white text-[8px]">GFT</span>
+                    <div className="w-8 h-8 bg-status-success rounded-lg flex items-center justify-center">
+                      <span className="text-text-inverse text-mini">GFT</span>
                     </div>
-                    <span className="text-primary text-sm">Gift for teammates</span>
+                    <span className="text-text-primary text-sm">Gift for teammates</span>
                   </div>
                 </div>
 
                 {/* Timer */}
                 <div className="flex justify-center mt-3">
-                  <div className="bg-surface-light rounded-full px-3 py-1 flex items-center gap-1">
-                    <span className="text-secondary text-xs">T</span>
-                    <span className="text-primary text-xs font-bold">{timer.days}d {timer.hours}h</span>
+                  <div className="bg-bg-page rounded-full px-3 py-1 flex items-center gap-1">
+                    <span className="text-text-primary text-xs">T</span>
+                    <span className="text-text-primary text-value-sm">{timer.days}d {timer.hours}h</span>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Bottom section with purchase button */}
-            <div className="bg-secondary px-4 pb-4 rounded-b-2xl">
+            <div className="bg-bg-inverse px-4 pb-4 rounded-b-2xl">
               <button
                 onClick={handlePurchase}
-                className="w-full py-4 bg-success rounded-xl border-2 border-success-light"
+                className="w-full py-4 bg-status-success rounded-xl border-2 border-success-light"
               >
-                <span className="text-white text-xl font-bold">{passData.price}</span>
+                <span className="text-text-inverse text-h2">{passData.price}</span>
               </button>
             </div>
           </div>
@@ -433,31 +433,31 @@ export function RoyalPassPage() {
             {/* Close button */}
             <button
               onClick={() => setShowInfoModal(false)}
-              className="absolute -top-1 -right-1 w-8 h-8 bg-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
+              className="absolute -top-1 -right-1 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
             >
-              <span className="text-white font-bold text-sm">X</span>
+              <span className="text-text-inverse font-bold text-sm">X</span>
             </button>
 
             {/* Header */}
-            <div className="bg-primary-light rounded-t-2xl py-3 px-3">
-              <h1 className="text-white text-xl font-bold text-center">Royal Pass!</h1>
+            <div className="bg-brand-hover rounded-t-2xl py-3 px-3">
+              <h1 className="text-text-inverse text-h2 text-center">Royal Pass!</h1>
             </div>
 
             {/* Divider line */}
-            <div className="h-0.5 bg-secondary-light" />
+            <div className="h-0.5 bg-brand-muted" />
 
             {/* Content */}
-            <div className="bg-secondary-light p-4">
+            <div className="bg-brand-muted p-4">
               {/* Step 1: Beat Levels */}
               <div className="text-center mb-4">
-                <div className="w-20 h-20 mx-auto bg-surface-light rounded-xl mb-2 flex items-center justify-center border-2 border-surface">
+                <div className="w-20 h-20 mx-auto bg-bg-page rounded-xl mb-2 flex items-center justify-center border-2 border-border">
                   <div className="grid grid-cols-3 gap-1">
                     {[...Array(9)].map((_, i) => (
-                      <div key={i} className="w-4 h-4 bg-accent rounded" />
+                      <div key={i} className="w-4 h-4 bg-brand-primary rounded" />
                     ))}
                   </div>
                 </div>
-                <p className="text-primary text-lg font-bold">Beat Levels!</p>
+                <p className="text-text-primary text-h3">Beat Levels!</p>
               </div>
 
               {/* Arrow */}
@@ -467,17 +467,17 @@ export function RoyalPassPage() {
               <div className="text-center mb-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="w-6 h-6 bg-gold rounded flex items-center justify-center">
-                    <span className="text-primary text-xs font-bold">K</span>
+                    <span className="text-text-inverse text-value-sm">K</span>
                   </div>
-                  <div className="w-24 h-4 bg-secondary rounded-full overflow-hidden">
-                    <div className="w-3/5 h-full bg-success rounded-full" />
+                  <div className="w-24 h-4 bg-bg-inverse rounded-full overflow-hidden">
+                    <div className="w-3/5 h-full bg-status-success rounded-full" />
                   </div>
-                  <span className="text-primary text-sm font-bold">3/5</span>
-                  <div className="w-6 h-6 bg-accent rotate-45 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold -rotate-45">4</span>
+                  <span className="text-text-primary text-value">3/5</span>
+                  <div className="w-6 h-6 bg-brand-primary rotate-45 flex items-center justify-center">
+                    <span className="text-text-inverse text-value-sm -rotate-45">4</span>
                   </div>
                 </div>
-                <p className="text-primary text-lg font-bold">Collect Keys!</p>
+                <p className="text-text-primary text-h3">Collect Keys!</p>
               </div>
 
               {/* Arrow */}
@@ -486,29 +486,29 @@ export function RoyalPassPage() {
               {/* Step 3: Unlock Rewards */}
               <div className="text-center mb-4">
                 <div className="flex justify-center gap-2 mb-2">
-                  <div className="w-10 h-10 bg-success rounded-lg flex items-center justify-center">
-                    <span className="text-white text-[8px]">CHEST</span>
+                  <div className="w-10 h-10 bg-status-success rounded-lg flex items-center justify-center">
+                    <span className="text-text-inverse text-mini">CHEST</span>
                   </div>
-                  <div className="w-12 h-12 bg-error rounded-lg flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">8</span>
+                  <div className="w-12 h-12 bg-status-error rounded-lg flex items-center justify-center">
+                    <span className="text-text-inverse text-value-sm">8</span>
                   </div>
                   <div className="w-10 h-10 bg-gold rounded-lg flex items-center justify-center">
-                    <span className="text-primary text-[8px]">COINS</span>
+                    <span className="text-text-inverse text-mini">COINS</span>
                   </div>
                 </div>
-                <p className="text-primary text-lg font-bold">Unlock Rewards!</p>
+                <p className="text-text-primary text-h3">Unlock Rewards!</p>
               </div>
             </div>
 
             {/* Bottom section */}
-            <div className="bg-secondary px-4 pb-4 rounded-b-2xl">
+            <div className="bg-bg-inverse px-4 pb-4 rounded-b-2xl">
               {/* Activation Note */}
-              <div className="bg-surface-dark rounded-xl p-3 mb-4 border-2 border-surface">
+              <div className="bg-border-strong rounded-xl p-3 mb-4 border-2 border-border">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-gold rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary text-xs font-bold">RP</span>
+                    <span className="text-text-inverse text-value-sm">RP</span>
                   </div>
-                  <p className="text-primary-light text-sm">
+                  <p className="text-text-primary text-sm">
                     You can activate the <span className="text-gold font-bold">Royal Pass</span> to get additional exclusive rewards!
                   </p>
                 </div>
@@ -519,7 +519,7 @@ export function RoyalPassPage() {
                 onClick={() => setShowInfoModal(false)}
                 className="w-full py-3 bg-gold rounded-xl border-2 border-gold-light"
               >
-                <span className="text-primary text-lg font-bold">Tap to Continue</span>
+                <span className="text-text-inverse text-h3">Tap to Continue</span>
               </button>
             </div>
           </div>

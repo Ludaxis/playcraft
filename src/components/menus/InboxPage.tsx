@@ -31,8 +31,8 @@ export function InboxPage() {
       <div className="p-4">
         {inbox.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-16 h-16 bg-surface-light rounded-full mb-4" />
-            <p className="text-secondary">No messages</p>
+            <div className="w-16 h-16 bg-bg-page rounded-full mb-4" />
+            <p className="text-text-secondary">No messages</p>
           </div>
         ) : (
           <List>

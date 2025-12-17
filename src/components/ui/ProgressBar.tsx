@@ -34,7 +34,7 @@ export function ProgressBar({
         />
       </div>
       {showLabel && (
-        <div className="flex justify-between text-xs text-secondary mt-1">
+        <div className="flex justify-between text-caption text-text-secondary mt-1">
           <span>{current}</span>
           <span>{max}</span>
         </div>

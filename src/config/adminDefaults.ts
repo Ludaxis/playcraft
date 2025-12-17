@@ -23,6 +23,7 @@ export interface AdminConfig {
   enabledEvents: string[]; // kept for backward compatibility
   eventPlacement: EventPlacement;
   theme: ThemeConfig;
+  showAreaButton: boolean;
 }
 
 // Theme configuration
@@ -91,23 +92,23 @@ export const defaultEventPlacement: EventPlacement = {
   right: [],
 };
 
-// Default theme (Periwinkle Dream)
+// Default theme (Grayscale)
 export const defaultTheme: ThemeConfig = {
-  primary: '#6b5bc7',
-  primaryLight: '#7d6dd4',
-  primaryDark: '#5a4ab3',
-  secondary: '#8578d9',
-  secondaryLight: '#9381ff',
-  secondaryDark: '#7269c4',
-  accent: '#9381ff',
-  accentLight: '#a899ff',
-  accentDark: '#7b69e6',
-  surface: '#d4d4ff',
-  surfaceLight: '#e8e8ff',
-  surfaceDark: '#b8b8ff',
-  gold: '#ffd966',
-  goldLight: '#ffe599',
-  goldDark: '#f0c840',
+  primary: '#374151',     // gray-700
+  primaryLight: '#4B5563', // gray-600
+  primaryDark: '#1F2937',  // gray-800
+  secondary: '#4B5563',    // gray-600
+  secondaryLight: '#6B7280', // gray-500
+  secondaryDark: '#374151',  // gray-700
+  accent: '#374151',       // gray-700
+  accentLight: '#E5E7EB',  // gray-200
+  accentDark: '#1F2937',   // gray-800
+  surface: '#F3F4F6',      // gray-100
+  surfaceLight: '#F9FAFB', // gray-50
+  surfaceDark: '#D1D5DB',  // gray-300
+  gold: '#F59E0B',         // amber-500
+  goldLight: '#FCD34D',    // amber-300
+  goldDark: '#D97706',     // amber-600
 };
 
 // Default admin configuration
@@ -116,6 +117,7 @@ export const defaultAdminConfig: AdminConfig = {
   enabledEvents: defaultEnabledEvents,
   eventPlacement: defaultEventPlacement,
   theme: defaultTheme,
+  showAreaButton: true,
 };
 
 // LocalStorage key

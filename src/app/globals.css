@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 /**
- * ═══════════════════════════════════════════════════════════════════════════════
- * PUZZLE KIT - CENTRALIZED THEME CONFIGURATION
- * ═══════════════════════════════════════════════════════════════════════════════
+ * ===============================================================================
+ * PUZZLE KIT - DESIGN TOKEN SYSTEM
+ * ===============================================================================
  *
- * To change colors or fonts, edit ONLY THIS FILE.
- * All components reference these CSS variables through Tailwind classes.
+ * A clean, semantic token system with grayscale default theme.
+ * Theme can be customized via the admin dashboard using presets.
  *
- * Color System:
- * - primary: Main dark color for headers, important elements
- * - secondary: Medium tone for containers, navigation
- * - surface: Background colors (light to dark variants)
- * - muted: Subdued text and icons
- * - accent: Featured/highlighted elements
- * - gold: Premium/VIP elements
- * - success/error/warning: Status colors
+ * Token Categories:
+ * - bg-*: Background colors
+ * - text-*: Text colors
+ * - brand-*: Configurable brand accent colors
+ * - status-*: Success, warning, error states
+ * - gold: Special reward color
+ * - border: Border colors
+ *
+ * Legacy colors are maintained for backward compatibility during migration.
  */
 
-/* ═══════════════════════════════════════════════════════════════════════════════
-   THEME VARIABLES - Edit these to change the entire app
-   ═══════════════════════════════════════════════════════════════════════════════ */
+/* ===============================================================================
+   SEMANTIC COLOR TOKENS (NEW SYSTEM)
+   =============================================================================== */
 
 @theme {
   /* ─────────────────────────────────────────────────────────────────────────────
@@ -30,90 +31,115 @@
   --font-display: var(--font-lilita), 'Lilita One', system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 
-  /* ═══════════════════════════════════════════════════════════════════════════
-     🎨 PERIWINKLE DREAM THEME
-     Base: Soft Periwinkle (#9381ff), Periwinkle (#b8b8ff), Ghost White (#f8f7ff)
-     ═══════════════════════════════════════════════════════════════════════════ */
+  /* ===============================================================================
+     GRAYSCALE DEFAULT THEME (Wireframe-friendly)
+     =============================================================================== */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     PRIMARY COLORS - Soft Periwinkle (#9381ff) for headers, key elements
+     BACKGROUND COLORS - Clean, neutral backgrounds
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-primary: #6b5bc7;
-  --color-primary-light: #7d6dd4;
-  --color-primary-dark: #5a4ab3;
+  --color-bg-page: #F9FAFB;       /* gray-50 - Main page background */
+  --color-bg-card: #FFFFFF;       /* white - Cards, panels, modals */
+  --color-bg-muted: #F3F4F6;      /* gray-100 - Subtle backgrounds */
+  --color-bg-inverse: #374151;    /* gray-700 - Dark backgrounds (headers) */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     SECONDARY COLORS - Deeper periwinkle for containers, navigation
+     TEXT COLORS - Clear hierarchy
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-secondary: #8578d9;
-  --color-secondary-light: #9381ff;
-  --color-secondary-dark: #7269c4;
+  --color-text-primary: #111827;    /* gray-900 - Headings, important */
+  --color-text-secondary: #4B5563;  /* gray-600 - Body text */
+  --color-text-muted: #9CA3AF;      /* gray-400 - Hints, captions */
+  --color-text-inverse: #FFFFFF;    /* white - Text on dark bg */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     SURFACE COLORS - Periwinkle to Ghost White (backgrounds)
+     BRAND COLORS - Configurable via admin (default: grayscale)
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-surface: #d4d4ff;
-  --color-surface-light: #e8e8ff;
-  --color-surface-lighter: #f0f0ff;
-  --color-surface-lightest: #f8f7ff;
-  --color-surface-dark: #b8b8ff;
-  --color-surface-darker: #a0a0eb;
+  --color-brand-primary: #374151;   /* gray-700 - Primary buttons, headers */
+  --color-brand-hover: #1F2937;     /* gray-800 - Hover states */
+  --color-brand-muted: #E5E7EB;     /* gray-200 - Light brand tint */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     MUTED COLORS - Soft lavender tones
+     STATUS COLORS - Consistent feedback
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-muted: #a8a8d8;
-  --color-muted-light: #c8c8eb;
-  --color-muted-dark: #8888c0;
-  --color-muted-foreground: #6b6b9d;
+  --color-status-success: #10B981;  /* emerald-500 */
+  --color-status-warning: #F59E0B;  /* amber-500 */
+  --color-status-error: #EF4444;    /* red-500 */
+  --color-status-info: #3B82F6;     /* blue-500 */
+
+  /* ─────────────────────────────────────────────────────────────────────────────
+     SPECIAL COLORS
+     ───────────────────────────────────────────────────────────────────────────── */
+  --color-gold: #F59E0B;            /* amber-500 - Rewards, premium */
+  --color-gold-light: #FCD34D;      /* amber-300 */
+  --color-gold-dark: #D97706;       /* amber-600 */
 
   /* ─────────────────────────────────────────────────────────────────────────────
      BORDER COLORS
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-border: #c8c8eb;
-  --color-border-light: #e0e0f5;
-  --color-border-dark: #a8a8d8;
-
-  /* ─────────────────────────────────────────────────────────────────────────────
-     ACCENT COLORS - Soft Periwinkle (#9381ff) for highlights
-     ───────────────────────────────────────────────────────────────────────────── */
-  --color-accent: #9381ff;
-  --color-accent-light: #a899ff;
-  --color-accent-dark: #7b69e6;
-  --color-accent-darker: #6352cc;
-  --color-accent-muted: #c4bcff;
-
-  /* ─────────────────────────────────────────────────────────────────────────────
-     GOLD COLORS - Warm complement for rewards
-     ───────────────────────────────────────────────────────────────────────────── */
-  --color-gold: #ffd966;
-  --color-gold-light: #ffe599;
-  --color-gold-dark: #f0c840;
-  --color-gold-darker: #d4ad20;
-
-  /* ─────────────────────────────────────────────────────────────────────────────
-     STATUS COLORS
-     ───────────────────────────────────────────────────────────────────────────── */
-  --color-success: #7dd3a8;
-  --color-success-light: #a0e6c4;
-  --color-success-dark: #5cb88a;
-
-  --color-error: #f87171;
-  --color-error-light: #fca5a5;
-  --color-error-dark: #ef4444;
-
-  --color-warning: #fbbf24;
-  --color-warning-light: #fcd34d;
-  --color-warning-dark: #f59e0b;
-
-  --color-info: #60a5fa;
-  --color-info-light: #93c5fd;
-  --color-info-dark: #3b82f6;
+  --color-border: #E5E7EB;          /* gray-200 - Default borders */
+  --color-border-strong: #D1D5DB;   /* gray-300 - Emphasized borders */
 
   /* ─────────────────────────────────────────────────────────────────────────────
      PAGE BACKGROUND - Behind the phone frame
      ───────────────────────────────────────────────────────────────────────────── */
   --color-page-bg: #141514;
+
+  /* ===============================================================================
+     LEGACY COLORS (Backward Compatibility)
+     These map to the new semantic tokens for gradual migration.
+     =============================================================================== */
+
+  /* Primary -> Brand */
+  --color-primary: var(--color-brand-primary);
+  --color-primary-light: var(--color-brand-hover);
+  --color-primary-dark: #111827;
+
+  /* Secondary -> Brand variants */
+  --color-secondary: var(--color-text-secondary);
+  --color-secondary-light: var(--color-brand-muted);
+  --color-secondary-dark: var(--color-text-primary);
+
+  /* Surface -> Background */
+  --color-surface: var(--color-bg-muted);
+  --color-surface-light: var(--color-bg-page);
+  --color-surface-lighter: var(--color-bg-card);
+  --color-surface-lightest: #FFFFFF;
+  --color-surface-dark: var(--color-border-strong);
+  --color-surface-darker: var(--color-text-muted);
+
+  /* Muted -> Text muted */
+  --color-muted: var(--color-text-muted);
+  --color-muted-light: var(--color-border);
+  --color-muted-dark: var(--color-text-secondary);
+  --color-muted-foreground: var(--color-text-secondary);
+
+  /* Accent -> Brand (for highlighted elements) */
+  --color-accent: var(--color-brand-primary);
+  --color-accent-light: var(--color-brand-muted);
+  --color-accent-dark: var(--color-brand-hover);
+  --color-accent-darker: var(--color-brand-hover);
+  --color-accent-muted: var(--color-brand-muted);
+
+  /* Status colors (keep separate for clarity) */
+  --color-success: var(--color-status-success);
+  --color-success-light: #34D399;
+  --color-success-dark: #059669;
+
+  --color-error: var(--color-status-error);
+  --color-error-light: #FCA5A5;
+  --color-error-dark: #DC2626;
+
+  --color-warning: var(--color-status-warning);
+  --color-warning-light: #FCD34D;
+  --color-warning-dark: #D97706;
+
+  --color-info: var(--color-status-info);
+  --color-info-light: #93C5FD;
+  --color-info-dark: #2563EB;
+
+  /* Border legacy */
+  --color-border-light: var(--color-border);
+  --color-border-dark: var(--color-border-strong);
 
   /* ─────────────────────────────────────────────────────────────────────────────
      ANIMATIONS
@@ -144,17 +170,121 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════════
+/* ===============================================================================
+   TYPOGRAPHY SYSTEM
+   ===============================================================================
+
+   Standardized text styles for consistent typography across the app.
+   Use these classes instead of arbitrary text sizes.
+
+   Headings:     .text-h1, .text-h2, .text-h3, .text-h4
+   Body:         .text-body, .text-body-sm
+   UI Elements:  .text-label, .text-caption, .text-button, .text-button-lg
+   Values:       .text-value, .text-value-lg, .text-value-sm
+*/
+
+/* Headings */
+.text-h1 {
+  font-size: 1.5rem;      /* 24px */
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.text-h2 {
+  font-size: 1.25rem;     /* 20px */
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.text-h3 {
+  font-size: 1.125rem;    /* 18px */
+  font-weight: 700;
+  line-height: 1.375;
+}
+
+.text-h4 {
+  font-size: 1rem;        /* 16px */
+  font-weight: 700;
+  line-height: 1.375;
+}
+
+/* Body Text */
+.text-body {
+  font-size: 1rem;        /* 16px */
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.text-body-sm {
+  font-size: 0.875rem;    /* 14px */
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* UI Elements */
+.text-label {
+  font-size: 0.875rem;    /* 14px */
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.text-caption {
+  font-size: 0.75rem;     /* 12px */
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.text-button {
+  font-size: 0.875rem;    /* 14px */
+  font-weight: 700;
+  line-height: 1;
+}
+
+.text-button-lg {
+  font-size: 1rem;        /* 16px */
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Values (numbers, stats, prices) */
+.text-value {
+  font-size: 0.875rem;    /* 14px */
+  font-weight: 700;
+  line-height: 1;
+}
+
+.text-value-lg {
+  font-size: 1.125rem;    /* 18px */
+  font-weight: 700;
+  line-height: 1;
+}
+
+.text-value-sm {
+  font-size: 0.75rem;     /* 12px */
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Special: Mini text for badges/tags (minimum readable) */
+.text-mini {
+  font-size: 0.625rem;    /* 10px - minimum for badges */
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* ===============================================================================
    BASE STYLES
-   ═══════════════════════════════════════════════════════════════════════════════ */
+   =============================================================================== */
 
 html,
 body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #141514 !important;
-  color: var(--color-primary);
+  background: var(--color-page-bg) !important;
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
 }
 
@@ -174,7 +304,7 @@ body {
   height: calc(100vh - 40px);
   max-height: 844px;
   min-height: 700px;
-  background: var(--color-surface-light);
+  background: var(--color-bg-page);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
@@ -208,14 +338,14 @@ a {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-surface-lighter);
+  background: var(--color-bg-muted);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-surface);
+  background: var(--color-border-strong);
   border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-muted);
+  background: var(--color-text-muted);
 }

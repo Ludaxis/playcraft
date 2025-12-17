@@ -35,7 +35,7 @@ export function Toggle({ checked, onChange, label, disabled = false }: TogglePro
           `}
         />
       </button>
-      {label && <span className="text-sm text-primary">{label}</span>}
+      {label && <span className="text-body-sm text-text-primary">{label}</span>}
     </label>
   );
 }

@@ -23,7 +23,7 @@ export function Header() {
         >
           <CrownIcon />
         </IconButton>
-        <div className="text-sm font-medium text-secondary">
+        <div className="text-sm font-medium text-text-secondary">
           Lv. {player.currentLevel}
         </div>
       </div>

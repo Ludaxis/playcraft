@@ -35,33 +35,33 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
   };
 
   return (
-    <div className="w-[320px] bg-secondary rounded-2xl border-2 border-secondary-light overflow-hidden">
+    <div className="w-[320px] bg-bg-inverse rounded-2xl border-2 border-brand-muted overflow-hidden">
         {/* Header */}
-        <div className="bg-primary-light py-2.5 px-3 flex items-center justify-center relative">
-          <h2 className="text-white text-base font-bold">Level {player.currentLevel}</h2>
+        <div className="bg-brand-hover py-2.5 px-3 flex items-center justify-center relative">
+          <h2 className="text-text-inverse text-h4">Level {player.currentLevel}</h2>
           <button
             onClick={handleClose}
-            className="absolute right-2 w-7 h-7 bg-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
+            className="absolute right-2 w-7 h-7 bg-status-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
           >
-            <span className="text-white text-sm font-bold">X</span>
+            <span className="text-text-inverse text-value">X</span>
           </button>
         </div>
 
         {/* Divider */}
-        <div className="h-0.5 bg-secondary-light" />
+        <div className="h-0.5 bg-brand-muted" />
 
         {/* Content */}
         <div className="p-3">
           {/* Difficulty Badge */}
           <div className="flex justify-center mb-2">
-            <div className="bg-secondary-light rounded-full px-3 py-0.5">
-              <span className="text-surface-light text-xs font-bold">Super Hard</span>
+            <div className="bg-brand-muted rounded-full px-3 py-0.5">
+              <span className="text-text-muted text-value-sm">Super Hard</span>
             </div>
           </div>
 
           {/* Goals Panel */}
-          <div className="bg-secondary-light rounded-lg border border-surface-dark p-2 mb-3">
-            <p className="text-surface text-[10px] text-center mb-1.5">Goals</p>
+          <div className="bg-brand-muted rounded-lg border border-border-strong p-2 mb-3">
+            <p className="text-text-muted text-mini text-center mb-1.5">Goals</p>
             <div className="flex justify-center gap-3">
               <GoalItem icon="BLU" count={30} />
               <GoalItem icon="RED" count={25} />
@@ -71,14 +71,14 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
 
           {/* Moves */}
           <div className="flex justify-center mb-3">
-            <div className="bg-secondary-light rounded-lg border border-surface-dark px-5 py-1.5 text-center">
-              <p className="text-surface text-[10px]">Moves</p>
-              <p className="text-white text-lg font-bold">25</p>
+            <div className="bg-brand-muted rounded-lg border border-border-strong px-5 py-1.5 text-center">
+              <p className="text-text-muted text-mini">Moves</p>
+              <p className="text-text-inverse text-h3">25</p>
             </div>
           </div>
 
           {/* Boosters Section */}
-          <p className="text-surface text-[10px] text-center mb-1.5">Select Boosters</p>
+          <p className="text-text-muted text-mini text-center mb-1.5">Select Boosters</p>
           <div className="flex justify-center gap-2 mb-3">
             {preGameBoosters.map((booster) => (
               <BoosterSelect
@@ -95,7 +95,7 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
           {/* Play Button */}
           <button
             onClick={handlePlay}
-            className="w-full bg-surface-dark hover:bg-surface border-2 border-surface rounded-lg py-3 text-primary-light font-bold text-sm transition-colors"
+            className="w-full bg-border-strong hover:bg-bg-muted border-2 border-border rounded-lg py-3 text-text-primary font-bold text-sm transition-colors"
           >
             Play
           </button>
@@ -108,10 +108,10 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
 function GoalItem({ icon, count }: { icon: string; count: number }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="w-9 h-9 bg-surface-dark rounded flex items-center justify-center mb-0.5">
-        <span className="text-secondary text-[10px] font-bold">{icon}</span>
+      <div className="w-9 h-9 bg-border-strong rounded flex items-center justify-center mb-0.5">
+        <span className="text-text-secondary text-mini font-bold">{icon}</span>
       </div>
-      <span className="text-white text-xs font-bold">{count}</span>
+      <span className="text-text-inverse text-value-sm">{count}</span>
     </div>
   );
 }
@@ -134,28 +134,28 @@ function BoosterSelect({ name, count, selected, onToggle, disabled }: BoosterSel
       disabled={disabled}
       className={`relative flex flex-col items-center p-1.5 rounded-lg border transition-colors ${
         disabled
-          ? 'opacity-50 cursor-not-allowed border-secondary'
+          ? 'opacity-50 cursor-not-allowed border-bg-inverse'
           : selected
-          ? 'bg-surface-dark border-surface'
-          : 'bg-secondary-light border-surface-dark hover:bg-surface-dark'
+          ? 'bg-border-strong border-border'
+          : 'bg-brand-muted border-border-strong hover:bg-border-strong'
       }`}
     >
       {/* Checkbox */}
       <div
         className={`absolute -top-1 -right-1 w-4 h-4 rounded border flex items-center justify-center ${
-          selected ? 'bg-surface border-surface-light' : 'bg-secondary border-secondary-light'
+          selected ? 'bg-bg-muted border-bg-page' : 'bg-bg-inverse border-brand-muted'
         }`}
       >
-        {selected && <span className="text-secondary text-[8px] font-bold">V</span>}
+        {selected && <span className="text-text-secondary text-mini font-bold">V</span>}
       </div>
 
       {/* Icon */}
-      <div className="w-8 h-8 bg-surface-dark rounded flex items-center justify-center mb-0.5">
-        <span className="text-secondary text-[8px] font-bold">{abbreviation}</span>
+      <div className="w-8 h-8 bg-border-strong rounded flex items-center justify-center mb-0.5">
+        <span className="text-text-secondary text-mini font-bold">{abbreviation}</span>
       </div>
 
       {/* Count */}
-      <span className="text-white text-[10px] font-bold">{count}</span>
+      <span className="text-text-inverse text-mini font-bold">{count}</span>
     </button>
   );
 }

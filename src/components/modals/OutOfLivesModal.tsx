@@ -30,10 +30,10 @@ export function OutOfLivesModal() {
           ))}
         </div>
 
-        <p className="text-lg font-bold text-primary mb-1">
+        <p className="text-h3 text-text-primary mb-1">
           {player.lives}/{player.maxLives} Lives
         </p>
-        <p className="text-sm text-secondary mb-4">
+        <p className="text-sm text-text-secondary mb-4">
           {player.lives < player.maxLives
             ? 'Lives refill over time'
             : 'You have full lives!'}
@@ -42,8 +42,8 @@ export function OutOfLivesModal() {
         {/* Timer */}
         {player.lives < player.maxLives && (
           <Panel variant="outlined" className="mb-4">
-            <p className="text-sm text-secondary">Next life in</p>
-            <p className="text-xl font-bold text-primary">29:45</p>
+            <p className="text-sm text-text-secondary">Next life in</p>
+            <p className="text-h2 text-text-primary">29:45</p>
           </Panel>
         )}
 
@@ -84,7 +84,7 @@ export function OutOfLivesModal() {
 function HeartIcon({ filled }: { filled: boolean }) {
   return (
     <svg
-      className={`w-8 h-8 ${filled ? 'text-primary' : 'text-surface'}`}
+      className={`w-8 h-8 ${filled ? 'text-text-primary' : 'text-bg-muted'}`}
       viewBox="0 0 24 24"
       fill="currentColor"
     >

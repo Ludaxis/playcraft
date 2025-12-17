@@ -24,56 +24,56 @@ export function WeeklyContestInfoModal({ onAnimatedClose }: WeeklyContestInfoMod
       onClick={handleClose}
     >
       {/* Title */}
-      <h1 className="text-white text-2xl font-bold mb-12">Weekly Contest</h1>
+      <h1 className="text-text-inverse text-h1 mb-12">Weekly Contest</h1>
 
       {/* Step 1 */}
       <div className="flex flex-col items-center mb-8">
-        <div className="w-24 h-24 bg-surface-dark rounded-xl border-2 border-surface flex items-center justify-center mb-2">
-          <span className="text-secondary text-xs font-bold">GAME</span>
+        <div className="w-24 h-24 bg-border-strong rounded-xl border-2 border-border flex items-center justify-center mb-2">
+          <span className="text-text-secondary text-value-sm">GAME</span>
         </div>
-        <p className="text-white font-bold">Beat Levels!</p>
+        <p className="text-text-inverse font-bold">Beat Levels!</p>
       </div>
 
-      <div className="text-surface-dark text-2xl mb-4">↓</div>
+      <div className="text-border-strong text-2xl mb-4">↓</div>
 
       {/* Step 2 */}
       <div className="flex flex-col items-center mb-8">
         <div className="flex items-end gap-2 mb-2">
-          <div className="w-16 h-16 bg-surface-dark rounded-lg flex items-center justify-center">
-            <span className="text-secondary text-xs font-bold">2nd</span>
+          <div className="w-16 h-16 bg-border-strong rounded-lg flex items-center justify-center">
+            <span className="text-text-secondary text-value-sm">2nd</span>
           </div>
-          <div className="w-20 h-20 bg-surface rounded-lg flex items-center justify-center">
-            <span className="text-secondary text-sm font-bold">1st</span>
+          <div className="w-20 h-20 bg-bg-muted rounded-lg flex items-center justify-center">
+            <span className="text-text-secondary text-value">1st</span>
           </div>
-          <div className="w-16 h-16 bg-secondary-light rounded-lg flex items-center justify-center">
-            <span className="text-surface text-xs font-bold">3rd</span>
+          <div className="w-16 h-16 bg-brand-muted rounded-lg flex items-center justify-center">
+            <span className="text-text-muted text-value-sm">3rd</span>
           </div>
         </div>
-        <p className="text-white font-bold">Take the Lead!</p>
+        <p className="text-text-inverse font-bold">Take the Lead!</p>
       </div>
 
-      <div className="text-surface-dark text-2xl mb-4">↓</div>
+      <div className="text-border-strong text-2xl mb-4">↓</div>
 
       {/* Step 3 */}
       <div className="flex flex-col items-center mb-12">
-        <div className="w-24 h-20 bg-surface-dark rounded-lg border-2 border-surface flex items-center justify-center mb-2">
-          <span className="text-secondary text-xs font-bold">CHEST</span>
+        <div className="w-24 h-20 bg-border-strong rounded-lg border-2 border-border flex items-center justify-center mb-2">
+          <span className="text-text-secondary text-value-sm">CHEST</span>
         </div>
-        <p className="text-white font-bold">Win Rewards!</p>
+        <p className="text-text-inverse font-bold">Win Rewards!</p>
       </div>
 
       {/* Facebook Connect */}
       <div className="flex items-center gap-3 mb-12">
-        <div className="w-10 h-10 bg-secondary-light rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold">f</span>
+        <div className="w-10 h-10 bg-brand-muted rounded-lg flex items-center justify-center">
+          <span className="text-text-inverse font-bold">f</span>
         </div>
-        <p className="text-surface text-sm">
+        <p className="text-text-muted text-sm">
           Connect with Facebook to compete<br />against your friends!
         </p>
       </div>
 
       {/* Tap to Continue */}
-      <p className="text-surface text-lg font-bold">Tap to Continue</p>
+      <p className="text-text-muted text-h3">Tap to Continue</p>
     </div>
   );
 }

@@ -19,12 +19,12 @@ export function ResourceDisplay({
 }: ResourceDisplayProps) {
   const content = (
     <>
-      <span className="flex items-center justify-center w-6 h-6 bg-surface-light rounded text-xs">
+      <span className="flex items-center justify-center w-6 h-6 bg-surface-light rounded text-caption">
         {icon}
       </span>
-      <span className="text-sm font-semibold text-primary">{value}</span>
+      <span className="text-value text-text-primary">{value}</span>
       {showAdd && (
-        <span className="flex items-center justify-center w-5 h-5 bg-primary text-white rounded-full text-xs font-bold">
+        <span className="flex items-center justify-center w-5 h-5 bg-primary text-text-inverse rounded-full text-value-sm">
           +
         </span>
       )}

@@ -45,28 +45,28 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
   };
 
   return (
-    <div className="w-[320px] bg-secondary-light rounded-2xl border-2 border-surface-dark overflow-hidden">
+    <div className="w-[320px] bg-brand-muted rounded-2xl border-2 border-border-strong overflow-hidden">
       {/* Header */}
-      <div className="bg-secondary py-2.5 px-3 flex items-center justify-center relative">
-        <h2 className="text-white text-base font-bold">Free Lives</h2>
+      <div className="bg-bg-inverse py-2.5 px-3 flex items-center justify-center relative">
+        <h2 className="text-text-inverse text-h4">Free Lives</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-7 h-7 bg-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
+          className="absolute right-2 w-7 h-7 bg-status-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
         >
-          <span className="text-white text-sm font-bold">X</span>
+          <span className="text-text-inverse text-value">X</span>
         </button>
       </div>
 
       {/* Divider */}
-      <div className="h-0.5 bg-surface-dark" />
+      <div className="h-0.5 bg-border-strong" />
 
       {/* Content */}
-      <div className="bg-surface-light m-1.5 rounded-lg border border-surface p-2">
+      <div className="bg-bg-page m-1.5 rounded-lg border border-border p-2">
         {/* Total free lives counter */}
-        <div className="bg-surface-lighter rounded px-3 py-1.5 mb-2 flex items-center justify-between border border-surface">
-          <span className="text-secondary text-xs font-medium">Total free lives:</span>
-          <div className="bg-surface rounded px-3 py-0.5">
-            <span className="text-primary-light font-bold text-sm">{unclaimedCount}</span>
+        <div className="bg-bg-card rounded px-3 py-1.5 mb-2 flex items-center justify-between border border-border">
+          <span className="text-text-secondary text-xs font-medium">Total free lives:</span>
+          <div className="bg-bg-muted rounded px-3 py-0.5">
+            <span className="text-text-primary font-bold text-sm">{unclaimedCount}</span>
           </div>
         </div>
 
@@ -94,7 +94,7 @@ interface LifeGiftRowProps {
 
 function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
   return (
-    <div className="bg-surface-lighter rounded-lg px-2 py-1.5 flex items-center gap-2 border border-surface">
+    <div className="bg-bg-card rounded-lg px-2 py-1.5 flex items-center gap-2 border border-border">
       {/* Heart icon */}
       <div className="w-8 h-8 flex items-center justify-center">
         <Image
@@ -108,21 +108,21 @@ function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
 
       {/* Sender info */}
       <div className="flex-1">
-        <p className="text-primary-light text-xs font-bold">{senderName}</p>
-        <p className="text-secondary-light text-[10px]">Sent you a life!</p>
+        <p className="text-text-primary text-value-sm">{senderName}</p>
+        <p className="text-text-muted text-mini">Sent you a life!</p>
       </div>
 
       {/* Add button */}
       {claimed ? (
-        <div className="bg-surface rounded px-3 py-1">
-          <span className="text-secondary-light text-xs font-bold">Added</span>
+        <div className="bg-bg-muted rounded px-3 py-1">
+          <span className="text-text-muted text-value-sm">Added</span>
         </div>
       ) : (
         <button
           onClick={onAdd}
-          className="bg-surface-dark hover:bg-secondary-light border border-surface rounded px-3 py-1 transition-colors"
+          className="bg-border-strong hover:bg-brand-muted border border-border rounded px-3 py-1 transition-colors"
         >
-          <span className="text-white text-xs font-bold">Add</span>
+          <span className="text-text-inverse text-value-sm">Add</span>
         </button>
       )}
     </div>

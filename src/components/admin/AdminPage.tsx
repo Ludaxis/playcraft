@@ -10,7 +10,7 @@ type SectionId = 'tabs' | 'events' | 'theme';
 
 export function AdminPage() {
   const { navigate } = useNavigation();
-  const { resetToDefaults } = useAdmin();
+  const { config, toggleAreaButton, resetToDefaults } = useAdmin();
   const [expandedSection, setExpandedSection] = useState<SectionId | null>('tabs');
 
   const toggleSection = (section: SectionId) => {
@@ -24,48 +24,68 @@ export function AdminPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-secondary">
+    <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="flex items-center justify-center px-3 py-3 bg-primary relative">
-        <h1 className="text-white text-xl font-bold">Admin Panel</h1>
+      <div className="flex items-center justify-center px-3 py-3 bg-brand-hover relative">
+        <h1 className="text-text-inverse text-h2">Admin Panel</h1>
         <button
           onClick={() => navigate('settings')}
-          className="absolute right-3 w-8 h-8 bg-primary-light rounded-full flex items-center justify-center border-2 border-primary-dark"
+          className="absolute right-3 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
         >
-          <span className="text-white font-bold">X</span>
+          <span className="text-text-inverse text-value">X</span>
         </button>
       </div>
 
       {/* Divider */}
-      <div className="h-1 bg-secondary-light" />
+      <div className="h-1 bg-brand-muted" />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Info Banner */}
-        <div className="bg-accent/20 rounded-xl p-3 border border-accent/30">
-          <p className="text-primary text-sm font-bold mb-1">Prototype Admin</p>
-          <p className="text-muted-foreground text-xs">
+        <div className="bg-bg-muted rounded-xl p-3 border border-border">
+          <p className="text-text-primary text-sm font-bold mb-1">Prototype Admin</p>
+          <p className="text-text-muted text-xs">
             Configure tabs, events, and theme. Changes are saved automatically.
           </p>
         </div>
 
+        {/* Main Menu Options */}
+        <div className="bg-bg-page rounded-xl border border-border p-3">
+          <p className="text-text-primary text-value mb-3">Main Menu Options</p>
+          <div className="flex items-center justify-between">
+            <span className="text-text-secondary text-body-sm">Show Area Button</span>
+            <button
+              onClick={() => toggleAreaButton(!config.showAreaButton)}
+              className={`w-12 h-6 rounded-full relative transition-colors ${
+                config.showAreaButton ? 'bg-status-success' : 'bg-bg-muted'
+              }`}
+            >
+              <div
+                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${
+                  config.showAreaButton ? 'right-1' : 'left-1'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
         {/* Sections */}
         {sections.map(({ id, title, component: Component }) => (
-          <div key={id} className="bg-surface-light rounded-xl border border-surface overflow-hidden">
+          <div key={id} className="bg-bg-page rounded-xl border border-border overflow-hidden">
             {/* Section Header */}
             <button
               onClick={() => toggleSection(id)}
-              className="w-full flex items-center justify-between p-3 bg-surface-lighter"
+              className="w-full flex items-center justify-between p-3 bg-bg-card"
             >
-              <span className="text-primary font-bold">{title}</span>
-              <span className="text-primary text-lg">
+              <span className="text-text-primary font-bold">{title}</span>
+              <span className="text-text-primary text-lg">
                 {expandedSection === id ? '-' : '+'}
               </span>
             </button>
 
             {/* Section Content */}
             {expandedSection === id && (
-              <div className="p-3 border-t border-surface">
+              <div className="p-3 border-t border-border">
                 <Component />
               </div>
             )}
@@ -75,14 +95,14 @@ export function AdminPage() {
         {/* Reset All */}
         <button
           onClick={resetToDefaults}
-          className="w-full bg-error/20 border-2 border-error/30 rounded-xl py-3"
+          className="w-full bg-status-error/20 border-2 border-status-error/30 rounded-xl py-3"
         >
-          <span className="text-error font-bold">Reset All to Defaults</span>
+          <span className="text-status-error font-bold">Reset All to Defaults</span>
         </button>
 
         {/* Version Info */}
         <div className="text-center py-2">
-          <p className="text-muted text-xs">Puzzle Kit Admin v1.0</p>
+          <p className="text-text-muted text-xs">Puzzle Kit Admin v1.0</p>
         </div>
       </div>
     </div>

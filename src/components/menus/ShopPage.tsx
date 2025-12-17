@@ -44,26 +44,26 @@ export function ShopPage() {
   ];
 
   return (
-    <div className="flex flex-col h-full bg-secondary">
+    <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 bg-primary-light">
+      <div className="flex items-center justify-between px-2 py-2 bg-brand-hover">
         {/* Coins display */}
-        <div className="flex items-center gap-1 bg-surface-light rounded-full px-2 py-0.5">
+        <div className="flex items-center gap-1 bg-bg-page rounded-full px-2 py-0.5">
           <div className="w-5 h-5 bg-gold rounded-full flex items-center justify-center">
-            <span className="text-gold-darker text-[10px] font-bold">$</span>
+            <span className="text-gold-darker text-mini">$</span>
           </div>
-          <span className="text-primary-light text-xs font-bold">{state.player.coins.toLocaleString()}</span>
+          <span className="text-text-primary text-value-sm">{state.player.coins.toLocaleString()}</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-white text-base font-bold">Shop</h1>
+        <h1 className="text-text-inverse text-h4">Shop</h1>
 
         {/* Close button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="w-8 h-8 bg-error rounded-full flex items-center justify-center border border-error-light"
+          className="w-8 h-8 bg-status-error rounded-full flex items-center justify-center border border-error-light"
         >
-          <span className="text-white text-sm font-bold">X</span>
+          <span className="text-text-inverse text-value">X</span>
         </button>
       </div>
 
@@ -121,16 +121,14 @@ export function ShopPage() {
         {/* More Offers Button */}
         <button
           onClick={() => setShowMoreOffers(!showMoreOffers)}
-          className="w-full bg-surface-light rounded-full py-2 flex items-center justify-center gap-2 border border-surface"
+          className="w-full bg-bg-card rounded-full py-2 flex items-center justify-center gap-2 border border-border"
         >
-          <span className="text-secondary text-xs font-bold">
+          <span className="text-text-primary text-value-sm">
             {showMoreOffers ? 'Show Less' : 'More Offers!'}
           </span>
-          <div className="w-5 h-5 bg-surface-dark rounded-full flex items-center justify-center">
-            <span className={`text-white text-xs transition-transform ${showMoreOffers ? 'rotate-180' : ''}`}>
-              v
-            </span>
-          </div>
+          <span className={`text-text-secondary text-caption transition-transform ${showMoreOffers ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
         </button>
       </div>
 

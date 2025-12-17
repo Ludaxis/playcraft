@@ -104,8 +104,8 @@ export function AnimatedTabs({
               key={tab.id}
               ref={(el) => setTabRef(tab.id, el)}
               onClick={() => handleTabClick(tab.id)}
-              className={`flex-1 py-1.5 text-center text-xs font-bold transition-colors relative z-10 ${
-                activeTab === tab.id ? 'text-primary-light' : 'text-surface'
+              className={`flex-1 py-1.5 text-center text-value-sm transition-colors relative z-10 ${
+                activeTab === tab.id ? 'text-text-primary' : 'text-text-muted'
               }`}
             >
               {tab.label}
@@ -170,8 +170,8 @@ export function AnimatedTabBar({ tabs, activeTab, onTabChange, className = '' }:
             key={tab.id}
             ref={(el) => setTabRef(tab.id, el)}
             onClick={() => onTabChange(tab.id)}
-            className={`flex-1 py-1.5 text-center text-xs font-bold transition-colors relative z-10 ${
-              activeTab === tab.id ? 'text-primary-light' : 'text-surface'
+            className={`flex-1 py-1.5 text-center text-value-sm transition-colors relative z-10 ${
+              activeTab === tab.id ? 'text-text-primary' : 'text-text-muted'
             }`}
           >
             {tab.label}

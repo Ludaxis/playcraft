@@ -15,15 +15,15 @@ interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> 
 }
 
 const sizeStyles: Record<IconButtonSize, string> = {
-  sm: 'w-8 h-8 text-sm',
-  md: 'w-10 h-10 text-base',
-  lg: 'w-12 h-12 text-lg',
+  sm: 'w-8 h-8 text-body-sm',
+  md: 'w-10 h-10 text-body',
+  lg: 'w-12 h-12 text-h3',
 };
 
 const variantStyles: Record<IconButtonVariant, string> = {
-  default: 'bg-surface-lighter text-primary hover:bg-surface-light',
-  primary: 'bg-primary text-white hover:bg-primary-light',
-  ghost: 'bg-transparent text-primary hover:bg-surface-lighter',
+  default: 'bg-surface-lighter text-text-primary hover:bg-surface-light',
+  primary: 'bg-primary text-text-inverse hover:bg-primary-light',
+  ghost: 'bg-transparent text-text-primary hover:bg-surface-lighter',
 };
 
 export function IconButton({

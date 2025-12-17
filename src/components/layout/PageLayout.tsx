@@ -35,7 +35,7 @@ export function PageLayout({
               </IconButton>
             )}
             {title && (
-              <h1 className="text-lg font-semibold text-primary">{title}</h1>
+              <h1 className="text-lg font-semibold text-text-primary">{title}</h1>
             )}
           </div>
           {headerActions && (

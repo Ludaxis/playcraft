@@ -4,21 +4,23 @@ import React from 'react';
 import Image from 'next/image';
 import { useGame, useNavigation, useAdmin } from '@/store';
 import { BottomNavigation } from '@/components/shared';
+import { LevelRoadmap } from './LevelRoadmap';
 import { useTimer } from '@/hooks';
 import type { PageId } from '@/types';
 
 // Event configuration with icons and colors
+// All backgrounds are dark for good contrast with white text
 const eventConfig: Record<string, { icon: string; bgColor: string; page: PageId }> = {
   'royal-pass': { icon: 'RP', bgColor: 'bg-gold', page: 'royal-pass' },
-  'mission-control': { icon: 'MC', bgColor: 'bg-accent', page: 'mission-control' },
+  'mission-control': { icon: 'MC', bgColor: 'bg-brand-hover', page: 'mission-control' },
   'lightning-rush': { icon: 'LR', bgColor: 'bg-gold', page: 'lightning-rush' },
-  'lava-quest': { icon: 'LQ', bgColor: 'bg-secondary-light', page: 'lava-quest' },
-  'sky-race': { icon: 'SR', bgColor: 'bg-accent', page: 'main-menu' },
-  'kings-cup': { icon: 'KC', bgColor: 'bg-gold', page: 'main-menu' },
-  'team-chest': { icon: 'TC', bgColor: 'bg-secondary', page: 'main-menu' },
-  'book-of-treasure': { icon: 'BT', bgColor: 'bg-gold-dark', page: 'main-menu' },
-  'album': { icon: 'AL', bgColor: 'bg-accent', page: 'main-menu' },
-  'collection': { icon: 'CO', bgColor: 'bg-secondary', page: 'collection' },
+  'lava-quest': { icon: 'LQ', bgColor: 'bg-bg-inverse', page: 'lava-quest' },
+  'sky-race': { icon: 'SR', bgColor: 'bg-brand-hover', page: 'sky-race' },
+  'kings-cup': { icon: 'KC', bgColor: 'bg-gold', page: 'kings-cup' },
+  'team-chest': { icon: 'TC', bgColor: 'bg-brand-hover', page: 'team-chest' },
+  'book-of-treasure': { icon: 'BT', bgColor: 'bg-gold', page: 'book-of-treasure' },
+  'album': { icon: 'AL', bgColor: 'bg-brand-hover', page: 'album' },
+  'collection': { icon: 'CO', bgColor: 'bg-brand-hover', page: 'collection' },
 };
 
 export function MainMenu() {
@@ -39,15 +41,15 @@ export function MainMenu() {
   const getEventEndTime = () => new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 20 * 60 * 60 * 1000);
 
   return (
-    <div className="relative flex flex-col h-full bg-surface-light overflow-hidden">
+    <div className="relative flex flex-col h-full bg-bg-page overflow-hidden">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-2 py-2 bg-primary">
+      <div className="flex items-center justify-between px-2 py-2 bg-bg-inverse">
         {/* Profile */}
         <button
           onClick={() => openModal('profile')}
-          className="w-12 h-12 bg-secondary rounded-lg border-2 border-secondary-light flex items-center justify-center"
+          className="w-12 h-12 bg-bg-inverse rounded-lg border-2 border-brand-muted flex items-center justify-center"
         >
-          <span className="text-white text-xs">PRO</span>
+          <span className="text-text-inverse text-caption">PRO</span>
         </button>
 
         {/* Resources */}
@@ -55,63 +57,93 @@ export function MainMenu() {
           {/* Coins */}
           <button
             onClick={() => navigate('shop')}
-            className="flex items-center gap-1 bg-primary-light rounded-full px-2 py-1"
+            className="flex items-center gap-1 bg-brand-hover rounded-full px-2 py-1"
           >
-            <div className="w-5 h-5 bg-surface-dark rounded-full flex items-center justify-center border border-surface">
-              <span className="text-secondary text-[10px] font-bold">$</span>
+            <div className="w-5 h-5 bg-gold rounded-full flex items-center justify-center">
+              <span className="text-text-primary text-mini font-bold">$</span>
             </div>
-            <span className="text-white text-sm font-bold">{player.coins.toLocaleString()}</span>
-            <div className="w-4 h-4 bg-secondary-light rounded-full flex items-center justify-center">
-              <Image src="/icons/Add.svg" alt="Add" width={12} height={12} className="invert opacity-80" />
+            <span className="text-text-inverse text-value">{player.coins.toLocaleString()}</span>
+            <div className="w-4 h-4 bg-status-success rounded-full flex items-center justify-center">
+              <Image src="/icons/Add.svg" alt="Add" width={10} height={10} className="invert" />
             </div>
           </button>
 
           {/* Lives */}
           <button
             onClick={() => openModal('free-lives')}
-            className="flex items-center gap-1 bg-primary-light rounded-full px-2 py-1"
+            className="flex items-center gap-1 bg-brand-hover rounded-full px-2 py-1"
           >
-            <div className="w-5 h-5 bg-secondary-light rounded-full flex items-center justify-center">
-              <Image src="/icons/Heart-Filled.svg" alt="Lives" width={14} height={14} className="invert opacity-80" />
-            </div>
-            <span className="text-white text-sm font-bold">{player.lives}</span>
+            <Image src="/icons/Heart-Filled.svg" alt="Lives" width={18} height={18} className="text-status-error" style={{ filter: 'invert(27%) sepia(94%) saturate(5618%) hue-rotate(355deg) brightness(91%) contrast(128%)' }} />
+            <span className="text-text-inverse text-value">{player.lives}</span>
           </button>
 
           {/* Stars */}
           <button
             onClick={() => openModal('star-info')}
-            className="flex items-center gap-1 bg-primary-light rounded-full px-2 py-1"
+            className="flex items-center gap-1 bg-brand-hover rounded-full px-2 py-1"
           >
-            <div className="w-5 h-5 bg-secondary-light rounded-full flex items-center justify-center">
-              <Image src="/icons/Star-Filled.svg" alt="Stars" width={14} height={14} className="invert opacity-80" />
-            </div>
-            <span className="text-white text-sm font-bold">{player.stars}</span>
+            <Image src="/icons/Star-Filled.svg" alt="Stars" width={18} height={18} style={{ filter: 'invert(76%) sepia(53%) saturate(1285%) hue-rotate(358deg) brightness(103%) contrast(104%)' }} />
+            <span className="text-text-inverse text-value">{player.stars}</span>
           </button>
         </div>
 
         {/* Settings */}
         <button
           onClick={() => navigate('settings')}
-          className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center"
+          className="w-10 h-10 bg-bg-inverse rounded-full flex items-center justify-center"
         >
           <Image src="/icons/Setting.svg" alt="Settings" width={20} height={20} className="invert opacity-80" />
         </button>
       </div>
 
-      {/* Main Castle Area with LiveOps Buttons */}
-      <div className="flex-1 relative">
-        {/* Castle View - Center */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-64 h-64 bg-surface rounded-full flex items-center justify-center border-4 border-surface-dark">
-            <div className="text-center">
-              <div className="text-secondary-light text-sm">[Castle Area]</div>
-              <div className="text-secondary text-xs mt-1">{currentArea?.name}</div>
+      {/* Main Content Area */}
+      <div className="flex-1 relative flex flex-col">
+        {config.showAreaButton ? (
+          /* Castle View Mode */
+          <>
+            {/* Castle View - Center */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-64 h-64 bg-bg-muted rounded-full flex items-center justify-center border-4 border-border-strong">
+                <div className="text-center">
+                  <div className="text-text-muted text-body-sm">[Castle Area]</div>
+                  <div className="text-text-secondary text-caption mt-1">{currentArea?.name}</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            {/* Bottom Buttons - Level & Area */}
+            <div className="absolute bottom-4 left-0 right-0 px-3 flex items-end justify-between">
+              {/* Level Button */}
+              <button
+                onClick={() => openModal('level-start')}
+                className="bg-brand-hover border-2 border-brand-primary rounded-xl px-6 py-3 shadow-lg"
+              >
+                <div className="text-text-inverse text-h3">Level {player.currentLevel}</div>
+                <div className="text-text-muted text-caption text-center">Super Hard</div>
+              </button>
+
+              {/* Area Button */}
+              <button
+                onClick={() => navigate('area-tasks')}
+                className="bg-bg-card border-2 border-border rounded-xl px-4 py-3 shadow-lg flex items-center gap-3"
+              >
+                <div>
+                  <div className="text-text-primary text-value">Area {player.currentArea}</div>
+                  <div className="text-text-secondary text-caption">{completedTasks}/{totalTasks}</div>
+                </div>
+                <div className="w-8 h-8 bg-brand-hover rounded-lg flex items-center justify-center">
+                  <span className="text-text-inverse text-caption">CH</span>
+                </div>
+              </button>
+            </div>
+          </>
+        ) : (
+          /* Level Roadmap Mode */
+          <LevelRoadmap />
+        )}
 
         {/* Left Side Events */}
-        <div className="absolute left-1 top-8 flex flex-col gap-2">
+        <div className="absolute left-1 top-8 flex flex-col gap-2 z-10">
           {leftEvents.map((eventId) => {
             const cfg = eventConfig[eventId];
             if (!cfg) return null;
@@ -128,7 +160,7 @@ export function MainMenu() {
         </div>
 
         {/* Right Side Events */}
-        <div className="absolute right-1 top-8 flex flex-col gap-2">
+        <div className="absolute right-1 top-8 flex flex-col gap-2 z-10">
           {rightEvents.map((eventId) => {
             const cfg = eventConfig[eventId];
             if (!cfg) return null;
@@ -142,32 +174,6 @@ export function MainMenu() {
               />
             );
           })}
-        </div>
-
-        {/* Bottom Buttons - Level & Area */}
-        <div className="absolute bottom-4 left-0 right-0 px-3 flex justify-between items-end">
-          {/* Level Button */}
-          <button
-            onClick={() => openModal('level-start')}
-            className="bg-secondary-light border-2 border-surface-dark rounded-lg px-5 py-2 shadow-lg"
-          >
-            <div className="text-white text-base font-bold">Level {player.currentLevel}</div>
-            <div className="text-surface text-[10px] text-center">Super Hard</div>
-          </button>
-
-          {/* Area Button */}
-          <button
-            onClick={() => navigate('area-tasks')}
-            className="bg-surface-dark border-2 border-surface rounded-lg px-4 py-2 shadow-lg flex items-center gap-2"
-          >
-            <div>
-              <div className="text-primary-light text-sm font-bold">Area {player.currentArea}</div>
-              <div className="text-secondary text-[10px]">{completedTasks}/{totalTasks}</div>
-            </div>
-            <div className="w-7 h-7 bg-secondary-light rounded flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold">CH</span>
-            </div>
-          </button>
         </div>
       </div>
 
@@ -185,7 +191,7 @@ interface EventButtonProps {
   bgColor?: string;
 }
 
-function EventButton({ icon, timer, onClick, bgColor = 'bg-secondary-light' }: EventButtonProps) {
+function EventButton({ icon, timer, onClick, bgColor = 'bg-brand-muted' }: EventButtonProps) {
   const timerData = useTimer(timer);
 
   return (
@@ -193,11 +199,11 @@ function EventButton({ icon, timer, onClick, bgColor = 'bg-secondary-light' }: E
       onClick={onClick}
       className="relative flex flex-col items-center"
     >
-      <div className={`w-14 h-14 ${bgColor} rounded-full border-2 border-surface-dark shadow-lg flex items-center justify-center`}>
-        <span className="text-white text-xs font-bold">{icon}</span>
+      <div className={`w-14 h-14 ${bgColor} rounded-full border-2 border-border-strong shadow-lg flex items-center justify-center`}>
+        <span className="text-text-inverse text-value-sm">{icon}</span>
       </div>
-      <div className="bg-primary-light rounded-full px-2 py-0.5 -mt-2 z-10">
-        <span className="text-white text-[10px] font-medium">
+      <div className="bg-brand-hover rounded-full px-2 py-0.5 -mt-2 z-10">
+        <span className="text-text-inverse text-mini">
           {timerData.days > 0 ? `${timerData.days}d ${timerData.hours}h` : `${timerData.hours}h ${timerData.minutes}m`}
         </span>
       </div>

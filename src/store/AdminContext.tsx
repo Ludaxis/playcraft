@@ -11,13 +11,21 @@ import {
   defaultEventPlacement,
   ADMIN_CONFIG_KEY,
 } from '@/config/adminDefaults';
+import {
+  type ThemePreset,
+  themePresets,
+  defaultThemePreset,
+  applyThemePreset,
+} from '@/config/themePresets';
 
-// State type
-interface AdminState extends AdminConfig {}
+// Extended state type with preset support
+interface AdminState extends AdminConfig {
+  themePresetId: string;
+}
 
 // Action types
 type AdminAction =
-  | { type: 'SET_CONFIG'; payload: AdminConfig }
+  | { type: 'SET_CONFIG'; payload: AdminState }
   | { type: 'UPDATE_TABS'; payload: TabConfig[] }
   | { type: 'TOGGLE_TAB'; payload: { tabId: string; enabled: boolean } }
   | { type: 'REORDER_TABS'; payload: TabConfig[] }
@@ -25,7 +33,15 @@ type AdminAction =
   | { type: 'REORDER_EVENTS'; payload: string[] }
   | { type: 'UPDATE_EVENT_PLACEMENT'; payload: EventPlacement }
   | { type: 'UPDATE_THEME'; payload: Partial<ThemeConfig> }
+  | { type: 'SET_THEME_PRESET'; payload: string }
+  | { type: 'TOGGLE_AREA_BUTTON'; payload: boolean }
   | { type: 'RESET_TO_DEFAULTS' };
+
+// Default state with preset
+const defaultState: AdminState = {
+  ...defaultAdminConfig,
+  themePresetId: 'grayscale',
+};
 
 // Reducer
 function adminReducer(state: AdminState, action: AdminAction): AdminState {
@@ -106,8 +122,31 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
     case 'UPDATE_THEME':
       return { ...state, theme: { ...state.theme, ...action.payload } };
 
+    case 'SET_THEME_PRESET': {
+      const presetId = action.payload;
+      const preset = themePresets[presetId];
+      if (!preset) return state;
+
+      // Update theme with preset colors
+      return {
+        ...state,
+        themePresetId: presetId,
+        theme: {
+          ...state.theme,
+          primary: preset.brandPrimary,
+          primaryLight: preset.brandHover,
+          accent: preset.brandPrimary,
+          accentLight: preset.brandMuted,
+          accentDark: preset.brandHover,
+        },
+      };
+    }
+
+    case 'TOGGLE_AREA_BUTTON':
+      return { ...state, showAreaButton: action.payload };
+
     case 'RESET_TO_DEFAULTS':
-      return { ...defaultAdminConfig };
+      return { ...defaultState };
 
     default:
       return state;
@@ -118,6 +157,7 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
 interface AdminContextValue {
   config: AdminState;
   enabledTabs: TabConfig[];
+  currentPreset: ThemePreset;
   updateTabs: (tabs: TabConfig[]) => void;
   toggleTab: (tabId: string, enabled: boolean) => void;
   reorderTabs: (tabs: TabConfig[]) => void;
@@ -126,15 +166,17 @@ interface AdminContextValue {
   updateEventPlacement: (placement: EventPlacement) => void;
   isEventEnabled: (eventId: string) => boolean;
   updateTheme: (theme: Partial<ThemeConfig>) => void;
+  setThemePreset: (presetId: string) => void;
+  toggleAreaButton: (show: boolean) => void;
   resetToDefaults: () => void;
 }
 
 const AdminContext = createContext<AdminContextValue | null>(null);
 
 // Load config from localStorage
-function loadConfig(): AdminConfig {
+function loadConfig(): AdminState {
   if (typeof window === 'undefined') {
-    return defaultAdminConfig;
+    return defaultState;
   }
 
   try {
@@ -143,23 +185,25 @@ function loadConfig(): AdminConfig {
       const parsed = JSON.parse(stored);
       // Merge with defaults to ensure all fields exist
       return {
-        ...defaultAdminConfig,
+        ...defaultState,
         ...parsed,
         tabs: parsed.tabs || defaultAdminConfig.tabs,
         enabledEvents: parsed.enabledEvents || defaultAdminConfig.enabledEvents,
         eventPlacement: parsed.eventPlacement || defaultEventPlacement,
         theme: { ...defaultAdminConfig.theme, ...parsed.theme },
+        themePresetId: parsed.themePresetId || 'grayscale',
+        showAreaButton: parsed.showAreaButton ?? true,
       };
     }
   } catch (e) {
     console.error('Failed to load admin config:', e);
   }
 
-  return defaultAdminConfig;
+  return defaultState;
 }
 
 // Save config to localStorage
-function saveConfig(config: AdminConfig) {
+function saveConfig(config: AdminState) {
   if (typeof window === 'undefined') return;
 
   try {
@@ -169,13 +213,13 @@ function saveConfig(config: AdminConfig) {
   }
 }
 
-// Apply theme to CSS variables
+// Apply theme to CSS variables (legacy support)
 function applyTheme(theme: ThemeConfig) {
   if (typeof window === 'undefined') return;
 
   const root = document.documentElement;
 
-  // Map theme config to CSS variables
+  // Map theme config to CSS variables (legacy colors)
   const cssVarMap: Record<keyof ThemeConfig, string> = {
     primary: '--color-primary',
     primaryLight: '--color-primary-light',
@@ -202,29 +246,43 @@ function applyTheme(theme: ThemeConfig) {
   });
 }
 
+// Apply both preset and legacy theme
+function applyFullTheme(state: AdminState) {
+  const preset = themePresets[state.themePresetId] || defaultThemePreset;
+
+  // Apply new semantic token colors from preset
+  applyThemePreset(preset);
+
+  // Apply legacy theme colors for backward compatibility
+  applyTheme(state.theme);
+}
+
 // Provider
 interface AdminProviderProps {
   children: ReactNode;
 }
 
 export function AdminProvider({ children }: AdminProviderProps) {
-  const [state, dispatch] = useReducer(adminReducer, defaultAdminConfig);
+  const [state, dispatch] = useReducer(adminReducer, defaultState);
 
   // Load config from localStorage on mount
   useEffect(() => {
     const config = loadConfig();
     dispatch({ type: 'SET_CONFIG', payload: config });
-    applyTheme(config.theme);
+    applyFullTheme(config);
   }, []);
 
   // Save to localStorage and apply theme whenever state changes
   useEffect(() => {
     saveConfig(state);
-    applyTheme(state.theme);
+    applyFullTheme(state);
   }, [state]);
 
   // Get only enabled tabs, sorted by their position in allAvailableTabs
   const enabledTabs = state.tabs.filter(tab => tab.enabled);
+
+  // Get current theme preset
+  const currentPreset = themePresets[state.themePresetId] || defaultThemePreset;
 
   const updateTabs = useCallback((tabs: TabConfig[]) => {
     dispatch({ type: 'UPDATE_TABS', payload: tabs });
@@ -258,6 +316,14 @@ export function AdminProvider({ children }: AdminProviderProps) {
     dispatch({ type: 'UPDATE_THEME', payload: theme });
   }, []);
 
+  const setThemePreset = useCallback((presetId: string) => {
+    dispatch({ type: 'SET_THEME_PRESET', payload: presetId });
+  }, []);
+
+  const toggleAreaButton = useCallback((show: boolean) => {
+    dispatch({ type: 'TOGGLE_AREA_BUTTON', payload: show });
+  }, []);
+
   const resetToDefaults = useCallback(() => {
     dispatch({ type: 'RESET_TO_DEFAULTS' });
   }, []);
@@ -267,6 +333,7 @@ export function AdminProvider({ children }: AdminProviderProps) {
       value={{
         config: state,
         enabledTabs,
+        currentPreset,
         updateTabs,
         toggleTab,
         reorderTabs,
@@ -275,6 +342,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
         updateEventPlacement,
         isEventEnabled,
         updateTheme,
+        setThemePreset,
+        toggleAreaButton,
         resetToDefaults,
       }}
     >

@@ -38,7 +38,7 @@ export function FriendsPage() {
         {activeTab === 'friends' && (
           <>
             <Panel variant="outlined" className="mb-4 text-center p-3">
-              <p className="text-sm text-secondary">
+              <p className="text-sm text-text-secondary">
                 {mockFriends.length} Friends
               </p>
             </Panel>
@@ -46,9 +46,9 @@ export function FriendsPage() {
               {mockFriends.map((friend) => (
                 <ListItem key={friend.id}>
                   <div className="relative">
-                    <div className="w-10 h-10 bg-surface rounded-full" />
+                    <div className="w-10 h-10 bg-bg-muted rounded-full" />
                     {friend.online && (
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-white" />
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-status-success rounded-full border-2 border-white" />
                     )}
                   </div>
                   <ListItemContent
@@ -73,13 +73,13 @@ export function FriendsPage() {
         {activeTab === 'requests' && (
           <List>
             {mockRequests.length === 0 ? (
-              <div className="text-center py-8 text-secondary">
+              <div className="text-center py-8 text-text-secondary">
                 No pending requests
               </div>
             ) : (
               mockRequests.map((request) => (
                 <ListItem key={request.id}>
-                  <div className="w-10 h-10 bg-surface rounded-full" />
+                  <div className="w-10 h-10 bg-bg-muted rounded-full" />
                   <ListItemContent
                     title={request.username}
                     subtitle={`Level ${request.level}`}
@@ -100,7 +100,7 @@ export function FriendsPage() {
 
         {activeTab === 'add' && (
           <Panel variant="elevated">
-            <h3 className="text-sm font-semibold text-primary mb-3">
+            <h3 className="text-sm font-semibold text-text-primary mb-3">
               Add Friends
             </h3>
             <List>

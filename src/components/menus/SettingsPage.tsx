@@ -16,28 +16,28 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-secondary">
+    <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="flex items-center justify-center px-3 py-3 bg-primary-light relative">
+      <div className="flex items-center justify-center px-3 py-3 bg-brand-hover relative">
         {/* Title */}
-        <h1 className="text-white text-xl font-bold">Settings</h1>
+        <h1 className="text-text-inverse text-h2">Settings</h1>
 
         {/* Close button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="absolute right-3 w-10 h-10 bg-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="absolute right-3 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
         >
-          <span className="text-white text-xl font-bold">X</span>
+          <span className="text-text-inverse text-value">X</span>
         </button>
       </div>
 
       {/* Orange divider */}
-      <div className="h-1 bg-secondary-light" />
+      <div className="h-1 bg-brand-muted" />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Toggles Panel */}
-        <div className="bg-secondary-light rounded-xl border-2 border-surface-dark p-4">
+        <div className="bg-brand-muted rounded-xl border-2 border-border-strong p-4">
           {/* Row 1: Music, Sound, Vibration */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <SettingsToggle
@@ -103,14 +103,14 @@ export function SettingsPage() {
 
         {/* Admin Panel */}
         <SettingsButton
-          icon="/icons/Setting-2.svg"
+          icon="/icons/Category.svg"
           label="Admin Panel"
           variant="primary"
           onClick={() => navigate('admin')}
         />
 
         {/* Version */}
-        <div className="text-center text-xs text-surface-dark mt-4">
+        <div className="text-center text-caption text-text-muted mt-4">
           Puzzle Kit v1.0.0
         </div>
       </div>
@@ -128,13 +128,13 @@ interface SettingsToggleProps {
 function SettingsToggle({ label, checked, onChange }: SettingsToggleProps) {
   return (
     <div className="flex flex-col items-center">
-      <span className="text-white text-sm font-bold mb-2">{label}</span>
+      <span className="text-text-primary text-value mb-2">{label}</span>
       <button
         onClick={onChange}
         className={`w-full h-9 rounded-full border-2 flex items-center px-1 transition-colors ${
           checked
-            ? 'bg-surface-dark border-surface'
-            : 'bg-primary-light border-secondary-light'
+            ? 'bg-border-strong border-border'
+            : 'bg-brand-hover border-brand-muted'
         }`}
       >
         <div
@@ -143,15 +143,15 @@ function SettingsToggle({ label, checked, onChange }: SettingsToggleProps) {
           }`}
         >
           <span
-            className={`text-xs font-bold ${
-              checked ? 'text-primary-light' : 'text-surface-dark'
+            className={`text-value-sm ${
+              checked ? 'text-text-primary' : 'text-text-muted'
             }`}
           >
             {checked ? 'ON' : 'OFF'}
           </span>
           <div
             className={`w-7 h-7 rounded-full ${
-              checked ? 'bg-secondary' : 'bg-secondary-light'
+              checked ? 'bg-bg-inverse' : 'bg-brand-muted'
             }`}
           />
         </div>
@@ -172,15 +172,13 @@ function SettingsButton({ icon, label, variant, onClick }: SettingsButtonProps) 
   const baseClasses = 'w-full py-4 rounded-xl border-2 flex items-center justify-center gap-2 font-bold';
   const variantClasses =
     variant === 'primary'
-      ? 'bg-surface-dark border-surface text-primary-light'
-      : 'bg-secondary-light border-surface-dark text-surface-light';
+      ? 'bg-border-strong border-border text-text-primary'
+      : 'bg-brand-muted border-border-strong text-text-primary';
 
   return (
     <button onClick={onClick} className={`${baseClasses} ${variantClasses}`}>
       {icon && (
-        <div className="w-6 h-6 bg-surface rounded flex items-center justify-center">
-          <Image src={icon} alt="" width={16} height={16} className="opacity-70" />
-        </div>
+        <Image src={icon} alt="" width={18} height={18} />
       )}
       <span>{label}</span>
     </button>

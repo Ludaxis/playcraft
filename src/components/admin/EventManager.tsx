@@ -52,23 +52,23 @@ function SortableEventItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 bg-surface-light rounded-lg p-2 border border-accent cursor-grab active:cursor-grabbing"
+      className="flex items-center gap-2 bg-bg-card rounded-lg p-2 border border-border cursor-grab active:cursor-grabbing"
       {...attributes}
       {...listeners}
     >
-      <div className="w-5 h-5 bg-surface-dark rounded flex items-center justify-center">
-        <span className="text-primary text-[10px]">::</span>
+      <div className="w-5 h-5 bg-bg-muted rounded flex items-center justify-center">
+        <span className="text-text-muted text-mini">::</span>
       </div>
-      <span className="flex-1 text-primary font-bold text-xs truncate">{name}</span>
+      <span className="flex-1 text-text-primary font-bold text-xs truncate">{name}</span>
       <button
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="w-5 h-5 bg-error rounded flex items-center justify-center"
+        className="w-5 h-5 bg-status-error rounded flex items-center justify-center"
       >
-        <span className="text-white text-[10px] font-bold">x</span>
+        <span className="text-text-inverse text-mini font-bold">x</span>
       </button>
     </div>
   );
@@ -92,11 +92,11 @@ function DroppableColumn({
 
   return (
     <div className="flex-1">
-      <p className="text-primary text-sm font-bold mb-2 text-center">{title} ({count}/{maxCount})</p>
+      <p className="text-text-primary text-value mb-2 text-center">{title} ({count}/{maxCount})</p>
       <div
         ref={setNodeRef}
         className={`space-y-1 min-h-[200px] rounded-lg p-2 transition-colors ${
-          isOver ? 'bg-accent/30' : 'bg-surface-dark/50'
+          isOver ? 'bg-brand-primary/30' : 'bg-bg-muted'
         }`}
       >
         {children}
@@ -108,11 +108,11 @@ function DroppableColumn({
 // Drag overlay item
 function DragOverlayItem({ name }: { name: string }) {
   return (
-    <div className="flex items-center gap-2 bg-surface-light rounded-lg p-2 border-2 border-accent shadow-lg">
-      <div className="w-5 h-5 bg-surface-dark rounded flex items-center justify-center">
-        <span className="text-primary text-[10px]">::</span>
+    <div className="flex items-center gap-2 bg-bg-card rounded-lg p-2 border-2 border-border-strong shadow-lg">
+      <div className="w-5 h-5 bg-bg-muted rounded flex items-center justify-center">
+        <span className="text-text-muted text-mini">::</span>
       </div>
-      <span className="flex-1 text-primary font-bold text-xs">{name}</span>
+      <span className="flex-1 text-text-primary font-bold text-xs">{name}</span>
     </div>
   );
 }
@@ -240,7 +240,7 @@ export function EventManager() {
           <DroppableColumn id="left-column" title="Left" count={leftEvents.length} maxCount={5}>
             <SortableContext items={leftEvents} strategy={verticalListSortingStrategy}>
               {leftEvents.length === 0 ? (
-                <p className="text-muted-foreground text-xs py-4 text-center">Drag events here</p>
+                <p className="text-text-muted text-xs py-4 text-center">Drag events here</p>
               ) : (
                 leftEvents.map((eventId) => (
                   <SortableEventItem
@@ -258,7 +258,7 @@ export function EventManager() {
           <DroppableColumn id="right-column" title="Right" count={rightEvents.length} maxCount={5}>
             <SortableContext items={rightEvents} strategy={verticalListSortingStrategy}>
               {rightEvents.length === 0 ? (
-                <p className="text-muted-foreground text-xs py-4 text-center">Drag events here</p>
+                <p className="text-text-muted text-xs py-4 text-center">Drag events here</p>
               ) : (
                 rightEvents.map((eventId) => (
                   <SortableEventItem
@@ -281,17 +281,17 @@ export function EventManager() {
       {/* Available Events */}
       {disabledEvents.length > 0 && (
         <div>
-          <p className="text-primary text-sm font-bold mb-2">Available Events</p>
+          <p className="text-text-primary text-value mb-2">Available Events</p>
           <div className="flex flex-wrap gap-2">
             {disabledEvents.map((event) => (
               <button
                 key={event.id}
                 onClick={() => addEvent(event.id)}
                 disabled={leftEvents.length >= 5 && rightEvents.length >= 5}
-                className="flex items-center gap-1 bg-surface-light rounded-full px-3 py-1.5 border border-surface disabled:opacity-30"
+                className="flex items-center gap-1 bg-bg-card rounded-full px-3 py-1.5 border border-border disabled:opacity-30"
               >
-                <span className="text-primary text-xs font-bold">{event.name}</span>
-                <span className="text-success text-xs font-bold">+</span>
+                <span className="text-text-primary text-value-sm">{event.name}</span>
+                <span className="text-status-success text-value-sm">+</span>
               </button>
             ))}
           </div>
