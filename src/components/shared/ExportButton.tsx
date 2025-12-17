@@ -5,7 +5,6 @@ import { toSvg, toPng, toBlob } from 'html-to-image';
 import { useNavigation } from '@/store';
 
 type ExportFormat = 'svg' | 'png' | 'clipboard';
-type ExportMode = 'page' | 'component';
 
 interface ExportButtonProps {
   targetId?: string;
@@ -14,50 +13,54 @@ interface ExportButtonProps {
 export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [exportMode, setExportMode] = useState<ExportMode | null>(null);
-  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
+  const [isSelectMode, setIsSelectMode] = useState(false);
   const [hoveredElement, setHoveredElement] = useState<HTMLElement | null>(null);
   const [notification, setNotification] = useState<string | null>(null);
+  const [selectedElement, setSelectedElement] = useState<HTMLElement | null>(null);
   const { state } = useNavigation();
 
   // Show notification
   const showNotification = (message: string) => {
     setNotification(message);
-    setTimeout(() => setNotification(null), 2000);
+    setTimeout(() => setNotification(null), 3000);
   };
 
   // Handle component selection mode
   useEffect(() => {
-    if (exportMode !== 'component') {
+    if (!isSelectMode) {
       setHoveredElement(null);
-      setSelectedElement(null);
       return;
     }
 
     const handleMouseMove = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const exportable = findExportableParent(target);
-      if (exportable && exportable.id !== 'app-content') {
+      if (exportable && exportable.id !== 'app-content' && !exportable.closest('.export-button-container')) {
         setHoveredElement(exportable);
       }
     };
 
     const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+
+      // Ignore clicks on the export button itself
+      if (target.closest('.export-button-container')) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
 
-      const target = e.target as HTMLElement;
       const exportable = findExportableParent(target);
-
       if (exportable && exportable.id !== 'app-content') {
         setSelectedElement(exportable);
-        setExportMode(null);
+        setIsSelectMode(false);
       }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setExportMode(null);
+        setIsSelectMode(false);
         setHoveredElement(null);
       }
     };
@@ -71,7 +74,7 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
       document.removeEventListener('click', handleClick, true);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [exportMode]);
+  }, [isSelectMode]);
 
   // Find a meaningful parent element to export
   const findExportableParent = (element: HTMLElement): HTMLElement | null => {
@@ -84,8 +87,9 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
                      current.classList.contains('rounded-lg');
       const isPanel = current.classList.contains('bg-bg-card') ||
                       current.classList.contains('bg-brand-muted') ||
-                      current.classList.contains('bg-bg-muted');
-      const isModal = current.classList.contains('fixed');
+                      current.classList.contains('bg-bg-muted') ||
+                      current.classList.contains('bg-bg-inverse');
+      const isModal = current.classList.contains('fixed') && current.classList.contains('inset-0');
       const hasRole = current.getAttribute('role') !== null;
 
       if (isButton || isCard || isPanel || isModal || hasRole) {
@@ -98,62 +102,89 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
     return element;
   };
 
-  const handleExport = useCallback(async (format: ExportFormat, target?: HTMLElement | null) => {
-    // For full page export, use the app container but check for modals
-    let node: HTMLElement | null = target || document.getElementById(targetId);
-
-    // If no specific target and there are modals open, capture the whole app content
-    // We need to handle fixed positioning for modals
-    const appContent = document.getElementById(targetId);
-    const hasModals = appContent?.querySelector('.fixed.inset-0');
-
-    if (!target && hasModals && appContent) {
-      // Temporarily convert fixed modals to absolute for capture
-      const fixedElements = appContent.querySelectorAll('.fixed');
-      fixedElements.forEach((el) => {
-        if (el instanceof HTMLElement && !el.classList.contains('export-button-container')) {
-          el.dataset.originalPosition = el.style.position;
-          el.style.position = 'absolute';
-        }
-      });
-
-      // Also ensure the container can contain absolute elements
-      const originalPosition = appContent.style.position;
-      const originalOverflow = appContent.style.overflow;
-      appContent.style.position = 'relative';
-      appContent.style.overflow = 'hidden';
-
-      node = appContent;
-
-      // Restore after a short delay (will be done in finally block)
-      setTimeout(() => {
-        fixedElements.forEach((el) => {
-          if (el instanceof HTMLElement && !el.classList.contains('export-button-container')) {
-            el.style.position = el.dataset.originalPosition || '';
-            delete el.dataset.originalPosition;
-          }
-        });
-        appContent.style.position = originalPosition;
-        appContent.style.overflow = originalOverflow;
-      }, 100);
-    }
-
-    if (!node) {
-      console.error('Export target not found');
-      return;
-    }
-
+  const doExport = async (format: ExportFormat, element: HTMLElement) => {
     setIsExporting(true);
 
     try {
       const options = {
         quality: 1,
-        pixelRatio: 3, // Higher quality for Figma
+        pixelRatio: 3,
         backgroundColor: '#ffffff',
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left',
         },
+        filter: (filterNode: Element) => {
+          if (filterNode instanceof HTMLElement) {
+            return !filterNode.classList.contains('export-button-container') &&
+                   !filterNode.classList.contains('export-dialog');
+          }
+          return true;
+        },
+      };
+
+      console.log('Exporting element:', element.tagName, element.className);
+
+      if (format === 'clipboard') {
+        const blob = await toBlob(element, options);
+        if (blob) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          showNotification('Copied to clipboard! Paste in Figma with Cmd/Ctrl+V');
+        }
+      } else if (format === 'svg') {
+        const dataUrl = await toSvg(element, options);
+        downloadFile(dataUrl, 'svg');
+      } else {
+        const dataUrl = await toPng(element, options);
+        downloadFile(dataUrl, 'png');
+      }
+
+      setSelectedElement(null);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Export failed:', error);
+      showNotification('Export failed: ' + (error as Error).message);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportPage = async (format: ExportFormat) => {
+    const appContent = document.getElementById(targetId);
+    if (!appContent) {
+      showNotification('Export target not found');
+      return;
+    }
+
+    setIsExporting(true);
+
+    // Handle fixed position modals
+    const hasModals = appContent.querySelector('.fixed.inset-0');
+    const fixedElements: HTMLElement[] = [];
+    let originalPosition = '';
+    let originalOverflow = '';
+
+    if (hasModals) {
+      appContent.querySelectorAll('.fixed').forEach((el) => {
+        if (el instanceof HTMLElement && !el.classList.contains('export-button-container')) {
+          fixedElements.push(el);
+          el.dataset.originalPosition = el.style.position || '';
+          el.style.position = 'absolute';
+        }
+      });
+      originalPosition = appContent.style.position;
+      originalOverflow = appContent.style.overflow;
+      appContent.style.position = 'relative';
+      appContent.style.overflow = 'hidden';
+    }
+
+    try {
+      const options = {
+        quality: 1,
+        pixelRatio: 3,
+        backgroundColor: '#ffffff',
         filter: (filterNode: Element) => {
           if (filterNode instanceof HTMLElement) {
             return !filterNode.classList.contains('export-button-container');
@@ -163,8 +194,7 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
       };
 
       if (format === 'clipboard') {
-        // Copy to clipboard as PNG
-        const blob = await toBlob(node, options);
+        const blob = await toBlob(appContent, options);
         if (blob) {
           await navigator.clipboard.write([
             new ClipboardItem({ 'image/png': blob })
@@ -172,40 +202,58 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
           showNotification('Copied to clipboard! Paste in Figma with Cmd/Ctrl+V');
         }
       } else if (format === 'svg') {
-        const dataUrl = await toSvg(node, options);
-        downloadFile(dataUrl, 'svg', target);
+        const dataUrl = await toSvg(appContent, options);
+        downloadFile(dataUrl, 'svg');
       } else {
-        const dataUrl = await toPng(node, options);
-        downloadFile(dataUrl, 'png', target);
+        const dataUrl = await toPng(appContent, options);
+        downloadFile(dataUrl, 'png');
       }
 
       setIsOpen(false);
-      setSelectedElement(null);
     } catch (error) {
       console.error('Export failed:', error);
-      showNotification('Export failed. Try PNG format.');
+      showNotification('Export failed: ' + (error as Error).message);
     } finally {
+      // Restore fixed positions
+      fixedElements.forEach((el) => {
+        el.style.position = el.dataset.originalPosition || '';
+        delete el.dataset.originalPosition;
+      });
+      if (hasModals && appContent) {
+        appContent.style.position = originalPosition;
+        appContent.style.overflow = originalOverflow;
+      }
       setIsExporting(false);
     }
-  }, [targetId, state.currentPage]);
+  };
 
-  const downloadFile = (dataUrl: string, format: string, target?: HTMLElement | null) => {
+  const handleComponentExport = useCallback((format: ExportFormat) => {
+    if (!selectedElement) {
+      showNotification('No component selected');
+      return;
+    }
+    doExport(format, selectedElement);
+  }, [selectedElement]);
+
+  const downloadFile = (dataUrl: string, format: string) => {
     const link = document.createElement('a');
     const pageName = state.currentPage || 'page';
     const timestamp = new Date().toISOString().slice(0, 10);
-    const componentName = target ? 'component' : pageName;
-    link.download = `${componentName}-${timestamp}.${format}`;
+    const name = selectedElement ? 'component' : pageName;
+    link.download = `${name}-${timestamp}.${format}`;
     link.href = dataUrl;
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
   };
 
   const startComponentSelection = () => {
-    setExportMode('component');
+    setIsSelectMode(true);
     setIsOpen(false);
   };
 
-  const cancelSelection = () => {
-    setExportMode(null);
+  const cancelAll = () => {
+    setIsSelectMode(false);
     setSelectedElement(null);
     setHoveredElement(null);
   };
@@ -214,21 +262,21 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
     <>
       {/* Notification Toast */}
       {notification && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[102] bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-pulse">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg text-sm">
           {notification}
         </div>
       )}
 
       {/* Selection Mode Overlay */}
-      {exportMode === 'component' && (
-        <div className="fixed inset-0 z-[99] pointer-events-none">
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full text-sm pointer-events-none">
+      {isSelectMode && (
+        <div className="fixed inset-0 z-[150] pointer-events-none">
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/80 text-white px-4 py-2 rounded-full text-sm">
             Click on any component to select it (ESC to cancel)
           </div>
 
           {hoveredElement && (
             <div
-              className="absolute border-2 border-purple-500 bg-purple-500/10 rounded pointer-events-none transition-all duration-75"
+              className="absolute border-2 border-purple-500 bg-purple-500/20 rounded transition-all duration-75"
               style={{
                 top: hoveredElement.getBoundingClientRect().top,
                 left: hoveredElement.getBoundingClientRect().left,
@@ -242,8 +290,8 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
 
       {/* Selected Component Export Dialog */}
       {selectedElement && (
-        <div className="fixed inset-0 z-[101] flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl p-4 min-w-[300px]">
+        <div className="export-dialog fixed inset-0 z-[160] flex items-center justify-center bg-black/50" onClick={cancelAll}>
+          <div className="bg-white rounded-xl shadow-2xl p-4 min-w-[300px]" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-gray-800 mb-3">Export Component</h3>
 
             <div className="bg-gray-100 rounded-lg p-3 mb-4">
@@ -260,9 +308,9 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
             </div>
 
             <div className="space-y-2">
-              {/* Recommended: Copy to clipboard */}
               <button
-                onClick={() => handleExport('clipboard', selectedElement)}
+                type="button"
+                onClick={() => handleComponentExport('clipboard')}
                 disabled={isExporting}
                 className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
@@ -270,36 +318,36 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
                   <rect x="9" y="9" width="13" height="13" rx="2"/>
                   <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
                 </svg>
-                <div className="text-left">
-                  <div>Copy to Clipboard</div>
-                  <div className="text-xs opacity-75">Recommended for Figma</div>
-                </div>
+                <span>{isExporting ? 'Copying...' : 'Copy to Clipboard'}</span>
               </button>
 
               <button
-                onClick={() => handleExport('png', selectedElement)}
+                type="button"
+                onClick={() => handleComponentExport('png')}
                 disabled={isExporting}
                 className="w-full px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                 </svg>
-                Download PNG (3x)
+                <span>{isExporting ? 'Downloading...' : 'Download PNG (3x)'}</span>
               </button>
 
               <button
-                onClick={() => handleExport('svg', selectedElement)}
+                type="button"
+                onClick={() => handleComponentExport('svg')}
                 disabled={isExporting}
                 className="w-full px-4 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 2.8L18.6 7 12 9.2 5.4 7 12 4.8z"/>
                 </svg>
-                Download SVG
+                <span>Download SVG</span>
               </button>
 
               <button
-                onClick={cancelSelection}
+                type="button"
+                onClick={cancelAll}
                 className="w-full px-4 py-2 text-gray-500 hover:text-gray-700 font-medium"
               >
                 Cancel
@@ -313,13 +361,13 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
       <div className="export-button-container fixed bottom-20 right-3 z-[100]">
         {isOpen && (
           <div className="absolute bottom-14 right-0 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden min-w-[220px]">
-            {/* Full Page Section */}
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
               <span className="text-xs font-semibold text-gray-500 uppercase">Full Page</span>
             </div>
 
             <button
-              onClick={() => handleExport('clipboard')}
+              type="button"
+              onClick={() => handleExportPage('clipboard')}
               disabled={isExporting}
               className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-green-50 flex items-center gap-3 disabled:opacity-50"
             >
@@ -334,7 +382,8 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
             </button>
 
             <button
-              onClick={() => handleExport('png')}
+              type="button"
+              onClick={() => handleExportPage('png')}
               disabled={isExporting}
               className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3 disabled:opacity-50"
             >
@@ -348,7 +397,8 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
             </button>
 
             <button
-              onClick={() => handleExport('svg')}
+              type="button"
+              onClick={() => handleExportPage('svg')}
               disabled={isExporting}
               className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3 disabled:opacity-50 border-b border-gray-200"
             >
@@ -361,11 +411,11 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
               </div>
             </button>
 
-            {/* Component Section */}
             <div className="px-3 py-2 bg-gray-50 border-b border-gray-200">
               <span className="text-xs font-semibold text-gray-500 uppercase">Component</span>
             </div>
             <button
+              type="button"
               onClick={startComponentSelection}
               className="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100 flex items-center gap-3"
             >
@@ -385,13 +435,20 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
 
         {/* Floating Button */}
         <button
-          onClick={() => exportMode ? cancelSelection() : setIsOpen(!isOpen)}
+          type="button"
+          onClick={() => {
+            if (isSelectMode) {
+              cancelAll();
+            } else {
+              setIsOpen(!isOpen);
+            }
+          }}
           disabled={isExporting}
           className={`
             w-12 h-12 rounded-full shadow-lg
             flex items-center justify-center
             transition-all duration-200
-            ${exportMode === 'component'
+            ${isSelectMode
               ? 'bg-red-500 hover:bg-red-600'
               : isOpen
                 ? 'bg-gray-700 rotate-45'
@@ -399,14 +456,14 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
             }
             ${isExporting ? 'opacity-50 cursor-wait' : ''}
           `}
-          title={exportMode ? 'Cancel selection' : 'Export page or component'}
+          title={isSelectMode ? 'Cancel selection' : 'Export page or component'}
         >
           {isExporting ? (
             <svg className="w-5 h-5 text-white animate-spin" viewBox="0 0 24 24" fill="none">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
             </svg>
-          ) : exportMode === 'component' ? (
+          ) : isSelectMode ? (
             <svg className="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M6 18L18 6M6 6l12 12"/>
             </svg>
