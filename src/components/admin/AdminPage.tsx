@@ -26,25 +26,22 @@ export function AdminPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="flex items-center justify-center px-3 py-3 bg-brand-hover relative">
-        <h1 className="text-text-inverse text-h2">Admin Panel</h1>
+      <div className="flex items-center justify-center px-3 py-3 bg-bg-muted relative border-b border-border">
+        <h1 className="text-text-primary text-h2">Admin Panel</h1>
         <button
           onClick={() => navigate('settings')}
-          className="absolute right-3 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="absolute right-3 w-8 h-8 bg-bg-page rounded-full flex items-center justify-center border-2 border-border hover:opacity-80"
         >
-          <span className="text-text-inverse text-value">X</span>
+          <span className="text-text-primary text-value">X</span>
         </button>
       </div>
-
-      {/* Divider */}
-      <div className="h-1 bg-brand-muted" />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {/* Info Banner */}
         <div className="bg-bg-muted rounded-xl p-3 border border-border">
-          <p className="text-text-primary text-sm font-bold mb-1">Prototype Admin</p>
-          <p className="text-text-muted text-xs">
+          <p className="text-text-primary text-caption font-bold mb-1">Prototype Admin</p>
+          <p className="text-text-muted text-mini">
             Configure tabs, events, and theme. Changes are saved automatically.
           </p>
         </div>
@@ -57,11 +54,11 @@ export function AdminPage() {
             <button
               onClick={() => toggleAreaButton(!config.showAreaButton)}
               className={`w-12 h-6 rounded-full relative transition-colors ${
-                config.showAreaButton ? 'bg-status-success' : 'bg-bg-muted'
+                config.showAreaButton ? 'bg-bg-inverse' : 'bg-bg-muted'
               }`}
             >
               <div
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${
+                className={`absolute top-1 w-4 h-4 bg-bg-card rounded-full transition-all ${
                   config.showAreaButton ? 'right-1' : 'left-1'
                 }`}
               />
@@ -78,7 +75,7 @@ export function AdminPage() {
               className="w-full flex items-center justify-between p-3 bg-bg-card"
             >
               <span className="text-text-primary font-bold">{title}</span>
-              <span className="text-text-primary text-lg">
+              <span className="text-text-primary text-value">
                 {expandedSection === id ? '-' : '+'}
               </span>
             </button>
@@ -95,14 +92,14 @@ export function AdminPage() {
         {/* Reset All */}
         <button
           onClick={resetToDefaults}
-          className="w-full bg-status-error/20 border-2 border-status-error/30 rounded-xl py-3"
+          className="w-full bg-bg-muted border-2 border-border rounded-xl py-3 hover:bg-bg-page transition-colors"
         >
-          <span className="text-status-error font-bold">Reset All to Defaults</span>
+          <span className="text-text-primary font-bold">Reset All to Defaults</span>
         </button>
 
         {/* Version Info */}
         <div className="text-center py-2">
-          <p className="text-text-muted text-xs">Puzzle Kit Admin v1.0</p>
+          <p className="text-text-muted text-mini">Puzzle Kit Admin v1.0</p>
         </div>
       </div>
     </div>

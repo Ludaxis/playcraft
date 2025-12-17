@@ -77,7 +77,7 @@ export function Modal({
           ${sizeStyles[size]}
           bg-bg-card
           rounded-2xl
-          shadow-xl
+          border-2 border-border
           overflow-hidden
           ${className}
         `}
@@ -105,11 +105,11 @@ function ModalHeader({ title, onClose, className = '' }: ModalHeaderProps) {
         ${className}
       `}
     >
-      <h2 className="text-lg font-bold text-text-primary">{title}</h2>
+      <h2 className="text-value font-bold text-text-primary">{title}</h2>
       {onClose && (
         <button
           onClick={onClose}
-          className="w-8 h-8 rounded-full bg-status-error flex items-center justify-center hover:opacity-90"
+          className="w-8 h-8 rounded-full bg-bg-inverse flex items-center justify-center hover:opacity-80"
         >
           <span className="text-text-inverse font-bold">X</span>
         </button>

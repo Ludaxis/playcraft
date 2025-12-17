@@ -27,7 +27,7 @@ export function CardStarsModal({ onAnimatedClose }: CardStarsModalProps) {
         <h2 className="text-text-inverse text-h1">Card Stars</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="absolute right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border hover:opacity-80"
         >
           <span className="text-text-inverse font-bold">X</span>
         </button>
@@ -70,7 +70,7 @@ export function CardStarsModal({ onAnimatedClose }: CardStarsModalProps) {
 
         {/* Info Text */}
         <div className="bg-bg-inverse px-4 pb-3">
-          <p className="text-text-inverse text-sm text-center font-medium">
+          <p className="text-text-inverse text-caption text-center font-medium">
             Use your duplicate card stars to open chests!
           </p>
         </div>

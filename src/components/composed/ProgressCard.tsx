@@ -40,7 +40,7 @@ export function ProgressCard({
   return (
     <Card className={className}>
       {description && (
-        <p className="text-sm text-text-secondary text-center mb-3">
+        <p className="text-caption text-text-secondary text-center mb-3">
           {description}
         </p>
       )}
@@ -48,7 +48,7 @@ export function ProgressCard({
       {(title || showValue) && (
         <div className="flex justify-between items-center mb-2">
           {title && (
-            <span className="text-sm text-text-secondary">{title}</span>
+            <span className="text-caption text-text-secondary">{title}</span>
           )}
           {showValue && (
             <span className="font-bold text-text-primary">

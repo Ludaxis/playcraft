@@ -39,7 +39,7 @@ export function GameplayPage() {
   return (
     <div className="flex flex-col h-full bg-bg-card">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-bg-page">
+      <div className="flex items-center justify-between px-4 py-3 bg-bg-card border-b border-border">
         <IconButton label="Pause" onClick={() => navigate('main-menu')} variant="ghost">
           <PauseIcon />
         </IconButton>
@@ -47,20 +47,20 @@ export function GameplayPage() {
         <div className="flex items-center gap-4">
           {/* Moves */}
           <div className="text-center">
-            <p className="text-xs text-text-secondary">Moves</p>
-            <p className="text-lg font-bold text-text-primary">{moves}</p>
+            <p className="text-mini text-text-secondary">Moves</p>
+            <p className="text-value font-bold text-text-primary">{moves}</p>
           </div>
 
           {/* Level */}
           <div className="text-center">
-            <p className="text-xs text-text-secondary">Level</p>
-            <p className="text-lg font-bold text-text-primary">{player.currentLevel}</p>
+            <p className="text-mini text-text-secondary">Level</p>
+            <p className="text-value font-bold text-text-primary">{player.currentLevel}</p>
           </div>
 
           {/* Score */}
           <div className="text-center">
-            <p className="text-xs text-text-secondary">Score</p>
-            <p className="text-lg font-bold text-text-primary">{score}</p>
+            <p className="text-mini text-text-secondary">Score</p>
+            <p className="text-value font-bold text-text-primary">{score}</p>
           </div>
         </div>
 
@@ -70,11 +70,11 @@ export function GameplayPage() {
       </div>
 
       {/* Objectives */}
-      <div className="flex gap-4 px-4 py-2 bg-surface-lightest border-b border-bg-page">
+      <div className="flex gap-4 px-4 py-2 bg-bg-muted border-b border-border">
         {objectives.map((obj) => (
           <div key={obj.id} className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-bg-muted rounded" />
-            <span className="text-sm font-medium text-text-primary">
+            <div className="w-6 h-6 bg-border-strong rounded" />
+            <span className="text-caption font-medium text-text-primary">
               {obj.current}/{obj.target}
             </span>
           </div>
@@ -86,7 +86,7 @@ export function GameplayPage() {
         <Panel variant="elevated" className="w-full max-w-sm aspect-square flex items-center justify-center">
           <div className="text-center">
             <p className="text-text-muted mb-4">[Match-3 Game Board]</p>
-            <p className="text-xs text-text-muted">
+            <p className="text-mini text-text-muted">
               Tap tiles to match 3 or more
             </p>
 
@@ -108,7 +108,7 @@ export function GameplayPage() {
       </div>
 
       {/* Bottom Boosters */}
-      <div className="px-4 py-3 bg-white border-t border-bg-page">
+      <div className="px-4 py-3 bg-bg-card border-t border-border">
         <div className="flex justify-center gap-4 mb-3">
           {inGameBoosters.map((booster) => (
             <button
@@ -117,11 +117,11 @@ export function GameplayPage() {
               disabled={booster.count === 0}
               className={`
                 flex flex-col items-center p-2 rounded-lg transition-colors
-                ${booster.count > 0 ? 'bg-bg-card hover:bg-bg-page' : 'bg-surface-lightest opacity-50'}
+                ${booster.count > 0 ? 'bg-bg-card hover:bg-bg-page' : 'bg-bg-muted opacity-50'}
               `}
             >
-              <div className="w-10 h-10 bg-bg-page rounded-lg mb-1" />
-              <span className="text-xs font-medium text-text-primary">{booster.count}</span>
+              <div className="w-10 h-10 bg-bg-page rounded-lg mb-1 border border-border" />
+              <span className="text-mini font-medium text-text-primary">{booster.count}</span>
             </button>
           ))}
         </div>

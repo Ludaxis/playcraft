@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useNavigation } from '@/store';
 import { BottomNavigation } from '@/components/shared';
 
@@ -42,18 +41,18 @@ export function CollectionPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Top Bar with Info and Reward buttons */}
-      <div className="flex items-center justify-between px-2 py-1.5 bg-brand-hover">
+      <div className="flex items-center justify-between px-2 py-1.5 bg-bg-inverse">
         <button
           onClick={() => openModal('collection-info')}
-          className="w-8 h-8 bg-brand-muted rounded-full flex items-center justify-center border border-border-strong"
+          className="w-8 h-8 bg-border-strong rounded-full flex items-center justify-center border border-border"
         >
-          <span className="text-text-inverse text-value-sm">i</span>
+          <span className="text-text-primary text-value-sm">i</span>
         </button>
         <button
           onClick={() => openModal('card-stars')}
           className="w-9 h-9 bg-border-strong rounded-full flex items-center justify-center border border-border"
         >
-          <Image src="/icons/Star-Filled.svg" alt="Card Stars" width={20} height={20} className="opacity-80" />
+          <span className="text-text-primary text-mini">STAR</span>
         </button>
       </div>
 
@@ -104,18 +103,18 @@ export function CollectionPage() {
               setShowInfoMessage(!showInfoMessage);
               if (showRewardTooltip) setShowRewardTooltip(false);
             }}
-            className="w-6 h-6 bg-brand-muted rounded flex items-center justify-center"
+            className="w-6 h-6 bg-border-strong rounded flex items-center justify-center border border-border"
           >
-            <Image src="/icons/Category.svg" alt="Cards" width={14} height={14} className="invert opacity-80" />
+            <span className="text-text-primary text-mini">CAT</span>
           </button>
           <div className="flex-1 relative">
-            <div className="h-4 bg-brand-muted rounded-full overflow-hidden">
+            <div className="h-4 bg-border-strong rounded-full overflow-hidden">
               <div
-                className="h-full bg-border-strong rounded-full transition-all"
+                className="h-full bg-bg-inverse rounded-full transition-all"
                 style={{ width: `${(totalCollected / totalCards) * 100}%` }}
               />
             </div>
-            <span className="absolute inset-0 flex items-center justify-center text-text-inverse text-mini font-bold">
+            <span className="absolute inset-0 flex items-center justify-center text-text-primary text-mini font-bold">
               {totalCollected}/{totalCards}
             </span>
           </div>
@@ -145,14 +144,14 @@ export function CollectionPage() {
             <div className="w-6 h-6 bg-border-strong rounded flex items-center justify-center">
               <span className="text-text-primary text-mini font-bold">TRP</span>
             </div>
-            <span className="text-text-muted text-xs">+</span>
+            <span className="text-text-muted text-mini">+</span>
             <div className="flex flex-col items-center">
               <div className="w-6 h-6 bg-border-strong rounded-full flex items-center justify-center">
                 <span className="text-text-primary text-mini font-bold">$</span>
               </div>
               <span className="text-text-primary text-mini font-bold">10k</span>
             </div>
-            <span className="text-text-muted text-xs">+</span>
+            <span className="text-text-muted text-mini">+</span>
             <div className="flex flex-col items-center">
               <div className="w-6 h-6 bg-border-strong rounded-full flex items-center justify-center">
                 <span className="text-text-primary text-mini font-bold">BST</span>
@@ -166,7 +165,7 @@ export function CollectionPage() {
       {/* Info Text */}
       {showInfoMessage && (
         <div className="mx-2 mt-1.5 bg-bg-page rounded-lg border border-border p-2">
-          <p className="text-text-primary text-xs text-center font-medium">
+          <p className="text-text-primary text-mini text-center font-medium">
             Collect all cards to complete Origins Collection!
           </p>
         </div>
@@ -210,7 +209,7 @@ function CollectionSetCard({ set, onPress }: CollectionSetCardProps) {
   return (
     <button
       onClick={onPress}
-      className="bg-brand-muted rounded-lg border border-border-strong overflow-hidden w-full text-left"
+      className="bg-bg-muted rounded-lg border border-border-strong overflow-hidden w-full text-left"
     >
       <div className="p-1.5 flex justify-center">
         <div className="w-10 h-10 bg-border-strong rounded-full border border-border flex items-center justify-center">
@@ -223,9 +222,9 @@ function CollectionSetCard({ set, onPress }: CollectionSetCardProps) {
       </div>
 
       <div className="px-1.5 pb-0.5">
-        <div className="h-1.5 bg-bg-inverse rounded-full overflow-hidden">
+        <div className="h-1.5 bg-border-strong rounded-full overflow-hidden">
           <div
-            className="h-full bg-bg-muted rounded-full transition-all"
+            className="h-full bg-bg-inverse rounded-full transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>

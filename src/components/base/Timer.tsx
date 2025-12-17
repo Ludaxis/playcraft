@@ -41,7 +41,7 @@ export function Timer({
 
   if (!endTime || isExpired) {
     return (
-      <span className={`text-text-muted text-sm ${className}`}>
+      <span className={`text-text-muted text-caption ${className}`}>
         Expired
       </span>
     );
@@ -59,7 +59,7 @@ export function Timer({
 
   if (variant === 'compact') {
     return (
-      <span className={`text-text-secondary text-xs font-medium ${className}`}>
+      <span className={`text-text-secondary text-mini font-medium ${className}`}>
         {display}
       </span>
     );
@@ -88,15 +88,15 @@ export function Timer({
       <div className="flex items-center justify-center gap-1 text-text-primary font-bold">
         {timer.days > 0 && (
           <>
-            <span className="text-lg">{timer.days}</span>
-            <span className="text-xs text-text-muted">d</span>
+            <span className="text-value">{timer.days}</span>
+            <span className="text-mini text-text-muted">d</span>
           </>
         )}
-        <span className="text-lg">{timer.hours.toString().padStart(2, '0')}</span>
-        <span className="text-xs text-text-muted">:</span>
-        <span className="text-lg">{timer.minutes.toString().padStart(2, '0')}</span>
-        <span className="text-xs text-text-muted">:</span>
-        <span className="text-lg">{timer.seconds.toString().padStart(2, '0')}</span>
+        <span className="text-value">{timer.hours.toString().padStart(2, '0')}</span>
+        <span className="text-mini text-text-muted">:</span>
+        <span className="text-value">{timer.minutes.toString().padStart(2, '0')}</span>
+        <span className="text-mini text-text-muted">:</span>
+        <span className="text-value">{timer.seconds.toString().padStart(2, '0')}</span>
       </div>
     </div>
   );

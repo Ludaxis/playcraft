@@ -118,16 +118,13 @@ export function LeaderboardPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="bg-brand-hover py-4 px-4">
-        <h1 className="text-text-inverse text-h3 text-center">Leaderboard</h1>
+      <div className="bg-bg-muted py-4 px-4 border-b border-border">
+        <h1 className="text-text-primary text-h3 text-center">Leaderboard</h1>
       </div>
 
-      {/* Divider */}
-      <div className="h-0.5 bg-brand-muted" />
-
       {/* Main Tab Bar */}
-      <div className="bg-brand-muted px-2 py-1.5">
-        <div className="relative flex bg-bg-inverse rounded border border-brand-muted overflow-hidden">
+      <div className="bg-bg-page px-2 py-1.5 border-b border-border">
+        <div className="relative flex bg-bg-inverse rounded border border-border overflow-hidden">
           {/* Sliding indicator */}
           <div
             ref={indicatorRef}
@@ -155,14 +152,14 @@ export function LeaderboardPage() {
       <div ref={contentRef} className="flex-1 overflow-y-auto">
         {/* Weekly Tab */}
         {activeTab === 'weekly' && (
-          <div className="bg-brand-muted p-2">
+          <div className="bg-bg-page p-2">
             {/* Weekly Contest Banner */}
             <div className="flex justify-center items-center gap-3 mb-4">
               <div className="bg-border-strong rounded-lg px-6 py-2 border border-border">
                 <span className="text-text-primary text-h4">Weekly Contest</span>
               </div>
-              <div className="bg-brand-hover rounded-full px-3 py-1">
-                <span className="text-text-inverse text-caption">
+              <div className="bg-bg-muted rounded-full px-3 py-1 border border-border">
+                <span className="text-text-primary text-caption">
                   {weeklyContestData.isFinished ? 'Finished' : weeklyContestData.timeRemaining}
                 </span>
               </div>
@@ -192,13 +189,13 @@ export function LeaderboardPage() {
 
               {/* 1st Place */}
               <div className="flex flex-col items-center w-[110px] -mt-4">
-                <div className="w-14 h-14 bg-gold/20 rounded-xl border-2 border-gold flex items-center justify-center mb-2">
-                  <span className="text-gold text-h4">1st</span>
+                <div className="w-14 h-14 bg-bg-muted rounded-xl border-2 border-border-strong flex items-center justify-center mb-2">
+                  <span className="text-text-primary text-h4">1st</span>
                 </div>
-                <div className="bg-gold/10 rounded-xl p-2 w-full border-2 border-gold">
+                <div className="bg-bg-muted rounded-xl p-2 w-full border-2 border-border-strong">
                   <p className="text-text-primary text-value text-center truncate">{weeklyContestData.topThree[0].name}</p>
                   <p className="text-text-secondary text-caption text-center truncate">{weeklyContestData.topThree[0].team}</p>
-                  <p className="text-gold text-value text-center mt-1">{weeklyContestData.topThree[0].score}</p>
+                  <p className="text-text-primary text-value text-center mt-1">{weeklyContestData.topThree[0].score}</p>
                 </div>
               </div>
 
@@ -222,24 +219,24 @@ export function LeaderboardPage() {
                   key={player.id}
                   onClick={() => !player.isPlayer && openModal('member-profile', { memberId: player.id })}
                   className={`w-full rounded-xl p-3 flex items-center gap-3 ${
-                    player.isPlayer ? 'bg-brand-hover border-2 border-bg-inverse' : 'bg-bg-page border-2 border-border hover:bg-bg-muted transition-colors'
+                    player.isPlayer ? 'bg-bg-muted border-2 border-border-strong' : 'bg-bg-page border-2 border-border hover:bg-bg-muted transition-colors'
                   }`}
                 >
-                  <span className={`w-6 text-value ${player.isPlayer ? 'text-text-inverse' : 'text-text-secondary'}`}>
+                  <span className={`w-6 text-value ${player.isPlayer ? 'text-text-primary' : 'text-text-secondary'}`}>
                     {player.rank}
                   </span>
                   <div className="w-10 h-10 bg-border-strong rounded-lg flex items-center justify-center border border-border">
                     <span className="text-text-secondary text-caption">AVA</span>
                   </div>
                   <div className="flex-1 text-left">
-                    <p className={`text-value ${player.isPlayer ? 'text-text-inverse' : 'text-text-primary'}`}>{player.name}</p>
+                    <p className={`text-value ${player.isPlayer ? 'text-text-primary' : 'text-text-primary'}`}>{player.name}</p>
                     {player.team && (
-                      <p className={`text-caption ${player.isPlayer ? 'text-text-muted' : 'text-text-secondary'}`}>{player.team}</p>
+                      <p className={`text-caption ${player.isPlayer ? 'text-text-secondary' : 'text-text-secondary'}`}>{player.team}</p>
                     )}
                   </div>
                   <div className="text-right">
-                    <span className={`text-caption ${player.isPlayer ? 'text-text-muted' : 'text-text-secondary'}`}>Score</span>
-                    <p className={`text-value ${player.isPlayer ? 'text-text-inverse' : 'text-text-primary'}`}>{player.score}</p>
+                    <span className={`text-caption ${player.isPlayer ? 'text-text-secondary' : 'text-text-secondary'}`}>Score</span>
+                    <p className={`text-value ${player.isPlayer ? 'text-text-primary' : 'text-text-primary'}`}>{player.score}</p>
                   </div>
                 </button>
               ))}
@@ -256,7 +253,7 @@ export function LeaderboardPage() {
 
         {/* Friends Tab */}
         {activeTab === 'friends' && (
-          <div className="bg-brand-muted p-2">
+          <div className="bg-bg-page p-2">
             {/* Sub Tabs */}
             <div className="flex gap-1.5 mb-3">
               {(['list', 'add'] as const).map((tab) => (
@@ -265,7 +262,7 @@ export function LeaderboardPage() {
                   onClick={() => setFriendsSubTab(tab)}
                   className={`flex-1 py-1.5 rounded-lg text-value-sm ${
                     friendsSubTab === tab
-                      ? 'bg-brand-hover text-text-inverse border border-bg-inverse'
+                      ? 'bg-bg-muted text-text-primary border border-border-strong'
                       : 'bg-border-strong text-text-primary border border-border'
                   }`}
                 >
@@ -281,7 +278,7 @@ export function LeaderboardPage() {
                   key={friend.id}
                   onClick={() => !friend.isPlayer && openModal('member-profile', { memberId: friend.id })}
                   className={`w-full rounded-lg p-1.5 flex items-center gap-2 ${
-                    friend.isPlayer ? 'bg-brand-hover border border-bg-inverse' : 'bg-bg-page border border-border hover:bg-bg-muted transition-colors'
+                    friend.isPlayer ? 'bg-bg-muted border border-border-strong' : 'bg-bg-page border border-border hover:bg-bg-muted transition-colors'
                   }`}
                 >
                   {getRankBadge(friend.rank)}
@@ -289,14 +286,14 @@ export function LeaderboardPage() {
                     <span className="text-text-secondary text-mini">AVA</span>
                   </div>
                   <div className="flex-1 text-left">
-                    <p className={`text-value-sm ${friend.isPlayer ? 'text-text-inverse' : 'text-text-primary'}`}>{friend.name}</p>
+                    <p className={`text-value-sm ${friend.isPlayer ? 'text-text-primary' : 'text-text-primary'}`}>{friend.name}</p>
                     {friend.team && (
                       <p className={`text-mini ${friend.isPlayer ? 'text-text-muted' : 'text-text-muted'}`}>{friend.team}</p>
                     )}
                   </div>
                   <div className="text-right">
                     <span className={`text-mini ${friend.isPlayer ? 'text-text-muted' : 'text-text-muted'}`}>Level</span>
-                    <p className={`text-value-sm ${friend.isPlayer ? 'text-text-inverse' : 'text-text-primary'}`}>{friend.level}</p>
+                    <p className={`text-value-sm ${friend.isPlayer ? 'text-text-primary' : 'text-text-primary'}`}>{friend.level}</p>
                   </div>
                 </button>
               ))}
@@ -314,7 +311,7 @@ export function LeaderboardPage() {
 
         {/* Players Tab */}
         {activeTab === 'players' && (
-          <div className="bg-brand-muted p-2">
+          <div className="bg-bg-page p-2">
             {/* Region Filter */}
             <div className="flex gap-1.5 mb-3">
               {(['world', 'local'] as const).map((region) => (
@@ -323,7 +320,7 @@ export function LeaderboardPage() {
                   onClick={() => setRegionFilter(region)}
                   className={`flex-1 py-1.5 rounded-lg text-value-sm ${
                     regionFilter === region
-                      ? 'bg-brand-hover text-text-inverse border border-bg-inverse'
+                      ? 'bg-bg-muted text-text-primary border border-border-strong'
                       : 'bg-border-strong text-text-primary border border-border'
                   }`}
                 >
@@ -360,7 +357,7 @@ export function LeaderboardPage() {
 
         {/* Teams Tab */}
         {activeTab === 'teams' && (
-          <div className="bg-brand-muted p-2">
+          <div className="bg-bg-page p-2">
             {/* Region Filter */}
             <div className="flex gap-1.5 mb-3">
               {(['world', 'local'] as const).map((region) => (
@@ -369,7 +366,7 @@ export function LeaderboardPage() {
                   onClick={() => setRegionFilter(region)}
                   className={`flex-1 py-1.5 rounded-lg text-value-sm ${
                     regionFilter === region
-                      ? 'bg-brand-hover text-text-inverse border border-bg-inverse'
+                      ? 'bg-bg-muted text-text-primary border border-border-strong'
                       : 'bg-border-strong text-text-primary border border-border'
                   }`}
                 >

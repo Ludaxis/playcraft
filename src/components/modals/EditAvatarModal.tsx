@@ -42,21 +42,21 @@ export function EditAvatarModal({ onAnimatedClose }: EditAvatarModalProps) {
   };
 
   return (
-    <div className="relative w-[320px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
+    <div className="relative w-[320px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
         <h2 className="text-text-inverse text-h3">Choose Avatar</h2>
         <button
           onClick={handleClose}
-          className="w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="w-8 h-8 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80"
         >
-          <span className="text-text-inverse font-bold">X</span>
+          <span className="text-text-primary font-bold">X</span>
         </button>
       </div>
 
         {/* Current Selection Preview */}
-        <div className="p-4 flex justify-center">
-          <div className="w-24 h-24 bg-border-strong rounded-xl border-4 border-border flex items-center justify-center">
+        <div className="p-4 flex justify-center bg-bg-card">
+          <div className="w-24 h-24 bg-bg-muted rounded-xl border-2 border-border flex items-center justify-center">
             <span className="text-text-secondary text-h1">
               {avatarOptions.find((a) => a.id === selectedAvatar)?.abbr || 'K1'}
             </span>
@@ -64,24 +64,24 @@ export function EditAvatarModal({ onAnimatedClose }: EditAvatarModalProps) {
         </div>
 
         {/* Divider */}
-        <div className="h-1 bg-bg-inverse mx-4" />
+        <div className="h-0.5 bg-border mx-4" />
 
         {/* Avatar Grid */}
-        <div className="p-4 max-h-[240px] overflow-y-auto">
+        <div className="p-4 max-h-[240px] overflow-y-auto bg-bg-card">
           <div className="grid grid-cols-4 gap-3">
             {avatarOptions.map((avatar) => (
               <button
                 key={avatar.id}
                 onClick={() => setSelectedAvatar(avatar.id)}
-                className={`relative w-16 h-16 rounded-xl border-2 flex items-center justify-center transition-all ${
+                className={`relative w-16 h-16 rounded-xl border flex items-center justify-center transition-all ${
                   selectedAvatar === avatar.id
-                    ? 'bg-bg-muted border-bg-page ring-2 ring-bg-page'
-                    : 'bg-border-strong border-border hover:bg-bg-muted'
+                    ? 'bg-bg-muted border-border ring-2 ring-bg-inverse'
+                    : 'bg-bg-page border-border hover:bg-bg-muted'
                 }`}
               >
                 <span className="text-text-secondary font-bold">{avatar.abbr}</span>
                 {selectedAvatar === avatar.id && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-status-success rounded-full flex items-center justify-center border-2 border-white">
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-bg-inverse rounded-full flex items-center justify-center border border-border">
                     <Image
                       src="/icons/Check-Circle.svg"
                       alt="Selected"
@@ -97,13 +97,13 @@ export function EditAvatarModal({ onAnimatedClose }: EditAvatarModalProps) {
         </div>
 
         {/* Divider */}
-        <div className="h-1 bg-bg-inverse mx-4" />
+        <div className="h-0.5 bg-border mx-4" />
 
       {/* Save Button */}
-      <div className="p-4">
+      <div className="p-4 bg-bg-card">
         <button
           onClick={handleSave}
-          className="w-full bg-border-strong hover:bg-bg-muted rounded-xl py-3 border-2 border-border"
+          className="w-full bg-bg-muted hover:bg-bg-page rounded-xl py-3 border border-border"
         >
           <span className="text-text-primary font-bold">Save</span>
         </button>

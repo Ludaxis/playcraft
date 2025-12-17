@@ -47,7 +47,7 @@ export function LevelRoadmap() {
                     w-14 h-14 rounded-full flex items-center justify-center
                     border-3 transition-all
                     ${isCurrentLevel
-                      ? 'bg-bg-page border-border-strong shadow-lg scale-110'
+                      ? 'bg-bg-page border-border-strong scale-110'
                       : isCompleted
                         ? 'bg-bg-page border-border-strong'
                         : 'bg-bg-page border-border opacity-60'
@@ -75,9 +75,9 @@ export function LevelRoadmap() {
       <div className="flex flex-col items-center pb-4">
         <button
           onClick={() => openModal('level-start')}
-          className="bg-brand-hover border-2 border-brand-primary rounded-xl px-10 py-3 shadow-lg"
+          className="bg-bg-muted border-2 border-border-strong rounded-xl px-10 py-3"
         >
-          <span className="text-text-inverse text-h3">PLAY</span>
+          <span className="text-text-primary text-h3">PLAY</span>
         </button>
       </div>
     </div>

@@ -62,7 +62,7 @@ export function Toggle({
         />
       </button>
       {label && (
-        <span className="text-sm font-medium text-text-primary">{label}</span>
+        <span className="text-caption font-medium text-text-primary">{label}</span>
       )}
     </label>
   );

@@ -60,7 +60,7 @@ export function PageHeader({
       </div>
 
       {/* Title */}
-      <h1 className="text-text-inverse text-lg font-bold text-center flex-1">
+      <h1 className="text-text-inverse text-value font-bold text-center flex-1">
         {title}
       </h1>
 
@@ -70,7 +70,7 @@ export function PageHeader({
         {onClose && (
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-status-error flex items-center justify-center border-2 border-error-light hover:opacity-90"
+            className="w-8 h-8 rounded-full bg-bg-inverse flex items-center justify-center border-2 border-border hover:opacity-80"
           >
             <span className="text-text-inverse text-value">X</span>
           </button>

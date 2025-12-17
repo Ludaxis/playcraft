@@ -16,12 +16,9 @@ export function AreaTasksPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="bg-brand-hover py-3 px-4">
-        <h1 className="text-text-inverse text-h4 text-center">Areas</h1>
+      <div className="bg-bg-muted py-3 px-4 border-b border-border">
+        <h1 className="text-text-primary text-h4 text-center">Areas</h1>
       </div>
-
-      {/* Divider */}
-      <div className="h-0.5 bg-brand-muted" />
 
       {/* Areas List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -52,11 +49,7 @@ export function AreaTasksPage() {
                   <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
                     {area.completed ? (
                       <div className="flex items-center gap-1.5">
-                        <div className="w-4 h-4 bg-brand-muted rounded flex items-center justify-center">
-                          <svg className="w-2.5 h-2.5 text-text-inverse" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                            <path d="M5 13L9 17L19 7" />
-                          </svg>
-                        </div>
+                        <span className="text-text-primary text-value-sm">[check]</span>
                         <span className="text-text-primary text-value-sm">Completed!</span>
                       </div>
                     ) : (
@@ -77,9 +70,6 @@ export function AreaTasksPage() {
           </div>
         ))}
       </div>
-
-      {/* Divider */}
-      <div className="h-0.5 bg-brand-muted" />
 
       {/* Bottom Navigation */}
       <BottomNavigation activePage="areas" />

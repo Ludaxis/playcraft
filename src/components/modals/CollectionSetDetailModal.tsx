@@ -93,9 +93,9 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
       {/* Close button - Above panel top-right */}
       <button
         onClick={handleClose}
-        className="absolute -top-12 -right-2 w-10 h-10 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+        className="absolute -top-12 -right-2 w-10 h-10 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border z-10 hover:opacity-80"
       >
-        <span className="text-text-inverse font-bold text-lg">X</span>
+        <span className="text-text-inverse font-bold text-value">X</span>
       </button>
 
         <div className="w-[320px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">

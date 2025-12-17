@@ -13,9 +13,9 @@ interface PanelProps {
 }
 
 const variantStyles: Record<PanelVariant, string> = {
-  default: 'bg-surface-lighter',
-  elevated: 'bg-white shadow-md',
-  outlined: 'bg-white border-2 border-surface',
+  default: 'bg-bg-muted',
+  elevated: 'bg-bg-card border border-border',
+  outlined: 'bg-bg-card border border-border',
 };
 
 const paddingStyles: Record<string, string> = {
@@ -40,7 +40,7 @@ export function Panel({
         ${variantStyles[variant]}
         ${paddingStyles[padding]}
         rounded-lg
-        ${onClick ? 'cursor-pointer hover:bg-surface-light transition-colors w-full text-left' : ''}
+        ${onClick ? 'cursor-pointer hover:bg-bg-muted transition-colors w-full text-left' : ''}
         ${className}
       `}
       onClick={onClick}

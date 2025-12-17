@@ -59,7 +59,7 @@ export function TeamInfoModal({ onAnimatedClose }: TeamInfoModalProps) {
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+        className="absolute top-2 right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border z-10 hover:opacity-80"
       >
         <span className="text-text-inverse text-value">X</span>
       </button>
@@ -145,8 +145,8 @@ export function TeamInfoModal({ onAnimatedClose }: TeamInfoModalProps) {
 
             {/* Name & Role */}
             <div className="flex-1 text-left">
-              <p className="text-primary font-bold text-sm">{member.name}</p>
-              <p className="text-muted-foreground text-xs">{member.role}</p>
+              <p className="text-primary font-bold text-caption">{member.name}</p>
+              <p className="text-muted-foreground text-mini">{member.role}</p>
             </div>
 
             {/* Trophies */}
@@ -154,13 +154,13 @@ export function TeamInfoModal({ onAnimatedClose }: TeamInfoModalProps) {
               <div className="w-8 h-8 bg-bg-inverse rounded-lg flex items-center justify-center">
                 <Image src="/icons/Medal.svg" alt="Trophies" width={16} height={16} className="opacity-80" />
               </div>
-              <span className="text-primary font-bold text-sm w-10">{member.trophies}</span>
+              <span className="text-primary font-bold text-caption w-10">{member.trophies}</span>
             </div>
 
             {/* Level */}
             <div className="text-right">
               <span className="text-text-secondary text-mini">Level</span>
-              <p className="text-primary font-bold text-sm">{member.level}</p>
+              <p className="text-primary font-bold text-caption">{member.level}</p>
             </div>
           </button>
         ))}

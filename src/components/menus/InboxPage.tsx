@@ -39,7 +39,7 @@ export function InboxPage() {
             {inbox.map((message) => (
               <ListItem key={message.id}>
                 <ListItemIcon>
-                  <span className="text-sm font-bold">{getTypeIcon(message.type)}</span>
+                  <span className="text-caption font-bold">{getTypeIcon(message.type)}</span>
                 </ListItemIcon>
                 <ListItemContent
                   title={message.title}

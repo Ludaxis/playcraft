@@ -29,6 +29,7 @@ import { LavaQuestPage } from '@/components/liveops/LavaQuestPage';
 import { MissionControlPage } from '@/components/liveops/MissionControlPage';
 import { AlbumPage } from '@/components/liveops/AlbumPage';
 import { CollectionPage } from '@/components/liveops/CollectionPage';
+import { WinningStreakPage } from '@/components/liveops/WinningStreakPage';
 
 // Gameplay
 import { GameplayPage } from '@/components/menus/GameplayPage';
@@ -65,6 +66,7 @@ const pageComponents: Record<PageId, React.ComponentType> = {
   'lightning-rush': LightningRushPage,
   'lava-quest': LavaQuestPage,
   'mission-control': MissionControlPage,
+  'winning-streak': WinningStreakPage,
   album: AlbumPage,
   collection: CollectionPage,
   gameplay: GameplayPage,
@@ -129,7 +131,7 @@ function PageRenderer() {
   }, [state.currentPage, NAV_TABS]);
 
   return (
-    <div ref={containerRef} id="app-content" className="flex flex-col h-full bg-surface-light">
+    <div ref={containerRef} id="app-content" className="flex flex-col h-full bg-bg-page">
       <main ref={(el) => {
         contentRef.current = el;
         if (swipeContentRef) swipeContentRef.current = el;

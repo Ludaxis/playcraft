@@ -36,12 +36,12 @@ export function TabManager() {
     <div className="space-y-4">
       {/* Preview */}
       <div className="bg-bg-muted rounded-xl p-3">
-        <p className="text-text-muted text-xs mb-2">Preview ({enabledCount}/5 tabs)</p>
+        <p className="text-text-muted text-mini mb-2">Preview ({enabledCount}/5 tabs)</p>
         <div className="flex justify-around bg-bg-inverse rounded-lg p-2">
           {enabledTabs.map((tab) => (
             <div key={tab.id} className="flex flex-col items-center gap-1">
-              <div className="w-8 h-8 bg-brand-hover rounded-lg flex items-center justify-center">
-                <Image src={tab.icon} alt={tab.label} width={16} height={16} className="opacity-80 invert" />
+              <div className="w-8 h-8 bg-border-strong rounded-lg flex items-center justify-center border border-border">
+                <span className="text-text-primary text-mini">{tab.label.slice(0, 2)}</span>
               </div>
               <span className="text-mini text-text-inverse">{tab.label}</span>
             </div>
@@ -65,26 +65,26 @@ export function TabManager() {
                   disabled={index === 0}
                   className="w-5 h-5 bg-bg-muted rounded flex items-center justify-center disabled:opacity-30"
                 >
-                  <span className="text-text-primary text-xs">^</span>
+                  <span className="text-text-primary text-mini">^</span>
                 </button>
                 <button
                   onClick={() => moveTab(index, 'down')}
                   disabled={index === enabledTabs.length - 1}
                   className="w-5 h-5 bg-bg-muted rounded flex items-center justify-center disabled:opacity-30"
                 >
-                  <span className="text-text-primary text-xs">v</span>
+                  <span className="text-text-primary text-mini">v</span>
                 </button>
               </div>
 
               {/* Icon */}
-              <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center">
-                <Image src={tab.icon} alt={tab.label} width={20} height={20} className="opacity-70" />
+              <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center border border-border">
+                <span className="text-text-secondary text-mini">{tab.label.slice(0, 3)}</span>
               </div>
 
               {/* Label */}
               <div className="flex-1">
-                <p className="text-text-primary font-bold text-sm">{tab.label}</p>
-                <p className="text-text-muted text-xs">{tab.page}</p>
+                <p className="text-text-primary font-bold text-caption">{tab.label}</p>
+                <p className="text-text-muted text-mini">{tab.page}</p>
               </div>
 
               {/* Toggle */}
@@ -95,7 +95,7 @@ export function TabManager() {
                   enabledCount <= 1 ? 'bg-bg-muted cursor-not-allowed' : 'bg-bg-inverse'
                 }`}
               >
-                <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full" />
+                <div className="absolute right-1 top-1 w-4 h-4 bg-bg-card rounded-full" />
               </button>
             </div>
           ))}
@@ -116,14 +116,14 @@ export function TabManager() {
                 <div className="w-5" />
 
                 {/* Icon */}
-                <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center">
-                  <Image src={tab.icon} alt={tab.label} width={20} height={20} className="opacity-50" />
+                <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center border border-border">
+                  <span className="text-text-muted text-mini">{tab.label.slice(0, 3)}</span>
                 </div>
 
                 {/* Label */}
                 <div className="flex-1">
-                  <p className="text-text-secondary font-bold text-sm">{tab.label}</p>
-                  <p className="text-text-muted text-xs">{tab.page}</p>
+                  <p className="text-text-secondary font-bold text-caption">{tab.label}</p>
+                  <p className="text-text-muted text-mini">{tab.page}</p>
                 </div>
 
                 {/* Toggle */}

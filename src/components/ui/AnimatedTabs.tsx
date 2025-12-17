@@ -89,12 +89,12 @@ export function AnimatedTabs({
   return (
     <div className={className}>
       {/* Tab Bar */}
-      <div className={`bg-secondary-light px-2 py-1.5 ${tabBarClassName}`}>
-        <div className="relative flex bg-secondary rounded border border-secondary-light overflow-hidden">
+      <div className={`bg-bg-muted px-2 py-1.5 ${tabBarClassName}`}>
+        <div className="relative flex bg-bg-card rounded border border-border overflow-hidden">
           {/* Sliding indicator */}
           <div
             ref={indicatorRef}
-            className="absolute top-0 bottom-0 bg-surface-dark rounded transition-none"
+            className="absolute top-0 bottom-0 bg-border rounded transition-none"
             style={{ width: `${100 / tabs.length}%` }}
           />
 
@@ -155,12 +155,12 @@ export function AnimatedTabBar({ tabs, activeTab, onTabChange, className = '' }:
   }, []);
 
   return (
-    <div className={`bg-secondary-light px-2 py-1.5 ${className}`}>
-      <div className="relative flex bg-secondary rounded border border-secondary-light overflow-hidden">
+    <div className={`bg-bg-muted px-2 py-1.5 ${className}`}>
+      <div className="relative flex bg-bg-card rounded border border-border overflow-hidden">
         {/* Sliding indicator */}
         <div
           ref={indicatorRef}
-          className="absolute top-0 bottom-0 bg-surface-dark rounded"
+          className="absolute top-0 bottom-0 bg-border rounded"
           style={{ width: `${100 / tabs.length}%` }}
         />
 

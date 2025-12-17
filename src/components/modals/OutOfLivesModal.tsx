@@ -33,7 +33,7 @@ export function OutOfLivesModal() {
         <p className="text-h3 text-text-primary mb-1">
           {player.lives}/{player.maxLives} Lives
         </p>
-        <p className="text-sm text-text-secondary mb-4">
+        <p className="text-caption text-text-secondary mb-4">
           {player.lives < player.maxLives
             ? 'Lives refill over time'
             : 'You have full lives!'}
@@ -42,7 +42,7 @@ export function OutOfLivesModal() {
         {/* Timer */}
         {player.lives < player.maxLives && (
           <Panel variant="outlined" className="mb-4">
-            <p className="text-sm text-text-secondary">Next life in</p>
+            <p className="text-caption text-text-secondary">Next life in</p>
             <p className="text-h2 text-text-primary">29:45</p>
           </Panel>
         )}

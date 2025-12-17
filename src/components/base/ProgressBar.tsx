@@ -41,8 +41,8 @@ export function ProgressBar({
     <div className={className}>
       {showLabel && (
         <div className="flex justify-between mb-1">
-          <span className="text-xs text-text-muted">Progress</span>
-          <span className="text-xs font-bold text-text-secondary">
+          <span className="text-mini text-text-muted">Progress</span>
+          <span className="text-mini font-bold text-text-secondary">
             {current}/{max}
           </span>
         </div>

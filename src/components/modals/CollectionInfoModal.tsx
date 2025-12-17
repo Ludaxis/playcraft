@@ -38,7 +38,7 @@ export function CollectionInfoModal({ onAnimatedClose }: CollectionInfoModalProp
             <div className="w-14 h-18 bg-bg-muted rounded-lg border-2 border-bg-page z-10" />
             <div className="w-12 h-16 bg-border-strong rounded-lg border-2 border-border rotate-12 -ml-4" />
           </div>
-          <p className="text-text-inverse text-sm text-center font-medium max-w-[200px]">
+          <p className="text-text-inverse text-caption text-center font-medium max-w-[200px]">
             Collect card packs from events and chests!
           </p>
         </div>
@@ -65,7 +65,7 @@ export function CollectionInfoModal({ onAnimatedClose }: CollectionInfoModalProp
               </div>
             </div>
           </div>
-          <p className="text-text-inverse text-sm text-center font-medium max-w-[200px]">
+          <p className="text-text-inverse text-caption text-center font-medium max-w-[200px]">
             Get cards from card packs and friends to complete sets!
           </p>
         </div>
@@ -84,10 +84,10 @@ export function CollectionInfoModal({ onAnimatedClose }: CollectionInfoModalProp
             <span className="text-text-secondary text-h3">TRP</span>
           </div>
           <div className="w-10 h-10 bg-brand-muted rounded-full -ml-2 -mb-1 flex items-center justify-center border-2 border-border-strong">
-            <span className="text-text-muted text-xs">$</span>
+            <span className="text-text-muted text-mini">$</span>
           </div>
         </div>
-        <p className="text-text-inverse text-sm text-center font-medium max-w-[220px]">
+        <p className="text-text-inverse text-caption text-center font-medium max-w-[220px]">
           Complete all sets to claim collection rewards and Origins Badge!
         </p>
       </div>
@@ -109,7 +109,7 @@ export function CollectionInfoModal({ onAnimatedClose }: CollectionInfoModalProp
 
         {/* Level */}
         <div className="text-right">
-          <div className="text-text-muted text-xs">Level</div>
+          <div className="text-text-muted text-mini">Level</div>
           <div className="text-text-primary text-h3">{player.currentLevel}</div>
         </div>
       </div>

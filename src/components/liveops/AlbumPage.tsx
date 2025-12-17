@@ -42,13 +42,13 @@ export function AlbumPage() {
         {/* Album Progress */}
         <Panel variant="elevated" className="mb-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-sm text-text-secondary">Cards Collected</span>
+            <span className="text-caption text-text-secondary">Cards Collected</span>
             <span className="font-bold text-text-primary">
               {collectedCards}/{totalCards}
             </span>
           </div>
           <ProgressBar current={collectedCards} max={totalCards} />
-          <p className="text-xs text-text-muted mt-2 text-center">
+          <p className="text-mini text-text-muted mt-2 text-center">
             Complete collections to earn rewards
           </p>
         </Panel>
@@ -69,10 +69,10 @@ export function AlbumPage() {
               >
                 <div className="flex items-center justify-between mb-2">
                   <div>
-                    <p className="text-sm font-medium text-text-primary">
+                    <p className="text-caption font-medium text-text-primary">
                       {collection.name}
                     </p>
-                    <p className="text-xs text-text-secondary">
+                    <p className="text-mini text-text-secondary">
                       {collection.collected}/{collection.cards} cards
                     </p>
                   </div>
@@ -118,10 +118,10 @@ export function AlbumPage() {
                 className="flex items-center justify-between"
               >
                 <div>
-                  <p className="text-sm font-medium text-text-primary">
+                  <p className="text-caption font-medium text-text-primary">
                     {collection.name}
                   </p>
-                  <p className="text-xs text-text-secondary">
+                  <p className="text-mini text-text-secondary">
                     {(index + 1) * 500} coins + Booster
                   </p>
                 </div>

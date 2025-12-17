@@ -47,7 +47,6 @@ export function EventCard({
           bg-bg-inverse
           rounded-full
           border-2 border-border
-          shadow-lg
           flex items-center justify-center
           hover:opacity-90
           active:scale-95
@@ -55,7 +54,7 @@ export function EventCard({
         "
       >
         {iconElement || (
-          <span className="text-text-inverse text-xs font-bold">{icon}</span>
+          <span className="text-text-inverse text-mini font-bold">{icon}</span>
         )}
       </div>
 

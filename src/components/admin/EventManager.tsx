@@ -59,14 +59,14 @@ function SortableEventItem({
       <div className="w-5 h-5 bg-bg-muted rounded flex items-center justify-center">
         <span className="text-text-muted text-mini">::</span>
       </div>
-      <span className="flex-1 text-text-primary font-bold text-xs truncate">{name}</span>
+      <span className="flex-1 text-text-primary font-bold text-mini truncate">{name}</span>
       <button
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
         }}
         onPointerDown={(e) => e.stopPropagation()}
-        className="w-5 h-5 bg-status-error rounded flex items-center justify-center"
+        className="w-5 h-5 bg-bg-inverse rounded flex items-center justify-center"
       >
         <span className="text-text-inverse text-mini font-bold">x</span>
       </button>
@@ -96,7 +96,7 @@ function DroppableColumn({
       <div
         ref={setNodeRef}
         className={`space-y-1 min-h-[200px] rounded-lg p-2 transition-colors ${
-          isOver ? 'bg-brand-primary/30' : 'bg-bg-muted'
+          isOver ? 'bg-bg-page border-2 border-border-strong' : 'bg-bg-muted'
         }`}
       >
         {children}
@@ -108,11 +108,11 @@ function DroppableColumn({
 // Drag overlay item
 function DragOverlayItem({ name }: { name: string }) {
   return (
-    <div className="flex items-center gap-2 bg-bg-card rounded-lg p-2 border-2 border-border-strong shadow-lg">
+    <div className="flex items-center gap-2 bg-bg-card rounded-lg p-2 border-2 border-border-strong">
       <div className="w-5 h-5 bg-bg-muted rounded flex items-center justify-center">
         <span className="text-text-muted text-mini">::</span>
       </div>
-      <span className="flex-1 text-text-primary font-bold text-xs">{name}</span>
+      <span className="flex-1 text-text-primary font-bold text-mini">{name}</span>
     </div>
   );
 }
@@ -240,7 +240,7 @@ export function EventManager() {
           <DroppableColumn id="left-column" title="Left" count={leftEvents.length} maxCount={5}>
             <SortableContext items={leftEvents} strategy={verticalListSortingStrategy}>
               {leftEvents.length === 0 ? (
-                <p className="text-text-muted text-xs py-4 text-center">Drag events here</p>
+                <p className="text-text-muted text-mini py-4 text-center">Drag events here</p>
               ) : (
                 leftEvents.map((eventId) => (
                   <SortableEventItem
@@ -258,7 +258,7 @@ export function EventManager() {
           <DroppableColumn id="right-column" title="Right" count={rightEvents.length} maxCount={5}>
             <SortableContext items={rightEvents} strategy={verticalListSortingStrategy}>
               {rightEvents.length === 0 ? (
-                <p className="text-text-muted text-xs py-4 text-center">Drag events here</p>
+                <p className="text-text-muted text-mini py-4 text-center">Drag events here</p>
               ) : (
                 rightEvents.map((eventId) => (
                   <SortableEventItem
@@ -291,7 +291,7 @@ export function EventManager() {
                 className="flex items-center gap-1 bg-bg-card rounded-full px-3 py-1.5 border border-border disabled:opacity-30"
               >
                 <span className="text-text-primary text-value-sm">{event.name}</span>
-                <span className="text-status-success text-value-sm">+</span>
+                <span className="text-text-secondary text-value-sm">+</span>
               </button>
             ))}
           </div>

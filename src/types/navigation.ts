@@ -20,6 +20,7 @@ export type PageId =
   | 'mission-control'
   | 'album'
   | 'collection'
+  | 'winning-streak'
   | 'area-tasks'
   | 'boosters'
   | 'friends'

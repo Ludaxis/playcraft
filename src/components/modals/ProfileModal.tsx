@@ -28,22 +28,22 @@ export function ProfileModal({ onAnimatedClose }: ProfileModalProps) {
       {/* Close button - Top right */}
       <button
         onClick={handleClose}
-        className="absolute -top-1 -right-1 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg hover:bg-error-light transition-colors"
+        className="absolute -top-1 -right-1 w-8 h-8 bg-bg-muted rounded-full flex items-center justify-center border border-border z-10 hover:opacity-80 transition-colors"
       >
-        <span className="text-text-inverse font-bold text-sm">X</span>
+        <span className="text-text-primary font-bold text-caption">X</span>
       </button>
 
       {/* Header */}
-      <div className="bg-brand-hover rounded-t-2xl py-2.5 px-3">
+      <div className="bg-bg-inverse rounded-t-2xl py-2.5 px-3">
         <h1 className="text-text-inverse text-h4 text-center">Profile</h1>
       </div>
 
       {/* Divider line */}
-      <div className="h-0.5 bg-brand-muted" />
+      <div className="h-0.5 bg-border" />
 
         {/* Profile Card */}
-        <div className="bg-brand-muted p-4">
-          <div className="bg-border-strong rounded-xl border-2 border-border p-3">
+        <div className="bg-bg-muted p-4">
+          <div className="bg-bg-card rounded-xl border-2 border-border p-3">
             <div className="flex items-center gap-3">
               {/* Avatar - Clickable */}
               <button
@@ -60,7 +60,7 @@ export function ProfileModal({ onAnimatedClose }: ProfileModalProps) {
                   />
                 </div>
                 {/* Edit indicator */}
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-status-success rounded-full border-2 border-success-light flex items-center justify-center">
+                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-bg-inverse rounded-full border border-border flex items-center justify-center">
                   <span className="text-text-inverse text-value-sm">+</span>
                 </div>
               </button>
@@ -72,7 +72,7 @@ export function ProfileModal({ onAnimatedClose }: ProfileModalProps) {
 
                 {/* Playing since tooltip */}
                 <div className="inline-block bg-bg-page rounded-lg px-3 py-1 mb-2">
-                  <span className="text-text-secondary text-xs font-medium">Playing since 05/2022</span>
+                  <span className="text-text-secondary text-mini font-medium">Playing since 05/2022</span>
                 </div>
 
                 {/* Join Date with clock */}
@@ -86,7 +86,7 @@ export function ProfileModal({ onAnimatedClose }: ProfileModalProps) {
 
               {/* Level Badge - Flag style */}
               <div className="flex-shrink-0">
-                <div className="bg-bg-inverse rounded-t-lg px-4 pt-2 pb-1 border-2 border-brand-muted border-b-0">
+                <div className="bg-bg-inverse rounded-t-lg px-4 pt-2 pb-1 border-2 border-border border-b-0">
                   <div className="text-text-muted text-value-sm text-center">Level</div>
                   <div className="text-text-inverse text-h1 text-center">{player.currentLevel}</div>
                 </div>
@@ -98,15 +98,15 @@ export function ProfileModal({ onAnimatedClose }: ProfileModalProps) {
         </div>
 
         {/* General Stats Section */}
-        <div className="bg-bg-inverse px-4 pb-4 rounded-b-2xl">
+        <div className="bg-bg-card px-4 pb-4 rounded-b-2xl border-x-2 border-b-2 border-border">
           {/* Ribbon Title */}
           <div className="flex justify-center -mt-1 mb-3">
             <div className="relative">
               {/* Ribbon ends */}
-              <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-border-strong" />
-              <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-border-strong" />
+              <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-bg-muted" />
+              <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-bg-muted" />
               {/* Main ribbon */}
-              <div className="bg-border-strong rounded px-6 py-1.5 border-2 border-border">
+              <div className="bg-bg-muted rounded px-6 py-1.5 border-2 border-border">
                 <span className="text-text-primary font-bold">General Stats</span>
               </div>
             </div>

@@ -33,17 +33,17 @@ export function TeamChestPage() {
         {/* Chest Progress */}
         <Panel variant="elevated" className="mb-4 text-center">
           <div className="w-20 h-20 bg-bg-page rounded-lg mx-auto mb-3 flex items-center justify-center">
-            <span className="text-text-muted text-xs">[Chest]</span>
+            <span className="text-text-muted text-mini">[Chest]</span>
           </div>
           <p className="text-h3 text-text-primary">
             {team.chestProgress} / {team.chestGoal}
           </p>
-          <p className="text-sm text-text-secondary mb-3">Stars Collected</p>
+          <p className="text-caption text-text-secondary mb-3">Stars Collected</p>
           <ProgressBar current={team.chestProgress} max={team.chestGoal} size="lg" />
         </Panel>
 
         {/* Milestones */}
-        <h3 className="text-sm font-semibold text-text-primary mb-3">Milestones</h3>
+        <h3 className="text-caption font-semibold text-text-primary mb-3">Milestones</h3>
         <div className="space-y-2 mb-4">
           {milestones.map((milestone, index) => (
             <Panel
@@ -61,8 +61,8 @@ export function TeamChestPage() {
                 {milestone.reached ? <CheckIcon /> : index + 1}
               </div>
               <div className="flex-1">
-                <p className="text-sm font-medium text-text-primary">{milestone.stars} Stars</p>
-                <p className="text-xs text-text-secondary">{milestone.reward}</p>
+                <p className="text-caption font-medium text-text-primary">{milestone.stars} Stars</p>
+                <p className="text-mini text-text-secondary">{milestone.reward}</p>
               </div>
               {milestone.reached && (
                 <Button size="sm" variant="primary">
@@ -74,7 +74,7 @@ export function TeamChestPage() {
         </div>
 
         {/* Top Contributors */}
-        <h3 className="text-sm font-semibold text-text-primary mb-3">Top Contributors</h3>
+        <h3 className="text-caption font-semibold text-text-primary mb-3">Top Contributors</h3>
         <List>
           {team.members
             .sort((a, b) => b.contributedStars - a.contributedStars)

@@ -1,22 +1,18 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Puzzle Kit - Centralized Theme Configuration
+ * Puzzle Kit - Mid-Fidelity Wireframe Configuration
  *
- * To change the color palette or fonts, edit this file only.
- * All components use semantic color names that reference these values.
+ * Grayscale-only color palette for wireframe design.
+ * All colors are shades of gray to focus on layout and structure.
  *
- * Color System:
- * - primary: Main dark color for headers, important elements
- * - secondary: Medium tone for containers, navigation
- * - surface: Background colors (light to dark variants)
- * - muted: Subdued text and icons
- * - border: Borders and dividers
- * - accent: Featured/highlighted elements (purple theme)
- * - gold: Premium/VIP elements
- * - success: Positive actions, confirmations
- * - error: Errors, destructive actions
- * - warning: Warnings, alerts
+ * Color System (Grayscale):
+ * - primary: Dark gray for headers, important elements
+ * - secondary: Medium gray for containers, navigation
+ * - surface: White to light gray backgrounds
+ * - muted: Light gray for subdued elements
+ * - border: Gray borders for structure definition
+ * - All status/accent/gold colors: Grayscale variants
  */
 
 const config: Config = {
@@ -27,100 +23,101 @@ const config: Config = {
   theme: {
     extend: {
       // ═══════════════════════════════════════════════════════════════════
-      // COLORS - Edit these to change the entire app's color palette
+      // WIREFRAME GRAYSCALE COLORS
       // ═══════════════════════════════════════════════════════════════════
       colors: {
-        // Primary colors (dark tones)
+        // Primary colors (dark grays)
         primary: {
-          DEFAULT: '#1e293b', // slate-800
-          light: '#334155',   // slate-700
-          dark: '#0f172a',    // slate-900
+          DEFAULT: '#333333', // Dark gray
+          light: '#4D4D4D',   // Medium-dark gray
+          dark: '#1A1A1A',    // Near black
         },
 
-        // Secondary colors (medium tones)
+        // Secondary colors (medium grays)
         secondary: {
-          DEFAULT: '#475569', // slate-600
-          light: '#64748b',   // slate-500
-          dark: '#334155',    // slate-700
+          DEFAULT: '#666666', // Medium gray
+          light: '#808080',   // Gray
+          dark: '#4D4D4D',    // Medium-dark gray
         },
 
-        // Surface colors (backgrounds)
+        // Surface colors (light grays to white)
         surface: {
-          DEFAULT: '#cbd5e1', // slate-300
-          light: '#e2e8f0',   // slate-200
-          lighter: '#f1f5f9', // slate-100
-          lightest: '#f8fafc', // slate-50
-          dark: '#94a3b8',    // slate-400
-          darker: '#64748b',  // slate-500
+          DEFAULT: '#E5E5E5', // Light gray
+          light: '#F0F0F0',   // Very light gray
+          lighter: '#F5F5F5', // Near white
+          lightest: '#FFFFFF', // White
+          dark: '#CCCCCC',    // Medium-light gray
+          darker: '#999999',  // Gray
         },
 
-        // Muted colors (subdued elements)
+        // Muted colors (grays for subdued elements)
         muted: {
-          DEFAULT: '#94a3b8', // slate-400
-          light: '#cbd5e1',   // slate-300
-          dark: '#64748b',    // slate-500
-          foreground: '#64748b', // slate-500
+          DEFAULT: '#999999', // Gray
+          light: '#CCCCCC',   // Light gray
+          dark: '#666666',    // Medium gray
+          foreground: '#666666',
         },
 
-        // Border colors
+        // Border colors (grays for structure)
         border: {
-          DEFAULT: '#cbd5e1', // slate-300
-          light: '#e2e8f0',   // slate-200
-          dark: '#94a3b8',    // slate-400
+          DEFAULT: '#CCCCCC', // Standard border
+          light: '#E5E5E5',   // Light border
+          dark: '#999999',    // Strong border
         },
 
-        // Accent colors (featured elements)
+        // Accent colors (grayscale - no colors in wireframes)
         accent: {
-          DEFAULT: '#7c3aed', // violet-600
-          light: '#8b5cf6',   // violet-500
-          dark: '#6d28d9',    // violet-700
-          darker: '#5b21b6',  // violet-800
-          muted: '#a78bfa',   // violet-400
+          DEFAULT: '#4D4D4D', // Dark gray
+          light: '#666666',   // Medium gray
+          dark: '#333333',    // Darker gray
+          darker: '#1A1A1A',  // Near black
+          muted: '#E5E5E5',   // Light gray
         },
 
-        // Gold colors (premium/VIP)
+        // Gold colors (grayscale for wireframes)
         gold: {
-          DEFAULT: '#fbbf24', // amber-400
-          light: '#fcd34d',   // amber-300
-          dark: '#f59e0b',    // amber-500
-          darker: '#d97706',  // amber-600
+          DEFAULT: '#808080', // Gray
+          light: '#B3B3B3',   // Light gray
+          dark: '#666666',    // Medium gray
+          darker: '#4D4D4D',  // Dark gray
         },
 
-        // Success colors
+        // Success colors (grayscale)
         success: {
-          DEFAULT: '#22c55e', // green-500
-          light: '#4ade80',   // green-400
-          dark: '#16a34a',    // green-600
+          DEFAULT: '#666666', // Gray
+          light: '#808080',   // Lighter gray
+          dark: '#4D4D4D',    // Darker gray
         },
 
-        // Error colors
+        // Error colors (grayscale)
         error: {
-          DEFAULT: '#ef4444', // red-500
-          light: '#f87171',   // red-400
-          dark: '#dc2626',    // red-600
+          DEFAULT: '#4D4D4D', // Dark gray
+          light: '#666666',   // Gray
+          dark: '#333333',    // Darker gray
         },
 
-        // Warning colors
+        // Warning colors (grayscale)
         warning: {
-          DEFAULT: '#f59e0b', // amber-500
-          light: '#fbbf24',   // amber-400
-          dark: '#d97706',    // amber-600
+          DEFAULT: '#808080', // Gray
+          light: '#999999',   // Light gray
+          dark: '#666666',    // Medium gray
         },
 
-        // Info colors
+        // Info colors (grayscale)
         info: {
-          DEFAULT: '#3b82f6', // blue-500
-          light: '#60a5fa',   // blue-400
-          dark: '#2563eb',    // blue-600
+          DEFAULT: '#808080', // Gray
+          light: '#999999',   // Light gray
+          dark: '#666666',    // Medium gray
         },
       },
 
       // ═══════════════════════════════════════════════════════════════════
-      // FONTS - Edit these to change typography
+      // FONTS - Clean sans-serif for wireframes
       // ═══════════════════════════════════════════════════════════════════
       fontFamily: {
-        // Primary font for all text
+        // Primary font - Inter for clean wireframe look
         sans: [
+          'Inter',
           'var(--font-sans)',
           'system-ui',
           '-apple-system',
@@ -131,8 +128,9 @@ const config: Config = {
           'Arial',
           'sans-serif',
         ],
-        // Display font for headings (optional - defaults to sans)
+        // Display font (same as sans for consistency)
         display: [
+          'Inter',
           'var(--font-display)',
           'var(--font-sans)',
           'system-ui',
@@ -150,27 +148,27 @@ const config: Config = {
       },
 
       // ═══════════════════════════════════════════════════════════════════
-      // SPACING & SIZING - Common values
+      // SPACING & SIZING - Consistent wireframe values
       // ═══════════════════════════════════════════════════════════════════
       borderRadius: {
-        'sm': '0.25rem',
-        'DEFAULT': '0.5rem',
-        'md': '0.5rem',
-        'lg': '0.75rem',
-        'xl': '1rem',
-        '2xl': '1.5rem',
-        '3xl': '2rem',
+        'sm': '0.125rem',   // 2px - minimal
+        'DEFAULT': '0.25rem', // 4px - standard
+        'md': '0.375rem',   // 6px
+        'lg': '0.5rem',     // 8px
+        'xl': '0.75rem',    // 12px
+        '2xl': '1rem',      // 16px
+        '3xl': '1.5rem',    // 24px
         'full': '9999px',
       },
 
       // ═══════════════════════════════════════════════════════════════════
-      // ANIMATIONS
+      // ANIMATIONS - Subtle for wireframes
       // ═══════════════════════════════════════════════════════════════════
       animation: {
-        'fade-in': 'fadeIn 0.2s ease-out',
-        'fade-out': 'fadeOut 0.2s ease-out',
-        'slide-up': 'slideUp 0.3s ease-out',
-        'slide-down': 'slideDown 0.3s ease-out',
+        'fade-in': 'fadeIn 0.15s ease-out',
+        'fade-out': 'fadeOut 0.15s ease-out',
+        'slide-up': 'slideUp 0.2s ease-out',
+        'slide-down': 'slideDown 0.2s ease-out',
         'pulse-slow': 'pulse 3s infinite',
       },
       keyframes: {
@@ -183,11 +181,11 @@ const config: Config = {
           '100%': { opacity: '0' },
         },
         slideUp: {
-          '0%': { transform: 'translateY(10px)', opacity: '0' },
+          '0%': { transform: 'translateY(8px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
         slideDown: {
-          '0%': { transform: 'translateY(-10px)', opacity: '0' },
+          '0%': { transform: 'translateY(-8px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
         },
       },

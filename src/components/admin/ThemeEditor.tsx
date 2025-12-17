@@ -21,8 +21,8 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
         className="w-10 h-10 rounded-lg cursor-pointer border-2 border-border"
       />
       <div className="flex-1">
-        <p className="text-text-primary text-sm font-bold">{label}</p>
-        <p className="text-text-muted text-xs uppercase">{value}</p>
+        <p className="text-text-primary text-caption font-bold">{label}</p>
+        <p className="text-text-muted text-mini uppercase">{value}</p>
       </div>
     </div>
   );
@@ -92,11 +92,11 @@ export function ThemeEditor() {
     <div className="space-y-4">
       {/* Theme Preset Selector */}
       <div className="bg-bg-card rounded-xl p-4 border border-border">
-        <p className="text-text-primary text-sm font-bold mb-3">Theme Preset</p>
+        <p className="text-text-primary text-caption font-bold mb-3">Theme Preset</p>
         <select
           value={config.themePresetId}
           onChange={handlePresetChange}
-          className="w-full bg-bg-muted border border-border rounded-lg px-3 py-2 text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-brand-primary"
+          className="w-full bg-bg-muted border border-border rounded-lg px-3 py-2 text-text-primary font-medium focus:outline-none focus:ring-2 focus:ring-border-strong"
         >
           {presetIds.map((presetId) => (
             <option key={presetId} value={presetId}>
@@ -122,7 +122,7 @@ export function ThemeEditor() {
             style={{ backgroundColor: currentPreset.brandMuted }}
             title="Brand Muted"
           />
-          <span className="text-text-muted text-xs ml-2">
+          <span className="text-text-muted text-mini ml-2">
             {currentPreset.name}
           </span>
         </div>
@@ -130,14 +130,14 @@ export function ThemeEditor() {
 
       {/* Advanced Color Customization (collapsed by default) */}
       <details className="group">
-        <summary className="cursor-pointer text-text-secondary text-sm font-medium py-2 hover:text-text-primary">
+        <summary className="cursor-pointer text-text-secondary text-caption font-medium py-2 hover:text-text-primary">
           Advanced Color Customization
         </summary>
 
         <div className="mt-3 space-y-4">
           {/* Preview */}
           <div className="bg-bg-muted rounded-xl p-3">
-            <p className="text-text-muted text-xs mb-2">Current Colors</p>
+            <p className="text-text-muted text-mini mb-2">Current Colors</p>
             <div className="flex gap-2">
               <div className="w-8 h-8 rounded" style={{ backgroundColor: theme.primary }} />
               <div className="w-8 h-8 rounded" style={{ backgroundColor: theme.secondary }} />
@@ -150,7 +150,7 @@ export function ThemeEditor() {
           {/* Color Groups */}
           {colorGroups.map((group) => (
             <div key={group.title}>
-              <p className="text-text-primary text-sm font-bold mb-2">{group.title}</p>
+              <p className="text-text-primary text-caption font-bold mb-2">{group.title}</p>
               <div className="bg-bg-card rounded-xl p-3 space-y-3 border border-border">
                 {group.colors.map((color) => (
                   <ColorInput

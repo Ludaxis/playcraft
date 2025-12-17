@@ -37,9 +37,9 @@ export function KingsCupPage() {
       <div className="p-4">
         {/* Current Standing */}
         <Panel variant="elevated" className="mb-4 text-center">
-          <p className="text-sm text-text-secondary">Your Rank</p>
-          <p className="text-3xl font-bold text-text-primary">#156</p>
-          <p className="text-sm text-text-secondary mt-2">
+          <p className="text-caption text-text-secondary">Your Rank</p>
+          <p className="text-h1 font-bold text-text-primary">#156</p>
+          <p className="text-caption text-text-secondary mt-2">
             {event.progress.toLocaleString()} points
           </p>
           <ProgressBar
@@ -47,13 +47,13 @@ export function KingsCupPage() {
             max={event.maxProgress}
             className="mt-3"
           />
-          <p className="text-xs text-text-muted mt-1">
+          <p className="text-mini text-text-muted mt-1">
             {(event.maxProgress - event.progress).toLocaleString()} to next tier
           </p>
         </Panel>
 
         {/* Reward Tiers */}
-        <h3 className="text-sm font-semibold text-text-primary mb-3">Reward Tiers</h3>
+        <h3 className="text-caption font-semibold text-text-primary mb-3">Reward Tiers</h3>
         <div className="space-y-2 mb-4">
           {tournamentTiers.map((tier) => (
             <Panel
@@ -63,8 +63,8 @@ export function KingsCupPage() {
               className="flex justify-between items-center"
             >
               <div>
-                <p className="text-sm font-medium text-text-primary">Rank {tier.rank}</p>
-                <p className="text-xs text-text-secondary">{tier.points.toLocaleString()}+ pts</p>
+                <p className="text-caption font-medium text-text-primary">Rank {tier.rank}</p>
+                <p className="text-mini text-text-secondary">{tier.points.toLocaleString()}+ pts</p>
               </div>
               <Badge variant="accent">{tier.reward}</Badge>
             </Panel>
@@ -72,13 +72,13 @@ export function KingsCupPage() {
         </div>
 
         {/* Top Players */}
-        <h3 className="text-sm font-semibold text-text-primary mb-3">Top Players</h3>
+        <h3 className="text-caption font-semibold text-text-primary mb-3">Top Players</h3>
         <List>
           {topPlayers.map((player) => (
             <ListItem key={player.id} active={player.isPlayer}>
               <div
                 className={`
-                  w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
+                  w-8 h-8 rounded-full flex items-center justify-center font-bold text-caption
                   ${player.rank <= 3 ? 'bg-bg-inverse text-text-inverse' : 'bg-bg-page text-text-text-secondary'}
                 `}
               >

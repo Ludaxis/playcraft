@@ -97,7 +97,7 @@ export function AnimatedModal({
     >
       <div
         ref={contentRef}
-        className={`${width} bg-secondary rounded-2xl border-2 border-secondary-light overflow-hidden ${className}`}
+        className={`${width} bg-bg-card rounded-xl border-2 border-border overflow-hidden ${className}`}
       >
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
@@ -127,7 +127,7 @@ export function ModalHeader({ title, onClose, showCloseButton = true }: ModalHea
         {showCloseButton && (
           <button
             onClick={onClose}
-            className="absolute right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light hover:opacity-90 transition-opacity"
+            className="absolute right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border hover:opacity-80 transition-opacity"
           >
             <span className="text-text-inverse text-value">X</span>
           </button>

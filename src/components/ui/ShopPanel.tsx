@@ -32,7 +32,7 @@ export function ShopPanel({
         {/* Title Banner */}
         {title && (
           <div className="bg-brand-primary px-4 py-2 flex items-center gap-2">
-            <div className="w-6 h-6 bg-gold rounded-lg flex items-center justify-center">
+            <div className="w-6 h-6 bg-brand-primary rounded-lg flex items-center justify-center">
               <span className="text-text-primary text-value-sm">♛</span>
             </div>
             <span className="text-text-inverse text-h3">{title}</span>
@@ -42,11 +42,11 @@ export function ShopPanel({
         <div className="p-4 flex gap-4">
           {/* Left: Crown illustration */}
           <div className="relative w-24 h-24 flex-shrink-0">
-            <div className="absolute inset-0 bg-gold rounded-xl flex items-center justify-center">
+            <div className="absolute inset-0 bg-brand-primary rounded-xl flex items-center justify-center">
               <div className="text-4xl">👑</div>
             </div>
             {/* Badge */}
-            <div className="absolute -bottom-1 -right-1 bg-status-success text-text-inverse text-mini px-2 py-0.5 rounded-full">
+            <div className="absolute -bottom-1 -right-1 bg-brand-primary text-text-inverse text-mini px-2 py-0.5 rounded-full">
               VIP
             </div>
           </div>
@@ -77,7 +77,7 @@ export function ShopPanel({
           </div>
           <button
             onClick={onClick}
-            className="bg-gold hover:bg-gold/90 text-text-primary text-button py-2.5 px-6 rounded-xl transition-all"
+            className="bg-brand-primary hover:bg-brand-hover text-text-inverse text-button py-2.5 px-6 rounded-xl transition-all"
           >
             {buttonLabel}
           </button>
@@ -101,8 +101,8 @@ export function ShopPanel({
           {/* Coins */}
           {coins && (
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 bg-gold rounded-full flex items-center justify-center">
-                <span className="text-text-primary text-value">$</span>
+              <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center">
+                <span className="text-text-inverse text-value">$</span>
               </div>
               <span className="text-text-primary text-value-sm mt-0.5">{coins.toLocaleString()}</span>
             </div>
@@ -142,7 +142,7 @@ export function ShopPanel({
           <span className="text-text-inverse text-value-sm">{title || 'Special Offer'}</span>
           <button
             onClick={onClick}
-            className="bg-gold hover:bg-gold/90 text-text-primary text-value-sm py-1 px-3 rounded"
+            className="bg-brand-primary hover:bg-brand-hover text-text-inverse text-value-sm py-1 px-3 rounded"
           >
             {price}
           </button>
@@ -155,8 +155,8 @@ export function ShopPanel({
   return (
     <div className="bg-bg-card rounded-lg border border-border overflow-hidden flex flex-col">
       <div className="flex-1 p-2 flex flex-col items-center justify-center">
-        <div className="w-9 h-9 bg-gold rounded-full flex items-center justify-center">
-          <span className="text-text-primary text-value">$</span>
+        <div className="w-9 h-9 bg-brand-primary rounded-full flex items-center justify-center">
+          <span className="text-text-inverse text-value">$</span>
         </div>
         <span className="text-text-primary text-value-sm mt-0.5">{coins?.toLocaleString()}</span>
       </div>

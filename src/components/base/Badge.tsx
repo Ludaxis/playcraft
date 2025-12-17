@@ -23,8 +23,8 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-bg-muted text-text-secondary',
-  notification: 'bg-status-error text-text-inverse',
+  default: 'bg-bg-muted text-text-secondary border border-border',
+  notification: 'bg-bg-inverse text-text-inverse',
 };
 
 export function Badge({
@@ -81,7 +81,7 @@ export function NotificationDot({
       className={`
         absolute -top-1 -right-1
         min-w-[18px] h-[18px]
-        bg-status-error text-text-inverse
+        bg-bg-inverse text-text-inverse
         text-mini font-bold
         rounded-full
         flex items-center justify-center

@@ -68,7 +68,7 @@ export function ListRow({
             w-7 h-7
             rounded-full
             flex items-center justify-center
-            font-bold text-xs
+            font-bold text-mini
             ${rank <= 3
               ? 'bg-bg-inverse text-text-inverse'
               : 'bg-bg-muted text-text-secondary'
@@ -84,16 +84,16 @@ export function ListRow({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-text-primary truncate">{name}</p>
+        <p className="text-caption font-medium text-text-primary truncate">{name}</p>
         {subtitle && (
-          <p className="text-xs text-text-muted truncate">{subtitle}</p>
+          <p className="text-mini text-text-muted truncate">{subtitle}</p>
         )}
       </div>
 
       {/* Value or Right Element */}
       {rightElement}
       {value !== undefined && !rightElement && (
-        <span className="text-sm font-bold text-text-primary">{value}</span>
+        <span className="text-caption font-bold text-text-primary">{value}</span>
       )}
     </Component>
   );

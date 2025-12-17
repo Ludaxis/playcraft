@@ -97,16 +97,13 @@ export function TeamPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="bg-brand-hover py-3 px-4">
-        <h1 className="text-text-inverse text-h4 text-center">Teams</h1>
+      <div className="bg-bg-muted py-3 px-4 border-b border-border">
+        <h1 className="text-text-primary text-h4 text-center">Teams</h1>
       </div>
 
-      {/* Divider */}
-      <div className="h-0.5 bg-brand-muted" />
-
       {/* Tab Bar */}
-      <div className="bg-brand-muted px-2 py-1.5">
-        <div className="relative flex bg-bg-inverse rounded border border-brand-muted overflow-hidden">
+      <div className="bg-bg-page px-2 py-1.5 border-b border-border">
+        <div className="relative flex bg-bg-inverse rounded border border-border overflow-hidden">
           {/* Sliding indicator */}
           <div
             ref={indicatorRef}
@@ -146,13 +143,13 @@ export function TeamPage() {
           <div className="p-3">
             {/* Search Input */}
             <div className="flex gap-2 mb-3">
-              <div className="flex-1 flex items-center bg-brand-muted rounded px-2 py-1.5 border border-border-strong">
+              <div className="flex-1 flex items-center bg-bg-muted rounded px-2 py-1.5 border border-border">
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Enter team name..."
-                  className="flex-1 bg-transparent text-text-inverse text-caption placeholder-text-muted outline-none"
+                  className="flex-1 bg-transparent text-text-primary text-caption placeholder-text-muted outline-none"
                 />
                 {searchQuery && (
                   <button onClick={() => setSearchQuery('')} className="text-text-muted ml-1">
@@ -169,11 +166,11 @@ export function TeamPage() {
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-brand-muted mb-3" />
+            <div className="h-px bg-border mb-3" />
 
             {!showSearchResults ? (
               <div className="text-center">
-                <p className="text-text-inverse text-caption mb-2">
+                <p className="text-text-primary text-caption mb-2">
                   Check suggested teams for you
                 </p>
                 <button
@@ -198,7 +195,7 @@ export function TeamPage() {
           <div className="p-3 space-y-3">
             {/* Team Logo */}
             <div className="flex items-center gap-3">
-              <span className="text-text-inverse text-value-sm w-20">Team Logo</span>
+              <span className="text-text-primary text-value-sm w-20">Team Logo</span>
               <div className="w-10 h-10 bg-border-strong rounded border border-border flex items-center justify-center">
                 <span className="text-text-secondary text-mini">LOGO</span>
               </div>
@@ -209,7 +206,7 @@ export function TeamPage() {
 
             {/* Team Name */}
             <div className="flex items-center gap-3">
-              <span className="text-text-inverse text-value-sm w-20">Team Name</span>
+              <span className="text-text-primary text-value-sm w-20">Team Name</span>
               <input
                 type="text"
                 value={teamName}
@@ -221,7 +218,7 @@ export function TeamPage() {
 
             {/* Description */}
             <div className="flex items-start gap-3">
-              <span className="text-text-inverse text-xs font-bold w-20 pt-1">Description</span>
+              <span className="text-text-primary text-mini font-bold w-20 pt-1">Description</span>
               <textarea
                 value={teamDescription}
                 onChange={(e) => setTeamDescription(e.target.value)}
@@ -232,7 +229,7 @@ export function TeamPage() {
 
             {/* Team Type */}
             <div className="flex items-center gap-3">
-              <span className="text-text-inverse text-value-sm w-20">Team Type</span>
+              <span className="text-text-primary text-value-sm w-20">Team Type</span>
               <div className="flex-1 flex items-center gap-1">
                 <button
                   onClick={() => setTeamTypeIndex((prev) => (prev > 0 ? prev - 1 : teamTypes.length - 1))}
@@ -240,8 +237,8 @@ export function TeamPage() {
                 >
                   <span className="text-text-primary text-body-sm">‹</span>
                 </button>
-                <div className="flex-1 bg-brand-muted rounded py-1.5 border border-border-strong">
-                  <span className="text-text-inverse text-value-sm text-center block">{teamTypes[teamTypeIndex]}</span>
+                <div className="flex-1 bg-bg-muted rounded py-1.5 border border-border">
+                  <span className="text-text-primary text-value-sm text-center block">{teamTypes[teamTypeIndex]}</span>
                 </div>
                 <button
                   onClick={() => setTeamTypeIndex((prev) => (prev < teamTypes.length - 1 ? prev + 1 : 0))}
@@ -254,7 +251,7 @@ export function TeamPage() {
 
             {/* Required Level */}
             <div className="flex items-center gap-3">
-              <span className="text-text-inverse text-value-sm w-20">Req. Level</span>
+              <span className="text-text-primary text-value-sm w-20">Req. Level</span>
               <div className="flex-1 flex items-center gap-1">
                 <button
                   onClick={() => setRequiredLevel((prev) => Math.max(0, prev - 100))}
@@ -262,8 +259,8 @@ export function TeamPage() {
                 >
                   <span className="text-text-primary text-body-sm">‹</span>
                 </button>
-                <div className="flex-1 bg-brand-muted rounded py-1.5 border border-border-strong">
-                  <span className="text-text-inverse text-value-sm text-center block">{requiredLevel}</span>
+                <div className="flex-1 bg-bg-muted rounded py-1.5 border border-border">
+                  <span className="text-text-primary text-value-sm text-center block">{requiredLevel}</span>
                 </div>
                 <button
                   onClick={() => setRequiredLevel((prev) => prev + 100)}
@@ -276,7 +273,7 @@ export function TeamPage() {
 
             {/* Required Crown */}
             <div className="flex items-center gap-3">
-              <span className="text-text-inverse text-value-sm w-20">Req. Crown</span>
+              <span className="text-text-primary text-value-sm w-20">Req. Crown</span>
               <div className="flex-1 flex items-center gap-1">
                 <button
                   onClick={() => setRequiredCrown((prev) => Math.max(0, prev - 100))}
@@ -284,8 +281,8 @@ export function TeamPage() {
                 >
                   <span className="text-text-primary text-body-sm">‹</span>
                 </button>
-                <div className="flex-1 bg-brand-muted rounded py-1.5 border border-border-strong">
-                  <span className="text-text-inverse text-value-sm text-center block">{requiredCrown}</span>
+                <div className="flex-1 bg-bg-muted rounded py-1.5 border border-border">
+                  <span className="text-text-primary text-value-sm text-center block">{requiredCrown}</span>
                 </div>
                 <button
                   onClick={() => setRequiredCrown((prev) => prev + 100)}

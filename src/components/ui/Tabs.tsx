@@ -16,7 +16,7 @@ interface TabsProps {
 
 export function Tabs({ tabs, activeTab, onTabChange, className = '' }: TabsProps) {
   return (
-    <div className={`flex gap-1 p-1 bg-surface-light rounded-lg ${className}`}>
+    <div className={`flex gap-1 p-1 bg-bg-muted rounded-lg border border-border ${className}`}>
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -25,7 +25,7 @@ export function Tabs({ tabs, activeTab, onTabChange, className = '' }: TabsProps
             flex-1 px-3 py-2 text-label rounded-md transition-colors
             ${
               activeTab === tab.id
-                ? 'bg-white text-text-primary shadow-sm'
+                ? 'bg-bg-card text-text-primary border border-border'
                 : 'text-text-secondary hover:text-text-primary'
             }
           `}

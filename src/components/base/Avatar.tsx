@@ -25,10 +25,10 @@ interface AvatarProps {
 }
 
 const sizeStyles: Record<AvatarSize, { container: string; text: string; indicator: string }> = {
-  sm: { container: 'w-8 h-8', text: 'text-xs', indicator: 'w-2 h-2' },
-  md: { container: 'w-10 h-10', text: 'text-sm', indicator: 'w-2.5 h-2.5' },
+  sm: { container: 'w-8 h-8', text: 'text-mini', indicator: 'w-2 h-2' },
+  md: { container: 'w-10 h-10', text: 'text-caption', indicator: 'w-2.5 h-2.5' },
   lg: { container: 'w-12 h-12', text: 'text-base', indicator: 'w-3 h-3' },
-  xl: { container: 'w-16 h-16', text: 'text-lg', indicator: 'w-3.5 h-3.5' },
+  xl: { container: 'w-16 h-16', text: 'text-value', indicator: 'w-3.5 h-3.5' },
 };
 
 function getInitials(name: string): string {
@@ -82,7 +82,7 @@ export function Avatar({
             ${styles.indicator}
             rounded-full
             border-2 border-bg-card
-            ${online ? 'bg-status-success' : 'bg-text-muted'}
+            ${online ? 'bg-brand-primary' : 'bg-text-muted'}
           `}
         />
       )}

@@ -28,9 +28,9 @@ export function ListItem({ children, onClick, className = '', active = false }: 
   return (
     <Component
       className={`
-        flex items-center gap-3 p-3 rounded-lg
-        ${active ? 'bg-surface-light' : 'bg-surface-lighter'}
-        ${onClick ? 'hover:bg-surface-light cursor-pointer transition-colors w-full text-left' : ''}
+        flex items-center gap-3 p-3 rounded-lg border border-border
+        ${active ? 'bg-bg-muted' : 'bg-bg-card'}
+        ${onClick ? 'hover:bg-bg-muted cursor-pointer transition-colors w-full text-left' : ''}
         ${className}
       `}
       onClick={onClick}
@@ -46,7 +46,7 @@ interface ListItemIconProps {
 
 export function ListItemIcon({ children }: ListItemIconProps) {
   return (
-    <div className="flex items-center justify-center w-10 h-10 bg-surface-light rounded-lg text-text-secondary">
+    <div className="flex items-center justify-center w-10 h-10 bg-bg-muted rounded-lg text-text-secondary border border-border">
       {children}
     </div>
   );

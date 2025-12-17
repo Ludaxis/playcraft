@@ -34,7 +34,7 @@ export function WeeklyContestInfoModal({ onAnimatedClose }: WeeklyContestInfoMod
         <p className="text-text-inverse font-bold">Beat Levels!</p>
       </div>
 
-      <div className="text-border-strong text-2xl mb-4">↓</div>
+      <div className="text-border-strong text-h2 mb-4">↓</div>
 
       {/* Step 2 */}
       <div className="flex flex-col items-center mb-8">
@@ -52,7 +52,7 @@ export function WeeklyContestInfoModal({ onAnimatedClose }: WeeklyContestInfoMod
         <p className="text-text-inverse font-bold">Take the Lead!</p>
       </div>
 
-      <div className="text-border-strong text-2xl mb-4">↓</div>
+      <div className="text-border-strong text-h2 mb-4">↓</div>
 
       {/* Step 3 */}
       <div className="flex flex-col items-center mb-12">
@@ -67,7 +67,7 @@ export function WeeklyContestInfoModal({ onAnimatedClose }: WeeklyContestInfoMod
         <div className="w-10 h-10 bg-brand-muted rounded-lg flex items-center justify-center">
           <span className="text-text-inverse font-bold">f</span>
         </div>
-        <p className="text-text-muted text-sm">
+        <p className="text-text-muted text-caption">
           Connect with Facebook to compete<br />against your friends!
         </p>
       </div>

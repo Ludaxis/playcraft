@@ -40,14 +40,14 @@ export function BoostersPage() {
 
               {/* Booster Icon */}
               <div className="aspect-square bg-bg-card rounded-lg mb-3 flex items-center justify-center">
-                <span className="text-text-muted text-xs">[{booster.name}]</span>
+                <span className="text-text-muted text-mini">[{booster.name}]</span>
               </div>
 
               {/* Booster Info */}
-              <h3 className="text-sm font-medium text-text-primary mb-1">
+              <h3 className="text-caption font-medium text-text-primary mb-1">
                 {booster.name}
               </h3>
-              <p className="text-xs text-text-secondary mb-3">{booster.description}</p>
+              <p className="text-mini text-text-secondary mb-3">{booster.description}</p>
 
               {/* Get More Button */}
               <Button
@@ -64,7 +64,7 @@ export function BoostersPage() {
 
         {/* Info Panel */}
         <Panel variant="outlined" className="mt-4">
-          <p className="text-xs text-text-secondary text-center">
+          <p className="text-mini text-text-secondary text-center">
             {activeTab === 'pre-game'
               ? 'Pre-game boosters are activated before starting a level'
               : 'In-game boosters can be used during gameplay'}

@@ -46,24 +46,24 @@ export function ShopPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 bg-brand-hover">
+      <div className="flex items-center justify-between px-2 py-2 bg-bg-muted border-b border-border">
         {/* Coins display */}
-        <div className="flex items-center gap-1 bg-bg-page rounded-full px-2 py-0.5">
-          <div className="w-5 h-5 bg-gold rounded-full flex items-center justify-center">
-            <span className="text-gold-darker text-mini">$</span>
+        <div className="flex items-center gap-1 bg-bg-page rounded-full px-2 py-0.5 border border-border">
+          <div className="w-5 h-5 bg-border-strong rounded-full flex items-center justify-center">
+            <span className="text-text-primary text-mini">$</span>
           </div>
           <span className="text-text-primary text-value-sm">{state.player.coins.toLocaleString()}</span>
         </div>
 
         {/* Title */}
-        <h1 className="text-text-inverse text-h4">Shop</h1>
+        <h1 className="text-text-primary text-h4">Shop</h1>
 
         {/* Close button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="w-8 h-8 bg-status-error rounded-full flex items-center justify-center border border-error-light"
+          className="w-8 h-8 bg-bg-page rounded-full flex items-center justify-center border border-border hover:opacity-80"
         >
-          <span className="text-text-inverse text-value">X</span>
+          <span className="text-text-primary text-value">X</span>
         </button>
       </div>
 

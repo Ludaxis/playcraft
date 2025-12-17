@@ -26,7 +26,7 @@ export function GrandPrizeModal({ onAnimatedClose }: GrandPrizeModalProps) {
         <h2 className="text-text-inverse text-h2">Grand Prize</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="absolute right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border hover:opacity-80"
         >
           <span className="text-text-inverse font-bold">X</span>
         </button>

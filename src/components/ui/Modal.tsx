@@ -51,7 +51,7 @@ export function Modal({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-primary-dark/50"
+        className="absolute inset-0 bg-black/50"
         onClick={onClose}
       />
 
@@ -59,17 +59,17 @@ export function Modal({
       <div
         className={`
           relative z-10 w-full ${sizeStyles[size]}
-          bg-white rounded-lg shadow-xl
+          bg-bg-card rounded-lg border border-border
           max-h-[90vh] overflow-hidden flex flex-col
         `}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-surface-light">
-            <h2 className="text-h3 text-text-primary">{title}</h2>
+          <div className="flex items-center justify-between px-4 py-3 bg-bg-inverse border-b border-border">
+            <h2 className="text-h3 text-text-inverse">{title}</h2>
             <button
               onClick={onClose}
-              className="p-1 text-text-secondary hover:text-text-primary hover:bg-surface-lighter rounded"
+              className="p-1 text-text-muted hover:text-text-inverse hover:bg-bg-muted rounded"
             >
               <svg
                 className="w-5 h-5"

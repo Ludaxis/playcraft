@@ -24,19 +24,19 @@ interface RankBadgeProps {
 }
 
 const sizeStyles: Record<RankBadgeSize, { container: string; text: string }> = {
-  sm: { container: 'w-6 h-6', text: 'text-xs' },
-  md: { container: 'w-8 h-8', text: 'text-sm' },
+  sm: { container: 'w-6 h-6', text: 'text-mini' },
+  md: { container: 'w-8 h-8', text: 'text-caption' },
   lg: { container: 'w-10 h-10', text: 'text-base' },
 };
 
 function getRankStyle(position: number): string {
   switch (position) {
     case 1:
-      return 'bg-gold text-gold-dark border-gold-dark';
+      return 'bg-brand-primary text-text-inverse border-brand-muted';
     case 2:
       return 'bg-border text-text-primary border-border-strong';
     case 3:
-      return 'bg-status-warning/30 text-status-warning border-status-warning';
+      return 'bg-brand-muted/30 text-text-secondary border-brand-muted';
     default:
       return 'bg-bg-muted text-text-secondary border-border';
   }

@@ -31,9 +31,9 @@ export function CardDetailModal({ onAnimatedClose }: CardDetailModalProps) {
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute -top-10 -right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+        className="absolute -top-10 -right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border hover:opacity-80"
       >
-        <span className="text-text-inverse font-bold text-sm">X</span>
+        <span className="text-text-inverse font-bold text-caption">X</span>
       </button>
 
         <div className="w-[200px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
@@ -64,14 +64,14 @@ export function CardDetailModal({ onAnimatedClose }: CardDetailModalProps) {
               {[1, 2, 3].map((star) => (
                 <div
                   key={star}
-                  className={`w-4 h-4 ${card.collected ? 'bg-gold' : 'bg-bg-inverse'} rounded-sm`}
+                  className={`w-4 h-4 ${card.collected ? 'bg-brand-primary' : 'bg-bg-inverse'} rounded-sm`}
                   style={{ clipPath: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' }}
                 />
               ))}
             </div>
 
             {/* Status */}
-            <div className={`px-3 py-1 rounded-full ${card.collected ? 'bg-status-success' : 'bg-bg-inverse'}`}>
+            <div className={`px-3 py-1 rounded-full ${card.collected ? 'bg-brand-primary' : 'bg-bg-inverse'}`}>
               <span className="text-text-inverse text-value-sm">
                 {card.collected ? 'Collected' : 'Not Found'}
               </span>
@@ -81,7 +81,7 @@ export function CardDetailModal({ onAnimatedClose }: CardDetailModalProps) {
         {/* Card Info */}
         {!card.collected && (
           <div className="bg-border-strong p-3 text-center">
-            <p className="text-text-primary text-xs font-medium">
+            <p className="text-text-primary text-mini font-medium">
               Play levels to find this card!
             </p>
           </div>

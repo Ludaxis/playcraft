@@ -47,7 +47,7 @@ export function MilestoneItem({
       padding="sm"
       className={`
         flex items-center gap-3
-        ${completed && !claimed ? 'border-status-success' : ''}
+        ${completed && !claimed ? 'border-brand-primary' : ''}
         ${claimed ? 'opacity-60' : ''}
         ${className}
       `}
@@ -58,9 +58,9 @@ export function MilestoneItem({
           w-8 h-8
           rounded-full
           flex items-center justify-center
-          font-bold text-sm
+          font-bold text-caption
           ${completed
-            ? 'bg-status-success text-text-inverse'
+            ? 'bg-brand-primary text-text-inverse'
             : 'bg-bg-muted text-text-secondary'
           }
         `}
@@ -74,9 +74,9 @@ export function MilestoneItem({
 
       {/* Content */}
       <div className="flex-1">
-        <p className="text-sm font-medium text-text-primary">{title}</p>
+        <p className="text-caption font-medium text-text-primary">{title}</p>
         {subtitle && (
-          <p className="text-xs text-text-muted">{subtitle}</p>
+          <p className="text-mini text-text-muted">{subtitle}</p>
         )}
       </div>
 
@@ -88,7 +88,7 @@ export function MilestoneItem({
       )}
 
       {claimed && (
-        <span className="text-xs text-text-muted font-medium">Claimed</span>
+        <span className="text-mini text-text-muted font-medium">Claimed</span>
       )}
     </Card>
   );

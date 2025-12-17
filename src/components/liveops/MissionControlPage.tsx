@@ -31,7 +31,7 @@ const missionControlData = {
       id: 1,
       name: 'Stage 1',
       capsuleColor: 'Blue',
-      capsuleColorClass: 'bg-brand-primary',
+      capsuleColorClass: 'bg-bg-inverse',
       missions: [
         { id: 1, title: 'Complete 8 Steps!', current: 0, target: 8, capsuleReward: 3, completed: false },
         { id: 2, title: 'Collect 10 Cards!', current: 0, target: 10, capsuleReward: 3, completed: false },
@@ -43,7 +43,7 @@ const missionControlData = {
       id: 2,
       name: 'Stage 2',
       capsuleColor: 'Green',
-      capsuleColorClass: 'bg-status-success',
+      capsuleColorClass: 'bg-border-strong',
       missions: [
         { id: 1, title: 'Complete 15 Steps!', current: 0, target: 15, capsuleReward: 3, completed: false },
         { id: 2, title: 'Collect 20 Cards!', current: 0, target: 20, capsuleReward: 3, completed: false },
@@ -55,7 +55,7 @@ const missionControlData = {
       id: 3,
       name: 'Stage 3',
       capsuleColor: 'Yellow',
-      capsuleColorClass: 'bg-gold',
+      capsuleColorClass: 'bg-bg-muted',
       missions: [
         { id: 1, title: 'Collect 60 Cards!', current: 0, target: 60, capsuleReward: 3, completed: false },
         { id: 2, title: 'Find 10 Formulas!', current: 0, target: 10, capsuleReward: 3, completed: false },
@@ -66,7 +66,7 @@ const missionControlData = {
       id: 4,
       name: 'Stage 4',
       capsuleColor: 'Red',
-      capsuleColorClass: 'bg-status-error',
+      capsuleColorClass: 'bg-bg-page',
       missions: [
         { id: 1, title: 'Collect 60 Cards!', current: 0, target: 60, capsuleReward: 3, completed: false },
         { id: 2, title: 'Find 10 Formulas!', current: 0, target: 10, capsuleReward: 3, completed: false },
@@ -92,7 +92,7 @@ export function MissionControlPage() {
   if (!isEventEnabled('mission-control')) {
     return (
       <div className="flex flex-col h-full bg-bg-inverse items-center justify-center">
-        <p className="text-text-inverse text-lg">Event not available</p>
+        <p className="text-text-inverse text-value">Event not available</p>
         <button onClick={() => navigate('main-menu')} className="mt-4 text-brand-primary underline">
           Go Back
         </button>
@@ -116,7 +116,7 @@ export function MissionControlPage() {
         {/* Close Button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+          className="absolute top-2 right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border z-10 hover:opacity-80"
         >
           <span className="text-text-inverse font-bold">X</span>
         </button>
@@ -138,39 +138,39 @@ export function MissionControlPage() {
 
       {/* Grand Prize Section */}
       <div className="mx-3 mb-3">
-        <div className="bg-bg-inverse rounded-xl p-3 border-2 border-brand-muted">
+        <div className="bg-bg-inverse rounded-xl p-3 border-2 border-border">
           {/* Grand Prize Label */}
           <div className="text-center mb-2">
-            <span className="bg-gold text-text-inverse text-value-sm px-3 py-1 rounded-full">Grand Prize</span>
+            <span className="bg-bg-inverse text-text-inverse text-value-sm px-3 py-1 rounded-full border border-border">Grand Prize</span>
           </div>
 
           {/* Prize Chest */}
           <div className="flex justify-center mb-3">
-            <div className="w-20 h-20 bg-brand-primary rounded-xl flex items-center justify-center border-2 border-accent-light">
+            <div className="w-20 h-20 bg-bg-inverse rounded-xl flex items-center justify-center border-2 border-border">
               <span className="text-text-inverse text-value-sm">CHEST</span>
             </div>
           </div>
 
           {/* Energy Capsules */}
           <div className="flex justify-center gap-2 mb-3">
-            <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center border-2 border-accent-light">
+            <div className="w-10 h-10 bg-bg-inverse rounded-lg flex items-center justify-center border-2 border-border">
               <span className="text-text-inverse text-mini font-bold">B</span>
             </div>
-            <div className="w-10 h-10 bg-status-success rounded-lg flex items-center justify-center border-2 border-success-light">
-              <span className="text-text-inverse text-mini font-bold">G</span>
+            <div className="w-10 h-10 bg-border-strong rounded-lg flex items-center justify-center border-2 border-border">
+              <span className="text-text-primary text-mini font-bold">G</span>
             </div>
-            <div className="w-10 h-10 bg-gold rounded-lg flex items-center justify-center border-2 border-gold-light">
-              <span className="text-text-inverse text-mini font-bold">Y</span>
+            <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center border-2 border-border">
+              <span className="text-text-primary text-mini font-bold">Y</span>
             </div>
-            <div className="w-10 h-10 bg-status-error rounded-lg flex items-center justify-center border-2 border-error-light">
-              <span className="text-text-inverse text-mini font-bold">R</span>
+            <div className="w-10 h-10 bg-bg-page rounded-lg flex items-center justify-center border-2 border-border">
+              <span className="text-text-primary text-mini font-bold">R</span>
             </div>
           </div>
 
           {/* Timer */}
           <div className="flex justify-center">
             <div className="bg-border-strong rounded-full px-3 py-1 flex items-center gap-1">
-              <span className="text-text-primary text-xs">T</span>
+              <span className="text-text-primary text-mini">T</span>
               <span className="text-text-primary text-value-sm">{timer.days}d {timer.hours}h</span>
             </div>
           </div>
@@ -180,8 +180,8 @@ export function MissionControlPage() {
       {/* Rewards Preview */}
       <div className="mx-3 mb-3">
         <div className="bg-bg-page rounded-xl p-3 border-2 border-border">
-          <p className="text-text-primary text-center text-sm mb-2">
-            Collect all <span className={`font-bold ${currentStage.capsuleColorClass === 'bg-gold' ? 'text-gold-dark' : currentStage.capsuleColorClass === 'bg-brand-primary' ? 'text-brand-primary' : currentStage.capsuleColorClass === 'bg-status-success' ? 'text-status-success' : 'text-status-error'}`}>{currentStage.capsuleColor.toLowerCase()}</span> energy capsules to win rewards!
+          <p className="text-text-primary text-center text-caption mb-2">
+            Collect all <span className="font-bold text-text-primary">{currentStage.capsuleColor.toLowerCase()}</span> energy capsules to win rewards!
           </p>
           <div className="flex justify-center gap-3">
             {missionControlData.grandPrizeRewards.map((reward, idx) => (
@@ -195,12 +195,12 @@ export function MissionControlPage() {
       </div>
 
       {/* Missions List */}
-      <div className="flex-1 overflow-y-auto mx-3 bg-bg-inverse rounded-t-xl p-3 border-2 border-b-0 border-brand-muted">
+      <div className="flex-1 overflow-y-auto mx-3 bg-bg-inverse rounded-t-xl p-3 border-2 border-b-0 border-border">
         <div className="space-y-2">
           {currentStage.missions.map((mission) => (
             <div key={mission.id} className="bg-bg-page rounded-xl p-3 border-2 border-border flex items-center gap-3">
               {/* Mission Icon */}
-              <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 bg-bg-inverse rounded-lg flex items-center justify-center flex-shrink-0 border border-border">
                 <span className="text-text-inverse text-mini font-bold">ICN</span>
               </div>
 
@@ -210,7 +210,7 @@ export function MissionControlPage() {
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex-1 h-3 bg-border-strong rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-status-success rounded-full"
+                      className="h-full bg-bg-inverse rounded-full"
                       style={{ width: `${(mission.current / mission.target) * 100}%` }}
                     />
                   </div>
@@ -221,8 +221,8 @@ export function MissionControlPage() {
               {/* Capsule Rewards */}
               <div className="flex gap-1 flex-shrink-0">
                 {[...Array(mission.capsuleReward)].map((_, idx) => (
-                  <div key={idx} className={`w-6 h-8 ${currentStage.capsuleColorClass} rounded flex items-center justify-center border border-white/30`}>
-                    <span className="text-text-inverse text-mini font-bold">C</span>
+                  <div key={idx} className={`w-6 h-8 ${currentStage.capsuleColorClass} rounded flex items-center justify-center border border-border`}>
+                    <span className="text-text-primary text-mini font-bold">C</span>
                   </div>
                 ))}
               </div>
@@ -232,7 +232,7 @@ export function MissionControlPage() {
       </div>
 
       {/* Stage Tabs */}
-      <div className="mx-3 bg-bg-inverse rounded-b-xl border-2 border-t-0 border-brand-muted">
+      <div className="mx-3 bg-bg-inverse rounded-b-xl border-2 border-t-0 border-border">
         <div className="flex">
           {missionControlData.stages.map((stage) => (
             <button
@@ -240,8 +240,8 @@ export function MissionControlPage() {
               onClick={() => setActiveStage(stage.id)}
               className={`flex-1 py-3 text-value ${
                 activeStage === stage.id
-                  ? 'bg-gold text-text-primary'
-                  : 'bg-brand-muted text-text-primary'
+                  ? 'bg-bg-inverse text-text-inverse'
+                  : 'bg-bg-muted text-text-primary'
               } ${stage.id === 1 ? 'rounded-bl-xl' : ''} ${stage.id === missionControlData.stages.length ? 'rounded-br-xl' : ''}`}
             >
               {stage.name}
@@ -260,32 +260,32 @@ export function MissionControlPage() {
             {/* Close button */}
             <button
               onClick={() => setShowInfoModal(false)}
-              className="absolute -top-1 -right-1 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10 shadow-lg"
+              className="absolute -top-1 -right-1 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border z-10 hover:opacity-80"
             >
-              <span className="text-text-inverse font-bold text-sm">X</span>
+              <span className="text-text-inverse font-bold text-caption">X</span>
             </button>
 
             {/* Header */}
-            <div className="bg-brand-hover rounded-t-2xl py-3 px-3">
+            <div className="bg-bg-inverse rounded-t-2xl py-3 px-3">
               <h1 className="text-text-inverse text-h2 text-center">Mission Control</h1>
             </div>
 
             {/* Divider line */}
-            <div className="h-0.5 bg-brand-muted" />
+            <div className="h-0.5 bg-border-strong" />
 
             {/* Content */}
-            <div className="bg-brand-muted p-4">
+            <div className="bg-bg-muted p-4">
               {/* Step 1: Complete Missions */}
               <div className="text-center mb-4">
                 <div className="w-48 mx-auto bg-bg-page rounded-xl p-2 mb-2 border-2 border-border">
                   <div className="space-y-1">
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-brand-primary rounded flex items-center justify-center">
+                        <div className="w-6 h-6 bg-bg-inverse rounded flex items-center justify-center border border-border">
                           <span className="text-text-inverse text-mini">ICN</span>
                         </div>
-                        <div className="flex-1 h-2 bg-status-success rounded-full" />
-                        <span className="text-status-success text-value-sm">V</span>
+                        <div className="flex-1 h-2 bg-bg-inverse rounded-full" />
+                        <span className="text-text-primary text-value-sm">V</span>
                       </div>
                     ))}
                   </div>
@@ -294,12 +294,12 @@ export function MissionControlPage() {
               </div>
 
               {/* Arrow */}
-              <div className="text-center text-gold text-2xl mb-4">v</div>
+              <div className="text-center text-text-primary text-h2 mb-4">v</div>
 
               {/* Step 2: Collect Energy Capsules */}
               <div className="text-center mb-4">
                 <div className="flex justify-center mb-2">
-                  <div className="w-12 h-16 bg-brand-primary rounded-lg flex items-center justify-center border-2 border-accent-light">
+                  <div className="w-12 h-16 bg-bg-inverse rounded-lg flex items-center justify-center border-2 border-border">
                     <span className="text-text-inverse text-value-sm">CAP</span>
                   </div>
                 </div>
@@ -307,19 +307,19 @@ export function MissionControlPage() {
               </div>
 
               {/* Arrow */}
-              <div className="text-center text-gold text-2xl mb-4">v</div>
+              <div className="text-center text-text-primary text-h2 mb-4">v</div>
 
               {/* Step 3: Win Rewards */}
               <div className="text-center mb-4">
                 <div className="flex justify-center gap-2 mb-2">
-                  <div className="w-10 h-10 bg-gold rounded-lg flex items-center justify-center">
-                    <span className="text-text-inverse text-mini">CHEST</span>
+                  <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center border border-border">
+                    <span className="text-text-primary text-mini">CHEST</span>
                   </div>
-                  <div className="w-14 h-14 bg-brand-primary rounded-lg flex items-center justify-center border-2 border-accent-light">
+                  <div className="w-14 h-14 bg-bg-inverse rounded-lg flex items-center justify-center border-2 border-border">
                     <span className="text-text-inverse text-mini">PRIZE</span>
                   </div>
-                  <div className="w-10 h-10 bg-gold rounded-lg flex items-center justify-center">
-                    <span className="text-text-inverse text-mini">COINS</span>
+                  <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center border border-border">
+                    <span className="text-text-primary text-mini">COINS</span>
                   </div>
                 </div>
                 <p className="text-text-primary text-h3">Win Rewards!</p>
@@ -330,9 +330,9 @@ export function MissionControlPage() {
             <div className="bg-bg-inverse px-4 pb-4 rounded-b-2xl">
               <button
                 onClick={() => setShowInfoModal(false)}
-                className="w-full py-3 bg-gold rounded-xl border-2 border-gold-light"
+                className="w-full py-3 bg-bg-inverse rounded-xl border-2 border-border"
               >
-                <span className="text-text-primary text-h3">Tap to Continue</span>
+                <span className="text-text-inverse text-h3">Tap to Continue</span>
               </button>
             </div>
           </div>

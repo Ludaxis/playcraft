@@ -18,26 +18,23 @@ export function SettingsPage() {
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}
-      <div className="flex items-center justify-center px-3 py-3 bg-brand-hover relative">
+      <div className="flex items-center justify-center px-3 py-3 bg-bg-muted relative border-b border-border">
         {/* Title */}
-        <h1 className="text-text-inverse text-h2">Settings</h1>
+        <h1 className="text-text-primary text-h2">Settings</h1>
 
         {/* Close button */}
         <button
           onClick={() => navigate('main-menu')}
-          className="absolute right-3 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="absolute right-3 w-8 h-8 bg-bg-page rounded-full flex items-center justify-center border-2 border-border hover:opacity-80"
         >
-          <span className="text-text-inverse text-value">X</span>
+          <span className="text-text-primary text-value">X</span>
         </button>
       </div>
-
-      {/* Orange divider */}
-      <div className="h-1 bg-brand-muted" />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Toggles Panel */}
-        <div className="bg-brand-muted rounded-xl border-2 border-border-strong p-4">
+        <div className="bg-bg-page rounded-xl border-2 border-border p-4">
           {/* Row 1: Music, Sound, Vibration */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <SettingsToggle
@@ -134,7 +131,7 @@ function SettingsToggle({ label, checked, onChange }: SettingsToggleProps) {
         className={`w-full h-9 rounded-full border-2 flex items-center px-1 transition-colors ${
           checked
             ? 'bg-border-strong border-border'
-            : 'bg-brand-hover border-brand-muted'
+            : 'bg-bg-muted border-border'
         }`}
       >
         <div
@@ -151,7 +148,7 @@ function SettingsToggle({ label, checked, onChange }: SettingsToggleProps) {
           </span>
           <div
             className={`w-7 h-7 rounded-full ${
-              checked ? 'bg-bg-inverse' : 'bg-brand-muted'
+              checked ? 'bg-bg-inverse' : 'bg-border-strong'
             }`}
           />
         </div>
@@ -173,7 +170,7 @@ function SettingsButton({ icon, label, variant, onClick }: SettingsButtonProps) 
   const variantClasses =
     variant === 'primary'
       ? 'bg-border-strong border-border text-text-primary'
-      : 'bg-brand-muted border-border-strong text-text-primary';
+      : 'bg-bg-page border-border text-text-primary';
 
   return (
     <button onClick={onClick} className={`${baseClasses} ${variantClasses}`}>

@@ -2,104 +2,107 @@
 
 /**
  * ===============================================================================
- * PUZZLE KIT - DESIGN TOKEN SYSTEM
+ * PUZZLE KIT - MID-FIDELITY WIREFRAME DESIGN SYSTEM
  * ===============================================================================
  *
- * A clean, semantic token system with grayscale default theme.
- * Theme can be customized via the admin dashboard using presets.
+ * A clean, minimal wireframe design system following 2025 best practices.
+ * Grayscale-only palette with typography hierarchy for structure focus.
+ *
+ * Wireframe Principles:
+ * - Grayscale only (no colors except strategic status indicators)
+ * - Clean sans-serif typography with weight-based hierarchy
+ * - Simple shapes with borders instead of shadows
+ * - Focus on layout, structure, and visual hierarchy
  *
  * Token Categories:
- * - bg-*: Background colors
- * - text-*: Text colors
- * - brand-*: Configurable brand accent colors
- * - status-*: Success, warning, error states
- * - gold: Special reward color
- * - border: Border colors
- *
- * Legacy colors are maintained for backward compatibility during migration.
+ * - bg-*: Background colors (white to dark gray)
+ * - text-*: Text colors (clear hierarchy)
+ * - brand-*: Primary UI elements (grayscale)
+ * - status-*: Minimal status indicators
+ * - border: Border colors for structure
  */
 
 /* ===============================================================================
-   SEMANTIC COLOR TOKENS (NEW SYSTEM)
+   WIREFRAME DESIGN TOKENS
    =============================================================================== */
 
 @theme {
   /* ─────────────────────────────────────────────────────────────────────────────
-     FONTS - Lilita One from Google Fonts
+     FONTS - Clean sans-serif for wireframes (Inter/System)
      ───────────────────────────────────────────────────────────────────────────── */
-  --font-sans: var(--font-lilita), 'Lilita One', system-ui, sans-serif;
-  --font-display: var(--font-lilita), 'Lilita One', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
 
   /* ===============================================================================
-     GRAYSCALE DEFAULT THEME (Wireframe-friendly)
+     MID-FIDELITY WIREFRAME GRAYSCALE PALETTE
      =============================================================================== */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     BACKGROUND COLORS - Clean, neutral backgrounds
+     BACKGROUND COLORS - White to light gray spectrum
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-bg-page: #F9FAFB;       /* gray-50 - Main page background */
-  --color-bg-card: #FFFFFF;       /* white - Cards, panels, modals */
-  --color-bg-muted: #F3F4F6;      /* gray-100 - Subtle backgrounds */
-  --color-bg-inverse: #374151;    /* gray-700 - Dark backgrounds (headers) */
+  --color-bg-page: #FFFFFF;         /* Pure white - Main page background */
+  --color-bg-card: #FFFFFF;         /* Pure white - Cards, panels, modals */
+  --color-bg-muted: #F5F5F5;        /* Light gray - Subtle backgrounds */
+  --color-bg-inverse: #333333;      /* Dark gray - Dark backgrounds (headers) */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     TEXT COLORS - Clear hierarchy
+     TEXT COLORS - Clear visual hierarchy
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-text-primary: #111827;    /* gray-900 - Headings, important */
-  --color-text-secondary: #4B5563;  /* gray-600 - Body text */
-  --color-text-muted: #9CA3AF;      /* gray-400 - Hints, captions */
-  --color-text-inverse: #FFFFFF;    /* white - Text on dark bg */
+  --color-text-primary: #1A1A1A;    /* Near black - Headings, important */
+  --color-text-secondary: #666666;  /* Medium gray - Body text */
+  --color-text-muted: #999999;      /* Light gray - Hints, captions */
+  --color-text-inverse: #FFFFFF;    /* White - Text on dark backgrounds */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     BRAND COLORS - Configurable via admin (default: grayscale)
+     BRAND COLORS - Grayscale for wireframes
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-brand-primary: #374151;   /* gray-700 - Primary buttons, headers */
-  --color-brand-hover: #1F2937;     /* gray-800 - Hover states */
-  --color-brand-muted: #E5E7EB;     /* gray-200 - Light brand tint */
+  --color-brand-primary: #333333;   /* Dark gray - Primary buttons, headers */
+  --color-brand-hover: #4D4D4D;     /* Medium-dark gray - Hover states */
+  --color-brand-muted: #E5E5E5;     /* Light gray - Light tint backgrounds */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     STATUS COLORS - Consistent feedback
+     STATUS COLORS - Grayscale for wireframes (minimal use)
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-status-success: #10B981;  /* emerald-500 */
-  --color-status-warning: #F59E0B;  /* amber-500 */
-  --color-status-error: #EF4444;    /* red-500 */
-  --color-status-info: #3B82F6;     /* blue-500 */
+  --color-status-success: #666666;  /* Gray - Success states */
+  --color-status-warning: #808080;  /* Gray - Warning states */
+  --color-status-error: #4D4D4D;    /* Darker gray - Error states */
+  --color-status-info: #808080;     /* Gray - Info states */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     SPECIAL COLORS
+     SPECIAL COLORS - Grayscale for wireframes
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-gold: #F59E0B;            /* amber-500 - Rewards, premium */
-  --color-gold-light: #FCD34D;      /* amber-300 */
-  --color-gold-dark: #D97706;       /* amber-600 */
+  --color-gold: #808080;            /* Gray - Rewards, premium (no color) */
+  --color-gold-light: #B3B3B3;      /* Light gray */
+  --color-gold-dark: #666666;       /* Darker gray */
 
   /* ─────────────────────────────────────────────────────────────────────────────
-     BORDER COLORS
+     BORDER COLORS - Structure definition
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-border: #E5E7EB;          /* gray-200 - Default borders */
-  --color-border-strong: #D1D5DB;   /* gray-300 - Emphasized borders */
+  --color-border: #CCCCCC;          /* Standard border gray */
+  --color-border-strong: #999999;   /* Emphasized borders */
 
   /* ─────────────────────────────────────────────────────────────────────────────
      PAGE BACKGROUND - Behind the phone frame
      ───────────────────────────────────────────────────────────────────────────── */
-  --color-page-bg: #141514;
+  --color-page-bg: #E0E0E0;
 
   /* ===============================================================================
-     LEGACY COLORS (Backward Compatibility)
-     These map to the new semantic tokens for gradual migration.
+     LEGACY COLORS (Backward Compatibility - All Grayscale)
+     These map to the wireframe grayscale tokens for gradual migration.
      =============================================================================== */
 
-  /* Primary -> Brand */
+  /* Primary -> Brand (grayscale) */
   --color-primary: var(--color-brand-primary);
   --color-primary-light: var(--color-brand-hover);
-  --color-primary-dark: #111827;
+  --color-primary-dark: #1A1A1A;
 
-  /* Secondary -> Brand variants */
+  /* Secondary -> Brand variants (grayscale) */
   --color-secondary: var(--color-text-secondary);
   --color-secondary-light: var(--color-brand-muted);
   --color-secondary-dark: var(--color-text-primary);
 
-  /* Surface -> Background */
+  /* Surface -> Background (grayscale) */
   --color-surface: var(--color-bg-muted);
   --color-surface-light: var(--color-bg-page);
   --color-surface-lighter: var(--color-bg-card);
@@ -107,37 +110,37 @@
   --color-surface-dark: var(--color-border-strong);
   --color-surface-darker: var(--color-text-muted);
 
-  /* Muted -> Text muted */
+  /* Muted -> Text muted (grayscale) */
   --color-muted: var(--color-text-muted);
   --color-muted-light: var(--color-border);
   --color-muted-dark: var(--color-text-secondary);
   --color-muted-foreground: var(--color-text-secondary);
 
-  /* Accent -> Brand (for highlighted elements) */
+  /* Accent -> Brand (grayscale for wireframes) */
   --color-accent: var(--color-brand-primary);
   --color-accent-light: var(--color-brand-muted);
   --color-accent-dark: var(--color-brand-hover);
   --color-accent-darker: var(--color-brand-hover);
   --color-accent-muted: var(--color-brand-muted);
 
-  /* Status colors (keep separate for clarity) */
+  /* Status colors (grayscale for wireframes) */
   --color-success: var(--color-status-success);
-  --color-success-light: #34D399;
-  --color-success-dark: #059669;
+  --color-success-light: #808080;
+  --color-success-dark: #4D4D4D;
 
   --color-error: var(--color-status-error);
-  --color-error-light: #FCA5A5;
-  --color-error-dark: #DC2626;
+  --color-error-light: #808080;
+  --color-error-dark: #333333;
 
   --color-warning: var(--color-status-warning);
-  --color-warning-light: #FCD34D;
-  --color-warning-dark: #D97706;
+  --color-warning-light: #B3B3B3;
+  --color-warning-dark: #666666;
 
   --color-info: var(--color-status-info);
-  --color-info-light: #93C5FD;
-  --color-info-dark: #2563EB;
+  --color-info-light: #B3B3B3;
+  --color-info-dark: #666666;
 
-  /* Border legacy */
+  /* Border legacy (grayscale) */
   --color-border-light: var(--color-border);
   --color-border-dark: var(--color-border-strong);
 
@@ -298,16 +301,17 @@ body {
   min-height: 100vh;
 }
 
-/* App wrapper - mobile phone frame */
+/* App wrapper - mobile phone frame (wireframe style) */
 .phone-frame {
   width: 390px;
   height: calc(100vh - 40px);
   max-height: 844px;
   min-height: 700px;
   background: var(--color-bg-page);
-  border-radius: 16px;
+  border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 2px solid var(--color-border-strong);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   position: relative;
   display: flex;
   flex-direction: column;

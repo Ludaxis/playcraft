@@ -48,7 +48,7 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute top-2 right-2 w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light z-10"
+        className="absolute top-2 right-2 w-8 h-8 bg-bg-inverse rounded-full flex items-center justify-center border-2 border-border z-10 hover:opacity-80"
       >
         <span className="text-text-inverse text-value">X</span>
       </button>
@@ -70,12 +70,12 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
             {/* Info */}
             <div className="flex-1">
               {/* Name */}
-              <h2 className="text-primary text-h3">{memberData.name}</h2>
+              <h2 className="text-text-primary text-h3">{memberData.name}</h2>
 
               {/* Team */}
               <div className="flex items-center gap-1 mb-1">
                 <Image src="/icons/2User.svg" alt="Team" width={14} height={14} className="opacity-60" />
-                <span className="text-muted-foreground text-sm font-medium">{memberData.team}</span>
+                <span className="text-text-muted text-caption font-medium">{memberData.team}</span>
               </div>
 
               {/* Join Date */}
@@ -83,19 +83,19 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
                 <div className="w-5 h-5 bg-border-strong rounded flex items-center justify-center">
                   <Image src="/icons/Clock.svg" alt="Date" width={12} height={12} className="opacity-60" />
                 </div>
-                <span className="text-muted-foreground text-value">{memberData.joinDate}</span>
+                <span className="text-text-muted text-value">{memberData.joinDate}</span>
               </div>
             </div>
 
             {/* Level & Crown Badge */}
             <div className="flex flex-col items-center">
-              <div className="bg-brand-primary rounded-t-lg px-3 pt-1 pb-0.5 border-2 border-accent-light border-b-0">
-                <div className="text-accent-muted text-mini font-bold text-center">Level</div>
+              <div className="bg-bg-inverse rounded-t-lg px-3 pt-1 pb-0.5 border-2 border-border border-b-0">
+                <div className="text-text-muted text-mini font-bold text-center">Level</div>
                 <div className="text-text-inverse text-h3 text-center">{memberData.level}</div>
               </div>
-              <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[10px] border-l-transparent border-r-transparent border-t-brand-primary" />
+              <div className="w-0 h-0 border-l-[24px] border-r-[24px] border-t-[10px] border-l-transparent border-r-transparent border-t-bg-inverse" />
 
-              <div className="bg-bg-inverse rounded-lg px-3 py-1 mt-1 border-2 border-brand-muted">
+              <div className="bg-bg-inverse rounded-lg px-3 py-1 mt-1 border-2 border-border">
                 <div className="flex items-center gap-1">
                   <Image src="/icons/Medal.svg" alt="Crowns" width={14} height={14} className="opacity-70" />
                   <span className="text-text-inverse font-bold">{memberData.crowns}</span>
@@ -105,7 +105,7 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
           </div>
 
           {/* Add Friend Button */}
-          <button className="w-full bg-brand-primary border-2 border-accent-light rounded-xl py-2 mt-3">
+          <button className="w-full bg-bg-inverse border-2 border-border rounded-xl py-2 mt-3">
             <span className="text-text-inverse font-bold">Add Friend</span>
           </button>
         </div>
@@ -119,7 +119,7 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
             <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-bg-muted" />
             <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-bg-muted" />
             <div className="bg-bg-muted rounded px-4 py-1.5 border-2 border-border-strong">
-              <span className="text-primary font-bold text-sm">Royal League Stats</span>
+              <span className="text-text-primary font-bold text-caption">Royal League Stats</span>
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
             <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-r-[16px] border-t-transparent border-b-transparent border-r-bg-muted" />
             <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[14px] border-b-[14px] border-l-[16px] border-t-transparent border-b-transparent border-l-bg-muted" />
             <div className="bg-bg-muted rounded px-4 py-1.5 border-2 border-border-strong">
-              <span className="text-primary font-bold text-sm">General Stats</span>
+              <span className="text-text-primary font-bold text-caption">General Stats</span>
             </div>
           </div>
         </div>
@@ -219,12 +219,12 @@ function StatItem({ icon, label, value }: StatItemProps) {
         <Image src={icon} alt={label} width={20} height={20} className="opacity-70" />
       </div>
       {/* Label */}
-      <p className="text-muted-foreground text-mini font-bold text-center whitespace-nowrap mb-1">
+      <p className="text-text-muted text-mini font-bold text-center whitespace-nowrap mb-1">
         {label}
       </p>
       {/* Value */}
       <div className="bg-bg-muted rounded-lg px-2 py-0.5 w-full">
-        <p className="text-primary text-value text-center">{value.toLocaleString()}</p>
+        <p className="text-text-primary text-value text-center">{value.toLocaleString()}</p>
       </div>
     </div>
   );

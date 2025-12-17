@@ -79,6 +79,7 @@ export const allEvents = [
   { id: 'lightning-rush', name: 'Lightning Rush', icon: '/icons/Lightning.svg' },
   { id: 'lava-quest', name: 'Lava Quest', icon: '/icons/Star-Filled.svg' },
   { id: 'mission-control', name: 'Mission Control', icon: '/icons/Flag.svg' },
+  { id: 'winning-streak', name: 'Winning Streak', icon: '/icons/Fire.svg' },
   { id: 'album', name: 'Album', icon: '/icons/Category.svg' },
   { id: 'collection', name: 'Collection', icon: '/icons/Archive.svg' },
 ];
@@ -92,23 +93,23 @@ export const defaultEventPlacement: EventPlacement = {
   right: [],
 };
 
-// Default theme (Grayscale)
+// Default wireframe theme (Pure Grayscale)
 export const defaultTheme: ThemeConfig = {
-  primary: '#374151',     // gray-700
-  primaryLight: '#4B5563', // gray-600
-  primaryDark: '#1F2937',  // gray-800
-  secondary: '#4B5563',    // gray-600
-  secondaryLight: '#6B7280', // gray-500
-  secondaryDark: '#374151',  // gray-700
-  accent: '#374151',       // gray-700
-  accentLight: '#E5E7EB',  // gray-200
-  accentDark: '#1F2937',   // gray-800
-  surface: '#F3F4F6',      // gray-100
-  surfaceLight: '#F9FAFB', // gray-50
-  surfaceDark: '#D1D5DB',  // gray-300
-  gold: '#F59E0B',         // amber-500
-  goldLight: '#FCD34D',    // amber-300
-  goldDark: '#D97706',     // amber-600
+  primary: '#333333',      // Dark gray
+  primaryLight: '#4D4D4D', // Medium-dark gray
+  primaryDark: '#1A1A1A',  // Near black
+  secondary: '#666666',    // Medium gray
+  secondaryLight: '#808080', // Gray
+  secondaryDark: '#4D4D4D',  // Medium-dark gray
+  accent: '#4D4D4D',       // Dark gray (no colors in wireframes)
+  accentLight: '#E5E5E5',  // Light gray
+  accentDark: '#333333',   // Dark gray
+  surface: '#F5F5F5',      // Light gray
+  surfaceLight: '#FFFFFF', // White
+  surfaceDark: '#CCCCCC',  // Medium-light gray
+  gold: '#808080',         // Gray (no gold in wireframes)
+  goldLight: '#B3B3B3',    // Light gray
+  goldDark: '#666666',     // Medium gray
 };
 
 // Default admin configuration

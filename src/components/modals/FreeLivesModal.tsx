@@ -45,28 +45,28 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
   };
 
   return (
-    <div className="w-[320px] bg-brand-muted rounded-2xl border-2 border-border-strong overflow-hidden">
+    <div className="w-[320px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-2.5 px-3 flex items-center justify-center relative">
         <h2 className="text-text-inverse text-h4">Free Lives</h2>
         <button
           onClick={handleClose}
-          className="absolute right-2 w-7 h-7 bg-status-error rounded-full flex items-center justify-center border border-error-light hover:bg-error-light transition-colors"
+          className="absolute right-2 w-7 h-7 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80 transition-colors"
         >
-          <span className="text-text-inverse text-value">X</span>
+          <span className="text-text-primary text-value">X</span>
         </button>
       </div>
 
       {/* Divider */}
-      <div className="h-0.5 bg-border-strong" />
+      <div className="h-0.5 bg-border" />
 
       {/* Content */}
-      <div className="bg-bg-page m-1.5 rounded-lg border border-border p-2">
+      <div className="bg-bg-card m-1.5 rounded-lg border border-border p-2">
         {/* Total free lives counter */}
         <div className="bg-bg-card rounded px-3 py-1.5 mb-2 flex items-center justify-between border border-border">
-          <span className="text-text-secondary text-xs font-medium">Total free lives:</span>
+          <span className="text-text-secondary text-mini font-medium">Total free lives:</span>
           <div className="bg-bg-muted rounded px-3 py-0.5">
-            <span className="text-text-primary font-bold text-sm">{unclaimedCount}</span>
+            <span className="text-text-primary font-bold text-caption">{unclaimedCount}</span>
           </div>
         </div>
 
@@ -114,15 +114,15 @@ function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
 
       {/* Add button */}
       {claimed ? (
-        <div className="bg-bg-muted rounded px-3 py-1">
+        <div className="bg-bg-muted rounded px-3 py-1 border border-border">
           <span className="text-text-muted text-value-sm">Added</span>
         </div>
       ) : (
         <button
           onClick={onAdd}
-          className="bg-border-strong hover:bg-brand-muted border border-border rounded px-3 py-1 transition-colors"
+          className="bg-bg-muted hover:bg-bg-page border border-border rounded px-3 py-1 transition-colors"
         >
-          <span className="text-text-inverse text-value-sm">Add</span>
+          <span className="text-text-primary text-value-sm">Add</span>
         </button>
       )}
     </div>

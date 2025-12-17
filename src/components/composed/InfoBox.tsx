@@ -39,7 +39,7 @@ export function InfoBox({
   return (
     <Card
       className={`
-        ${variant === 'highlight' ? 'border-gold bg-gold/5' : ''}
+        ${variant === 'highlight' ? 'border-brand-primary bg-brand-primary/5' : ''}
         ${className}
       `}
     >
@@ -52,15 +52,15 @@ export function InfoBox({
           <IconBox
             size="lg"
             variant={variant === 'highlight' ? 'default' : 'muted'}
-            className={variant === 'highlight' ? 'border-2 border-gold' : ''}
+            className={variant === 'highlight' ? 'border-2 border-brand-primary' : ''}
           >
             {icon || (
-              <span className="text-lg font-bold">{iconText}</span>
+              <span className="text-value font-bold">{iconText}</span>
             )}
           </IconBox>
         )}
 
-        <p className="flex-1 text-text-secondary text-sm">
+        <p className="flex-1 text-text-secondary text-caption">
           {description}
         </p>
       </div>

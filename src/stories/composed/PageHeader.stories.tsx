@@ -65,7 +65,7 @@ export const WithLeftElement: Story = {
     onClose: () => alert('Close pressed'),
     leftElement: (
       <div className="flex items-center gap-1 px-2 py-1 bg-bg-muted/20 rounded-lg">
-        <span className="text-gold text-sm">$</span>
+        <span className="text-brand-primary text-sm">$</span>
         <span className="text-text-inverse text-sm font-bold">1,250</span>
       </div>
     ),

@@ -22,31 +22,31 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
   };
 
   return (
-    <div className="relative w-[300px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
+    <div className="relative w-[300px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
         <h2 className="text-text-inverse text-h3">Parental Control</h2>
         <button
           onClick={handleClose}
-          className="w-8 h-8 bg-status-error rounded-full flex items-center justify-center border-2 border-error-light"
+          className="w-8 h-8 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80"
         >
-          <span className="text-text-inverse font-bold">X</span>
+          <span className="text-text-primary font-bold">X</span>
         </button>
       </div>
 
         {/* Content */}
-        <div className="p-4">
+        <div className="p-4 bg-bg-card">
           {/* Info Text */}
-          <p className="text-text-muted text-sm text-center mb-4">
+          <p className="text-text-secondary text-caption text-center mb-4">
             Control your child's gaming experience with these settings.
           </p>
 
           {/* Settings */}
           <div className="space-y-3">
             {/* In-App Purchases */}
-            <div className="flex items-center justify-between bg-border-strong rounded-xl p-3 border-2 border-border">
+            <div className="flex items-center justify-between bg-bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand-muted rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-bg-page rounded-lg flex items-center justify-center border border-border">
                   <Image
                     src="/icons/Reserve.svg"
                     alt="Purchases"
@@ -57,19 +57,19 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
                 </div>
                 <div>
                   <p className="text-text-primary text-value">In-App Purchases</p>
-                  <p className="text-text-secondary text-xs">Require PIN for purchases</p>
+                  <p className="text-text-secondary text-mini">Require PIN for purchases</p>
                 </div>
               </div>
               <button
                 onClick={() => setPurchasesEnabled(!purchasesEnabled)}
-                className={`w-12 h-7 rounded-full border-2 transition-colors ${
+                className={`w-12 h-7 rounded-full border transition-colors ${
                   purchasesEnabled
-                    ? 'bg-bg-muted border-bg-page'
-                    : 'bg-bg-inverse border-brand-muted'
+                    ? 'bg-bg-inverse border-border'
+                    : 'bg-bg-page border-border'
                 }`}
               >
                 <div
-                  className={`w-5 h-5 bg-brand-muted rounded-full transition-transform ${
+                  className={`w-5 h-5 bg-bg-muted rounded-full transition-transform border border-border ${
                     purchasesEnabled ? 'translate-x-5' : 'translate-x-0.5'
                   }`}
                 />
@@ -77,9 +77,9 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
             </div>
 
             {/* Personalized Ads */}
-            <div className="flex items-center justify-between bg-border-strong rounded-xl p-3 border-2 border-border">
+            <div className="flex items-center justify-between bg-bg-muted rounded-xl p-3 border border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-brand-muted rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-bg-page rounded-lg flex items-center justify-center border border-border">
                   <Image
                     src="/icons/Eye-Slash.svg"
                     alt="Ads"
@@ -90,19 +90,19 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
                 </div>
                 <div>
                   <p className="text-text-primary text-value">Personalized Ads</p>
-                  <p className="text-text-secondary text-xs">Show targeted advertisements</p>
+                  <p className="text-text-secondary text-mini">Show targeted advertisements</p>
                 </div>
               </div>
               <button
                 onClick={() => setAdsEnabled(!adsEnabled)}
-                className={`w-12 h-7 rounded-full border-2 transition-colors ${
+                className={`w-12 h-7 rounded-full border transition-colors ${
                   adsEnabled
-                    ? 'bg-bg-muted border-bg-page'
-                    : 'bg-bg-inverse border-brand-muted'
+                    ? 'bg-bg-inverse border-border'
+                    : 'bg-bg-page border-border'
                 }`}
               >
                 <div
-                  className={`w-5 h-5 bg-brand-muted rounded-full transition-transform ${
+                  className={`w-5 h-5 bg-bg-muted rounded-full transition-transform border border-border ${
                     adsEnabled ? 'translate-x-5' : 'translate-x-0.5'
                   }`}
                 />
@@ -110,7 +110,7 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
             </div>
 
             {/* Set PIN Button */}
-            <button className="w-full flex items-center justify-center gap-2 bg-border-strong hover:bg-bg-muted rounded-xl py-3 px-4 border-2 border-border mt-4">
+            <button className="w-full flex items-center justify-center gap-2 bg-bg-muted hover:bg-bg-page rounded-xl py-3 px-4 border border-border mt-4">
               <Image
                 src="/icons/Lock.svg"
                 alt="PIN"
@@ -123,7 +123,7 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
           </div>
 
         {/* Privacy Note */}
-        <p className="text-text-muted text-xs text-center mt-4">
+        <p className="text-text-muted text-mini text-center mt-4">
           These settings help protect younger players from unintended purchases.
         </p>
       </div>

@@ -11,12 +11,12 @@ export function RewardClaimModal() {
     <Modal isOpen onClose={closeModal} size="sm">
       <div className="text-center">
         {/* Reward Icon */}
-        <div className="w-24 h-24 bg-bg-page rounded-lg mx-auto mb-4 flex items-center justify-center">
+        <div className="w-24 h-24 bg-bg-muted rounded-lg mx-auto mb-4 flex items-center justify-center border border-border">
           <GiftIcon />
         </div>
 
         <h2 className="text-h2 text-text-primary mb-2">Reward!</h2>
-        <p className="text-sm text-text-secondary mb-4">
+        <p className="text-caption text-text-secondary mb-4">
           You received a reward
         </p>
 
@@ -24,18 +24,18 @@ export function RewardClaimModal() {
         <Panel variant="elevated" className="mb-4">
           <div className="flex justify-center gap-6">
             <div className="text-center">
-              <div className="w-12 h-12 bg-bg-page rounded-lg mx-auto mb-2 flex items-center justify-center">
+              <div className="w-12 h-12 bg-bg-muted rounded-lg mx-auto mb-2 flex items-center justify-center border border-border">
                 <span className="font-bold text-text-secondary">$</span>
               </div>
               <p className="text-h3 text-text-primary">+500</p>
-              <p className="text-xs text-text-secondary">Coins</p>
+              <p className="text-mini text-text-secondary">Coins</p>
             </div>
             <div className="text-center">
-              <div className="w-12 h-12 bg-bg-page rounded-lg mx-auto mb-2 flex items-center justify-center">
+              <div className="w-12 h-12 bg-bg-muted rounded-lg mx-auto mb-2 flex items-center justify-center border border-border">
                 <span className="font-bold text-text-secondary">B</span>
               </div>
               <p className="text-h3 text-text-primary">+2</p>
-              <p className="text-xs text-text-secondary">Boosters</p>
+              <p className="text-mini text-text-secondary">Boosters</p>
             </div>
           </div>
         </Panel>
