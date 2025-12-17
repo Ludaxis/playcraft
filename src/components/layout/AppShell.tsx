@@ -26,6 +26,7 @@ import { TeamChestPage } from '@/components/liveops/TeamChestPage';
 import { BookOfTreasurePage } from '@/components/liveops/BookOfTreasurePage';
 import { LightningRushPage } from '@/components/liveops/LightningRushPage';
 import { LavaQuestPage } from '@/components/liveops/LavaQuestPage';
+import { MissionControlPage } from '@/components/liveops/MissionControlPage';
 import { AlbumPage } from '@/components/liveops/AlbumPage';
 import { CollectionPage } from '@/components/liveops/CollectionPage';
 
@@ -60,6 +61,7 @@ const pageComponents: Record<PageId, React.ComponentType> = {
   'book-of-treasure': BookOfTreasurePage,
   'lightning-rush': LightningRushPage,
   'lava-quest': LavaQuestPage,
+  'mission-control': MissionControlPage,
   album: AlbumPage,
   collection: CollectionPage,
   gameplay: GameplayPage,

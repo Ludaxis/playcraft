@@ -3,22 +3,40 @@
 import React from 'react';
 import Image from 'next/image';
 import { useGame, useNavigation, useAdmin } from '@/store';
-import { ProgressBar } from '@/components/ui';
 import { BottomNavigation } from '@/components/shared';
 import { useTimer } from '@/hooks';
+import type { PageId } from '@/types';
+
+// Event configuration with icons and colors
+const eventConfig: Record<string, { icon: string; bgColor: string; page: PageId }> = {
+  'royal-pass': { icon: 'RP', bgColor: 'bg-gold', page: 'royal-pass' },
+  'mission-control': { icon: 'MC', bgColor: 'bg-accent', page: 'mission-control' },
+  'lightning-rush': { icon: 'LR', bgColor: 'bg-gold', page: 'lightning-rush' },
+  'lava-quest': { icon: 'LQ', bgColor: 'bg-secondary-light', page: 'lava-quest' },
+  'sky-race': { icon: 'SR', bgColor: 'bg-accent', page: 'main-menu' },
+  'kings-cup': { icon: 'KC', bgColor: 'bg-gold', page: 'main-menu' },
+  'team-chest': { icon: 'TC', bgColor: 'bg-secondary', page: 'main-menu' },
+  'book-of-treasure': { icon: 'BT', bgColor: 'bg-gold-dark', page: 'main-menu' },
+  'album': { icon: 'AL', bgColor: 'bg-accent', page: 'main-menu' },
+  'collection': { icon: 'CO', bgColor: 'bg-secondary', page: 'collection' },
+};
 
 export function MainMenu() {
   const { state } = useGame();
   const { navigate, openModal } = useNavigation();
-  const { isEventEnabled } = useAdmin();
-  const { player, areas, events } = state;
+  const { config } = useAdmin();
+  const { player, areas } = state;
 
   const currentArea = areas.find((a) => a.id === player.currentArea);
   const completedTasks = currentArea?.tasks.filter((t) => t.completed).length || 0;
   const totalTasks = currentArea?.tasks.length || 0;
 
-  // Get active events (filtered by admin config)
-  const lavaQuest = isEventEnabled('lava-quest') ? events.find((e) => e.type === 'lava-quest') : null;
+  // Get events from placement config
+  const leftEvents = config.eventPlacement?.left || [];
+  const rightEvents = config.eventPlacement?.right || [];
+
+  // Mock end time for all events
+  const getEventEndTime = () => new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 20 * 60 * 60 * 1000);
 
   return (
     <div className="relative flex flex-col h-full bg-surface-light overflow-hidden">
@@ -94,13 +112,36 @@ export function MainMenu() {
 
         {/* Left Side Events */}
         <div className="absolute left-1 top-8 flex flex-col gap-2">
-          {lavaQuest && (
-            <EventButton
-              icon="LVQ"
-              timer={lavaQuest.endTime}
-              onClick={() => navigate('lava-quest')}
-            />
-          )}
+          {leftEvents.map((eventId) => {
+            const cfg = eventConfig[eventId];
+            if (!cfg) return null;
+            return (
+              <EventButton
+                key={eventId}
+                icon={cfg.icon}
+                timer={getEventEndTime()}
+                onClick={() => navigate(cfg.page)}
+                bgColor={cfg.bgColor}
+              />
+            );
+          })}
+        </div>
+
+        {/* Right Side Events */}
+        <div className="absolute right-1 top-8 flex flex-col gap-2">
+          {rightEvents.map((eventId) => {
+            const cfg = eventConfig[eventId];
+            if (!cfg) return null;
+            return (
+              <EventButton
+                key={eventId}
+                icon={cfg.icon}
+                timer={getEventEndTime()}
+                onClick={() => navigate(cfg.page)}
+                bgColor={cfg.bgColor}
+              />
+            );
+          })}
         </div>
 
         {/* Bottom Buttons - Level & Area */}
@@ -141,9 +182,10 @@ interface EventButtonProps {
   icon: string;
   timer: Date | null;
   onClick: () => void;
+  bgColor?: string;
 }
 
-function EventButton({ icon, timer, onClick }: EventButtonProps) {
+function EventButton({ icon, timer, onClick, bgColor = 'bg-secondary-light' }: EventButtonProps) {
   const timerData = useTimer(timer);
 
   return (
@@ -151,12 +193,12 @@ function EventButton({ icon, timer, onClick }: EventButtonProps) {
       onClick={onClick}
       className="relative flex flex-col items-center"
     >
-      <div className="w-14 h-14 bg-secondary-light rounded-full border-2 border-surface-dark shadow-lg flex items-center justify-center">
+      <div className={`w-14 h-14 ${bgColor} rounded-full border-2 border-surface-dark shadow-lg flex items-center justify-center`}>
         <span className="text-white text-xs font-bold">{icon}</span>
       </div>
       <div className="bg-primary-light rounded-full px-2 py-0.5 -mt-2 z-10">
         <span className="text-white text-[10px] font-medium">
-          {timerData.hours}h {timerData.minutes}m
+          {timerData.days > 0 ? `${timerData.days}d ${timerData.hours}h` : `${timerData.hours}h ${timerData.minutes}m`}
         </span>
       </div>
     </button>

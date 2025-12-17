@@ -5,8 +5,10 @@ import {
   type AdminConfig,
   type TabConfig,
   type ThemeConfig,
+  type EventPlacement,
   defaultAdminConfig,
   allAvailableTabs,
+  defaultEventPlacement,
   ADMIN_CONFIG_KEY,
 } from '@/config/adminDefaults';
 
@@ -20,6 +22,8 @@ type AdminAction =
   | { type: 'TOGGLE_TAB'; payload: { tabId: string; enabled: boolean } }
   | { type: 'REORDER_TABS'; payload: TabConfig[] }
   | { type: 'TOGGLE_EVENT'; payload: { eventId: string; enabled: boolean } }
+  | { type: 'REORDER_EVENTS'; payload: string[] }
+  | { type: 'UPDATE_EVENT_PLACEMENT'; payload: EventPlacement }
   | { type: 'UPDATE_THEME'; payload: Partial<ThemeConfig> }
   | { type: 'RESET_TO_DEFAULTS' };
 
@@ -71,10 +75,32 @@ function adminReducer(state: AdminState, action: AdminAction): AdminState {
 
     case 'TOGGLE_EVENT': {
       const { eventId, enabled } = action.payload;
-      const enabledEvents = enabled
-        ? [...state.enabledEvents, eventId]
-        : state.enabledEvents.filter(id => id !== eventId);
-      return { ...state, enabledEvents };
+      if (enabled) {
+        // Add to enabledEvents and left side of placement
+        const enabledEvents = [...state.enabledEvents, eventId];
+        const eventPlacement = {
+          ...state.eventPlacement,
+          left: [...state.eventPlacement.left, eventId],
+        };
+        return { ...state, enabledEvents, eventPlacement };
+      } else {
+        // Remove from enabledEvents and both sides of placement
+        const enabledEvents = state.enabledEvents.filter(id => id !== eventId);
+        const eventPlacement = {
+          left: state.eventPlacement.left.filter(id => id !== eventId),
+          right: state.eventPlacement.right.filter(id => id !== eventId),
+        };
+        return { ...state, enabledEvents, eventPlacement };
+      }
+    }
+
+    case 'REORDER_EVENTS':
+      return { ...state, enabledEvents: action.payload };
+
+    case 'UPDATE_EVENT_PLACEMENT': {
+      // Also sync enabledEvents with the placement
+      const enabledEvents = [...action.payload.left, ...action.payload.right];
+      return { ...state, eventPlacement: action.payload, enabledEvents };
     }
 
     case 'UPDATE_THEME':
@@ -96,6 +122,8 @@ interface AdminContextValue {
   toggleTab: (tabId: string, enabled: boolean) => void;
   reorderTabs: (tabs: TabConfig[]) => void;
   toggleEvent: (eventId: string, enabled: boolean) => void;
+  reorderEvents: (events: string[]) => void;
+  updateEventPlacement: (placement: EventPlacement) => void;
   isEventEnabled: (eventId: string) => boolean;
   updateTheme: (theme: Partial<ThemeConfig>) => void;
   resetToDefaults: () => void;
@@ -119,6 +147,7 @@ function loadConfig(): AdminConfig {
         ...parsed,
         tabs: parsed.tabs || defaultAdminConfig.tabs,
         enabledEvents: parsed.enabledEvents || defaultAdminConfig.enabledEvents,
+        eventPlacement: parsed.eventPlacement || defaultEventPlacement,
         theme: { ...defaultAdminConfig.theme, ...parsed.theme },
       };
     }
@@ -213,6 +242,14 @@ export function AdminProvider({ children }: AdminProviderProps) {
     dispatch({ type: 'TOGGLE_EVENT', payload: { eventId, enabled } });
   }, []);
 
+  const reorderEvents = useCallback((events: string[]) => {
+    dispatch({ type: 'REORDER_EVENTS', payload: events });
+  }, []);
+
+  const updateEventPlacement = useCallback((placement: EventPlacement) => {
+    dispatch({ type: 'UPDATE_EVENT_PLACEMENT', payload: placement });
+  }, []);
+
   const isEventEnabled = useCallback((eventId: string) => {
     return state.enabledEvents.includes(eventId);
   }, [state.enabledEvents]);
@@ -234,6 +271,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
         toggleTab,
         reorderTabs,
         toggleEvent,
+        reorderEvents,
+        updateEventPlacement,
         isEventEnabled,
         updateTheme,
         resetToDefaults,

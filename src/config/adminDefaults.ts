@@ -11,10 +11,17 @@ export interface TabConfig {
   enabled: boolean;
 }
 
+// Event placement configuration
+export interface EventPlacement {
+  left: string[];
+  right: string[];
+}
+
 // Admin configuration interface
 export interface AdminConfig {
   tabs: TabConfig[];
-  enabledEvents: string[];
+  enabledEvents: string[]; // kept for backward compatibility
+  eventPlacement: EventPlacement;
   theme: ThemeConfig;
 }
 
@@ -70,12 +77,19 @@ export const allEvents = [
   { id: 'book-of-treasure', name: 'Book of Treasure', icon: '/icons/Bookmark.svg' },
   { id: 'lightning-rush', name: 'Lightning Rush', icon: '/icons/Lightning.svg' },
   { id: 'lava-quest', name: 'Lava Quest', icon: '/icons/Star-Filled.svg' },
+  { id: 'mission-control', name: 'Mission Control', icon: '/icons/Flag.svg' },
   { id: 'album', name: 'Album', icon: '/icons/Category.svg' },
   { id: 'collection', name: 'Collection', icon: '/icons/Archive.svg' },
 ];
 
 // Default enabled events
-export const defaultEnabledEvents = ['lava-quest'];
+export const defaultEnabledEvents = ['royal-pass', 'lava-quest', 'mission-control', 'lightning-rush'];
+
+// Default event placement
+export const defaultEventPlacement: EventPlacement = {
+  left: ['royal-pass', 'mission-control', 'lightning-rush', 'lava-quest'],
+  right: [],
+};
 
 // Default theme (Periwinkle Dream)
 export const defaultTheme: ThemeConfig = {
@@ -100,6 +114,7 @@ export const defaultTheme: ThemeConfig = {
 export const defaultAdminConfig: AdminConfig = {
   tabs: defaultTabs,
   enabledEvents: defaultEnabledEvents,
+  eventPlacement: defaultEventPlacement,
   theme: defaultTheme,
 };
 

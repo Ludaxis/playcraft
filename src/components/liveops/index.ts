@@ -7,3 +7,4 @@ export { LightningRushPage } from './LightningRushPage';
 export { LavaQuestPage } from './LavaQuestPage';
 export { AlbumPage } from './AlbumPage';
 export { CollectionPage } from './CollectionPage';
+export { MissionControlPage } from './MissionControlPage';

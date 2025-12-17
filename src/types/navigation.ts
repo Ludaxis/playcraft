@@ -17,6 +17,7 @@ export type PageId =
   | 'book-of-treasure'
   | 'lightning-rush'
   | 'lava-quest'
+  | 'mission-control'
   | 'album'
   | 'collection'
   | 'area-tasks'
