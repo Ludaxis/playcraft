@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useGame, useNavigation } from '@/store';
 import { ShopPanel, CoinPackGrid } from '@/components/ui/ShopPanel';
 import { BottomNavigation, FeatureDisabled } from '@/components/shared';
@@ -11,10 +12,12 @@ export function ShopPage() {
   const { state } = useGame();
   const { navigate } = useNavigation();
   const [showMoreOffers, setShowMoreOffers] = useState(false);
+  const t = useTranslations('shop');
+  const tCommon = useTranslations('common');
 
   // Feature flag check (must be after hooks)
   if (!isFeatureEnabled('SHOP')) {
-    return <FeatureDisabled featureName="Shop" />;
+    return <FeatureDisabled featureName={t('title')} />;
   }
 
   const { coinPacks, specialOfferItems, princeItems, queenItems } = shopMockData;
@@ -32,7 +35,7 @@ export function ShopPage() {
         </div>
 
         {/* Title */}
-        <h1 className="text-text-primary text-h4">Shop</h1>
+        <h1 className="text-text-primary text-h4">{t('title')}</h1>
 
         {/* Close button */}
         <button
@@ -48,20 +51,20 @@ export function ShopPage() {
         {/* Featured Banner - Winter Pass */}
         <ShopPanel
           variant="featured"
-          title="Royal Pass"
+          title={t('royalPass')}
           items={[
             { icon: 'BST', count: 8 },
             { icon: 'HRT', count: 8 },
             { icon: 'GFT' },
           ]}
           price="$14.98"
-          buttonLabel="Activate"
+          buttonLabel={t('activate')}
         />
 
         {/* Special Offer Bundle */}
         <ShopPanel
           variant="bundle"
-          title="Special Offer"
+          title={t('specialOffer')}
           coins={2000}
           items={specialOfferItems}
           price="$2.98"
@@ -76,7 +79,7 @@ export function ShopPage() {
             {/* Prince's Treasure */}
             <ShopPanel
               variant="bundle"
-              title="Prince's Treasure"
+              title={t('princesTreasure')}
               coins={5000}
               items={princeItems}
               price="$14.98"
@@ -85,8 +88,8 @@ export function ShopPage() {
             {/* Queen's Treasure */}
             <ShopPanel
               variant="bundle"
-              title="Queen's Treasure"
-              ribbon="Popular"
+              title={t('queensTreasure')}
+              ribbon={t('popular')}
               coins={10000}
               items={queenItems}
               price="$29.98"
@@ -100,7 +103,7 @@ export function ShopPage() {
           className="w-full bg-bg-card rounded-full py-2 flex items-center justify-center gap-2 border border-border"
         >
           <span className="text-text-primary text-value-sm">
-            {showMoreOffers ? 'Show Less' : 'More Offers!'}
+            {showMoreOffers ? tCommon('showLess') : tCommon('moreOffers')}
           </span>
           <span className={`text-text-secondary text-caption transition-transform ${showMoreOffers ? 'rotate-180' : ''}`}>
             ▼

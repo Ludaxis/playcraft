@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useNavigation } from '@/store';
 
 interface ParentalControlModalProps {
@@ -12,6 +13,7 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
   const { closeModal } = useNavigation();
   const [purchasesEnabled, setPurchasesEnabled] = useState(true);
   const [adsEnabled, setAdsEnabled] = useState(true);
+  const t = useTranslations('parentalControl');
 
   const handleClose = () => {
     if (onAnimatedClose) {
@@ -25,7 +27,7 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
     <div className="relative w-full max-w-[300px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
-        <h2 className="text-text-inverse text-h3">Parental Control</h2>
+        <h2 className="text-text-inverse text-h3">{t('title')}</h2>
         <button
           onClick={handleClose}
           className="w-8 h-8 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80"
@@ -38,7 +40,7 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
         <div className="p-4 bg-bg-card">
           {/* Info Text */}
           <p className="text-text-secondary text-caption text-center mb-4">
-            Control your child&apos;s gaming experience with these settings.
+            {t('controlDescription')}
           </p>
 
           {/* Settings */}
@@ -56,8 +58,8 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
                   />
                 </div>
                 <div>
-                  <p className="text-text-primary text-value">In-App Purchases</p>
-                  <p className="text-text-secondary text-mini">Require PIN for purchases</p>
+                  <p className="text-text-primary text-value">{t('inAppPurchases')}</p>
+                  <p className="text-text-secondary text-mini">{t('requirePinForPurchases')}</p>
                 </div>
               </div>
               <button
@@ -89,8 +91,8 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
                   />
                 </div>
                 <div>
-                  <p className="text-text-primary text-value">Personalized Ads</p>
-                  <p className="text-text-secondary text-mini">Show targeted advertisements</p>
+                  <p className="text-text-primary text-value">{t('personalizedAds')}</p>
+                  <p className="text-text-secondary text-mini">{t('showTargetedAds')}</p>
                 </div>
               </div>
               <button
@@ -118,13 +120,13 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
                 height={20}
                 className="opacity-70"
               />
-              <span className="text-text-primary font-bold">Set PIN Code</span>
+              <span className="text-text-primary font-bold">{t('setPinCode')}</span>
             </button>
           </div>
 
         {/* Privacy Note */}
         <p className="text-text-muted text-mini text-center mt-4">
-          These settings help protect younger players from unintended purchases.
+          {t('privacyNote')}
         </p>
       </div>
     </div>

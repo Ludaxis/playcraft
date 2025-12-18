@@ -112,13 +112,13 @@ const config: Config = {
       },
 
       // ═══════════════════════════════════════════════════════════════════
-      // FONTS - Clean sans-serif for wireframes
+      // FONTS - Multi-script font support
       // ═══════════════════════════════════════════════════════════════════
       fontFamily: {
-        // Primary font - Inter for clean wireframe look
+        // Primary font - defaults to Latin, overridden by locale
         sans: [
+          'var(--font-latin)',
           'Inter',
-          'var(--font-sans)',
           'system-ui',
           '-apple-system',
           'BlinkMacSystemFont',
@@ -130,20 +130,54 @@ const config: Config = {
         ],
         // Display font (same as sans for consistency)
         display: [
+          'var(--font-latin)',
           'Inter',
-          'var(--font-display)',
-          'var(--font-sans)',
           'system-ui',
           'sans-serif',
         ],
         // Monospace for numbers/codes
         mono: [
-          'var(--font-mono)',
           'ui-monospace',
           'SFMono-Regular',
           'Menlo',
           'Monaco',
           'monospace',
+        ],
+        // Script-specific font families
+        latin: [
+          'var(--font-latin)',
+          'Noto Sans',
+          'Inter',
+          'system-ui',
+          'sans-serif',
+        ],
+        arabic: [
+          'var(--font-arabic)',
+          'Noto Sans Arabic',
+          'Tahoma',
+          'Arial',
+          'sans-serif',
+        ],
+        chinese: [
+          'var(--font-chinese)',
+          'Noto Sans SC',
+          'PingFang SC',
+          'Microsoft YaHei',
+          'sans-serif',
+        ],
+        japanese: [
+          'var(--font-japanese)',
+          'Noto Sans JP',
+          'Hiragino Sans',
+          'Yu Gothic',
+          'sans-serif',
+        ],
+        korean: [
+          'var(--font-korean)',
+          'Noto Sans KR',
+          'Malgun Gothic',
+          'Apple SD Gothic Neo',
+          'sans-serif',
         ],
       },
 

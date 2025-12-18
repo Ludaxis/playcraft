@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useNavigation, useGame } from '@/store';
 
 interface LevelStartModalProps {
@@ -11,6 +12,8 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
   const { closeModal, navigate } = useNavigation();
   const { state } = useGame();
   const { player, boosters } = state;
+  const t = useTranslations('game');
+  const tCommon = useTranslations('common');
 
   const preGameBoosters = boosters.filter((b) => b.type === 'pre-game');
   const [selectedBoosters, setSelectedBoosters] = useState<string[]>([]);
@@ -38,7 +41,7 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
     <div className="w-full max-w-[320px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
         {/* Header */}
         <div className="bg-bg-inverse py-2.5 px-3 flex items-center justify-center relative">
-          <h2 className="text-text-inverse text-h4">Level {player.currentLevel}</h2>
+          <h2 className="text-text-inverse text-h4">{t('level', { level: player.currentLevel })}</h2>
           <button
             onClick={handleClose}
             className="absolute right-2 w-7 h-7 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80 transition-colors"
@@ -55,13 +58,13 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
           {/* Difficulty Badge */}
           <div className="flex justify-center mb-2">
             <div className="bg-bg-muted rounded-full px-3 py-0.5 border border-border">
-              <span className="text-text-secondary text-value-sm">Super Hard</span>
+              <span className="text-text-secondary text-value-sm">{t('superHard')}</span>
             </div>
           </div>
 
           {/* Goals Panel */}
           <div className="bg-bg-muted rounded-lg border border-border p-2 mb-3">
-            <p className="text-text-muted text-mini text-center mb-1.5">Goals</p>
+            <p className="text-text-muted text-mini text-center mb-1.5">{t('goals')}</p>
             <div className="flex justify-center gap-3">
               <GoalItem icon="BLU" count={30} />
               <GoalItem icon="RED" count={25} />
@@ -72,13 +75,13 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
           {/* Moves */}
           <div className="flex justify-center mb-3">
             <div className="bg-bg-muted rounded-lg border border-border px-5 py-1.5 text-center">
-              <p className="text-text-secondary text-mini">Moves</p>
+              <p className="text-text-secondary text-mini">{t('moves', { count: 25 })}</p>
               <p className="text-text-primary text-h3">25</p>
             </div>
           </div>
 
           {/* Boosters Section */}
-          <p className="text-text-muted text-mini text-center mb-1.5">Select Boosters</p>
+          <p className="text-text-muted text-mini text-center mb-1.5">{t('selectBoosters')}</p>
           <div className="flex justify-center gap-2 mb-3">
             {preGameBoosters.map((booster) => (
               <BoosterSelect
@@ -97,7 +100,7 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
             onClick={handlePlay}
             className="w-full bg-border-strong hover:bg-bg-muted border border-border rounded-lg py-3 text-text-primary font-bold text-caption transition-colors"
           >
-            Play
+            {tCommon('play')}
           </button>
         </div>
       </div>

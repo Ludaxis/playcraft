@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { Modal, Button, Panel, List, ListItem, ListItemContent, ListItemAction } from '@/components/ui';
 import { useNavigation, useGame, gameActions } from '@/store';
 
@@ -8,6 +9,8 @@ export function OutOfLivesModal() {
   const { closeModal, navigate } = useNavigation();
   const { state, dispatch } = useGame();
   const { player } = state;
+  const t = useTranslations('game');
+  const tCommon = useTranslations('common');
 
   const handleBuyLives = () => {
     dispatch(gameActions.updateCoins(-100));
@@ -21,7 +24,7 @@ export function OutOfLivesModal() {
   };
 
   return (
-    <Modal isOpen onClose={closeModal} title="Lives" size="sm">
+    <Modal isOpen onClose={closeModal} title={t('lives', { count: player.lives })} size="sm">
       <div className="text-center">
         {/* Hearts Display */}
         <div className="flex justify-center gap-1 mb-4">
@@ -31,18 +34,18 @@ export function OutOfLivesModal() {
         </div>
 
         <p className="text-h3 text-text-primary mb-1">
-          {player.lives}/{player.maxLives} Lives
+          {player.lives}/{player.maxLives} {t('lives', { count: player.lives })}
         </p>
         <p className="text-caption text-text-secondary mb-4">
           {player.lives < player.maxLives
-            ? 'Lives refill over time'
-            : 'You have full lives!'}
+            ? t('livesRemaining')
+            : t('livesRemaining')}
         </p>
 
         {/* Timer */}
         {player.lives < player.maxLives && (
           <Panel variant="outlined" className="mb-4">
-            <p className="text-caption text-text-secondary">Next life in</p>
+            <p className="text-caption text-text-secondary">{t('needMoreMoves')}</p>
             <p className="text-h2 text-text-primary">29:45</p>
           </Panel>
         )}
@@ -51,30 +54,30 @@ export function OutOfLivesModal() {
         <List className="mb-4">
           <ListItem onClick={handleBuyLives}>
             <ListItemContent
-              title="Buy 5 Lives"
-              subtitle="Instant refill"
+              title={t('buy5Lives')}
+              subtitle={t('instantRefill')}
             />
             <ListItemAction>
               <Button size="sm" variant="primary">
-                100 Coins
+                100 {t('coins', { amount: 100 })}
               </Button>
             </ListItemAction>
           </ListItem>
           <ListItem onClick={handleAskFriends}>
             <ListItemContent
-              title="Ask Friends"
-              subtitle="Request lives from friends"
+              title={t('askFriends')}
+              subtitle={t('requestLivesFromFriends')}
             />
             <ListItemAction>
               <Button size="sm" variant="secondary">
-                Free
+                {t('free')}
               </Button>
             </ListItemAction>
           </ListItem>
         </List>
 
         <Button variant="ghost" fullWidth onClick={closeModal}>
-          Close
+          {tCommon('close')}
         </Button>
       </div>
     </Modal>

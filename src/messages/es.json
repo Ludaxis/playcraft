@@ -1,0 +1,435 @@
+{
+  "metadata": {
+    "title": "Puzzle Kit",
+    "description": "Prototipo interactivo de alta fidelidad para interfaces de juegos de puzzle"
+  },
+  "common": {
+    "back": "Atrás",
+    "close": "Cerrar",
+    "cancel": "Cancelar",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "search": "Buscar",
+    "create": "Crear",
+    "view": "Ver",
+    "show": "Mostrar",
+    "showLess": "Mostrar menos",
+    "moreOffers": "¡Más ofertas!",
+    "continue": "Continuar",
+    "claim": "Reclamar",
+    "share": "Compartir",
+    "send": "Enviar",
+    "accept": "Aceptar",
+    "decline": "Rechazar",
+    "choose": "Elegir",
+    "connect": "Conectar",
+    "level": "Nivel",
+    "score": "Puntuación",
+    "capacity": "Capacidad",
+    "on": "ACTIVADO",
+    "off": "DESACTIVADO",
+    "done": "Hecho",
+    "claimed": "Reclamado",
+    "add": "Añadir",
+    "added": "Añadido",
+    "collect": "Recoger",
+    "sent": "Enviado",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "confirm": "Confirmar",
+    "retry": "Reintentar",
+    "quit": "Salir",
+    "play": "Jugar",
+    "start": "Iniciar",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "finish": "Finalizar",
+    "skip": "Omitir",
+    "pro": "PRO"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "shop": "Tienda",
+    "team": "Equipo",
+    "areas": "Áreas",
+    "collection": "Colección",
+    "leaderboard": "Clasificación",
+    "settings": "Ajustes",
+    "profile": "Perfil",
+    "inbox": "Bandeja de entrada",
+    "boosters": "Potenciadores",
+    "rewards": "Recompensas",
+    "friends": "Amigos"
+  },
+  "pages": {
+    "mainMenu": "Menú principal",
+    "gameplay": "Jugabilidad",
+    "shop": "Tienda",
+    "settings": "Ajustes",
+    "admin": "Admin",
+    "team": "Equipo",
+    "inbox": "Bandeja de entrada",
+    "leaderboard": "Clasificación",
+    "dailyRewards": "Recompensas diarias",
+    "profile": "Perfil",
+    "friends": "Amigos",
+    "boosters": "Potenciadores",
+    "areaTasks": "Tareas de área",
+    "areas": "Áreas",
+    "teams": "Equipos",
+    "royalPass": "Pase Real",
+    "skyRace": "Carrera del cielo",
+    "kingsCup": "Copa del Rey",
+    "teamChest": "Cofre de equipo",
+    "bookOfTreasure": "Libro del tesoro",
+    "lightningRush": "Carrera relámpago",
+    "lavaQuest": "Búsqueda de lava",
+    "missionControl": "Control de misión",
+    "album": "Álbum",
+    "collection": "Colección",
+    "winningStreak": "Racha ganadora"
+  },
+  "modals": {
+    "levelStart": "Inicio de nivel",
+    "levelComplete": "¡Nivel completado!",
+    "levelFailed": "Nivel fallido",
+    "purchaseConfirm": "Confirmar compra",
+    "rewardClaim": "Reclamar recompensa",
+    "areaComplete": "Área completada",
+    "eventInfo": "Info del evento",
+    "boosterSelect": "Seleccionar potenciador",
+    "outOfLives": "Vidas",
+    "helpRequest": "Solicitud de ayuda",
+    "settings": "Ajustes",
+    "freeLives": "Vidas gratis",
+    "profilePicture": "Foto de perfil",
+    "editAvatar": "Editar avatar",
+    "starInfo": "Info de estrella",
+    "signIn": "Iniciar sesión",
+    "parentalControl": "Control parental",
+    "privacyPolicy": "Política de privacidad",
+    "changeUsername": "Cambiar nombre de usuario",
+    "cardStars": "Estrellas de carta",
+    "collectionInfo": "Info de colección",
+    "grandPrize": "Gran premio",
+    "collectionSetDetail": "Detalle del set de colección",
+    "cardDetail": "Detalle de carta",
+    "profile": "Perfil",
+    "teamInfo": "Info de equipo",
+    "memberProfile": "Perfil del miembro",
+    "weeklyContestInfo": "Concurso semanal"
+  },
+  "events": {
+    "royalPass": {
+      "name": "Pase Real",
+      "description": "Completa tareas para ganar recompensas premium"
+    },
+    "skyRace": {
+      "name": "Carrera del cielo",
+      "description": "Compite contra otros hacia la cima"
+    },
+    "kingsCup": {
+      "name": "Copa del Rey",
+      "description": "Compite por la corona real"
+    },
+    "teamChest": {
+      "name": "Cofre de equipo",
+      "description": "Trabaja con tu equipo para desbloquear recompensas"
+    },
+    "bookOfTreasure": {
+      "name": "Libro del tesoro",
+      "description": "Completa capítulos para encontrar el tesoro"
+    },
+    "lightningRush": {
+      "name": "Carrera relámpago",
+      "description": "Desafíos rápidos para recompensas rápidas"
+    },
+    "lavaQuest": {
+      "name": "Búsqueda de lava",
+      "description": "Navega a través de desafíos volcánicos"
+    },
+    "missionControl": {
+      "name": "Control de misión",
+      "description": "Completa misiones para recompensas especiales"
+    },
+    "album": {
+      "name": "Álbum",
+      "description": "Colecciona cartas para completar tu álbum"
+    },
+    "collection": {
+      "name": "Colección",
+      "description": "Construye tu colección real"
+    },
+    "winningStreak": {
+      "name": "Racha ganadora",
+      "description": "Mantén tu racha ganadora"
+    },
+    "teamBattle": {
+      "name": "Batalla de equipos",
+      "description": "Batalla contra otros equipos"
+    },
+    "lightTheWay": {
+      "name": "Ilumina el camino",
+      "description": "Enciende velas para ganar recompensas"
+    },
+    "bonusLevel": {
+      "name": "Nivel bonus",
+      "description": "Desafíos especiales de nivel bonus"
+    },
+    "propHunt": {
+      "name": "Caza de objetos",
+      "description": "Encuentra objetos ocultos para premios"
+    },
+    "puzzleSafari": {
+      "name": "Safari puzzle",
+      "description": "Puzzles de aventura safari"
+    },
+    "treasureHunt": {
+      "name": "Caza del tesoro",
+      "description": "Caza tesoros ocultos"
+    },
+    "sweetVictory": {
+      "name": "Dulce victoria",
+      "description": "Dulces y victorias"
+    },
+    "bubbleShooter": {
+      "name": "Lanzador de burbujas",
+      "description": "Revienta burbujas para recompensas"
+    }
+  },
+  "game": {
+    "level": "Nivel {level}",
+    "moves": "{count, plural, one {# movimiento} other {# movimientos}}",
+    "goals": "Objetivos",
+    "coins": "{amount, number}",
+    "lives": "{count, plural, one {# vida} other {# vidas}}",
+    "stars": "{count, plural, one {# estrella} other {# estrellas}}",
+    "superHard": "Super difícil",
+    "hard": "Difícil",
+    "normal": "Normal",
+    "easy": "Fácil",
+    "selectBoosters": "Seleccionar potenciadores",
+    "youEarnedStar": "Has ganado {count, plural, one {# estrella} other {# estrellas}}",
+    "rewards": "Recompensas",
+    "youRanOutOfMoves": "¡Te quedaste sin movimientos!",
+    "livesRemaining": "Vidas restantes",
+    "needMoreMoves": "¿Necesitas más movimientos?",
+    "continueWithMoves": "Continuar con {count} movimientos extra",
+    "buy5Lives": "Comprar 5 vidas",
+    "instantRefill": "Recarga instantánea",
+    "askFriends": "Pedir a amigos",
+    "requestLivesFromFriends": "Solicitar vidas a amigos",
+    "free": "Gratis",
+    "boosters": "Potenciadores",
+    "preGame": "Pre-juego",
+    "inGame": "En juego"
+  },
+  "shop": {
+    "title": "Tienda",
+    "royalPass": "Pase Real",
+    "activate": "Activar",
+    "specialOffer": "Oferta especial",
+    "princesTreasure": "Tesoro del Príncipe",
+    "queensTreasure": "Tesoro de la Reina",
+    "popular": "Popular",
+    "bestValue": "Mejor valor",
+    "buyNow": "Comprar ahora",
+    "limitedTime": "Tiempo limitado",
+    "sale": "Oferta"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "music": "Música",
+    "sound": "Sonido",
+    "vibration": "Vibración",
+    "hint": "Pista",
+    "notifications": "Notificaciones",
+    "language": "Idioma",
+    "saveYourProgress": "Guarda tu progreso",
+    "support": "Soporte",
+    "parentalControl": "Control parental",
+    "termsPrivacy": "Términos y privacidad",
+    "adminPanel": "Panel de admin",
+    "version": "Puzzle Kit v1.0.0",
+    "signInToSave": "¡Inicia sesión para guardar tu progreso y jugar en múltiples dispositivos!",
+    "signInWithFacebook": "Iniciar sesión con Facebook",
+    "signInWithGoogle": "Iniciar sesión con Google",
+    "signInWithApple": "Iniciar sesión con Apple",
+    "termsAgreement": "Al iniciar sesión, aceptas nuestros Términos de servicio y Política de privacidad"
+  },
+  "profile": {
+    "title": "Perfil",
+    "generalStats": "Estadísticas generales",
+    "firstTryWins": "Victorias al primer intento",
+    "helpsMade": "Ayudas realizadas",
+    "helpsReceived": "Ayudas recibidas",
+    "areasCompleted": "Áreas completadas",
+    "collectionsCompleted": "Colecciones completadas",
+    "setsCompleted": "Sets completados",
+    "collections": "Colecciones",
+    "noTeam": "Sin equipo",
+    "playingSince": "Jugando desde {date}",
+    "home": "Inicio",
+    "achievements": "Logros",
+    "statistics": "Estadísticas"
+  },
+  "leaderboard": {
+    "title": "Clasificación",
+    "weeklyContest": "Concurso semanal",
+    "finished": "Terminado",
+    "rank1st": "1º",
+    "rank2nd": "2º",
+    "rank3rd": "3º",
+    "friendsList": "Lista de amigos",
+    "addFriends": "Añadir amigos",
+    "world": "Mundo",
+    "local": "Local",
+    "level": "Nivel"
+  },
+  "friends": {
+    "title": "Amigos",
+    "requests": "Solicitudes",
+    "add": "Añadir",
+    "count": "{count, plural, one {# amigo} other {# amigos}}",
+    "noPendingRequests": "No hay solicitudes pendientes",
+    "connectFacebook": "Conectar Facebook",
+    "findFriendsFromFacebook": "Encontrar amigos de Facebook",
+    "inviteViaLink": "Invitar por enlace",
+    "shareInviteLink": "Compartir enlace de invitación",
+    "searchById": "Buscar por ID",
+    "enterPlayerId": "Introduce el ID del jugador amigo"
+  },
+  "team": {
+    "title": "Equipo",
+    "join": "Unirse",
+    "search": "Buscar",
+    "create": "Crear",
+    "enterTeamName": "Introduce el nombre del equipo...",
+    "suggestedTeams": "Equipos sugeridos para ti",
+    "teamLogo": "Logo del equipo",
+    "teamName": "Nombre del equipo",
+    "teamDescription": "Descripción del equipo",
+    "description": "Descripción",
+    "enterDescription": "Introduce la descripción del equipo...",
+    "teamType": "Tipo de equipo",
+    "reqLevel": "Nivel req.",
+    "reqCrown": "Corona req.",
+    "open": "Abierto",
+    "closed": "Cerrado",
+    "request": "Solicitar",
+    "members": "Miembros",
+    "chat": "Chat",
+    "info": "Info",
+    "leave": "Salir",
+    "donate": "Donar"
+  },
+  "dailyRewards": {
+    "title": "Recompensas diarias",
+    "currentStreak": "Racha actual",
+    "day": "Día",
+    "dayNumber": "Día {number}"
+  },
+  "inbox": {
+    "title": "Bandeja de entrada",
+    "noMessages": "No hay mensajes",
+    "sentYouALife": "¡Te envió una vida!"
+  },
+  "boosters": {
+    "title": "Potenciadores",
+    "preGame": "Pre-juego",
+    "inGame": "En juego",
+    "getMore": "Obtener más",
+    "outOfStock": "Agotado",
+    "preGameDescription": "Los potenciadores pre-juego se activan antes de comenzar un nivel",
+    "inGameDescription": "Los potenciadores en juego se pueden usar durante el gameplay"
+  },
+  "areas": {
+    "title": "Áreas",
+    "areaNumber": "Área {number}",
+    "areaImage": "[Imagen de área]",
+    "completed": "¡Completada!",
+    "royalGarden": "Jardín real",
+    "magicRoom": "Sala mágica",
+    "candyShop": "Tienda de dulces",
+    "royalLibrary": "Biblioteca real",
+    "trophyHall": "Sala de trofeos",
+    "currentArea": "Área actual"
+  },
+  "admin": {
+    "title": "Panel de admin",
+    "prototypeAdmin": "Admin del prototipo",
+    "configureDescription": "Configura pestañas, eventos y tema. Los cambios se guardan automáticamente.",
+    "mainMenuOptions": "Opciones del menú principal",
+    "showAreaButton": "Mostrar botón de área",
+    "navigationTabs": "Pestañas de navegación",
+    "liveopsEvents": "Eventos LiveOps",
+    "themeColors": "Colores del tema",
+    "resetAllToDefaults": "Restablecer todo a predeterminados",
+    "version": "Puzzle Kit Admin v1.0"
+  },
+  "featureDisabled": {
+    "title": "Función deshabilitada",
+    "message": "{featureName} está actualmente deshabilitado en esta versión.",
+    "backToHome": "Volver al inicio"
+  },
+  "parentalControl": {
+    "title": "Control parental",
+    "controlDescription": "Controla la experiencia de juego de tu hijo con estos ajustes.",
+    "inAppPurchases": "Compras en la app",
+    "requirePinForPurchases": "Requerir PIN para compras",
+    "personalizedAds": "Anuncios personalizados",
+    "showTargetedAds": "Mostrar anuncios dirigidos",
+    "setPinCode": "Establecer código PIN",
+    "privacyNote": "Estos ajustes ayudan a proteger a los jugadores más jóvenes de compras no deseadas."
+  },
+  "privacyPolicy": {
+    "title": "Términos y privacidad",
+    "termsOfService": "Términos de servicio",
+    "termsDescription": "Al usar esta aplicación, aceptas nuestros términos de servicio. Esta es una aplicación prototipo solo para fines de demostración. Los datos del juego pueden restablecerse en cualquier momento. La moneda virtual no tiene valor real.",
+    "readFullTerms": "Leer términos completos",
+    "privacyPolicy": "Política de privacidad",
+    "privacyDescription": "Respetamos tu privacidad. Tus datos personales se almacenan localmente en tu dispositivo. No vendemos ni compartimos tus datos con terceros. Se pueden recopilar análisis para mejorar la experiencia de juego.",
+    "readFullPolicy": "Leer política completa",
+    "dataCollection": "Recopilación de datos",
+    "dataItems": {
+      "gameProgress": "Progreso del juego y puntuaciones",
+      "deviceInfo": "Información del dispositivo",
+      "usageStats": "Estadísticas de uso",
+      "crashReports": "Informes de fallos"
+    },
+    "contactUs": "Contáctanos",
+    "contactDescription": "Para inquietudes de privacidad o solicitudes de eliminación de datos, contáctanos en:",
+    "contactEmail": "privacy@example.com",
+    "iUnderstand": "Entiendo"
+  },
+  "rewards": {
+    "title": "¡Recompensa!",
+    "youReceivedReward": "Has recibido una recompensa",
+    "totalFreeLives": "Total de vidas gratis:"
+  },
+  "themePresets": {
+    "wireframe": "Wireframe (Predeterminado)",
+    "highContrast": "Alto contraste",
+    "lowContrast": "Bajo contraste",
+    "lightMode": "Modo claro",
+    "darkMode": "Modo oscuro",
+    "blueprint": "Blueprint",
+    "sketch": "Boceto"
+  },
+  "time": {
+    "days": "{count, plural, one {# día} other {# días}}",
+    "hours": "{count, plural, one {# hora} other {# horas}}",
+    "minutes": "{count, plural, one {# minuto} other {# minutos}}",
+    "seconds": "{count, plural, one {# segundo} other {# segundos}}",
+    "remaining": "{time} restante",
+    "ago": "hace {time}"
+  },
+  "numbers": {
+    "rank": "#{rank}"
+  }
+}

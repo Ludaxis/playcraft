@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useNavigation, useGame, gameActions } from '@/store';
 
 interface LifeGift {
@@ -26,6 +27,9 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
   const { closeModal } = useNavigation();
   const { dispatch } = useGame();
   const [gifts, setGifts] = useState<LifeGift[]>(initialGifts);
+  const t = useTranslations('rewards');
+  const tCommon = useTranslations('common');
+  const tInbox = useTranslations('inbox');
 
   const unclaimedCount = gifts.filter((g) => !g.claimed).length;
 
@@ -48,7 +52,7 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
     <div className="w-full max-w-[320px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-2.5 px-3 flex items-center justify-center relative">
-        <h2 className="text-text-inverse text-h4">Free Lives</h2>
+        <h2 className="text-text-inverse text-h4">{t('title')}</h2>
         <button
           onClick={handleClose}
           className="absolute right-2 w-7 h-7 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80 transition-colors"
@@ -64,7 +68,7 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
       <div className="bg-bg-card m-1.5 rounded-lg border border-border p-2">
         {/* Total free lives counter */}
         <div className="bg-bg-card rounded px-3 py-1.5 mb-2 flex items-center justify-between border border-border">
-          <span className="text-text-secondary text-mini font-medium">Total free lives:</span>
+          <span className="text-text-secondary text-mini font-medium">{t('totalFreeLives')}</span>
           <div className="bg-bg-muted rounded px-3 py-0.5">
             <span className="text-text-primary font-bold text-caption">{unclaimedCount}</span>
           </div>
@@ -78,6 +82,9 @@ export function FreeLivesModal({ onAnimatedClose }: FreeLivesModalProps) {
               senderName={gift.senderName}
               claimed={gift.claimed}
               onAdd={() => handleAdd(gift.id)}
+              sentLabel={tInbox('sentYouALife')}
+              addLabel={tCommon('add')}
+              addedLabel={tCommon('added')}
             />
           ))}
         </div>
@@ -90,9 +97,12 @@ interface LifeGiftRowProps {
   senderName: string;
   claimed: boolean;
   onAdd: () => void;
+  sentLabel: string;
+  addLabel: string;
+  addedLabel: string;
 }
 
-function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
+function LifeGiftRow({ senderName, claimed, onAdd, sentLabel, addLabel, addedLabel }: LifeGiftRowProps) {
   return (
     <div className="bg-bg-card rounded-lg px-2 py-1.5 flex items-center gap-2 border border-border">
       {/* Heart icon */}
@@ -109,20 +119,20 @@ function LifeGiftRow({ senderName, claimed, onAdd }: LifeGiftRowProps) {
       {/* Sender info */}
       <div className="flex-1">
         <p className="text-text-primary text-value-sm">{senderName}</p>
-        <p className="text-text-muted text-mini">Sent you a life!</p>
+        <p className="text-text-muted text-mini">{sentLabel}</p>
       </div>
 
       {/* Add button */}
       {claimed ? (
         <div className="bg-bg-muted rounded px-3 py-1 border border-border">
-          <span className="text-text-muted text-value-sm">Added</span>
+          <span className="text-text-muted text-value-sm">{addedLabel}</span>
         </div>
       ) : (
         <button
           onClick={onAdd}
           className="bg-bg-muted hover:bg-bg-page border border-border rounded px-3 py-1 transition-colors"
         >
-          <span className="text-text-primary text-value-sm">Add</span>
+          <span className="text-text-primary text-value-sm">{addLabel}</span>
         </button>
       )}
     </div>

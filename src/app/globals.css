@@ -28,11 +28,19 @@
 
 @theme {
   /* ─────────────────────────────────────────────────────────────────────────────
-     FONTS - Clean sans-serif for wireframes (Inter/System)
+     FONTS - Multi-script font support for internationalization
      ───────────────────────────────────────────────────────────────────────────── */
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-display: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Latin languages (default) */
+  --font-sans: var(--font-latin), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: var(--font-latin), 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
+
+  /* Font family definitions for different scripts */
+  --font-family-latin: var(--font-latin), 'Noto Sans', 'Inter', system-ui, sans-serif;
+  --font-family-arabic: var(--font-arabic), 'Noto Sans Arabic', 'Tahoma', 'Arial', sans-serif;
+  --font-family-chinese: var(--font-chinese), 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-family-japanese: var(--font-japanese), 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+  --font-family-korean: var(--font-korean), 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
 
   /* ===============================================================================
      MID-FIDELITY WIREFRAME GRAYSCALE PALETTE
@@ -372,4 +380,70 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
+}
+
+/* ===============================================================================
+   INTERNATIONALIZATION - Font and RTL Support
+   =============================================================================== */
+
+/* Font family classes for different scripts */
+.font-latin {
+  font-family: var(--font-family-latin);
+}
+
+.font-arabic {
+  font-family: var(--font-family-arabic);
+}
+
+.font-chinese {
+  font-family: var(--font-family-chinese);
+}
+
+.font-japanese {
+  font-family: var(--font-family-japanese);
+}
+
+.font-korean {
+  font-family: var(--font-family-korean);
+}
+
+/* CJK-specific typography adjustments */
+html[lang="zh-CN"] .text-body,
+html[lang="zh-TW"] .text-body,
+html[lang="ja"] .text-body,
+html[lang="ko"] .text-body {
+  line-height: 1.7; /* Increased line height for CJK readability */
+}
+
+html[lang="zh-CN"] .text-body-sm,
+html[lang="zh-TW"] .text-body-sm,
+html[lang="ja"] .text-body-sm,
+html[lang="ko"] .text-body-sm {
+  line-height: 1.6;
+}
+
+/* RTL-specific adjustments */
+html[dir="rtl"] {
+  text-align: right;
+}
+
+/* Flip directional icons in RTL mode */
+html[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Override text-transform for non-Latin scripts (no uppercase) */
+html[lang="ar"] .text-mini,
+html[lang="fa"] .text-mini,
+html[lang="zh-CN"] .text-mini,
+html[lang="zh-TW"] .text-mini,
+html[lang="ja"] .text-mini,
+html[lang="ko"] .text-mini {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* RTL scrollbar positioning */
+html[dir="rtl"] ::-webkit-scrollbar {
+  direction: rtl;
 }

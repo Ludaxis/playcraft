@@ -1,0 +1,435 @@
+{
+  "metadata": {
+    "title": "پازل کیت",
+    "description": "نمونه اولیه تعاملی با کیفیت بالا برای رابط کاربری بازی‌های پازل"
+  },
+  "common": {
+    "back": "بازگشت",
+    "close": "بستن",
+    "cancel": "لغو",
+    "yes": "بله",
+    "no": "خیر",
+    "ok": "باشه",
+    "search": "جستجو",
+    "create": "ایجاد",
+    "view": "مشاهده",
+    "show": "نمایش",
+    "showLess": "نمایش کمتر",
+    "moreOffers": "پیشنهادات بیشتر!",
+    "continue": "ادامه",
+    "claim": "دریافت",
+    "share": "اشتراک‌گذاری",
+    "send": "ارسال",
+    "accept": "پذیرش",
+    "decline": "رد",
+    "choose": "انتخاب",
+    "connect": "اتصال",
+    "level": "مرحله",
+    "score": "امتیاز",
+    "capacity": "ظرفیت",
+    "on": "روشن",
+    "off": "خاموش",
+    "done": "انجام شد",
+    "claimed": "دریافت شد",
+    "add": "افزودن",
+    "added": "افزوده شد",
+    "collect": "جمع‌آوری",
+    "sent": "ارسال شد",
+    "loading": "در حال بارگذاری...",
+    "error": "خطا",
+    "success": "موفق",
+    "save": "ذخیره",
+    "edit": "ویرایش",
+    "delete": "حذف",
+    "confirm": "تأیید",
+    "retry": "تلاش مجدد",
+    "quit": "خروج",
+    "play": "بازی",
+    "start": "شروع",
+    "next": "بعدی",
+    "previous": "قبلی",
+    "finish": "پایان",
+    "skip": "رد شدن",
+    "pro": "حرفه‌ای"
+  },
+  "navigation": {
+    "home": "خانه",
+    "shop": "فروشگاه",
+    "team": "تیم",
+    "areas": "مناطق",
+    "collection": "مجموعه",
+    "leaderboard": "جدول امتیازات",
+    "settings": "تنظیمات",
+    "profile": "پروفایل",
+    "inbox": "صندوق ورودی",
+    "boosters": "تقویت‌کننده‌ها",
+    "rewards": "جوایز",
+    "friends": "دوستان"
+  },
+  "pages": {
+    "mainMenu": "منوی اصلی",
+    "gameplay": "گیم‌پلی",
+    "shop": "فروشگاه",
+    "settings": "تنظیمات",
+    "admin": "مدیریت",
+    "team": "تیم",
+    "inbox": "صندوق ورودی",
+    "leaderboard": "جدول امتیازات",
+    "dailyRewards": "جوایز روزانه",
+    "profile": "پروفایل",
+    "friends": "دوستان",
+    "boosters": "تقویت‌کننده‌ها",
+    "areaTasks": "وظایف منطقه",
+    "areas": "مناطق",
+    "teams": "تیم‌ها",
+    "royalPass": "پاس سلطنتی",
+    "skyRace": "مسابقه آسمانی",
+    "kingsCup": "جام پادشاه",
+    "teamChest": "صندوق تیم",
+    "bookOfTreasure": "کتاب گنج",
+    "lightningRush": "حمله برق",
+    "lavaQuest": "مأموریت گدازه",
+    "missionControl": "مرکز مأموریت",
+    "album": "آلبوم",
+    "collection": "مجموعه",
+    "winningStreak": "رشته پیروزی"
+  },
+  "modals": {
+    "levelStart": "شروع مرحله",
+    "levelComplete": "مرحله تکمیل شد!",
+    "levelFailed": "مرحله ناموفق",
+    "purchaseConfirm": "تأیید خرید",
+    "rewardClaim": "دریافت جایزه",
+    "areaComplete": "منطقه تکمیل شد",
+    "eventInfo": "اطلاعات رویداد",
+    "boosterSelect": "انتخاب تقویت‌کننده",
+    "outOfLives": "جان‌ها",
+    "helpRequest": "درخواست کمک",
+    "settings": "تنظیمات",
+    "freeLives": "جان‌های رایگان",
+    "profilePicture": "تصویر پروفایل",
+    "editAvatar": "ویرایش آواتار",
+    "starInfo": "اطلاعات ستاره",
+    "signIn": "ورود",
+    "parentalControl": "کنترل والدین",
+    "privacyPolicy": "سیاست حفظ حریم خصوصی",
+    "changeUsername": "تغییر نام کاربری",
+    "cardStars": "ستاره‌های کارت",
+    "collectionInfo": "اطلاعات مجموعه",
+    "grandPrize": "جایزه بزرگ",
+    "collectionSetDetail": "جزئیات مجموعه کارت‌ها",
+    "cardDetail": "جزئیات کارت",
+    "profile": "پروفایل",
+    "teamInfo": "اطلاعات تیم",
+    "memberProfile": "پروفایل عضو",
+    "weeklyContestInfo": "اطلاعات مسابقه هفتگی"
+  },
+  "events": {
+    "royalPass": {
+      "name": "پاس سلطنتی",
+      "description": "وظایف را تکمیل کنید تا جوایز ویژه کسب کنید"
+    },
+    "skyRace": {
+      "name": "مسابقه آسمانی",
+      "description": "با دیگران برای رسیدن به قله رقابت کنید"
+    },
+    "kingsCup": {
+      "name": "جام پادشاه",
+      "description": "برای تاج سلطنتی رقابت کنید"
+    },
+    "teamChest": {
+      "name": "صندوق تیم",
+      "description": "با تیم خود کار کنید تا جوایز را باز کنید"
+    },
+    "bookOfTreasure": {
+      "name": "کتاب گنج",
+      "description": "فصل‌ها را تکمیل کنید تا گنج پیدا کنید"
+    },
+    "lightningRush": {
+      "name": "حمله برق",
+      "description": "چالش‌های سریع برای جوایز سریع"
+    },
+    "lavaQuest": {
+      "name": "مأموریت گدازه",
+      "description": "از چالش‌های آتشفشانی عبور کنید"
+    },
+    "missionControl": {
+      "name": "مرکز مأموریت",
+      "description": "مأموریت‌ها را برای جوایز ویژه تکمیل کنید"
+    },
+    "album": {
+      "name": "آلبوم",
+      "description": "کارت‌ها را جمع کنید تا آلبوم خود را تکمیل کنید"
+    },
+    "collection": {
+      "name": "مجموعه",
+      "description": "مجموعه سلطنتی خود را بسازید"
+    },
+    "winningStreak": {
+      "name": "رشته پیروزی",
+      "description": "رشته پیروزی خود را حفظ کنید"
+    },
+    "teamBattle": {
+      "name": "نبرد تیم‌ها",
+      "description": "با تیم‌های دیگر بجنگید"
+    },
+    "lightTheWay": {
+      "name": "راه را روشن کن",
+      "description": "شمع‌ها را روشن کنید تا جوایز کسب کنید"
+    },
+    "bonusLevel": {
+      "name": "مرحله پاداش",
+      "description": "چالش‌های ویژه مرحله پاداش"
+    },
+    "propHunt": {
+      "name": "شکار لوازم",
+      "description": "لوازم مخفی را برای جوایز پیدا کنید"
+    },
+    "puzzleSafari": {
+      "name": "سافاری پازل",
+      "description": "پازل‌های ماجراجویی سافاری"
+    },
+    "treasureHunt": {
+      "name": "شکار گنج",
+      "description": "گنج‌های مخفی را شکار کنید"
+    },
+    "sweetVictory": {
+      "name": "پیروزی شیرین",
+      "description": "شیرینی‌ها و پیروزی‌ها"
+    },
+    "bubbleShooter": {
+      "name": "تیرانداز حباب",
+      "description": "حباب‌ها را برای جوایز بترکانید"
+    }
+  },
+  "game": {
+    "level": "مرحله {level}",
+    "moves": "{count, plural, one {# حرکت} other {# حرکت}}",
+    "goals": "اهداف",
+    "coins": "{amount, number}",
+    "lives": "{count, plural, one {# جان} other {# جان}}",
+    "stars": "{count, plural, one {# ستاره} other {# ستاره}}",
+    "superHard": "خیلی سخت",
+    "hard": "سخت",
+    "normal": "عادی",
+    "easy": "آسان",
+    "selectBoosters": "تقویت‌کننده‌ها را انتخاب کنید",
+    "youEarnedStar": "شما {count, plural, one {# ستاره} other {# ستاره}} کسب کردید",
+    "rewards": "جوایز",
+    "youRanOutOfMoves": "حرکات شما تمام شد!",
+    "livesRemaining": "جان‌های باقیمانده",
+    "needMoreMoves": "به حرکات بیشتر نیاز دارید؟",
+    "continueWithMoves": "با {count} حرکت اضافی ادامه دهید",
+    "buy5Lives": "۵ جان بخرید",
+    "instantRefill": "شارژ فوری",
+    "askFriends": "از دوستان بخواهید",
+    "requestLivesFromFriends": "از دوستان جان درخواست کنید",
+    "free": "رایگان",
+    "boosters": "تقویت‌کننده‌ها",
+    "preGame": "قبل از بازی",
+    "inGame": "حین بازی"
+  },
+  "shop": {
+    "title": "فروشگاه",
+    "royalPass": "پاس سلطنتی",
+    "activate": "فعال‌سازی",
+    "specialOffer": "پیشنهاد ویژه",
+    "princesTreasure": "گنج شاهزاده",
+    "queensTreasure": "گنج ملکه",
+    "popular": "محبوب",
+    "bestValue": "بهترین ارزش",
+    "buyNow": "همین الان بخرید",
+    "limitedTime": "زمان محدود",
+    "sale": "تخفیف"
+  },
+  "settings": {
+    "title": "تنظیمات",
+    "music": "موسیقی",
+    "sound": "صدا",
+    "vibration": "لرزش",
+    "hint": "راهنما",
+    "notifications": "اعلان‌ها",
+    "language": "زبان",
+    "saveYourProgress": "پیشرفت خود را ذخیره کنید",
+    "support": "پشتیبانی",
+    "parentalControl": "کنترل والدین",
+    "termsPrivacy": "شرایط و حریم خصوصی",
+    "adminPanel": "پنل مدیریت",
+    "version": "پازل کیت نسخه 1.0.0",
+    "signInToSave": "برای ذخیره پیشرفت و بازی روی چند دستگاه وارد شوید!",
+    "signInWithFacebook": "ورود با فیسبوک",
+    "signInWithGoogle": "ورود با گوگل",
+    "signInWithApple": "ورود با اپل",
+    "termsAgreement": "با ورود، شما با شرایط خدمات و سیاست حفظ حریم خصوصی موافقت می‌کنید"
+  },
+  "profile": {
+    "title": "پروفایل",
+    "generalStats": "آمار کلی",
+    "firstTryWins": "برد در اولین تلاش",
+    "helpsMade": "کمک‌های انجام شده",
+    "helpsReceived": "کمک‌های دریافت شده",
+    "areasCompleted": "مناطق تکمیل شده",
+    "collectionsCompleted": "مجموعه‌های تکمیل شده",
+    "setsCompleted": "ست‌های تکمیل شده",
+    "collections": "مجموعه‌ها",
+    "noTeam": "بدون تیم",
+    "playingSince": "بازی از {date}",
+    "home": "خانه",
+    "achievements": "دستاوردها",
+    "statistics": "آمار"
+  },
+  "leaderboard": {
+    "title": "جدول امتیازات",
+    "weeklyContest": "مسابقه هفتگی",
+    "finished": "پایان یافت",
+    "rank1st": "اول",
+    "rank2nd": "دوم",
+    "rank3rd": "سوم",
+    "friendsList": "لیست دوستان",
+    "addFriends": "افزودن دوستان",
+    "world": "جهان",
+    "local": "محلی",
+    "level": "مرحله"
+  },
+  "friends": {
+    "title": "دوستان",
+    "requests": "درخواست‌ها",
+    "add": "افزودن",
+    "count": "{count, plural, one {# دوست} other {# دوست}}",
+    "noPendingRequests": "درخواست معلقی وجود ندارد",
+    "connectFacebook": "اتصال فیسبوک",
+    "findFriendsFromFacebook": "دوستان را از فیسبوک پیدا کنید",
+    "inviteViaLink": "دعوت با لینک",
+    "shareInviteLink": "لینک دعوت را به اشتراک بگذارید",
+    "searchById": "جستجو با شناسه",
+    "enterPlayerId": "شناسه بازیکن دوست را وارد کنید"
+  },
+  "team": {
+    "title": "تیم",
+    "join": "پیوستن",
+    "search": "جستجو",
+    "create": "ایجاد",
+    "enterTeamName": "نام تیم را وارد کنید...",
+    "suggestedTeams": "تیم‌های پیشنهادی را بررسی کنید",
+    "teamLogo": "لوگوی تیم",
+    "teamName": "نام تیم",
+    "teamDescription": "توضیحات تیم",
+    "description": "توضیحات",
+    "enterDescription": "توضیحات تیم را وارد کنید...",
+    "teamType": "نوع تیم",
+    "reqLevel": "مرحله موردنیاز",
+    "reqCrown": "تاج موردنیاز",
+    "open": "باز",
+    "closed": "بسته",
+    "request": "درخواست",
+    "members": "اعضا",
+    "chat": "چت",
+    "info": "اطلاعات",
+    "leave": "ترک",
+    "donate": "اهدا"
+  },
+  "dailyRewards": {
+    "title": "جوایز روزانه",
+    "currentStreak": "رشته فعلی",
+    "day": "روز",
+    "dayNumber": "روز {number}"
+  },
+  "inbox": {
+    "title": "صندوق ورودی",
+    "noMessages": "پیامی وجود ندارد",
+    "sentYouALife": "یک جان برایتان فرستاد!"
+  },
+  "boosters": {
+    "title": "تقویت‌کننده‌ها",
+    "preGame": "قبل از بازی",
+    "inGame": "حین بازی",
+    "getMore": "بیشتر بگیرید",
+    "outOfStock": "ناموجود",
+    "preGameDescription": "تقویت‌کننده‌های قبل از بازی قبل از شروع مرحله فعال می‌شوند",
+    "inGameDescription": "تقویت‌کننده‌های حین بازی در طول بازی قابل استفاده هستند"
+  },
+  "areas": {
+    "title": "مناطق",
+    "areaNumber": "منطقه {number}",
+    "areaImage": "[تصویر منطقه]",
+    "completed": "تکمیل شد!",
+    "royalGarden": "باغ سلطنتی",
+    "magicRoom": "اتاق جادو",
+    "candyShop": "فروشگاه آب‌نبات",
+    "royalLibrary": "کتابخانه سلطنتی",
+    "trophyHall": "تالار جوایز",
+    "currentArea": "منطقه فعلی"
+  },
+  "admin": {
+    "title": "پنل مدیریت",
+    "prototypeAdmin": "مدیر نمونه اولیه",
+    "configureDescription": "زبانه‌ها، رویدادها و تم را پیکربندی کنید. تغییرات به‌صورت خودکار ذخیره می‌شوند.",
+    "mainMenuOptions": "گزینه‌های منوی اصلی",
+    "showAreaButton": "نمایش دکمه منطقه",
+    "navigationTabs": "زبانه‌های ناوبری",
+    "liveopsEvents": "رویدادهای LiveOps",
+    "themeColors": "رنگ‌های تم",
+    "resetAllToDefaults": "بازنشانی همه به پیش‌فرض",
+    "version": "پازل کیت مدیر نسخه 1.0"
+  },
+  "featureDisabled": {
+    "title": "ویژگی غیرفعال",
+    "message": "{featureName} در این نسخه غیرفعال است.",
+    "backToHome": "بازگشت به خانه"
+  },
+  "parentalControl": {
+    "title": "کنترل والدین",
+    "controlDescription": "تجربه بازی فرزند خود را با این تنظیمات کنترل کنید.",
+    "inAppPurchases": "خریدهای درون‌برنامه‌ای",
+    "requirePinForPurchases": "نیاز به PIN برای خرید",
+    "personalizedAds": "تبلیغات شخصی‌سازی شده",
+    "showTargetedAds": "نمایش تبلیغات هدفمند",
+    "setPinCode": "تنظیم کد PIN",
+    "privacyNote": "این تنظیمات به محافظت از بازیکنان جوان‌تر در برابر خریدهای ناخواسته کمک می‌کند."
+  },
+  "privacyPolicy": {
+    "title": "شرایط و حریم خصوصی",
+    "termsOfService": "شرایط خدمات",
+    "termsDescription": "با استفاده از این برنامه، شما با شرایط خدمات ما موافقت می‌کنید. این یک برنامه نمونه اولیه فقط برای اهداف نمایشی است. داده‌های بازی ممکن است در هر زمانی بازنشانی شوند. ارز مجازی ارزش واقعی ندارد.",
+    "readFullTerms": "مطالعه شرایط کامل",
+    "privacyPolicy": "سیاست حفظ حریم خصوصی",
+    "privacyDescription": "ما به حریم خصوصی شما احترام می‌گذاریم. داده‌های شخصی شما به‌صورت محلی روی دستگاه شما ذخیره می‌شود. ما داده‌های شما را به اشخاص ثالث نمی‌فروشیم یا به اشتراک نمی‌گذاریم. تحلیل‌ها ممکن است برای بهبود تجربه بازی جمع‌آوری شوند.",
+    "readFullPolicy": "مطالعه سیاست کامل",
+    "dataCollection": "جمع‌آوری داده‌ها",
+    "dataItems": {
+      "gameProgress": "پیشرفت بازی و امتیازات",
+      "deviceInfo": "اطلاعات دستگاه",
+      "usageStats": "آمار استفاده",
+      "crashReports": "گزارش‌های خرابی"
+    },
+    "contactUs": "تماس با ما",
+    "contactDescription": "برای نگرانی‌های حریم خصوصی یا درخواست‌های حذف داده، با ما تماس بگیرید:",
+    "contactEmail": "privacy@example.com",
+    "iUnderstand": "متوجه شدم"
+  },
+  "rewards": {
+    "title": "جایزه!",
+    "youReceivedReward": "شما یک جایزه دریافت کردید",
+    "totalFreeLives": "کل جان‌های رایگان:"
+  },
+  "themePresets": {
+    "wireframe": "وایرفریم (پیش‌فرض)",
+    "highContrast": "کنتراست بالا",
+    "lowContrast": "کنتراست پایین",
+    "lightMode": "حالت روشن",
+    "darkMode": "حالت تاریک",
+    "blueprint": "نقشه",
+    "sketch": "طرح"
+  },
+  "time": {
+    "days": "{count, plural, one {# روز} other {# روز}}",
+    "hours": "{count, plural, one {# ساعت} other {# ساعت}}",
+    "minutes": "{count, plural, one {# دقیقه} other {# دقیقه}}",
+    "seconds": "{count, plural, one {# ثانیه} other {# ثانیه}}",
+    "remaining": "{time} باقی‌مانده",
+    "ago": "{time} پیش"
+  },
+  "numbers": {
+    "rank": "#{rank}"
+  }
+}

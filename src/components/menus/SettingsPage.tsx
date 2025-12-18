@@ -2,12 +2,16 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useGame, useNavigation, gameActions } from '@/store';
+import { LocaleSwitcher } from '@/components/shared/LocaleSwitcher';
 
 export function SettingsPage() {
   const { state, dispatch } = useGame();
   const { navigate, openModal } = useNavigation();
   const { settings } = state;
+  const t = useTranslations('settings');
+  const tCommon = useTranslations('common');
 
   const handleToggle = (key: keyof typeof settings) => {
     if (typeof settings[key] === 'boolean') {
@@ -20,7 +24,7 @@ export function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-center px-3 py-3 bg-bg-muted relative border-b border-border">
         {/* Title */}
-        <h1 className="text-text-primary text-h2">Settings</h1>
+        <h1 className="text-text-primary text-h2">{t('title')}</h1>
 
         {/* Close button */}
         <button
@@ -38,62 +42,78 @@ export function SettingsPage() {
           {/* Row 1: Music, Sound, Vibration */}
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-4">
             <SettingsToggle
-              label="Music"
+              label={t('music')}
               checked={settings.music}
               onChange={() => handleToggle('music')}
+              onLabel={tCommon('on')}
+              offLabel={tCommon('off')}
             />
             <SettingsToggle
-              label="Sound"
+              label={t('sound')}
               checked={settings.sound}
               onChange={() => handleToggle('sound')}
+              onLabel={tCommon('on')}
+              offLabel={tCommon('off')}
             />
             <SettingsToggle
-              label="Vibration"
+              label={t('vibration')}
               checked={settings.haptics}
               onChange={() => handleToggle('haptics')}
+              onLabel={tCommon('on')}
+              offLabel={tCommon('off')}
             />
           </div>
 
           {/* Row 2: Hint, Notifications */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <SettingsToggle
-              label="Hint"
+              label={t('hint')}
               checked={true}
               onChange={() => {}}
+              onLabel={tCommon('on')}
+              offLabel={tCommon('off')}
             />
             <SettingsToggle
-              label="Notifications"
+              label={t('notifications')}
               checked={settings.notifications}
               onChange={() => handleToggle('notifications')}
+              onLabel={tCommon('on')}
+              offLabel={tCommon('off')}
             />
           </div>
+        </div>
+
+        {/* Language Selector */}
+        <div className="bg-bg-page rounded-xl border-2 border-border p-4">
+          <p className="text-text-primary text-value mb-3">{t('language')}</p>
+          <LocaleSwitcher showNativeNames={true} />
         </div>
 
         {/* Action Buttons */}
         <SettingsButton
           icon="/icons/Login.svg"
-          label="Save your progress"
+          label={t('saveYourProgress')}
           variant="secondary"
           onClick={() => openModal('sign-in')}
         />
 
         <SettingsButton
           icon="/icons/Message Question.svg"
-          label="Support"
+          label={t('support')}
           variant="secondary"
           onClick={() => {}}
         />
 
         <SettingsButton
           icon="/icons/Lock.svg"
-          label="Parental Control"
+          label={t('parentalControl')}
           variant="secondary"
           onClick={() => openModal('parental-control')}
         />
 
         <SettingsButton
           icon="/icons/Document-Text.svg"
-          label="Terms & Privacy"
+          label={t('termsPrivacy')}
           variant="secondary"
           onClick={() => openModal('privacy-policy')}
         />
@@ -101,14 +121,14 @@ export function SettingsPage() {
         {/* Admin Panel */}
         <SettingsButton
           icon="/icons/Category.svg"
-          label="Admin Panel"
+          label={t('adminPanel')}
           variant="secondary"
           onClick={() => navigate('admin')}
         />
 
         {/* Version */}
         <div className="text-center text-caption text-text-muted mt-4">
-          Puzzle Kit v1.0.0
+          {t('version')}
         </div>
       </div>
     </div>
@@ -120,9 +140,11 @@ interface SettingsToggleProps {
   label: string;
   checked: boolean;
   onChange: () => void;
+  onLabel?: string;
+  offLabel?: string;
 }
 
-function SettingsToggle({ label, checked, onChange }: SettingsToggleProps) {
+function SettingsToggle({ label, checked, onChange, onLabel = 'ON', offLabel = 'OFF' }: SettingsToggleProps) {
   return (
     <div className="flex flex-col items-center">
       <span className="text-text-primary text-value mb-2">{label}</span>
@@ -144,7 +166,7 @@ function SettingsToggle({ label, checked, onChange }: SettingsToggleProps) {
               checked ? 'text-text-primary' : 'text-text-muted'
             }`}
           >
-            {checked ? 'ON' : 'OFF'}
+            {checked ? onLabel : offLabel}
           </span>
           <div
             className={`w-7 h-7 rounded-full ${

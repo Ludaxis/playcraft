@@ -1,0 +1,435 @@
+{
+  "metadata": {
+    "title": "بازل كيت",
+    "description": "نموذج تفاعلي عالي الدقة لواجهة ألعاب الألغاز"
+  },
+  "common": {
+    "back": "رجوع",
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "yes": "نعم",
+    "no": "لا",
+    "ok": "موافق",
+    "search": "بحث",
+    "create": "إنشاء",
+    "view": "عرض",
+    "show": "إظهار",
+    "showLess": "إظهار أقل",
+    "moreOffers": "عروض أكثر!",
+    "continue": "متابعة",
+    "claim": "مطالبة",
+    "share": "مشاركة",
+    "send": "إرسال",
+    "accept": "قبول",
+    "decline": "رفض",
+    "choose": "اختيار",
+    "connect": "اتصال",
+    "level": "المستوى",
+    "score": "النتيجة",
+    "capacity": "السعة",
+    "on": "تشغيل",
+    "off": "إيقاف",
+    "done": "تم",
+    "claimed": "تم المطالبة",
+    "add": "إضافة",
+    "added": "تمت الإضافة",
+    "collect": "جمع",
+    "sent": "تم الإرسال",
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "نجاح",
+    "save": "حفظ",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "confirm": "تأكيد",
+    "retry": "إعادة المحاولة",
+    "quit": "خروج",
+    "play": "لعب",
+    "start": "بدء",
+    "next": "التالي",
+    "previous": "السابق",
+    "finish": "إنهاء",
+    "skip": "تخطي",
+    "pro": "احترافي"
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "shop": "المتجر",
+    "team": "الفريق",
+    "areas": "المناطق",
+    "collection": "المجموعة",
+    "leaderboard": "لوحة المتصدرين",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "inbox": "البريد",
+    "boosters": "المعززات",
+    "rewards": "المكافآت",
+    "friends": "الأصدقاء"
+  },
+  "pages": {
+    "mainMenu": "القائمة الرئيسية",
+    "gameplay": "اللعب",
+    "shop": "المتجر",
+    "settings": "الإعدادات",
+    "admin": "المشرف",
+    "team": "الفريق",
+    "inbox": "البريد",
+    "leaderboard": "لوحة المتصدرين",
+    "dailyRewards": "المكافآت اليومية",
+    "profile": "الملف الشخصي",
+    "friends": "الأصدقاء",
+    "boosters": "المعززات",
+    "areaTasks": "مهام المنطقة",
+    "areas": "المناطق",
+    "teams": "الفرق",
+    "royalPass": "التذكرة الملكية",
+    "skyRace": "سباق السماء",
+    "kingsCup": "كأس الملك",
+    "teamChest": "صندوق الفريق",
+    "bookOfTreasure": "كتاب الكنز",
+    "lightningRush": "اندفاع البرق",
+    "lavaQuest": "مهمة الحمم",
+    "missionControl": "مركز المهام",
+    "album": "الألبوم",
+    "collection": "المجموعة",
+    "winningStreak": "سلسلة الانتصارات"
+  },
+  "modals": {
+    "levelStart": "بدء المستوى",
+    "levelComplete": "اكتمل المستوى!",
+    "levelFailed": "فشل المستوى",
+    "purchaseConfirm": "تأكيد الشراء",
+    "rewardClaim": "المطالبة بالمكافأة",
+    "areaComplete": "اكتملت المنطقة",
+    "eventInfo": "معلومات الحدث",
+    "boosterSelect": "اختيار المعزز",
+    "outOfLives": "الأرواح",
+    "helpRequest": "طلب المساعدة",
+    "settings": "الإعدادات",
+    "freeLives": "أرواح مجانية",
+    "profilePicture": "صورة الملف الشخصي",
+    "editAvatar": "تعديل الصورة الرمزية",
+    "starInfo": "معلومات النجوم",
+    "signIn": "تسجيل الدخول",
+    "parentalControl": "الرقابة الأبوية",
+    "privacyPolicy": "سياسة الخصوصية",
+    "changeUsername": "تغيير اسم المستخدم",
+    "cardStars": "نجوم البطاقة",
+    "collectionInfo": "معلومات المجموعة",
+    "grandPrize": "الجائزة الكبرى",
+    "collectionSetDetail": "تفاصيل مجموعة البطاقات",
+    "cardDetail": "تفاصيل البطاقة",
+    "profile": "الملف الشخصي",
+    "teamInfo": "معلومات الفريق",
+    "memberProfile": "ملف العضو",
+    "weeklyContestInfo": "معلومات المسابقة الأسبوعية"
+  },
+  "events": {
+    "royalPass": {
+      "name": "التذكرة الملكية",
+      "description": "أكمل المهام لكسب مكافآت مميزة"
+    },
+    "skyRace": {
+      "name": "سباق السماء",
+      "description": "تسابق مع الآخرين للوصول إلى القمة"
+    },
+    "kingsCup": {
+      "name": "كأس الملك",
+      "description": "تنافس على التاج الملكي"
+    },
+    "teamChest": {
+      "name": "صندوق الفريق",
+      "description": "اعمل مع فريقك لفتح المكافآت"
+    },
+    "bookOfTreasure": {
+      "name": "كتاب الكنز",
+      "description": "أكمل الفصول للعثور على الكنز"
+    },
+    "lightningRush": {
+      "name": "اندفاع البرق",
+      "description": "تحديات سريعة لمكافآت سريعة"
+    },
+    "lavaQuest": {
+      "name": "مهمة الحمم",
+      "description": "اجتز التحديات البركانية"
+    },
+    "missionControl": {
+      "name": "مركز المهام",
+      "description": "أكمل المهام للحصول على مكافآت خاصة"
+    },
+    "album": {
+      "name": "الألبوم",
+      "description": "اجمع البطاقات لإكمال ألبومك"
+    },
+    "collection": {
+      "name": "المجموعة",
+      "description": "ابنِ مجموعتك الملكية"
+    },
+    "winningStreak": {
+      "name": "سلسلة الانتصارات",
+      "description": "حافظ على سلسلة انتصاراتك"
+    },
+    "teamBattle": {
+      "name": "معركة الفرق",
+      "description": "قاتل ضد الفرق الأخرى"
+    },
+    "lightTheWay": {
+      "name": "أنر الطريق",
+      "description": "أشعل الشموع لكسب المكافآت"
+    },
+    "bonusLevel": {
+      "name": "المستوى الإضافي",
+      "description": "تحديات المستوى الإضافي الخاصة"
+    },
+    "propHunt": {
+      "name": "صيد الأدوات",
+      "description": "ابحث عن الأدوات المخفية للفوز بجوائز"
+    },
+    "puzzleSafari": {
+      "name": "رحلة الألغاز",
+      "description": "ألغاز مغامرة السفاري"
+    },
+    "treasureHunt": {
+      "name": "صيد الكنز",
+      "description": "ابحث عن الكنوز المخفية"
+    },
+    "sweetVictory": {
+      "name": "النصر الحلو",
+      "description": "حلويات وانتصارات"
+    },
+    "bubbleShooter": {
+      "name": "مطلق الفقاعات",
+      "description": "فجّر الفقاعات للحصول على مكافآت"
+    }
+  },
+  "game": {
+    "level": "المستوى {level}",
+    "moves": "{count, plural, one {حركة واحدة} two {حركتان} few {# حركات} many {# حركة} other {# حركة}}",
+    "goals": "الأهداف",
+    "coins": "{amount, number}",
+    "lives": "{count, plural, one {روح واحدة} two {روحان} few {# أرواح} many {# روح} other {# روح}}",
+    "stars": "{count, plural, one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
+    "superHard": "صعب جداً",
+    "hard": "صعب",
+    "normal": "عادي",
+    "easy": "سهل",
+    "selectBoosters": "اختر المعززات",
+    "youEarnedStar": "حصلت على {count, plural, one {نجمة واحدة} two {نجمتين} few {# نجوم} many {# نجمة} other {# نجمة}}",
+    "rewards": "المكافآت",
+    "youRanOutOfMoves": "نفدت حركاتك!",
+    "livesRemaining": "الأرواح المتبقية",
+    "needMoreMoves": "تحتاج المزيد من الحركات؟",
+    "continueWithMoves": "تابع مع {count} حركات إضافية",
+    "buy5Lives": "اشترِ 5 أرواح",
+    "instantRefill": "إعادة تعبئة فورية",
+    "askFriends": "اسأل الأصدقاء",
+    "requestLivesFromFriends": "اطلب أرواحاً من الأصدقاء",
+    "free": "مجاني",
+    "boosters": "المعززات",
+    "preGame": "قبل اللعب",
+    "inGame": "أثناء اللعب"
+  },
+  "shop": {
+    "title": "المتجر",
+    "royalPass": "التذكرة الملكية",
+    "activate": "تفعيل",
+    "specialOffer": "عرض خاص",
+    "princesTreasure": "كنز الأمير",
+    "queensTreasure": "كنز الملكة",
+    "popular": "شائع",
+    "bestValue": "أفضل قيمة",
+    "buyNow": "اشترِ الآن",
+    "limitedTime": "وقت محدود",
+    "sale": "تخفيض"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "music": "الموسيقى",
+    "sound": "الصوت",
+    "vibration": "الاهتزاز",
+    "hint": "التلميح",
+    "notifications": "الإشعارات",
+    "language": "اللغة",
+    "saveYourProgress": "احفظ تقدمك",
+    "support": "الدعم",
+    "parentalControl": "الرقابة الأبوية",
+    "termsPrivacy": "الشروط والخصوصية",
+    "adminPanel": "لوحة المشرف",
+    "version": "بازل كيت الإصدار 1.0.0",
+    "signInToSave": "سجّل الدخول لحفظ تقدمك واللعب على أجهزة متعددة!",
+    "signInWithFacebook": "تسجيل الدخول بفيسبوك",
+    "signInWithGoogle": "تسجيل الدخول بجوجل",
+    "signInWithApple": "تسجيل الدخول بأبل",
+    "termsAgreement": "بتسجيل الدخول، أنت توافق على شروط الخدمة وسياسة الخصوصية"
+  },
+  "profile": {
+    "title": "الملف الشخصي",
+    "generalStats": "الإحصائيات العامة",
+    "firstTryWins": "الفوز من المحاولة الأولى",
+    "helpsMade": "المساعدات المقدمة",
+    "helpsReceived": "المساعدات المستلمة",
+    "areasCompleted": "المناطق المكتملة",
+    "collectionsCompleted": "المجموعات المكتملة",
+    "setsCompleted": "المجموعات المكتملة",
+    "collections": "المجموعات",
+    "noTeam": "بدون فريق",
+    "playingSince": "يلعب منذ {date}",
+    "home": "الرئيسية",
+    "achievements": "الإنجازات",
+    "statistics": "الإحصائيات"
+  },
+  "leaderboard": {
+    "title": "لوحة المتصدرين",
+    "weeklyContest": "المسابقة الأسبوعية",
+    "finished": "انتهى",
+    "rank1st": "الأول",
+    "rank2nd": "الثاني",
+    "rank3rd": "الثالث",
+    "friendsList": "قائمة الأصدقاء",
+    "addFriends": "إضافة أصدقاء",
+    "world": "العالم",
+    "local": "محلي",
+    "level": "المستوى"
+  },
+  "friends": {
+    "title": "الأصدقاء",
+    "requests": "الطلبات",
+    "add": "إضافة",
+    "count": "{count, plural, one {صديق واحد} two {صديقان} few {# أصدقاء} many {# صديق} other {# صديق}}",
+    "noPendingRequests": "لا توجد طلبات معلقة",
+    "connectFacebook": "ربط فيسبوك",
+    "findFriendsFromFacebook": "ابحث عن أصدقاء من فيسبوك",
+    "inviteViaLink": "دعوة عبر رابط",
+    "shareInviteLink": "شارك رابط الدعوة",
+    "searchById": "البحث بالمعرف",
+    "enterPlayerId": "أدخل معرف اللاعب للصديق"
+  },
+  "team": {
+    "title": "الفريق",
+    "join": "انضمام",
+    "search": "بحث",
+    "create": "إنشاء",
+    "enterTeamName": "أدخل اسم الفريق...",
+    "suggestedTeams": "تحقق من الفرق المقترحة لك",
+    "teamLogo": "شعار الفريق",
+    "teamName": "اسم الفريق",
+    "teamDescription": "وصف الفريق",
+    "description": "الوصف",
+    "enterDescription": "أدخل وصف الفريق...",
+    "teamType": "نوع الفريق",
+    "reqLevel": "المستوى المطلوب",
+    "reqCrown": "التاج المطلوب",
+    "open": "مفتوح",
+    "closed": "مغلق",
+    "request": "طلب",
+    "members": "الأعضاء",
+    "chat": "الدردشة",
+    "info": "المعلومات",
+    "leave": "مغادرة",
+    "donate": "تبرع"
+  },
+  "dailyRewards": {
+    "title": "المكافآت اليومية",
+    "currentStreak": "السلسلة الحالية",
+    "day": "اليوم",
+    "dayNumber": "اليوم {number}"
+  },
+  "inbox": {
+    "title": "البريد",
+    "noMessages": "لا توجد رسائل",
+    "sentYouALife": "أرسل لك روحاً!"
+  },
+  "boosters": {
+    "title": "المعززات",
+    "preGame": "قبل اللعب",
+    "inGame": "أثناء اللعب",
+    "getMore": "احصل على المزيد",
+    "outOfStock": "نفد المخزون",
+    "preGameDescription": "يتم تفعيل معززات ما قبل اللعب قبل بدء المستوى",
+    "inGameDescription": "يمكن استخدام معززات اللعب أثناء اللعب"
+  },
+  "areas": {
+    "title": "المناطق",
+    "areaNumber": "المنطقة {number}",
+    "areaImage": "[صورة المنطقة]",
+    "completed": "مكتمل!",
+    "royalGarden": "الحديقة الملكية",
+    "magicRoom": "الغرفة السحرية",
+    "candyShop": "متجر الحلوى",
+    "royalLibrary": "المكتبة الملكية",
+    "trophyHall": "قاعة الجوائز",
+    "currentArea": "المنطقة الحالية"
+  },
+  "admin": {
+    "title": "لوحة المشرف",
+    "prototypeAdmin": "مشرف النموذج",
+    "configureDescription": "قم بتكوين التبويبات والأحداث والسمة. يتم حفظ التغييرات تلقائياً.",
+    "mainMenuOptions": "خيارات القائمة الرئيسية",
+    "showAreaButton": "إظهار زر المنطقة",
+    "navigationTabs": "تبويبات التنقل",
+    "liveopsEvents": "أحداث LiveOps",
+    "themeColors": "ألوان السمة",
+    "resetAllToDefaults": "إعادة تعيين الكل للافتراضي",
+    "version": "بازل كيت المشرف الإصدار 1.0"
+  },
+  "featureDisabled": {
+    "title": "الميزة معطلة",
+    "message": "{featureName} معطل حالياً في هذا الإصدار.",
+    "backToHome": "العودة للرئيسية"
+  },
+  "parentalControl": {
+    "title": "الرقابة الأبوية",
+    "controlDescription": "تحكم في تجربة طفلك في اللعب من خلال هذه الإعدادات.",
+    "inAppPurchases": "المشتريات داخل التطبيق",
+    "requirePinForPurchases": "طلب رمز PIN للمشتريات",
+    "personalizedAds": "الإعلانات المخصصة",
+    "showTargetedAds": "إظهار الإعلانات الموجهة",
+    "setPinCode": "تعيين رمز PIN",
+    "privacyNote": "تساعد هذه الإعدادات في حماية اللاعبين الصغار من عمليات الشراء غير المقصودة."
+  },
+  "privacyPolicy": {
+    "title": "الشروط والخصوصية",
+    "termsOfService": "شروط الخدمة",
+    "termsDescription": "باستخدام هذا التطبيق، فإنك توافق على شروط الخدمة الخاصة بنا. هذا تطبيق نموذجي لأغراض العرض فقط. قد يتم إعادة تعيين بيانات اللعبة في أي وقت. العملة الافتراضية ليس لها قيمة حقيقية.",
+    "readFullTerms": "قراءة الشروط الكاملة",
+    "privacyPolicy": "سياسة الخصوصية",
+    "privacyDescription": "نحن نحترم خصوصيتك. يتم تخزين بياناتك الشخصية محلياً على جهازك. نحن لا نبيع أو نشارك بياناتك مع أطراف ثالثة. قد يتم جمع التحليلات لتحسين تجربة اللعب.",
+    "readFullPolicy": "قراءة السياسة الكاملة",
+    "dataCollection": "جمع البيانات",
+    "dataItems": {
+      "gameProgress": "تقدم اللعبة والنتائج",
+      "deviceInfo": "معلومات الجهاز",
+      "usageStats": "إحصائيات الاستخدام",
+      "crashReports": "تقارير الأعطال"
+    },
+    "contactUs": "اتصل بنا",
+    "contactDescription": "لمخاوف الخصوصية أو طلبات حذف البيانات، اتصل بنا على:",
+    "contactEmail": "privacy@example.com",
+    "iUnderstand": "أنا أفهم"
+  },
+  "rewards": {
+    "title": "مكافأة!",
+    "youReceivedReward": "لقد تلقيت مكافأة",
+    "totalFreeLives": "إجمالي الأرواح المجانية:"
+  },
+  "themePresets": {
+    "wireframe": "إطار سلكي (افتراضي)",
+    "highContrast": "تباين عالي",
+    "lowContrast": "تباين منخفض",
+    "lightMode": "الوضع الفاتح",
+    "darkMode": "الوضع الداكن",
+    "blueprint": "مخطط",
+    "sketch": "رسم"
+  },
+  "time": {
+    "days": "{count, plural, one {يوم واحد} two {يومان} few {# أيام} many {# يوم} other {# يوم}}",
+    "hours": "{count, plural, one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}",
+    "minutes": "{count, plural, one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}",
+    "seconds": "{count, plural, one {ثانية واحدة} two {ثانيتان} few {# ثوان} many {# ثانية} other {# ثانية}}",
+    "remaining": "متبقي {time}",
+    "ago": "منذ {time}"
+  },
+  "numbers": {
+    "rank": "#{rank}"
+  }
+}

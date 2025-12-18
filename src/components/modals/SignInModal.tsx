@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useNavigation } from '@/store';
 
 interface SignInModalProps {
@@ -10,6 +11,7 @@ interface SignInModalProps {
 
 export function SignInModal({ onAnimatedClose }: SignInModalProps) {
   const { closeModal } = useNavigation();
+  const t = useTranslations('settings');
 
   const handleClose = () => {
     if (onAnimatedClose) {
@@ -23,7 +25,7 @@ export function SignInModal({ onAnimatedClose }: SignInModalProps) {
     <div className="relative w-full max-w-[300px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
-        <h2 className="text-text-inverse text-h3">Save Your Progress</h2>
+        <h2 className="text-text-inverse text-h3">{t('saveYourProgress')}</h2>
         <button
           onClick={handleClose}
           className="w-8 h-8 bg-bg-muted rounded-full flex items-center justify-center border border-border hover:opacity-80"
@@ -36,7 +38,7 @@ export function SignInModal({ onAnimatedClose }: SignInModalProps) {
         <div className="p-4 bg-bg-card">
           {/* Info Text */}
           <p className="text-text-secondary text-caption text-center mb-4">
-            Sign in to save your progress and play on multiple devices!
+            {t('signInToSave')}
           </p>
 
           {/* Sign In Options */}
@@ -52,7 +54,7 @@ export function SignInModal({ onAnimatedClose }: SignInModalProps) {
                   className="opacity-80"
                 />
               </div>
-              <span className="text-text-primary font-bold">Sign in with Facebook</span>
+              <span className="text-text-primary font-bold">{t('signInWithFacebook')}</span>
             </button>
 
             {/* Google */}
@@ -66,7 +68,7 @@ export function SignInModal({ onAnimatedClose }: SignInModalProps) {
                   className="opacity-80"
                 />
               </div>
-              <span className="text-text-primary font-bold">Sign in with Google</span>
+              <span className="text-text-primary font-bold">{t('signInWithGoogle')}</span>
             </button>
 
             {/* Apple (placeholder) */}
@@ -74,13 +76,13 @@ export function SignInModal({ onAnimatedClose }: SignInModalProps) {
               <div className="w-8 h-8 bg-bg-page rounded-lg flex items-center justify-center border border-border">
                 <span className="text-text-secondary font-bold text-value">A</span>
               </div>
-              <span className="text-text-primary font-bold">Sign in with Apple</span>
+              <span className="text-text-primary font-bold">{t('signInWithApple')}</span>
             </button>
           </div>
 
         {/* Privacy Note */}
         <p className="text-text-muted text-mini text-center mt-4">
-          By signing in, you agree to our Terms of Service and Privacy Policy
+          {t('termsAgreement')}
         </p>
       </div>
     </div>

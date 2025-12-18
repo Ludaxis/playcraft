@@ -1,13 +1,4 @@
 import type { Metadata, Viewport } from 'next';
-import { Lilita_One } from 'next/font/google';
-import './globals.css';
-
-const lilitaOne = Lilita_One({
-  weight: '400',
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-lilita',
-});
 
 export const metadata: Metadata = {
   title: 'Puzzle Kit',
@@ -20,18 +11,14 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 };
 
+/**
+ * Root layout that wraps locale-specific layouts.
+ * The actual content and styling is handled by [locale]/layout.tsx
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <html lang="en" className={lilitaOne.variable}>
-      <body className="antialiased">
-        <div className="phone-frame">
-          {children}
-        </div>
-      </body>
-    </html>
-  );
+  return children;
 }

@@ -1,0 +1,435 @@
+{
+  "metadata": {
+    "title": "パズルキット",
+    "description": "パズルゲームUI/UXの高忠実度インタラクティブプロトタイプ"
+  },
+  "common": {
+    "back": "戻る",
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "yes": "はい",
+    "no": "いいえ",
+    "ok": "OK",
+    "search": "検索",
+    "create": "作成",
+    "view": "表示",
+    "show": "表示する",
+    "showLess": "表示を減らす",
+    "moreOffers": "もっとオファー！",
+    "continue": "続ける",
+    "claim": "受け取る",
+    "share": "シェア",
+    "send": "送信",
+    "accept": "承諾",
+    "decline": "辞退",
+    "choose": "選択",
+    "connect": "接続",
+    "level": "レベル",
+    "score": "スコア",
+    "capacity": "容量",
+    "on": "オン",
+    "off": "オフ",
+    "done": "完了",
+    "claimed": "受取済み",
+    "add": "追加",
+    "added": "追加済み",
+    "collect": "集める",
+    "sent": "送信済み",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "save": "保存",
+    "edit": "編集",
+    "delete": "削除",
+    "confirm": "確認",
+    "retry": "リトライ",
+    "quit": "終了",
+    "play": "プレイ",
+    "start": "スタート",
+    "next": "次へ",
+    "previous": "前へ",
+    "finish": "終了",
+    "skip": "スキップ",
+    "pro": "プロ"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "shop": "ショップ",
+    "team": "チーム",
+    "areas": "エリア",
+    "collection": "コレクション",
+    "leaderboard": "ランキング",
+    "settings": "設定",
+    "profile": "プロフィール",
+    "inbox": "受信箱",
+    "boosters": "ブースター",
+    "rewards": "報酬",
+    "friends": "フレンド"
+  },
+  "pages": {
+    "mainMenu": "メインメニュー",
+    "gameplay": "ゲームプレイ",
+    "shop": "ショップ",
+    "settings": "設定",
+    "admin": "管理",
+    "team": "チーム",
+    "inbox": "受信箱",
+    "leaderboard": "ランキング",
+    "dailyRewards": "デイリー報酬",
+    "profile": "プロフィール",
+    "friends": "フレンド",
+    "boosters": "ブースター",
+    "areaTasks": "エリアタスク",
+    "areas": "エリア",
+    "teams": "チーム",
+    "royalPass": "ロイヤルパス",
+    "skyRace": "スカイレース",
+    "kingsCup": "キングスカップ",
+    "teamChest": "チームチェスト",
+    "bookOfTreasure": "宝の書",
+    "lightningRush": "ライトニングラッシュ",
+    "lavaQuest": "溶岩クエスト",
+    "missionControl": "ミッションコントロール",
+    "album": "アルバム",
+    "collection": "コレクション",
+    "winningStreak": "連勝"
+  },
+  "modals": {
+    "levelStart": "レベル開始",
+    "levelComplete": "レベルクリア！",
+    "levelFailed": "レベル失敗",
+    "purchaseConfirm": "購入確認",
+    "rewardClaim": "報酬を受け取る",
+    "areaComplete": "エリア完了",
+    "eventInfo": "イベント情報",
+    "boosterSelect": "ブースター選択",
+    "outOfLives": "ライフ",
+    "helpRequest": "ヘルプリクエスト",
+    "settings": "設定",
+    "freeLives": "無料ライフ",
+    "profilePicture": "プロフィール写真",
+    "editAvatar": "アバター編集",
+    "starInfo": "スター情報",
+    "signIn": "サインイン",
+    "parentalControl": "ペアレンタルコントロール",
+    "privacyPolicy": "プライバシーポリシー",
+    "changeUsername": "ユーザー名変更",
+    "cardStars": "カードスター",
+    "collectionInfo": "コレクション情報",
+    "grandPrize": "グランプリ",
+    "collectionSetDetail": "コレクションセット詳細",
+    "cardDetail": "カード詳細",
+    "profile": "プロフィール",
+    "teamInfo": "チーム情報",
+    "memberProfile": "メンバープロフィール",
+    "weeklyContestInfo": "週間コンテスト情報"
+  },
+  "events": {
+    "royalPass": {
+      "name": "ロイヤルパス",
+      "description": "タスクを完了してプレミアム報酬を獲得"
+    },
+    "skyRace": {
+      "name": "スカイレース",
+      "description": "他のプレイヤーと競争してトップへ"
+    },
+    "kingsCup": {
+      "name": "キングスカップ",
+      "description": "王冠を目指して競争"
+    },
+    "teamChest": {
+      "name": "チームチェスト",
+      "description": "チームと協力して報酬をアンロック"
+    },
+    "bookOfTreasure": {
+      "name": "宝の書",
+      "description": "チャプターを完了して宝を見つける"
+    },
+    "lightningRush": {
+      "name": "ライトニングラッシュ",
+      "description": "素早いチャレンジで素早い報酬"
+    },
+    "lavaQuest": {
+      "name": "溶岩クエスト",
+      "description": "火山チャレンジを乗り越える"
+    },
+    "missionControl": {
+      "name": "ミッションコントロール",
+      "description": "ミッションを完了して特別報酬を獲得"
+    },
+    "album": {
+      "name": "アルバム",
+      "description": "カードを集めてアルバムを完成"
+    },
+    "collection": {
+      "name": "コレクション",
+      "description": "ロイヤルコレクションを構築"
+    },
+    "winningStreak": {
+      "name": "連勝",
+      "description": "連勝記録を継続"
+    },
+    "teamBattle": {
+      "name": "チームバトル",
+      "description": "他のチームと対戦"
+    },
+    "lightTheWay": {
+      "name": "光の道",
+      "description": "キャンドルを灯して報酬を獲得"
+    },
+    "bonusLevel": {
+      "name": "ボーナスレベル",
+      "description": "特別ボーナスレベルチャレンジ"
+    },
+    "propHunt": {
+      "name": "プロップハント",
+      "description": "隠された小道具を見つけて賞品獲得"
+    },
+    "puzzleSafari": {
+      "name": "パズルサファリ",
+      "description": "サファリアドベンチャーパズル"
+    },
+    "treasureHunt": {
+      "name": "トレジャーハント",
+      "description": "隠された宝を探す"
+    },
+    "sweetVictory": {
+      "name": "スイートビクトリー",
+      "description": "甘いお菓子と勝利"
+    },
+    "bubbleShooter": {
+      "name": "バブルシューター",
+      "description": "バブルを弾いて報酬獲得"
+    }
+  },
+  "game": {
+    "level": "レベル {level}",
+    "moves": "{count} 手",
+    "goals": "目標",
+    "coins": "{amount, number}",
+    "lives": "{count} ライフ",
+    "stars": "{count} スター",
+    "superHard": "超難関",
+    "hard": "難しい",
+    "normal": "普通",
+    "easy": "簡単",
+    "selectBoosters": "ブースターを選択",
+    "youEarnedStar": "{count} スターを獲得しました",
+    "rewards": "報酬",
+    "youRanOutOfMoves": "手数がなくなりました！",
+    "livesRemaining": "残りライフ",
+    "needMoreMoves": "もっと手数が必要？",
+    "continueWithMoves": "{count} 追加手数で続ける",
+    "buy5Lives": "5ライフを購入",
+    "instantRefill": "即時補充",
+    "askFriends": "フレンドに聞く",
+    "requestLivesFromFriends": "フレンドにライフをリクエスト",
+    "free": "無料",
+    "boosters": "ブースター",
+    "preGame": "プレイ前",
+    "inGame": "プレイ中"
+  },
+  "shop": {
+    "title": "ショップ",
+    "royalPass": "ロイヤルパス",
+    "activate": "有効化",
+    "specialOffer": "特別オファー",
+    "princesTreasure": "王子の宝",
+    "queensTreasure": "女王の宝",
+    "popular": "人気",
+    "bestValue": "お得",
+    "buyNow": "今すぐ購入",
+    "limitedTime": "期間限定",
+    "sale": "セール"
+  },
+  "settings": {
+    "title": "設定",
+    "music": "音楽",
+    "sound": "サウンド",
+    "vibration": "バイブレーション",
+    "hint": "ヒント",
+    "notifications": "通知",
+    "language": "言語",
+    "saveYourProgress": "進捗を保存",
+    "support": "サポート",
+    "parentalControl": "ペアレンタルコントロール",
+    "termsPrivacy": "利用規約とプライバシー",
+    "adminPanel": "管理パネル",
+    "version": "パズルキット v1.0.0",
+    "signInToSave": "サインインして進捗を保存し、複数デバイスでプレイ！",
+    "signInWithFacebook": "Facebookでサインイン",
+    "signInWithGoogle": "Googleでサインイン",
+    "signInWithApple": "Appleでサインイン",
+    "termsAgreement": "サインインすることで、利用規約とプライバシーポリシーに同意します"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "generalStats": "全体統計",
+    "firstTryWins": "一発クリア",
+    "helpsMade": "ヘルプ送信",
+    "helpsReceived": "ヘルプ受信",
+    "areasCompleted": "完了エリア",
+    "collectionsCompleted": "完了コレクション",
+    "setsCompleted": "完了セット",
+    "collections": "コレクション",
+    "noTeam": "チームなし",
+    "playingSince": "{date}からプレイ",
+    "home": "ホーム",
+    "achievements": "実績",
+    "statistics": "統計"
+  },
+  "leaderboard": {
+    "title": "ランキング",
+    "weeklyContest": "週間コンテスト",
+    "finished": "終了",
+    "rank1st": "1位",
+    "rank2nd": "2位",
+    "rank3rd": "3位",
+    "friendsList": "フレンドリスト",
+    "addFriends": "フレンド追加",
+    "world": "世界",
+    "local": "ローカル",
+    "level": "レベル"
+  },
+  "friends": {
+    "title": "フレンド",
+    "requests": "リクエスト",
+    "add": "追加",
+    "count": "{count} フレンド",
+    "noPendingRequests": "保留中のリクエストなし",
+    "connectFacebook": "Facebook接続",
+    "findFriendsFromFacebook": "Facebookからフレンドを探す",
+    "inviteViaLink": "リンクで招待",
+    "shareInviteLink": "招待リンクをシェア",
+    "searchById": "IDで検索",
+    "enterPlayerId": "フレンドのプレイヤーIDを入力"
+  },
+  "team": {
+    "title": "チーム",
+    "join": "参加",
+    "search": "検索",
+    "create": "作成",
+    "enterTeamName": "チーム名を入力...",
+    "suggestedTeams": "おすすめのチーム",
+    "teamLogo": "チームロゴ",
+    "teamName": "チーム名",
+    "teamDescription": "チーム説明",
+    "description": "説明",
+    "enterDescription": "チーム説明を入力...",
+    "teamType": "チームタイプ",
+    "reqLevel": "必要レベル",
+    "reqCrown": "必要クラウン",
+    "open": "オープン",
+    "closed": "クローズ",
+    "request": "リクエスト",
+    "members": "メンバー",
+    "chat": "チャット",
+    "info": "情報",
+    "leave": "脱退",
+    "donate": "寄付"
+  },
+  "dailyRewards": {
+    "title": "デイリー報酬",
+    "currentStreak": "現在の連続",
+    "day": "日",
+    "dayNumber": "{number}日目"
+  },
+  "inbox": {
+    "title": "受信箱",
+    "noMessages": "メッセージなし",
+    "sentYouALife": "ライフを送りました！"
+  },
+  "boosters": {
+    "title": "ブースター",
+    "preGame": "プレイ前",
+    "inGame": "プレイ中",
+    "getMore": "もっと入手",
+    "outOfStock": "在庫切れ",
+    "preGameDescription": "プレイ前ブースターはレベル開始前に発動",
+    "inGameDescription": "プレイ中ブースターはゲームプレイ中に使用可能"
+  },
+  "areas": {
+    "title": "エリア",
+    "areaNumber": "エリア {number}",
+    "areaImage": "[エリア画像]",
+    "completed": "完了！",
+    "royalGarden": "ロイヤルガーデン",
+    "magicRoom": "マジックルーム",
+    "candyShop": "キャンディショップ",
+    "royalLibrary": "ロイヤルライブラリー",
+    "trophyHall": "トロフィーホール",
+    "currentArea": "現在のエリア"
+  },
+  "admin": {
+    "title": "管理パネル",
+    "prototypeAdmin": "プロトタイプ管理",
+    "configureDescription": "タブ、イベント、テーマを設定。変更は自動保存されます。",
+    "mainMenuOptions": "メインメニューオプション",
+    "showAreaButton": "エリアボタン表示",
+    "navigationTabs": "ナビゲーションタブ",
+    "liveopsEvents": "LiveOpsイベント",
+    "themeColors": "テーマカラー",
+    "resetAllToDefaults": "すべてをデフォルトにリセット",
+    "version": "パズルキット管理 v1.0"
+  },
+  "featureDisabled": {
+    "title": "機能無効",
+    "message": "{featureName} はこのビルドで現在無効になっています。",
+    "backToHome": "ホームに戻る"
+  },
+  "parentalControl": {
+    "title": "ペアレンタルコントロール",
+    "controlDescription": "これらの設定でお子様のゲーム体験を管理。",
+    "inAppPurchases": "アプリ内購入",
+    "requirePinForPurchases": "購入にPINが必要",
+    "personalizedAds": "パーソナライズ広告",
+    "showTargetedAds": "ターゲット広告を表示",
+    "setPinCode": "PINコードを設定",
+    "privacyNote": "これらの設定は若いプレイヤーを意図しない購入から保護します。"
+  },
+  "privacyPolicy": {
+    "title": "利用規約とプライバシー",
+    "termsOfService": "利用規約",
+    "termsDescription": "このアプリケーションを使用することで、利用規約に同意します。これはデモ目的のプロトタイプアプリケーションです。ゲームデータはいつでもリセットされる場合があります。仮想通貨に実際の価値はありません。",
+    "readFullTerms": "利用規約を読む",
+    "privacyPolicy": "プライバシーポリシー",
+    "privacyDescription": "私たちはあなたのプライバシーを尊重します。個人データはデバイスにローカルに保存されます。第三者にデータを販売・共有することはありません。ゲーム体験向上のため分析を収集する場合があります。",
+    "readFullPolicy": "ポリシーを読む",
+    "dataCollection": "データ収集",
+    "dataItems": {
+      "gameProgress": "ゲーム進捗とスコア",
+      "deviceInfo": "デバイス情報",
+      "usageStats": "使用統計",
+      "crashReports": "クラッシュレポート"
+    },
+    "contactUs": "お問い合わせ",
+    "contactDescription": "プライバシーに関する懸念やデータ削除リクエストはこちら：",
+    "contactEmail": "privacy@example.com",
+    "iUnderstand": "理解しました"
+  },
+  "rewards": {
+    "title": "報酬！",
+    "youReceivedReward": "報酬を受け取りました",
+    "totalFreeLives": "無料ライフ合計："
+  },
+  "themePresets": {
+    "wireframe": "ワイヤーフレーム（デフォルト）",
+    "highContrast": "ハイコントラスト",
+    "lowContrast": "ローコントラスト",
+    "lightMode": "ライトモード",
+    "darkMode": "ダークモード",
+    "blueprint": "ブループリント",
+    "sketch": "スケッチ"
+  },
+  "time": {
+    "days": "{count} 日",
+    "hours": "{count} 時間",
+    "minutes": "{count} 分",
+    "seconds": "{count} 秒",
+    "remaining": "残り {time}",
+    "ago": "{time}前"
+  },
+  "numbers": {
+    "rank": "{rank}位"
+  }
+}

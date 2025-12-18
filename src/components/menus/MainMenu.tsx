@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useGame, useNavigation, useAdmin } from '@/store';
 import { BottomNavigation } from '@/components/shared';
 import { LevelRoadmap } from './LevelRoadmap';
@@ -30,6 +31,9 @@ export function MainMenu() {
   const { navigate, openModal } = useNavigation();
   const { config, isEventEnabled } = useAdmin();
   const { player, areas } = state;
+  const t = useTranslations('game');
+  const tCommon = useTranslations('common');
+  const tAreas = useTranslations('areas');
 
   const currentArea = areas.find((a) => a.id === player.currentArea);
   const completedTasks = currentArea?.tasks.filter((t) => t.completed).length || 0;
@@ -62,7 +66,7 @@ export function MainMenu() {
           onClick={() => openModal('profile')}
           className="w-12 h-12 bg-bg-inverse rounded-lg border-2 border-brand-muted flex items-center justify-center"
         >
-          <span className="text-text-inverse text-caption">PRO</span>
+          <span className="text-text-inverse text-caption">{tCommon('pro')}</span>
         </button>
 
         {/* Resources */}
@@ -132,7 +136,7 @@ export function MainMenu() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-64 h-64 bg-bg-muted rounded-full flex items-center justify-center border-4 border-border-strong">
                 <div className="text-center">
-                  <div className="text-text-muted text-body-sm">[Castle Area]</div>
+                  <div className="text-text-muted text-body-sm">{tAreas('areaImage')}</div>
                   <div className="text-text-secondary text-caption mt-1">{currentArea?.name}</div>
                 </div>
               </div>
@@ -145,8 +149,8 @@ export function MainMenu() {
                 onClick={() => openModal('level-start')}
                 className="bg-bg-inverse border-2 border-border rounded-xl w-40 h-20 flex flex-col items-center justify-center"
               >
-                <div className="text-text-inverse text-h3">Level {player.currentLevel}</div>
-                <div className="text-text-muted text-caption">Super Hard</div>
+                <div className="text-text-inverse text-h3">{t('level', { level: player.currentLevel })}</div>
+                <div className="text-text-muted text-caption">{t('superHard')}</div>
               </button>
 
               {/* Area Button */}
@@ -155,7 +159,7 @@ export function MainMenu() {
                 className="bg-bg-card border-2 border-border rounded-xl w-40 h-20 flex items-center justify-center gap-3"
               >
                 <div>
-                  <div className="text-text-primary text-value">Area {player.currentArea}</div>
+                  <div className="text-text-primary text-value">{tAreas('areaNumber', { number: player.currentArea })}</div>
                   <div className="text-text-secondary text-caption">{completedTasks}/{totalTasks}</div>
                 </div>
                 <div className="w-8 h-8 bg-bg-inverse rounded-lg flex items-center justify-center">
