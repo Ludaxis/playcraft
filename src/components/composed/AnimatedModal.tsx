@@ -53,8 +53,16 @@ export function AnimatedModal({
     if (isAnimatingRef.current) return;
     isAnimatingRef.current = true;
 
+    const doClose = () => {
+      if (onClose) {
+        onClose();
+      } else {
+        closeModal();
+      }
+    };
+
     if (!overlayRef.current || !contentRef.current) {
-      onClose ? onClose() : closeModal();
+      doClose();
       return;
     }
 
@@ -74,9 +82,7 @@ export function AnimatedModal({
       duration: 0.2,
       delay: 0.1,
       ease: 'power2.in',
-      onComplete: () => {
-        onClose ? onClose() : closeModal();
-      },
+      onComplete: doClose,
     });
   }, [closeModal, onClose]);
 
@@ -99,6 +105,7 @@ export function AnimatedModal({
         ref={contentRef}
         className={`${width} bg-bg-card rounded-xl border-2 border-border overflow-hidden ${className}`}
       >
+        {/* eslint-disable-next-line react-hooks/refs -- React.Children.map callback doesn't access refs */}
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
             return React.cloneElement(child as React.ReactElement<{ onClose?: () => void }>, {

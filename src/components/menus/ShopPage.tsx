@@ -4,44 +4,14 @@ import React, { useState } from 'react';
 import { useGame, useNavigation } from '@/store';
 import { ShopPanel, CoinPackGrid } from '@/components/ui/ShopPanel';
 import { BottomNavigation } from '@/components/shared';
+import { shopMockData } from '@/config/mockData';
 
 export function ShopPage() {
   const { state } = useGame();
   const { navigate } = useNavigation();
   const [showMoreOffers, setShowMoreOffers] = useState(false);
 
-  const coinPacks = [
-    { coins: 1000, price: '$2.98' },
-    { coins: 5000, price: '$9.98' },
-    { coins: 10000, price: '$19.98' },
-  ];
-
-  const specialOfferItems = [
-    { icon: 'ARW', count: 1 },
-    { icon: 'TNT', count: 1 },
-    { icon: 'HAM', count: 1 },
-    { icon: 'GLV', count: 1 },
-    { icon: 'INF', count: '1h' },
-    { icon: 'GFT' },
-  ];
-
-  const princeItems = [
-    { icon: 'ARW', count: 1 },
-    { icon: 'TNT', count: 1 },
-    { icon: 'HAM', count: 1 },
-    { icon: 'GLV', count: 1 },
-    { icon: 'INF', count: '1h' },
-    { icon: 'GFT' },
-  ];
-
-  const queenItems = [
-    { icon: 'ARW', count: 2 },
-    { icon: 'TNT', count: 2 },
-    { icon: 'HAM', count: 2 },
-    { icon: 'GLV', count: 2 },
-    { icon: 'INF', count: '12h' },
-    { icon: 'GFT' },
-  ];
+  const { coinPacks, specialOfferItems, princeItems, queenItems } = shopMockData;
 
   return (
     <div className="flex flex-col h-full bg-bg-inverse">

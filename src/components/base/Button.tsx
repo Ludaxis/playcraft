@@ -1,20 +1,23 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/utils';
 
 /**
  * Button Component
  *
- * A simplified button with 2 variants:
- * - solid: Primary action (filled background)
- * - outline: Secondary action (bordered)
+ * Variants:
+ * - solid/primary: Primary action (filled background)
+ * - outline/secondary: Secondary action (bordered)
+ * - ghost: Minimal action (transparent)
  *
  * @example
  * <Button variant="solid" onClick={handleClick}>Submit</Button>
  * <Button variant="outline" size="sm">Cancel</Button>
+ * <Button variant="ghost">Cancel</Button>
  */
 
-type ButtonVariant = 'solid' | 'outline';
+type ButtonVariant = 'solid' | 'outline' | 'primary' | 'secondary' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -26,7 +29,10 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
   solid: 'bg-bg-inverse text-text-inverse hover:opacity-90 active:opacity-80',
+  primary: 'bg-bg-inverse text-text-inverse hover:opacity-90 active:opacity-80', // Alias for solid
   outline: 'bg-transparent border-2 border-border text-text-primary hover:bg-bg-muted active:bg-border',
+  secondary: 'bg-transparent border-2 border-border text-text-primary hover:bg-bg-muted active:bg-border', // Alias for outline
+  ghost: 'bg-transparent text-text-primary hover:bg-bg-muted active:bg-border',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -40,20 +46,20 @@ export function Button({
   size = 'md',
   fullWidth = false,
   children,
-  className = '',
+  className,
   disabled,
   ...props
 }: ButtonProps) {
   return (
     <button
-      className={`
-        ${variantStyles[variant]}
-        ${sizeStyles[size]}
-        ${fullWidth ? 'w-full' : ''}
-        rounded-lg font-bold transition-all
-        disabled:opacity-50 disabled:cursor-not-allowed
-        ${className}
-      `}
+      className={cn(
+        variantStyles[variant],
+        sizeStyles[size],
+        fullWidth && 'w-full',
+        'rounded-lg font-bold transition-all',
+        'disabled:opacity-50 disabled:cursor-not-allowed',
+        className
+      )}
       disabled={disabled}
       {...props}
     >

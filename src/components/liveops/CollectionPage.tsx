@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigation } from '@/store';
 import { BottomNavigation } from '@/components/shared';
 
@@ -21,16 +21,12 @@ export function CollectionPage() {
   const { openModal } = useNavigation();
   const [showRewardTooltip, setShowRewardTooltip] = useState(false);
   const [showInfoMessage, setShowInfoMessage] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const totalCollected = collectionSets.reduce((sum, s) => sum + s.collected, 0);
   const totalCards = collectionSets.reduce((sum, s) => sum + s.total, 0);
 
-  if (!mounted) {
+  // SSR check - return loading placeholder on server
+  if (typeof window === 'undefined') {
     return (
       <div className="flex flex-col h-full bg-bg-inverse items-center justify-center">
         <span className="text-text-inverse">Loading...</span>

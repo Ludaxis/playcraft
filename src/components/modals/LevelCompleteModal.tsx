@@ -9,7 +9,7 @@ interface LevelCompleteModalProps {
 
 export function LevelCompleteModal({ onAnimatedClose }: LevelCompleteModalProps) {
   const { closeModal, navigate } = useNavigation();
-  const { state } = useGame();
+  useGame(); // Keep hook call for potential future use
 
   const handleClose = () => {
     if (onAnimatedClose) {

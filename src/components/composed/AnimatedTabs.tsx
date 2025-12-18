@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import gsap from 'gsap';
 
 interface Tab {

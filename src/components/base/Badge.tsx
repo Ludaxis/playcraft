@@ -5,16 +5,20 @@ import React from 'react';
 /**
  * Badge Component
  *
- * Simplified to 2 variants:
+ * Variants:
  * - default: Neutral info badge
- * - notification: Alert/count badge (red)
+ * - notification: Alert/count badge
+ * - accent: Highlighted info (timers, etc.)
+ * - primary: Primary action/status badge
  *
  * @example
  * <Badge>New</Badge>
  * <Badge variant="notification">3</Badge>
+ * <Badge variant="accent">2d 5h</Badge>
+ * <Badge variant="primary">Complete</Badge>
  */
 
-type BadgeVariant = 'default' | 'notification';
+type BadgeVariant = 'default' | 'notification' | 'accent' | 'primary';
 
 interface BadgeProps {
   variant?: BadgeVariant;
@@ -25,6 +29,8 @@ interface BadgeProps {
 const variantStyles: Record<BadgeVariant, string> = {
   default: 'bg-bg-muted text-text-secondary border border-border',
   notification: 'bg-bg-inverse text-text-inverse',
+  accent: 'bg-bg-inverse text-text-inverse',
+  primary: 'bg-brand-primary text-text-inverse',
 };
 
 export function Badge({

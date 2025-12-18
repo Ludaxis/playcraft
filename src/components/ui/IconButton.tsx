@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { NotificationDot } from './Badge';
+import { NotificationDot } from '@/components/base';
 
 type IconButtonSize = 'sm' | 'md' | 'lg';
 type IconButtonVariant = 'default' | 'primary' | 'ghost';

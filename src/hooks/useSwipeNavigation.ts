@@ -37,12 +37,12 @@ export function useSwipeNavigation(
 
   const getCurrentTabIndex = useCallback(() => {
     return NAV_TABS.indexOf(currentPage);
-  }, [currentPage]);
+  }, [currentPage, NAV_TABS]);
 
   const canSwipeLeft = useCallback(() => {
     const index = getCurrentTabIndex();
     return index >= 0 && index < NAV_TABS.length - 1;
-  }, [getCurrentTabIndex]);
+  }, [getCurrentTabIndex, NAV_TABS]);
 
   const canSwipeRight = useCallback(() => {
     const index = getCurrentTabIndex();
@@ -166,7 +166,7 @@ export function useSwipeNavigation(
 
     isHorizontalSwipe.current = null;
     onSwipeEnd?.();
-  }, [getCurrentTabIndex, threshold, canSwipeLeft, canSwipeRight, navigate, onSwipeEnd]);
+  }, [getCurrentTabIndex, threshold, canSwipeLeft, canSwipeRight, navigate, onSwipeEnd, NAV_TABS]);
 
   useEffect(() => {
     const container = containerRef.current;

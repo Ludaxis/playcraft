@@ -38,7 +38,7 @@ export function ParentalControlModal({ onAnimatedClose }: ParentalControlModalPr
         <div className="p-4 bg-bg-card">
           {/* Info Text */}
           <p className="text-text-secondary text-caption text-center mb-4">
-            Control your child's gaming experience with these settings.
+            Control your child&apos;s gaming experience with these settings.
           </p>
 
           {/* Settings */}

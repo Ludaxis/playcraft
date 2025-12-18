@@ -54,7 +54,9 @@ export type EventType =
   | 'lightning-rush'
   | 'lava-quest'
   | 'album'
-  | 'collection';
+  | 'collection'
+  | 'mission-control'
+  | 'winning-streak';
 
 export interface Reward {
   type: 'coins' | 'booster' | 'stars' | 'lives' | 'card';

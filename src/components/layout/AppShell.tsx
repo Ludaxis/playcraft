@@ -1,41 +1,17 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import gsap from 'gsap';
 import { GameProvider, NavigationProvider, AdminProvider, useNavigation, useAdmin } from '@/store';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
-// All page imports
+// Eager imports - frequently accessed pages
 import { MainMenu } from '@/components/menus/MainMenu';
-import { ShopPage } from '@/components/menus/ShopPage';
-import { SettingsPage } from '@/components/menus/SettingsPage';
-import { TeamPage } from '@/components/menus/TeamPage';
-import { InboxPage } from '@/components/menus/InboxPage';
-import { LeaderboardPage } from '@/components/menus/LeaderboardPage';
-import { DailyRewardsPage } from '@/components/menus/DailyRewardsPage';
-import { ProfilePage } from '@/components/menus/ProfilePage';
-import { FriendsPage } from '@/components/menus/FriendsPage';
-import { BoostersPage } from '@/components/menus/BoostersPage';
-import { AreaTasksPage } from '@/components/menus/AreaTasksPage';
-
-// LiveOps pages
-import { RoyalPassPage } from '@/components/liveops/RoyalPassPage';
-import { SkyRacePage } from '@/components/liveops/SkyRacePage';
-import { KingsCupPage } from '@/components/liveops/KingsCupPage';
-import { TeamChestPage } from '@/components/liveops/TeamChestPage';
-import { BookOfTreasurePage } from '@/components/liveops/BookOfTreasurePage';
-import { LightningRushPage } from '@/components/liveops/LightningRushPage';
-import { LavaQuestPage } from '@/components/liveops/LavaQuestPage';
-import { MissionControlPage } from '@/components/liveops/MissionControlPage';
-import { AlbumPage } from '@/components/liveops/AlbumPage';
-import { CollectionPage } from '@/components/liveops/CollectionPage';
-import { WinningStreakPage } from '@/components/liveops/WinningStreakPage';
-
-// Gameplay
 import { GameplayPage } from '@/components/menus/GameplayPage';
 
-// Admin
-import { AdminPage } from '@/components/admin';
+// Loading skeleton for lazy-loaded pages
+import { PageSkeleton } from '@/components/shared';
 
 // Modal manager
 import { ModalManager } from '@/components/modals/ModalManager';
@@ -44,6 +20,32 @@ import { ModalManager } from '@/components/modals/ModalManager';
 import { ExportButton } from '@/components/shared';
 
 import type { PageId } from '@/types';
+
+// Lazy-loaded pages - code split for better initial load
+const ShopPage = dynamic(() => import('@/components/menus/ShopPage').then(m => ({ default: m.ShopPage })), { loading: () => <PageSkeleton /> });
+const SettingsPage = dynamic(() => import('@/components/menus/SettingsPage').then(m => ({ default: m.SettingsPage })), { loading: () => <PageSkeleton /> });
+const TeamPage = dynamic(() => import('@/components/menus/TeamPage').then(m => ({ default: m.TeamPage })), { loading: () => <PageSkeleton /> });
+const InboxPage = dynamic(() => import('@/components/menus/InboxPage').then(m => ({ default: m.InboxPage })), { loading: () => <PageSkeleton /> });
+const LeaderboardPage = dynamic(() => import('@/components/menus/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })), { loading: () => <PageSkeleton /> });
+const DailyRewardsPage = dynamic(() => import('@/components/menus/DailyRewardsPage').then(m => ({ default: m.DailyRewardsPage })), { loading: () => <PageSkeleton /> });
+const ProfilePage = dynamic(() => import('@/components/menus/ProfilePage').then(m => ({ default: m.ProfilePage })), { loading: () => <PageSkeleton /> });
+const FriendsPage = dynamic(() => import('@/components/menus/FriendsPage').then(m => ({ default: m.FriendsPage })), { loading: () => <PageSkeleton /> });
+const BoostersPage = dynamic(() => import('@/components/menus/BoostersPage').then(m => ({ default: m.BoostersPage })), { loading: () => <PageSkeleton /> });
+const AreaTasksPage = dynamic(() => import('@/components/menus/AreaTasksPage').then(m => ({ default: m.AreaTasksPage })), { loading: () => <PageSkeleton /> });
+const AdminPage = dynamic(() => import('@/components/admin').then(m => ({ default: m.AdminPage })), { loading: () => <PageSkeleton /> });
+
+// LiveOps pages (lazy-loaded)
+const RoyalPassPage = dynamic(() => import('@/components/liveops/RoyalPassPage').then(m => ({ default: m.RoyalPassPage })), { loading: () => <PageSkeleton /> });
+const SkyRacePage = dynamic(() => import('@/components/liveops/SkyRacePage').then(m => ({ default: m.SkyRacePage })), { loading: () => <PageSkeleton /> });
+const KingsCupPage = dynamic(() => import('@/components/liveops/KingsCupPage').then(m => ({ default: m.KingsCupPage })), { loading: () => <PageSkeleton /> });
+const TeamChestPage = dynamic(() => import('@/components/liveops/TeamChestPage').then(m => ({ default: m.TeamChestPage })), { loading: () => <PageSkeleton /> });
+const BookOfTreasurePage = dynamic(() => import('@/components/liveops/BookOfTreasurePage').then(m => ({ default: m.BookOfTreasurePage })), { loading: () => <PageSkeleton /> });
+const LightningRushPage = dynamic(() => import('@/components/liveops/LightningRushPage').then(m => ({ default: m.LightningRushPage })), { loading: () => <PageSkeleton /> });
+const LavaQuestPage = dynamic(() => import('@/components/liveops/LavaQuestPage').then(m => ({ default: m.LavaQuestPage })), { loading: () => <PageSkeleton /> });
+const MissionControlPage = dynamic(() => import('@/components/liveops/MissionControlPage').then(m => ({ default: m.MissionControlPage })), { loading: () => <PageSkeleton /> });
+const AlbumPage = dynamic(() => import('@/components/liveops/AlbumPage').then(m => ({ default: m.AlbumPage })), { loading: () => <PageSkeleton /> });
+const CollectionPage = dynamic(() => import('@/components/liveops/CollectionPage').then(m => ({ default: m.CollectionPage })), { loading: () => <PageSkeleton /> });
+const WinningStreakPage = dynamic(() => import('@/components/liveops/WinningStreakPage').then(m => ({ default: m.WinningStreakPage })), { loading: () => <PageSkeleton /> });
 
 const pageComponents: Record<PageId, React.ComponentType> = {
   'main-menu': MainMenu,

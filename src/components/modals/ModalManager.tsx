@@ -1,34 +1,53 @@
 'use client';
 
 import React, { useRef, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import gsap from 'gsap';
 import { useNavigation } from '@/store';
 import type { ModalId } from '@/types';
 
-// Modal components
+// Modal loading fallback
+function ModalSkeleton() {
+  return (
+    <div className="w-[320px] bg-bg-card rounded-xl border-2 border-border overflow-hidden animate-pulse">
+      <div className="bg-bg-muted py-3 px-4">
+        <div className="h-6 bg-border rounded w-32 mx-auto" />
+      </div>
+      <div className="p-4 space-y-3">
+        <div className="h-16 bg-bg-muted rounded-lg" />
+        <div className="h-4 bg-bg-muted rounded w-3/4" />
+        <div className="h-10 bg-bg-muted rounded" />
+      </div>
+    </div>
+  );
+}
+
+// Eager imports - frequently used modals
 import { LevelStartModal } from './LevelStartModal';
 import { LevelCompleteModal } from './LevelCompleteModal';
 import { LevelFailedModal } from './LevelFailedModal';
-import { OutOfLivesModal } from './OutOfLivesModal';
-import { RewardClaimModal } from './RewardClaimModal';
-import { BoosterSelectModal } from './BoosterSelectModal';
-import { FreeLivesModal } from './FreeLivesModal';
-import { ProfilePictureModal } from './ProfilePictureModal';
-import { EditAvatarModal } from './EditAvatarModal';
-import { StarInfoModal } from './StarInfoModal';
-import { SignInModal } from './SignInModal';
-import { ParentalControlModal } from './ParentalControlModal';
-import { PrivacyPolicyModal } from './PrivacyPolicyModal';
-import { ChangeUsernameModal } from './ChangeUsernameModal';
-import { CardStarsModal } from './CardStarsModal';
-import { CollectionInfoModal } from './CollectionInfoModal';
-import { GrandPrizeModal } from './GrandPrizeModal';
-import { CollectionSetDetailModal } from './CollectionSetDetailModal';
-import { CardDetailModal } from './CardDetailModal';
-import { ProfileModal } from './ProfileModal';
-import { TeamInfoModal } from './TeamInfoModal';
-import { MemberProfileModal } from './MemberProfileModal';
-import { WeeklyContestInfoModal } from './WeeklyContestInfoModal';
+
+// Lazy-loaded modals
+const OutOfLivesModal = dynamic(() => import('./OutOfLivesModal').then(m => ({ default: m.OutOfLivesModal })), { loading: () => <ModalSkeleton /> });
+const RewardClaimModal = dynamic(() => import('./RewardClaimModal').then(m => ({ default: m.RewardClaimModal })), { loading: () => <ModalSkeleton /> });
+const BoosterSelectModal = dynamic(() => import('./BoosterSelectModal').then(m => ({ default: m.BoosterSelectModal })), { loading: () => <ModalSkeleton /> });
+const FreeLivesModal = dynamic(() => import('./FreeLivesModal').then(m => ({ default: m.FreeLivesModal })), { loading: () => <ModalSkeleton /> });
+const ProfilePictureModal = dynamic(() => import('./ProfilePictureModal').then(m => ({ default: m.ProfilePictureModal })), { loading: () => <ModalSkeleton /> });
+const EditAvatarModal = dynamic(() => import('./EditAvatarModal').then(m => ({ default: m.EditAvatarModal })), { loading: () => <ModalSkeleton /> });
+const StarInfoModal = dynamic(() => import('./StarInfoModal').then(m => ({ default: m.StarInfoModal })), { loading: () => <ModalSkeleton /> });
+const SignInModal = dynamic(() => import('./SignInModal').then(m => ({ default: m.SignInModal })), { loading: () => <ModalSkeleton /> });
+const ParentalControlModal = dynamic(() => import('./ParentalControlModal').then(m => ({ default: m.ParentalControlModal })), { loading: () => <ModalSkeleton /> });
+const PrivacyPolicyModal = dynamic(() => import('./PrivacyPolicyModal').then(m => ({ default: m.PrivacyPolicyModal })), { loading: () => <ModalSkeleton /> });
+const ChangeUsernameModal = dynamic(() => import('./ChangeUsernameModal').then(m => ({ default: m.ChangeUsernameModal })), { loading: () => <ModalSkeleton /> });
+const CardStarsModal = dynamic(() => import('./CardStarsModal').then(m => ({ default: m.CardStarsModal })), { loading: () => <ModalSkeleton /> });
+const CollectionInfoModal = dynamic(() => import('./CollectionInfoModal').then(m => ({ default: m.CollectionInfoModal })), { loading: () => <ModalSkeleton /> });
+const GrandPrizeModal = dynamic(() => import('./GrandPrizeModal').then(m => ({ default: m.GrandPrizeModal })), { loading: () => <ModalSkeleton /> });
+const CollectionSetDetailModal = dynamic(() => import('./CollectionSetDetailModal').then(m => ({ default: m.CollectionSetDetailModal })), { loading: () => <ModalSkeleton /> });
+const CardDetailModal = dynamic(() => import('./CardDetailModal').then(m => ({ default: m.CardDetailModal })), { loading: () => <ModalSkeleton /> });
+const ProfileModal = dynamic(() => import('./ProfileModal').then(m => ({ default: m.ProfileModal })), { loading: () => <ModalSkeleton /> });
+const TeamInfoModal = dynamic(() => import('./TeamInfoModal').then(m => ({ default: m.TeamInfoModal })), { loading: () => <ModalSkeleton /> });
+const MemberProfileModal = dynamic(() => import('./MemberProfileModal').then(m => ({ default: m.MemberProfileModal })), { loading: () => <ModalSkeleton /> });
+const WeeklyContestInfoModal = dynamic(() => import('./WeeklyContestInfoModal').then(m => ({ default: m.WeeklyContestInfoModal })), { loading: () => <ModalSkeleton /> });
 
 const modalComponents: Partial<Record<NonNullable<ModalId>, React.ComponentType<{ onAnimatedClose?: () => void }>>> = {
   'level-start': LevelStartModal,
@@ -58,12 +77,11 @@ const modalComponents: Partial<Record<NonNullable<ModalId>, React.ComponentType<
 
 // Animated Modal Wrapper
 interface AnimatedModalWrapperProps {
-  modalId: ModalId;
   index: number;
   children: React.ReactNode;
 }
 
-function AnimatedModalWrapper({ modalId, index, children }: AnimatedModalWrapperProps) {
+function AnimatedModalWrapper({ index, children }: AnimatedModalWrapperProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const { closeModal } = useNavigation();
@@ -135,6 +153,7 @@ function AnimatedModalWrapper({ modalId, index, children }: AnimatedModalWrapper
       style={{ zIndex: 50 + index * 10 }}
     >
       <div ref={contentRef}>
+        {/* eslint-disable-next-line react-hooks/refs -- React.Children.map callback doesn't access refs */}
         {React.Children.map(children, (child) => {
           if (React.isValidElement(child)) {
             return React.cloneElement(child as React.ReactElement<{ onAnimatedClose?: () => void }>, {
@@ -160,7 +179,7 @@ export function ModalManager() {
         const ModalComponent = modalComponents[modalId];
         if (!ModalComponent) return null;
         return (
-          <AnimatedModalWrapper key={modalId} modalId={modalId} index={index}>
+          <AnimatedModalWrapper key={`${modalId}-${index}`} index={index}>
             <ModalComponent />
           </AnimatedModalWrapper>
         );

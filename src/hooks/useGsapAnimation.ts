@@ -108,7 +108,8 @@ export function useTabAnimation() {
   return { containerRef, animateTabChange };
 }
 
-export function useSlideAnimation(direction: 'horizontal' | 'vertical' = 'horizontal') {
+export function useSlideAnimation(_direction: 'horizontal' | 'vertical' = 'horizontal') {
+  void _direction; // Reserved for future axis-aware animations
   const elementRef = useRef<HTMLDivElement>(null);
 
   const slideIn = useCallback(

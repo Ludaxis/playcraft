@@ -3,7 +3,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { useGame, useNavigation } from '@/store';
-import type { ModalId } from '@/types';
 
 export function ProfilePage() {
   const { state } = useGame();
@@ -162,7 +161,7 @@ function StatItem({ icon, label, value }: StatItemProps) {
     <div className="flex flex-col items-center">
       {/* Icon */}
       <div className="w-10 h-10 bg-bg-muted rounded-lg flex items-center justify-center mb-1 border border-border">
-        <span className="text-text-secondary text-mini">[icon]</span>
+        <Image src={icon} alt={label} width={20} height={20} className="opacity-70" />
       </div>
       {/* Label */}
       <p className="text-text-secondary text-mini text-center whitespace-nowrap mb-1">

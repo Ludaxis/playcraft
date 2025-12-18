@@ -18,7 +18,7 @@ interface ShopPanelProps {
 export function ShopPanel({
   variant = 'offer',
   title,
-  subtitle,
+  subtitle: _subtitle, // Kept in API for future use
   ribbon,
   coins,
   items = [],
@@ -26,6 +26,7 @@ export function ShopPanel({
   buttonLabel = 'Buy',
   onClick,
 }: ShopPanelProps) {
+  void _subtitle;
   if (variant === 'featured') {
     return (
       <div className="relative bg-brand-hover rounded-2xl border-2 border-brand-muted overflow-hidden">

@@ -6,28 +6,8 @@ import { useGame, useNavigation, useAdmin } from '@/store';
 import { BottomNavigation } from '@/components/shared';
 import { LevelRoadmap } from './LevelRoadmap';
 import { useTimer } from '@/hooks';
-import type { PageId } from '@/types';
-
-// Event configuration with icons (wireframe - all grayscale)
-const eventConfig: Record<string, { icon: string; bgColor: string; page: PageId }> = {
-  'royal-pass': { icon: 'RP', bgColor: 'bg-bg-inverse', page: 'royal-pass' },
-  'mission-control': { icon: 'MC', bgColor: 'bg-bg-inverse', page: 'mission-control' },
-  'lightning-rush': { icon: 'LR', bgColor: 'bg-bg-inverse', page: 'lightning-rush' },
-  'lava-quest': { icon: 'LQ', bgColor: 'bg-bg-inverse', page: 'lava-quest' },
-  'sky-race': { icon: 'SR', bgColor: 'bg-bg-inverse', page: 'sky-race' },
-  'kings-cup': { icon: 'KC', bgColor: 'bg-bg-inverse', page: 'kings-cup' },
-  'team-chest': { icon: 'TC', bgColor: 'bg-bg-inverse', page: 'team-chest' },
-  'book-of-treasure': { icon: 'BT', bgColor: 'bg-bg-inverse', page: 'book-of-treasure' },
-  'album': { icon: 'AL', bgColor: 'bg-bg-inverse', page: 'album' },
-  'collection': { icon: 'CO', bgColor: 'bg-bg-inverse', page: 'collection' },
-};
-
-// Mock winning streak data
-const winningStreakData = {
-  current: 117,
-  target: 200,
-  endTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000 + 16 * 60 * 60 * 1000), // 1d 16h
-};
+import { EVENT_REGISTRY, isValidEventId, type EventId } from '@/config/registry';
+import { winningStreakMockData, getEventEndTime } from '@/config/mockData';
 
 export function MainMenu() {
   const { state } = useGame();
@@ -45,9 +25,6 @@ export function MainMenu() {
 
   // Check if winning streak is enabled
   const showWinningStreak = isEventEnabled('winning-streak');
-
-  // Mock end time for all events
-  const getEventEndTime = () => new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 20 * 60 * 60 * 1000);
 
   return (
     <div className="relative flex flex-col h-full bg-bg-page overflow-hidden">
@@ -112,9 +89,9 @@ export function MainMenu() {
       {/* Winning Streak Progress Bar */}
       {showWinningStreak && (
         <WinningStreakBar
-          current={winningStreakData.current}
-          target={winningStreakData.target}
-          endTime={winningStreakData.endTime}
+          current={winningStreakMockData.current}
+          target={winningStreakMockData.target}
+          endTime={winningStreakMockData.getEndTime()}
           onClick={() => navigate('winning-streak')}
         />
       )}
@@ -168,15 +145,15 @@ export function MainMenu() {
         {/* Left Side Events */}
         <div className="absolute left-1 top-8 flex flex-col gap-2 z-10">
           {leftEvents.map((eventId) => {
-            const cfg = eventConfig[eventId];
-            if (!cfg) return null;
+            if (!isValidEventId(eventId)) return null;
+            const cfg = EVENT_REGISTRY[eventId as EventId];
             return (
               <EventButton
                 key={eventId}
-                icon={cfg.icon}
+                icon={cfg.shortLabel}
                 timer={getEventEndTime()}
                 onClick={() => navigate(cfg.page)}
-                bgColor={cfg.bgColor}
+                bgColor="bg-bg-inverse"
               />
             );
           })}
@@ -185,15 +162,15 @@ export function MainMenu() {
         {/* Right Side Events */}
         <div className="absolute right-1 top-8 flex flex-col gap-2 z-10">
           {rightEvents.map((eventId) => {
-            const cfg = eventConfig[eventId];
-            if (!cfg) return null;
+            if (!isValidEventId(eventId)) return null;
+            const cfg = EVENT_REGISTRY[eventId as EventId];
             return (
               <EventButton
                 key={eventId}
-                icon={cfg.icon}
+                icon={cfg.shortLabel}
                 timer={getEventEndTime()}
                 onClick={() => navigate(cfg.page)}
-                bgColor={cfg.bgColor}
+                bgColor="bg-bg-inverse"
               />
             );
           })}

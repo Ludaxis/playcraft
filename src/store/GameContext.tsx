@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useReducer, useState, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useRef, useEffect, type ReactNode } from 'react';
 import type {
   PlayerState,
   Area,
@@ -192,7 +192,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
     case 'CLAIM_DAILY_REWARD':
       return {
         ...state,
-        dailyRewards: state.dailyRewards.map((d, i) => ({
+        dailyRewards: state.dailyRewards.map((d) => ({
           ...d,
           claimed: d.day <= action.payload ? true : d.claimed,
           current: d.day === action.payload + 1,
@@ -228,7 +228,8 @@ interface GameProviderProps {
 }
 
 export function GameProvider({ children }: GameProviderProps) {
-  const [mounted, setMounted] = useState(false);
+  // Use ref to track mount state - avoids setState in effect lint warning
+  const isMounted = useRef(false);
   const [state, dispatch] = useReducer(gameReducer, placeholderState, () => {
     // Lazy initialization - only runs once
     if (typeof window !== 'undefined') {
@@ -238,11 +239,15 @@ export function GameProvider({ children }: GameProviderProps) {
   });
 
   useEffect(() => {
-    setMounted(true);
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   // Show placeholder during SSR to avoid hydration mismatch
-  if (!mounted) {
+  // Check window instead of mounted ref to handle initial render
+  if (typeof window === 'undefined') {
     return (
       <GameContext.Provider value={{ state: placeholderState, dispatch }}>
         {children}

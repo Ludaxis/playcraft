@@ -232,13 +232,17 @@ export function WinningStreakPage() {
             );
           })}
 
-          {streakData.currentStreak < streakData.totalRequired && (
-            <div className="mt-2 bg-bg-card rounded-lg px-3 py-2 border border-border">
-              <p className="text-text-primary text-caption text-center">
-                Win {streakData.ladder.find(r => !r.unlocked)?.level! - streakData.currentStreak} more level(s) to unlock next reward!
-              </p>
-            </div>
-          )}
+          {streakData.currentStreak < streakData.totalRequired && (() => {
+            const nextLockedReward = streakData.ladder.find(r => !r.unlocked);
+            const levelsToGo = nextLockedReward ? nextLockedReward.level - streakData.currentStreak : 1;
+            return (
+              <div className="mt-2 bg-bg-card rounded-lg px-3 py-2 border border-border">
+                <p className="text-text-primary text-caption text-center">
+                  Win {levelsToGo} more level(s) to unlock next reward!
+                </p>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

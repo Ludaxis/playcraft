@@ -109,7 +109,7 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
       const options = {
         quality: 1,
         pixelRatio: 3,
-        backgroundColor: '#ffffff',
+        backgroundColor: 'var(--color-bg-page)',
         style: {
           transform: 'scale(1)',
           transformOrigin: 'top left',
@@ -184,7 +184,7 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
       const options = {
         quality: 1,
         pixelRatio: 3,
-        backgroundColor: '#ffffff',
+        backgroundColor: 'var(--color-bg-page)',
         filter: (filterNode: Element) => {
           if (filterNode instanceof HTMLElement) {
             return !filterNode.classList.contains('export-button-container');
@@ -227,13 +227,17 @@ export function ExportButton({ targetId = 'app-content' }: ExportButtonProps) {
     }
   };
 
-  const handleComponentExport = useCallback((format: ExportFormat) => {
-    if (!selectedElement) {
-      showNotification('No component selected');
-      return;
-    }
-    doExport(format, selectedElement);
-  }, [selectedElement]);
+  const handleComponentExport = useCallback(
+    (format: ExportFormat) => {
+      if (!selectedElement) {
+        showNotification('No component selected');
+        return;
+      }
+      doExport(format, selectedElement);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- doExport is stable for this prototype
+    [selectedElement]
+  );
 
   const downloadFile = (dataUrl: string, format: string) => {
     const link = document.createElement('a');

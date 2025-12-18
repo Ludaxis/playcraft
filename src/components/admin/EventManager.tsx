@@ -118,7 +118,7 @@ function DragOverlayItem({ name }: { name: string }) {
 }
 
 export function EventManager() {
-  const { config, toggleEvent, updateEventPlacement } = useAdmin();
+  const { config, updateEventPlacement } = useAdmin();
   const [activeId, setActiveId] = React.useState<string | null>(null);
 
   const leftEvents = config.eventPlacement?.left || [];

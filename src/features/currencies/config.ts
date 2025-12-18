@@ -1,5 +1,3 @@
-'use client';
-
 /**
  * Currencies Feature Configuration
  *

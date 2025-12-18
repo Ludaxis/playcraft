@@ -23,6 +23,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   size?: ModalSize;
+  title?: string; // Optional: renders a header with title
   children: React.ReactNode;
   className?: string;
 }
@@ -38,6 +39,7 @@ export function Modal({
   isOpen,
   onClose,
   size = 'md',
+  title,
   children,
   className = '',
 }: ModalProps) {
@@ -82,6 +84,7 @@ export function Modal({
           ${className}
         `}
       >
+        {title && <ModalHeader title={title} onClose={onClose} />}
         {children}
       </div>
     </div>

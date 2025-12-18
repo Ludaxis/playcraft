@@ -1,6 +1,5 @@
-'use client';
-
 import type { PageId } from '@/types';
+import { EVENT_REGISTRY, getAllEventIds } from '@/config/registry';
 
 // Tab configuration interface
 export interface TabConfig {
@@ -12,6 +11,7 @@ export interface TabConfig {
 }
 
 // Event placement configuration
+// Uses string[] for backward compatibility with localStorage
 export interface EventPlacement {
   left: string[];
   right: string[];
@@ -20,7 +20,7 @@ export interface EventPlacement {
 // Admin configuration interface
 export interface AdminConfig {
   tabs: TabConfig[];
-  enabledEvents: string[]; // kept for backward compatibility
+  enabledEvents: string[]; // Uses string[] for backward compatibility with localStorage
   eventPlacement: EventPlacement;
   theme: ThemeConfig;
   showAreaButton: boolean;
@@ -69,23 +69,18 @@ export const allAvailableTabs: TabConfig[] = [
   { id: 'friends', icon: '/icons/Heart.svg', label: 'Friends', page: 'friends', enabled: false },
 ];
 
-// All LiveOps events
-export const allEvents = [
-  { id: 'royal-pass', name: 'Royal Pass', icon: '/icons/Badge.svg' },
-  { id: 'sky-race', name: 'Sky Race', icon: '/icons/Lightning.svg' },
-  { id: 'kings-cup', name: "King's Cup", icon: '/icons/Medal.svg' },
-  { id: 'team-chest', name: 'Team Chest', icon: '/icons/Archive.svg' },
-  { id: 'book-of-treasure', name: 'Book of Treasure', icon: '/icons/Bookmark.svg' },
-  { id: 'lightning-rush', name: 'Lightning Rush', icon: '/icons/Lightning.svg' },
-  { id: 'lava-quest', name: 'Lava Quest', icon: '/icons/Star-Filled.svg' },
-  { id: 'mission-control', name: 'Mission Control', icon: '/icons/Flag.svg' },
-  { id: 'winning-streak', name: 'Winning Streak', icon: '/icons/Fire.svg' },
-  { id: 'album', name: 'Album', icon: '/icons/Category.svg' },
-  { id: 'collection', name: 'Collection', icon: '/icons/Archive.svg' },
-];
+/**
+ * All LiveOps events - derived from registry
+ * Use this for UI that needs to list all available events
+ */
+export const allEvents = getAllEventIds().map(id => ({
+  id,
+  name: EVENT_REGISTRY[id].name,
+  icon: EVENT_REGISTRY[id].icon,
+}));
 
 // Default enabled events
-export const defaultEnabledEvents = ['royal-pass', 'lava-quest', 'mission-control', 'lightning-rush'];
+export const defaultEnabledEvents: string[] = ['royal-pass', 'lava-quest', 'mission-control', 'lightning-rush'];
 
 // Default event placement
 export const defaultEventPlacement: EventPlacement = {

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useGame, useNavigation, gameActions } from '@/store';
-import { Button, Panel, ProgressBar, IconButton } from '@/components/ui';
+import { Button, Panel, IconButton } from '@/components/ui';
 
 export function GameplayPage() {
   const { state, dispatch } = useGame();

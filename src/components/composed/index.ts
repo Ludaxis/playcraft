@@ -31,3 +31,13 @@ export type { ListRowProps } from './ListRow';
 
 export { InfoBox } from './InfoBox';
 export type { InfoBoxProps } from './InfoBox';
+
+// List components
+export { List, ListItem, ListItemIcon, ListItemContent, ListItemAction } from './List';
+
+// Tab components
+export { Tabs } from './Tabs';
+
+// Animated components
+export { AnimatedModal, ModalHeader } from './AnimatedModal';
+export { AnimatedTabs, AnimatedTabBar } from './AnimatedTabs';

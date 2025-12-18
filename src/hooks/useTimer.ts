@@ -20,47 +20,48 @@ const INITIAL_STATE: TimeRemaining = {
   formatted: '--:--',
 };
 
+function calculateTime(endTime: Date | null): TimeRemaining {
+  if (!endTime) {
+    return INITIAL_STATE;
+  }
+
+  const total = Math.max(0, endTime.getTime() - Date.now());
+  const seconds = Math.floor((total / 1000) % 60);
+  const minutes = Math.floor((total / 1000 / 60) % 60);
+  const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+  const days = Math.floor(total / (1000 * 60 * 60 * 24));
+
+  let formatted: string;
+  if (days > 0) {
+    formatted = `${days}d ${hours}h`;
+  } else if (hours > 0) {
+    formatted = `${hours}h ${minutes}m`;
+  } else {
+    formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  return { days, hours, minutes, seconds, total, formatted };
+}
+
 export function useTimer(endTime: Date | null): TimeRemaining {
+  // Always initialize with INITIAL_STATE to prevent hydration mismatch
+  // The real time will be calculated after mount
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>(INITIAL_STATE);
-  const [mounted, setMounted] = useState(false);
 
-  const calculateTimeRemaining = useCallback((): TimeRemaining => {
-    if (!endTime) {
-      return INITIAL_STATE;
-    }
-
-    const total = Math.max(0, endTime.getTime() - Date.now());
-    const seconds = Math.floor((total / 1000) % 60);
-    const minutes = Math.floor((total / 1000 / 60) % 60);
-    const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
-    const days = Math.floor(total / (1000 * 60 * 60 * 24));
-
-    let formatted: string;
-    if (days > 0) {
-      formatted = `${days}d ${hours}h`;
-    } else if (hours > 0) {
-      formatted = `${hours}h ${minutes}m`;
-    } else {
-      formatted = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    return { days, hours, minutes, seconds, total, formatted };
+  const updateTime = useCallback(() => {
+    setTimeRemaining(calculateTime(endTime));
   }, [endTime]);
 
   useEffect(() => {
-    setMounted(true);
-    setTimeRemaining(calculateTimeRemaining());
-
-    const interval = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining());
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [calculateTimeRemaining]);
-
-  if (!mounted) {
-    return INITIAL_STATE;
-  }
+    // Defer initial calculation to avoid synchronous setState in effect
+    // Then update every second
+    const initialTimeout = setTimeout(updateTime, 0);
+    const interval = setInterval(updateTime, 1000);
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [updateTime]);
 
   return timeRemaining;
 }

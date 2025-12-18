@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useReducer, useCallback, type ReactNode } from 'react';
-import type { PageId, ModalId, NavigationState, NavigationAction } from '@/types';
+import type { PageId, ModalId, ModalIdOrNull, NavigationState, NavigationAction } from '@/types';
 
 // Initial State
 const initialState: NavigationState & { modalParams: Record<string, unknown> } = {
@@ -74,8 +74,8 @@ interface NavigationContextValue {
   openModal: (modal: ModalId, params?: Record<string, unknown>) => void;
   closeModal: () => void;
   closeAllModals: () => void;
-  currentModal: ModalId;
-  modalStack: ModalId[];
+  currentModal: ModalIdOrNull;
+  modalStack: ModalIdOrNull[];
   modalParams: Record<string, unknown>;
   canGoBack: boolean;
 }

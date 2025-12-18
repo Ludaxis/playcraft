@@ -1,36 +1,19 @@
 /**
  * LiveOps Feature Types
  *
- * Type definitions for LiveOps events system.
+ * Re-exports types from the centralized registry.
+ * Provides additional LiveOps-specific types.
  */
 
-import type { PageId } from '@/types';
+// Re-export core types from registry
+export type { EventId, EventConfig, PageId } from '@/config/registry';
 
-// Event type identifiers
-export type EventTypeId =
-  | 'royal-pass'
-  | 'sky-race'
-  | 'kings-cup'
-  | 'team-chest'
-  | 'book-of-treasure'
-  | 'lightning-rush'
-  | 'lava-quest'
-  | 'mission-control'
-  | 'album'
-  | 'collection';
+// Legacy type alias for backward compatibility
+export type EventTypeId = import('@/config/registry').EventId;
 
-// Event configuration
-export interface EventConfig {
-  id: EventTypeId;
-  name: string;
-  icon: string;
-  page: PageId;
-  description?: string;
-}
-
-// Active event state
+// Active event state (runtime state, not in registry)
 export interface ActiveEvent {
-  id: EventTypeId;
+  id: import('@/config/registry').EventId;
   endTime: Date | null;
   progress: number;
   maxProgress: number;

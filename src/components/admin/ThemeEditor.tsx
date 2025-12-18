@@ -29,7 +29,7 @@ function ColorInput({ label, value, onChange }: ColorInputProps) {
 }
 
 export function ThemeEditor() {
-  const { config, updateTheme, setThemePreset, currentPreset, resetToDefaults } = useAdmin();
+  const { config, updateTheme, setThemePreset, currentPreset } = useAdmin();
   const { theme } = config;
   const presetIds = getThemePresetIds();
 

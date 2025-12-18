@@ -1,9 +1,8 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { useAdmin } from '@/store';
-import { allAvailableTabs, type TabConfig } from '@/config/adminDefaults';
+import { allAvailableTabs } from '@/config/adminDefaults';
 
 export function TabManager() {
   const { config, toggleTab, reorderTabs } = useAdmin();
