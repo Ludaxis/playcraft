@@ -34,3 +34,6 @@ export type { ToggleProps } from './Toggle';
 
 export { Modal } from './Modal';
 export type { ModalProps, ModalSize, ModalHeaderProps, ModalBodyProps, ModalFooterProps } from './Modal';
+
+export { Select } from './Select';
+export type { SelectProps, SelectOption, SelectSize } from './Select';

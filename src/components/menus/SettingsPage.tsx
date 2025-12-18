@@ -85,8 +85,12 @@ export function SettingsPage() {
 
         {/* Language Selector */}
         <div className="bg-bg-page rounded-xl border-2 border-border p-4">
-          <p className="text-text-primary text-value mb-3">{t('language')}</p>
-          <LocaleSwitcher showNativeNames={true} />
+          <LocaleSwitcher
+            showNativeNames={true}
+            mode="dropdown"
+            size="lg"
+            label={t('language')}
+          />
         </div>
 
         {/* Action Buttons */}

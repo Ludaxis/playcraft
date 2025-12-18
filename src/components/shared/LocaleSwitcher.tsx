@@ -1,15 +1,20 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useMemo, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { locales, localeNames, type Locale } from '@/i18n/config';
+import { Select, type SelectOption, type SelectSize } from '@/components/base';
 
 interface LocaleSwitcherProps {
   /** Show native language names instead of English names */
   showNativeNames?: boolean;
-  /** Compact mode - show only current locale code */
-  compact?: boolean;
+  /** Display mode - dropdown or grid of buttons */
+  mode?: 'dropdown' | 'grid';
+  /** Size of the select dropdown (only applies to dropdown mode) */
+  size?: SelectSize;
+  /** Label for the dropdown */
+  label?: string;
   /** Custom class name */
   className?: string;
 }
@@ -22,11 +27,13 @@ interface LocaleSwitcherProps {
  */
 export function LocaleSwitcher({
   showNativeNames = true,
-  compact = false,
+  mode = 'dropdown',
+  size = 'md',
+  label,
   className = '',
 }: LocaleSwitcherProps) {
   const t = useTranslations('settings');
-  const locale = useLocale();
+  const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
@@ -37,30 +44,30 @@ export function LocaleSwitcher({
     });
   };
 
-  if (compact) {
+  const options: SelectOption<Locale>[] = useMemo(() => {
+    return locales.map((loc) => ({
+      value: loc,
+      label: showNativeNames ? localeNames[loc] : loc.toUpperCase(),
+    }));
+  }, [showNativeNames]);
+
+  if (mode === 'dropdown') {
     return (
-      <select
+      <Select<Locale>
         value={locale}
-        onChange={(e) => handleLocaleChange(e.target.value as Locale)}
+        options={options}
+        onChange={handleLocaleChange}
+        loading={isPending}
         disabled={isPending}
-        className={`
-          bg-bg-card border border-border rounded-lg px-3 py-2
-          text-text-primary text-body-sm
-          focus:outline-none focus:ring-2 focus:ring-brand-primary
-          disabled:opacity-50 disabled:cursor-not-allowed
-          ${className}
-        `}
-        aria-label={t('language')}
-      >
-        {locales.map((loc) => (
-          <option key={loc} value={loc}>
-            {showNativeNames ? localeNames[loc] : loc.toUpperCase()}
-          </option>
-        ))}
-      </select>
+        size={size}
+        label={label}
+        aria-label={label || t('language')}
+        className={className}
+      />
     );
   }
 
+  // Grid mode (legacy)
   return (
     <div className={`space-y-2 ${className}`}>
       <label className="text-label text-text-primary block mb-2">
