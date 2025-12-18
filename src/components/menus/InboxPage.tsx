@@ -2,11 +2,19 @@
 
 import React from 'react';
 import { PageLayout } from '@/components/layout';
-import { List, ListItem, ListItemIcon, ListItemContent, ListItemAction, Button, Badge } from '@/components/ui';
+import { Button, Badge } from '@/components/base';
+import { List, ListItem, ListItemIcon, ListItemContent, ListItemAction } from '@/components/composed';
+import { FeatureDisabled } from '@/components/shared';
 import { useGame, gameActions } from '@/store';
+import { isFeatureEnabled } from '@/config/features';
 
 export function InboxPage() {
   const { state, dispatch } = useGame();
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('INBOX')) {
+    return <FeatureDisabled featureName="Inbox" />;
+  }
   const { inbox } = state;
 
   const handleClaim = (messageId: string) => {

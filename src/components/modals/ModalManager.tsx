@@ -9,7 +9,7 @@ import type { ModalId } from '@/types';
 // Modal loading fallback
 function ModalSkeleton() {
   return (
-    <div className="w-[320px] bg-bg-card rounded-xl border-2 border-border overflow-hidden animate-pulse">
+    <div className="w-full max-w-[320px] bg-bg-card rounded-xl border-2 border-border overflow-hidden animate-pulse">
       <div className="bg-bg-muted py-3 px-4">
         <div className="h-6 bg-border rounded w-32 mx-auto" />
       </div>

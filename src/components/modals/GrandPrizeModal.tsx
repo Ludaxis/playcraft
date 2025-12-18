@@ -19,7 +19,7 @@ export function GrandPrizeModal({ onAnimatedClose }: GrandPrizeModalProps) {
   };
 
   return (
-    <div className="relative w-[320px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
+    <div className="relative w-full max-w-[320px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-center relative">
         <h2 className="text-text-inverse text-h2">Grand Prize</h2>

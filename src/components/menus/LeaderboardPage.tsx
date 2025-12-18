@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { useNavigation } from '@/store';
-import { BottomNavigation } from '@/components/shared';
+import { BottomNavigation, FeatureDisabled } from '@/components/shared';
+import { isFeatureEnabled } from '@/config/features';
 
 // Mock data for Weekly Contest
 const weeklyContestData = {
@@ -94,6 +95,11 @@ export function LeaderboardPage() {
       ease: 'power2.out',
     });
   }, [activeTab]);
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('LEADERBOARDS')) {
+    return <FeatureDisabled featureName="Leaderboards" />;
+  }
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId as 'weekly' | 'friends' | 'players' | 'teams');

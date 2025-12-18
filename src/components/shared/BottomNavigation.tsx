@@ -14,14 +14,14 @@ export function BottomNavigation({ activePage }: BottomNavigationProps) {
 
   return (
     <div className="bg-bg-card border-t border-border">
-      <div className="flex justify-around py-2">
+      <div className="flex justify-around py-2 max-w-lg mx-auto">
         {enabledTabs.map((tab) => (
           <NavButton
             key={tab.id}
             icon={tab.icon}
             label={tab.label}
-            active={activePage === tab.id}
-            onClick={() => activePage !== tab.id && navigate(tab.page)}
+            active={activePage === tab.page}
+            onClick={() => activePage !== tab.page && navigate(tab.page)}
           />
         ))}
       </div>

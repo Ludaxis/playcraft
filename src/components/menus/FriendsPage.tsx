@@ -2,7 +2,10 @@
 
 import React, { useState } from 'react';
 import { PageLayout } from '@/components/layout';
-import { Panel, Tabs, List, ListItem, ListItemContent, ListItemAction, Button, Badge } from '@/components/ui';
+import { Card as Panel, Button, Badge } from '@/components/base';
+import { List, ListItem, ListItemContent, ListItemAction, Tabs } from '@/components/composed';
+import { FeatureDisabled } from '@/components/shared';
+import { isFeatureEnabled } from '@/config/features';
 
 const tabs = [
   { id: 'friends', label: 'Friends' },
@@ -24,6 +27,11 @@ const mockRequests = [
 
 export function FriendsPage() {
   const [activeTab, setActiveTab] = useState('friends');
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('FRIENDS')) {
+    return <FeatureDisabled featureName="Friends" />;
+  }
 
   return (
     <PageLayout title="Friends">

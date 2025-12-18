@@ -169,7 +169,7 @@ import { Toggle } from '@/components/base';
 
 ### Modal
 
-Base modal with keyboard support and backdrop.
+Base modal with keyboard support and backdrop. Modals are responsive and adapt to screen size.
 
 ```tsx
 import { Modal } from '@/components/base';
@@ -188,6 +188,18 @@ import { Modal } from '@/components/base';
 | `isOpen` | `boolean` | - | Control visibility |
 | `onClose` | `() => void` | - | Close handler |
 | `size` | `'sm' \| 'md' \| 'lg' \| 'full'` | `'md'` | Modal width |
+
+**Responsive Modal Pattern:**
+
+When creating custom modals, always use responsive widths:
+
+```tsx
+// ✅ Correct - responsive width
+<div className="w-full max-w-[320px] bg-bg-card rounded-2xl">
+
+// ❌ Incorrect - fixed width breaks on small screens
+<div className="w-[320px] bg-bg-card rounded-2xl">
+```
 
 ---
 
@@ -402,3 +414,41 @@ import { Button, Card, Badge, IconBox, Avatar, Timer, ProgressBar, Toggle, Modal
 // Composed components
 import { PageHeader, EventCard, ResourceCounter, RankBadge, ProgressCard, MilestoneItem, ListRow, InfoBox } from '@/components/composed';
 ```
+
+---
+
+## Responsive Design Guidelines
+
+All components are designed to work from mobile (390px) to iPad Pro (1024px).
+
+### Grid Layouts
+
+Use responsive column counts:
+
+```tsx
+// Adapts: 2 cols → 3 cols → 4 cols
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+  {items.map(item => <Card key={item.id}>{item.name}</Card>)}
+</div>
+```
+
+### Container Widths
+
+Center content on wide screens:
+
+```tsx
+// Bottom navigation - centered on tablets
+<div className="flex justify-around py-2 max-w-lg mx-auto">
+
+// Page content - add padding on larger screens
+<div className="flex-1 overflow-y-auto sm:px-4 md:px-6 lg:px-8">
+```
+
+### Breakpoints Reference
+
+| Prefix | Min Width | Use Case |
+|--------|-----------|----------|
+| (none) | 0px | Mobile phones |
+| `sm:` | 640px | Large phones, small tablets |
+| `md:` | 768px | iPad mini, iPad |
+| `lg:` | 1024px | iPad Pro (max app width) |

@@ -20,7 +20,7 @@ export function PrivacyPolicyModal({ onAnimatedClose }: PrivacyPolicyModalProps)
   };
 
   return (
-    <div className="relative w-[320px] max-h-[80vh] bg-bg-card rounded-2xl border-2 border-border overflow-hidden flex flex-col">
+    <div className="relative w-full max-w-[320px] max-h-[80vh] bg-bg-card rounded-2xl border-2 border-border overflow-hidden flex flex-col">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
         <h2 className="text-text-inverse text-h3">Terms & Privacy</h2>

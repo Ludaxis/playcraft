@@ -3,10 +3,17 @@
 import React from 'react';
 import Image from 'next/image';
 import { useGame, useNavigation } from '@/store';
+import { FeatureDisabled } from '@/components/shared';
+import { isFeatureEnabled } from '@/config/features';
 
 export function ProfilePage() {
   const { state } = useGame();
   const { navigate, openModal } = useNavigation();
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('PROFILES')) {
+    return <FeatureDisabled featureName="Profile" />;
+  }
   const { player, areas, team } = state;
 
   const completedAreas = areas.filter((a) => a.completed).length;

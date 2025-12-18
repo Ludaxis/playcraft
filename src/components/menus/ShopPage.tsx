@@ -3,13 +3,19 @@
 import React, { useState } from 'react';
 import { useGame, useNavigation } from '@/store';
 import { ShopPanel, CoinPackGrid } from '@/components/ui/ShopPanel';
-import { BottomNavigation } from '@/components/shared';
+import { BottomNavigation, FeatureDisabled } from '@/components/shared';
 import { shopMockData } from '@/config/mockData';
+import { isFeatureEnabled } from '@/config/features';
 
 export function ShopPage() {
   const { state } = useGame();
   const { navigate } = useNavigation();
   const [showMoreOffers, setShowMoreOffers] = useState(false);
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('SHOP')) {
+    return <FeatureDisabled featureName="Shop" />;
+  }
 
   const { coinPacks, specialOfferItems, princeItems, queenItems } = shopMockData;
 

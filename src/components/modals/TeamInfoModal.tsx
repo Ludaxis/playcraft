@@ -55,7 +55,7 @@ export function TeamInfoModal({ onAnimatedClose }: TeamInfoModalProps) {
   };
 
   return (
-    <div className="relative w-[340px] max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="relative w-full max-w-[340px] max-h-[90vh] overflow-hidden flex flex-col">
       {/* Close button */}
       <button
         onClick={handleClose}

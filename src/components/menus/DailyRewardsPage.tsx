@@ -2,12 +2,19 @@
 
 import React from 'react';
 import { PageLayout } from '@/components/layout';
-import { Panel, Button, Badge } from '@/components/ui';
+import { Card as Panel, Button, Badge } from '@/components/base';
+import { FeatureDisabled } from '@/components/shared';
 import { useGame, gameActions } from '@/store';
+import { isFeatureEnabled } from '@/config/features';
 
 export function DailyRewardsPage() {
   const { state, dispatch } = useGame();
   const { dailyRewards } = state;
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('DAILY_REWARDS')) {
+    return <FeatureDisabled featureName="Daily Rewards" />;
+  }
 
   const handleClaim = (day: number) => {
     dispatch(gameActions.claimDailyReward(day));
@@ -25,7 +32,7 @@ export function DailyRewardsPage() {
           </p>
         </Panel>
 
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 gap-3">
           {dailyRewards.map((reward) => (
             <DailyRewardCard
               key={reward.day}

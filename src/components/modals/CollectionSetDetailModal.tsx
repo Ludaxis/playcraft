@@ -98,7 +98,7 @@ export function CollectionSetDetailModal({ onAnimatedClose }: CollectionSetDetai
         <span className="text-text-inverse font-bold text-value">X</span>
       </button>
 
-        <div className="w-[320px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
+        <div className="w-full max-w-[320px] bg-brand-muted rounded-2xl border-4 border-border-strong overflow-hidden">
         {/* Header */}
         <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
           <button

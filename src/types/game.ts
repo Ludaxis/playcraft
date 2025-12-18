@@ -1,5 +1,8 @@
 // Core game types for Puzzle Kit prototype
 
+// EventType is derived from the centralized registry (single source of truth)
+import type { EventId } from '@/config/registry';
+
 export interface PlayerState {
   coins: number;
   lives: number;
@@ -45,18 +48,9 @@ export interface LiveOpsEvent {
   rewards: Reward[];
 }
 
-export type EventType =
-  | 'royal-pass'
-  | 'sky-race'
-  | 'kings-cup'
-  | 'team-chest'
-  | 'book-of-treasure'
-  | 'lightning-rush'
-  | 'lava-quest'
-  | 'album'
-  | 'collection'
-  | 'mission-control'
-  | 'winning-streak';
+// EventType is now derived from EventId in registry (single source of truth)
+// To add a new event type, add it to EVENT_REGISTRY in src/config/registry.ts
+export type EventType = EventId;
 
 export interface Reward {
   type: 'coins' | 'booster' | 'stars' | 'lives' | 'card';

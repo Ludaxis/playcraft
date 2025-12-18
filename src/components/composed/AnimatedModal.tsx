@@ -15,7 +15,7 @@ export function AnimatedModal({
   children,
   className = '',
   onClose,
-  width = 'w-[320px]',
+  width = 'w-full max-w-sm mx-4 sm:mx-auto',
 }: AnimatedModalProps) {
   const { closeModal } = useNavigation();
   const overlayRef = useRef<HTMLDivElement>(null);

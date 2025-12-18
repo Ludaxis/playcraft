@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { BottomNavigation } from '@/components/shared';
+import { BottomNavigation, FeatureDisabled } from '@/components/shared';
+import { isFeatureEnabled } from '@/config/features';
 
 // Mock data for areas
 const areasData = [
@@ -13,6 +14,11 @@ const areasData = [
 ];
 
 export function AreaTasksPage() {
+  // Feature flag check
+  if (!isFeatureEnabled('AREAS')) {
+    return <FeatureDisabled featureName="Areas" />;
+  }
+
   return (
     <div className="flex flex-col h-full bg-bg-inverse">
       {/* Header */}

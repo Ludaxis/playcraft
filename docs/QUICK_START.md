@@ -46,12 +46,33 @@ Open `src/config/features.ts`:
 
 ```typescript
 export const FEATURES = {
-  TEAMS: true,           // Enable teams
-  FRIENDS: false,        // Disable friends
-  DAILY_REWARDS: true,   // Enable daily rewards
-  EVENT_ROYAL_PASS: true, // Enable Royal Pass event
+  // Core Systems
+  LIVES_SYSTEM: true,       // Enable lives
+  COINS_SYSTEM: true,       // Enable coins
+  BOOSTERS: true,           // Enable boosters
+  AREAS: true,              // Enable area meta-game
+
+  // Social Features
+  TEAMS: true,              // Enable teams
+  FRIENDS: false,           // Disable friends
+  LEADERBOARDS: true,       // Enable leaderboards
+  PROFILES: true,           // Enable profiles
+
+  // Monetization
+  SHOP: true,               // Enable shop
+  DAILY_REWARDS: true,      // Enable daily rewards
+
+  // LiveOps Events
+  EVENT_ROYAL_PASS: true,   // Enable Royal Pass
+  EVENT_SKY_RACE: true,     // Enable Sky Race
+  EVENT_LIGHTNING_RUSH: false, // Disable Lightning Rush
 };
 ```
+
+**What happens when a feature is disabled:**
+- The page shows a friendly "Feature Disabled" message
+- Events won't appear in the main menu
+- Navigation still works (no crashes)
 
 ## 4. Add Your First Feature
 
@@ -189,6 +210,39 @@ puzzle-kit/
 
 ---
 
+## 9. Run Tests
+
+```bash
+npm run test        # Run Playwright smoke tests
+npm run test:ui     # Run tests with UI
+```
+
+---
+
+## Responsive Design
+
+The app is responsive from mobile (390px) up to iPad Pro 12.9" (1024px).
+
+**For modals and panels:**
+```tsx
+// ✅ Good - responsive
+<div className="w-full max-w-[320px]">
+
+// ❌ Bad - fixed width
+<div className="w-[320px]">
+```
+
+**For grids:**
+```tsx
+// ✅ Good - adapts to screen size
+<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+
+// ❌ Bad - always 2 columns
+<div className="grid grid-cols-2">
+```
+
+---
+
 ## Common Commands
 
 | Command | Description |
@@ -196,6 +250,8 @@ puzzle-kit/
 | `npm run dev` | Start development server |
 | `npm run build` | Production build |
 | `npm run lint` | Run linter |
+| `npm run test` | Run Playwright tests |
+| `npm run test:ui` | Run tests with UI |
 | `npm run storybook` | Launch Storybook |
 | `npm run generate` | Interactive generator |
 | `npm run generate page <name>` | Generate a page |

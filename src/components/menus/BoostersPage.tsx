@@ -2,8 +2,11 @@
 
 import React, { useState } from 'react';
 import { PageLayout } from '@/components/layout';
-import { Panel, Tabs, Badge, Button } from '@/components/ui';
+import { Card as Panel, Badge, Button } from '@/components/base';
+import { Tabs } from '@/components/composed';
+import { FeatureDisabled } from '@/components/shared';
 import { useGame } from '@/store';
+import { isFeatureEnabled } from '@/config/features';
 
 const tabs = [
   { id: 'pre-game', label: 'Pre-Game' },
@@ -14,6 +17,11 @@ export function BoostersPage() {
   const { state } = useGame();
   const { boosters } = state;
   const [activeTab, setActiveTab] = useState('pre-game');
+
+  // Feature flag check (must be after hooks)
+  if (!isFeatureEnabled('BOOSTERS')) {
+    return <FeatureDisabled featureName="Boosters" />;
+  }
 
   const filteredBoosters = boosters.filter((b) => b.type === activeTab);
 
@@ -27,7 +35,7 @@ export function BoostersPage() {
           className="mb-4"
         />
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {filteredBoosters.map((booster) => (
             <Panel key={booster.id} variant="elevated" className="relative">
               {/* Count Badge */}

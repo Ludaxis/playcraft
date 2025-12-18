@@ -44,7 +44,7 @@ export function MemberProfileModal({ onAnimatedClose }: MemberProfileModalProps)
   };
 
   return (
-    <div className="relative w-[340px] max-h-[90vh] overflow-y-auto">
+    <div className="relative w-full max-w-[340px] max-h-[90vh] overflow-y-auto">
       {/* Close button */}
       <button
         onClick={handleClose}

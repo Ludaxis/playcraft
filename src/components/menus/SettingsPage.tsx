@@ -36,7 +36,7 @@ export function SettingsPage() {
         {/* Toggles Panel */}
         <div className="bg-bg-page rounded-xl border-2 border-border p-4">
           {/* Row 1: Music, Sound, Vibration */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-4">
             <SettingsToggle
               label="Music"
               checked={settings.music}
@@ -55,7 +55,7 @@ export function SettingsPage() {
           </div>
 
           {/* Row 2: Hint, Notifications */}
-          <div className="grid grid-cols-2 gap-3 max-w-[280px] mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             <SettingsToggle
               label="Hint"
               checked={true}

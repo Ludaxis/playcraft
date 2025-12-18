@@ -24,7 +24,7 @@ export function ProfileModal({ onAnimatedClose }: ProfileModalProps) {
   };
 
   return (
-    <div className="relative w-[320px]">
+    <div className="relative w-full max-w-[320px]">
       {/* Close button - Top right */}
       <button
         onClick={handleClose}

@@ -102,8 +102,55 @@ GSAP is used for all animations. Key patterns:
 - Modal animations: Slide down/up with backdrop fade via `AnimatedModal`
 - Swipe gestures: Use `useSwipeNavigation` hook for touch navigation
 
+### Responsive Design
+
+The app is responsive from mobile (390px) up to iPad Pro 12.9" (1024px max width).
+
+**Breakpoints (Tailwind defaults):**
+- `sm`: 640px (large phone / small tablet)
+- `md`: 768px (iPad mini / iPad)
+- `lg`: 1024px (iPad Pro - max width)
+
+**Key patterns:**
+- Container: `.phone-frame` uses `width: 100%; max-width: 1024px`
+- Modals: Use `w-full max-w-[320px]` instead of fixed widths
+- Grids: Use responsive columns like `grid-cols-2 sm:grid-cols-3 md:grid-cols-4`
+- Navigation: BottomNavigation centers with `max-w-lg mx-auto` on wide screens
+- PageLayout: Adds responsive padding `sm:px-4 md:px-6 lg:px-8`
+
+**Best practices:**
+- Always use `w-full max-w-[Xpx]` for modals and panels
+- Use Tailwind responsive prefixes (`sm:`, `md:`, `lg:`) for breakpoint-specific styles
+- Center content on wide screens rather than stretching edge-to-edge
+
+### Feature Flags
+
+Features can be enabled/disabled in `src/config/features.ts`:
+
+```typescript
+import { isFeatureEnabled } from '@/config/features';
+
+// Check if feature is enabled
+if (!isFeatureEnabled('SHOP')) {
+  return <FeatureDisabled featureName="Shop" />;
+}
+```
+
+Disabled features show a friendly "Feature Disabled" message with a back button.
+
 ### Configuration
 
 - `src/config/initialData.ts` - Mock game data
 - `src/config/adminDefaults.ts` - Default admin settings
 - `src/config/themePresets.ts` - 7 theme presets (grayscale, purple, blue, green, orange, pink, teal)
+- `src/config/features.ts` - Feature flags for enabling/disabling features
+- `src/config/registry.ts` - Centralized page, modal, and event registry
+
+### Testing
+
+```bash
+npm run test        # Run Playwright tests
+npm run test:ui     # Run tests with UI
+```
+
+Smoke tests verify basic navigation and modal functionality.

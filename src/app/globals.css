@@ -291,30 +291,50 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Mobile phone container */
+/* App container - responsive layout */
 body {
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 20px;
+  align-items: stretch;
+  padding: 0;
   box-sizing: border-box;
   min-height: 100vh;
 }
 
-/* App wrapper - mobile phone frame (wireframe style) */
+/* Desktop: add padding and center the frame */
+@media (min-width: 1025px) {
+  body {
+    padding: 20px;
+    align-items: center;
+  }
+}
+
+/* App wrapper - responsive frame (mobile to iPad Pro) */
 .phone-frame {
-  width: 390px;
-  height: calc(100vh - 40px);
-  max-height: 844px;
-  min-height: 700px;
+  width: 100%;
+  max-width: 1024px;
+  height: 100vh;
+  min-height: 0;
   background: var(--color-bg-page);
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
-  border: 2px solid var(--color-border-strong);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: none;
+  box-shadow: none;
   position: relative;
   display: flex;
   flex-direction: column;
+}
+
+/* Desktop: add frame styling */
+@media (min-width: 1025px) {
+  .phone-frame {
+    height: calc(100vh - 40px);
+    max-height: 900px;
+    min-height: 700px;
+    border-radius: 8px;
+    border: 2px solid var(--color-border-strong);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  }
 }
 
 /* Ensure content fills phone frame */

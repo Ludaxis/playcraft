@@ -35,7 +35,7 @@ export function LevelStartModal({ onAnimatedClose }: LevelStartModalProps) {
   };
 
   return (
-    <div className="w-[320px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
+    <div className="w-full max-w-[320px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
         {/* Header */}
         <div className="bg-bg-inverse py-2.5 px-3 flex items-center justify-center relative">
           <h2 className="text-text-inverse text-h4">Level {player.currentLevel}</h2>

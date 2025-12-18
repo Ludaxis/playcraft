@@ -256,7 +256,7 @@ export function MissionControlPage() {
       {/* Info Modal */}
       {showInfoModal && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" onClick={(e) => e.stopPropagation()}>
-          <div className="relative w-[320px]">
+          <div className="relative w-full max-w-[320px] mx-4">
             {/* Close button */}
             <button
               onClick={() => setShowInfoModal(false)}

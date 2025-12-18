@@ -8,6 +8,22 @@ import { LevelRoadmap } from './LevelRoadmap';
 import { useTimer } from '@/hooks';
 import { EVENT_REGISTRY, isValidEventId, type EventId } from '@/config/registry';
 import { winningStreakMockData, getEventEndTime } from '@/config/mockData';
+import { isFeatureEnabled, type FeatureFlag } from '@/config/features';
+
+// Map event IDs to feature flags for filtering
+const eventToFeature: Record<string, FeatureFlag> = {
+  'royal-pass': 'EVENT_ROYAL_PASS',
+  'sky-race': 'EVENT_SKY_RACE',
+  'kings-cup': 'EVENT_KINGS_CUP',
+  'team-chest': 'EVENT_TEAM_CHEST',
+  'book-of-treasure': 'EVENT_BOOK_OF_TREASURE',
+  'lightning-rush': 'EVENT_LIGHTNING_RUSH',
+  'lava-quest': 'EVENT_LAVA_QUEST',
+  'mission-control': 'EVENT_MISSION_CONTROL',
+  'album': 'EVENT_ALBUM',
+  'collection': 'EVENT_COLLECTION',
+  'winning-streak': 'EVENT_WINNING_STREAK',
+};
 
 export function MainMenu() {
   const { state } = useGame();
@@ -19,12 +35,23 @@ export function MainMenu() {
   const completedTasks = currentArea?.tasks.filter((t) => t.completed).length || 0;
   const totalTasks = currentArea?.tasks.length || 0;
 
-  // Get events from placement config (exclude winning-streak from side events)
-  const leftEvents = (config.eventPlacement?.left || []).filter(id => id !== 'winning-streak');
-  const rightEvents = (config.eventPlacement?.right || []).filter(id => id !== 'winning-streak');
+  // Helper to check if event is enabled (both admin toggle AND feature flag)
+  const isEventAvailable = (eventId: string): boolean => {
+    const featureFlag = eventToFeature[eventId];
+    // Event must be enabled in admin AND feature flag must be true
+    return isEventEnabled(eventId) && (!featureFlag || isFeatureEnabled(featureFlag));
+  };
 
-  // Check if winning streak is enabled
-  const showWinningStreak = isEventEnabled('winning-streak');
+  // Get events from placement config (exclude winning-streak from side events, filter by feature flags)
+  const leftEvents = (config.eventPlacement?.left || [])
+    .filter(id => id !== 'winning-streak')
+    .filter(id => isEventAvailable(id));
+  const rightEvents = (config.eventPlacement?.right || [])
+    .filter(id => id !== 'winning-streak')
+    .filter(id => isEventAvailable(id));
+
+  // Check if winning streak is enabled (both admin toggle AND feature flag)
+  const showWinningStreak = isEventAvailable('winning-streak');
 
   return (
     <div className="relative flex flex-col h-full bg-bg-page overflow-hidden">
@@ -112,20 +139,20 @@ export function MainMenu() {
             </div>
 
             {/* Bottom Buttons - Level & Area */}
-            <div className="absolute bottom-4 left-0 right-0 px-3 flex items-end justify-between">
+            <div className="absolute bottom-4 left-0 right-0 px-3 flex items-end justify-center gap-8">
               {/* Level Button */}
               <button
                 onClick={() => openModal('level-start')}
-                className="bg-bg-inverse border-2 border-border rounded-lg px-6 py-3"
+                className="bg-bg-inverse border-2 border-border rounded-xl w-40 h-20 flex flex-col items-center justify-center"
               >
                 <div className="text-text-inverse text-h3">Level {player.currentLevel}</div>
-                <div className="text-text-muted text-caption text-center">Super Hard</div>
+                <div className="text-text-muted text-caption">Super Hard</div>
               </button>
 
               {/* Area Button */}
               <button
                 onClick={() => navigate('area-tasks')}
-                className="bg-bg-card border-2 border-border rounded-lg px-4 py-3 flex items-center gap-3"
+                className="bg-bg-card border-2 border-border rounded-xl w-40 h-20 flex items-center justify-center gap-3"
               >
                 <div>
                   <div className="text-text-primary text-value">Area {player.currentArea}</div>

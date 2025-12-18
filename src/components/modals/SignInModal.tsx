@@ -20,7 +20,7 @@ export function SignInModal({ onAnimatedClose }: SignInModalProps) {
   };
 
   return (
-    <div className="relative w-[300px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
+    <div className="relative w-full max-w-[300px] bg-bg-card rounded-2xl border-2 border-border overflow-hidden">
       {/* Header */}
       <div className="bg-bg-inverse py-3 px-4 flex items-center justify-between">
         <h2 className="text-text-inverse text-h3">Save Your Progress</h2>
