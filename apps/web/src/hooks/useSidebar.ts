@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = 'joyixir-sidebar-collapsed';
+const STORAGE_KEY = 'playcraft-sidebar-collapsed';
 
 export interface UseSidebarReturn {
   isCollapsed: boolean;

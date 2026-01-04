@@ -28,7 +28,7 @@ Building a mobile game? Start with the Mobile preview and work your way up to De
 
 ## How It Works
 
-Joyixir uses [WebContainer](https://webcontainers.io/) to run a full Node.js environment in your browser. Your code runs locally - nothing is sent to a server.
+PlayCraft uses [WebContainer](https://webcontainers.io/) to run a full Node.js environment in your browser. Your code runs locally - nothing is sent to a server.
 
 The preview panel is completely separate from the chat panel, with its own header containing:
 - **Preview/Code tabs** - Switch between live preview and code editor

@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Joyixir.
+All notable changes to PlayCraft.
 
 ## January 2026
 

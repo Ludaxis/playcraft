@@ -4,7 +4,7 @@ Build immersive 3D experiences with Three.js.
 
 ## Auto-Installation
 
-When you describe a 3D game, Joyixir automatically installs:
+When you describe a 3D game, PlayCraft automatically installs:
 
 - `three` - Core library
 - `@react-three/fiber` - React renderer

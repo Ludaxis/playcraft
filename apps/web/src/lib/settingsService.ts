@@ -61,7 +61,7 @@ export async function getUserSettings(): Promise<UserSettings> {
 
   // Try to get existing settings
   const { data, error } = await supabase
-    .from('joyixir_user_settings')
+    .from('playcraft_user_settings')
     .select('*')
     .eq('user_id', user.id)
     .single();
@@ -73,7 +73,7 @@ export async function getUserSettings(): Promise<UserSettings> {
   // If no settings exist, create default
   if (!data) {
     const { data: newSettings, error: insertError } = await supabase
-      .from('joyixir_user_settings')
+      .from('playcraft_user_settings')
       .insert({
         user_id: user.id,
         display_name: user.user_metadata?.full_name || null,
@@ -104,7 +104,7 @@ export async function updateUserSettings(input: UpdateSettingsInput): Promise<Us
   }
 
   const { data, error } = await supabase
-    .from('joyixir_user_settings')
+    .from('playcraft_user_settings')
     .update(input)
     .eq('user_id', user.id)
     .select()
@@ -172,7 +172,7 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
   }
 
   const { data, error } = await supabase
-    .from('joyixir_user_settings')
+    .from('playcraft_user_settings')
     .select('id')
     .eq('username', username)
     .neq('user_id', user.id)
@@ -220,13 +220,13 @@ export async function getUsageStats(): Promise<{
 
   // Get projects count
   const { count: projectsCount } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
   // Get chat sessions count for credits used approximation
   const { count: chatSessionsCount } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .select('*', { count: 'exact', head: true });
 
   // Calculate credits (for now, each chat session = 1 credit used)

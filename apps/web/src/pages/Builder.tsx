@@ -25,15 +25,15 @@ import {
 } from '../components/builder';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
 import type { DeviceMode } from '../components/builder/DeviceToggle';
-import { useWebContainer, useJoyixirChat } from '../hooks';
+import { useWebContainer, usePlayCraftChat } from '../hooks';
 import { viteStarterTemplate } from '../templates';
-import { applyGeneratedFiles } from '../lib/joyixirService';
+import { applyGeneratedFiles } from '../lib/playcraftService';
 import {
   updateProject,
   updateProjectStatus,
   saveProjectFiles,
   getProject,
-  type JoyixirProject,
+  type PlayCraftProject,
 } from '../lib/projectService';
 import {
   getChatSessions,
@@ -82,7 +82,7 @@ function debounce<T extends (...args: unknown[]) => void>(fn: T, delay: number):
 
 interface BuilderPageProps {
   user: User;
-  project: JoyixirProject;
+  project: PlayCraftProject;
   initialPrompt?: string | null;
   onBackToHome: () => void;
 }
@@ -94,7 +94,7 @@ export function BuilderPage({
   onBackToHome,
 }: BuilderPageProps) {
   // Project state - use fresh data from database
-  const [project, setProject] = useState<JoyixirProject>(initialProject);
+  const [project, setProject] = useState<PlayCraftProject>(initialProject);
   const [isLoadingProject, setIsLoadingProject] = useState(true);
 
   // Fetch fresh project data on mount
@@ -246,7 +246,7 @@ export function BuilderPage({
 
   // AI Chat hook with file generation callback
   const { messages, isGenerating, sendMessage: sendAiMessage, addSystemMessage } =
-    useJoyixirChat({
+    usePlayCraftChat({
       readFile: readProjectFile,
       hasThreeJs,
       onNeedsThreeJs: upgradeToThreeJs,
@@ -548,7 +548,7 @@ export function BuilderPage({
     // Update project's active session
     await updateProject(project.id, { active_chat_session_id: session.id });
 
-    // TODO: Load session messages into chat (would need to extend useJoyixirChat hook)
+    // TODO: Load session messages into chat (would need to extend usePlayCraftChat hook)
     // For now, this just sets the active session for saving
   }, [project.id]);
 
@@ -561,7 +561,7 @@ export function BuilderPage({
     // Update project to clear active session
     await updateProject(project.id, { active_chat_session_id: null });
 
-    // TODO: Clear chat messages (would need to extend useJoyixirChat hook)
+    // TODO: Clear chat messages (would need to extend usePlayCraftChat hook)
     // For now, this just prepares for a new session
   }, [project.id]);
 

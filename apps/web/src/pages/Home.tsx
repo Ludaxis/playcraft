@@ -12,7 +12,7 @@ import {
 import {
   getProjects,
   createProject,
-  type JoyixirProject,
+  type PlayCraftProject,
 } from '../lib/projectService';
 import { getUserSettings, getUsageStats } from '../lib/settingsService';
 import { SettingsModal, SearchModal, Avatar, Sidebar } from '../components';
@@ -22,7 +22,7 @@ import type { NavItem, UsageStats } from '../types';
 interface HomePageProps {
   user: User;
   onSignOut: () => void;
-  onSelectProject: (project: JoyixirProject) => void;
+  onSelectProject: (project: PlayCraftProject) => void;
   onStartNewProject: (prompt: string) => void;
 }
 
@@ -35,7 +35,7 @@ const TEMPLATES = [
 ];
 
 export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }: HomePageProps) {
-  const [projects, setProjects] = useState<JoyixirProject[]>([]);
+  const [projects, setProjects] = useState<PlayCraftProject[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [activeNav, setActiveNav] = useState<NavItem>('home');
   const [showUserMenu, setShowUserMenu] = useState(false);

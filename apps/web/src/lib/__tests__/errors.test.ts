@@ -1,21 +1,21 @@
 import { describe, it, expect } from 'vitest';
 import {
-  JoyixirError,
+  PlayCraftError,
   NetworkError,
   ValidationError,
   isRetryable,
   formatUserMessage,
 } from '../errors';
 
-describe('JoyixirError', () => {
+describe('PlayCraftError', () => {
   it('creates error with code and cause', () => {
     const cause = new Error('original');
-    const error = new JoyixirError('Something went wrong', 'TEST_ERROR', cause);
+    const error = new PlayCraftError('Something went wrong', 'TEST_ERROR', cause);
 
     expect(error.message).toBe('Something went wrong');
     expect(error.code).toBe('TEST_ERROR');
     expect(error.cause).toBe(cause);
-    expect(error.name).toBe('JoyixirError');
+    expect(error.name).toBe('PlayCraftError');
   });
 });
 
@@ -43,11 +43,11 @@ describe('isRetryable', () => {
   });
 
   it('returns true for TIMEOUT error', () => {
-    expect(isRetryable(new JoyixirError('timeout', 'TIMEOUT'))).toBe(true);
+    expect(isRetryable(new PlayCraftError('timeout', 'TIMEOUT'))).toBe(true);
   });
 
   it('returns true for SERVICE_UNAVAILABLE error', () => {
-    expect(isRetryable(new JoyixirError('unavailable', 'SERVICE_UNAVAILABLE'))).toBe(true);
+    expect(isRetryable(new PlayCraftError('unavailable', 'SERVICE_UNAVAILABLE'))).toBe(true);
   });
 
   it('returns false for ValidationError', () => {
@@ -65,8 +65,8 @@ describe('isRetryable', () => {
 });
 
 describe('formatUserMessage', () => {
-  it('returns message from JoyixirError', () => {
-    const error = new JoyixirError('Custom message', 'CODE');
+  it('returns message from PlayCraftError', () => {
+    const error = new PlayCraftError('Custom message', 'CODE');
     expect(formatUserMessage(error)).toBe('Custom message');
   });
 

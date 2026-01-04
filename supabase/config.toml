@@ -1,4 +1,4 @@
-# Joyixir Supabase Configuration
+# PlayCraft Supabase Configuration
 # Uses the same database as NextTale
 
 [api]
@@ -42,5 +42,5 @@ secret = "env(GITHUB_CLIENT_SECRET)"
 [functions]
 verify_jwt = true
 
-[functions.generate-joyixir]
+[functions.generate-playcraft]
 verify_jwt = true

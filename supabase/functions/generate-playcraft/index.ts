@@ -28,7 +28,7 @@ interface GeneratedResponse {
   needsThreeJs?: boolean; // Signal to add Three.js template
 }
 
-const SYSTEM_PROMPT = `You are an expert game developer working in Joyixir, an AI-powered game builder.
+const SYSTEM_PROMPT = `You are an expert game developer working in PlayCraft, an AI-powered game builder.
 You're helping users build interactive browser games with the following tech stack:
 
 TECH STACK:

@@ -1,10 +1,10 @@
 # Getting Started
 
-Get up and running with Joyixir in under 5 minutes.
+Get up and running with PlayCraft in under 5 minutes.
 
 ## Quick Start
 
-1. **Go to [joyixir.app](https://joyixir.app)**
+1. **Go to [playcraft.app](https://playcraft.app)**
 2. **Sign in** with Google or GitHub
 3. **Create a new project** from the dashboard
 4. **Describe your game** in the chat panel
@@ -27,7 +27,7 @@ The AI will generate a complete, working game in seconds.
 
 ## Interface Overview
 
-Joyixir uses a modern split-panel layout inspired by the best AI code editors:
+PlayCraft uses a modern split-panel layout inspired by the best AI code editors:
 
 ### Left Panel - Chat
 | Feature | Description |

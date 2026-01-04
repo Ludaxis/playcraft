@@ -14,17 +14,17 @@ import {
   getProjects,
   createProject,
   deleteProject,
-  type JoyixirProject,
+  type PlayCraftProject,
 } from '../lib/projectService';
 
 interface ProjectsPageProps {
   user: User;
   onSignOut: () => void;
-  onSelectProject: (project: JoyixirProject) => void;
+  onSelectProject: (project: PlayCraftProject) => void;
 }
 
 export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageProps) {
-  const [projects, setProjects] = useState<JoyixirProject[]>([]);
+  const [projects, setProjects] = useState<PlayCraftProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
@@ -84,7 +84,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
     });
   };
 
-  const getStatusBadge = (status: JoyixirProject['status']) => {
+  const getStatusBadge = (status: PlayCraftProject['status']) => {
     const styles = {
       draft: 'bg-gray-700 text-gray-300',
       building: 'bg-yellow-900 text-yellow-300',
@@ -109,7 +109,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
             </div>
             <div>
               <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-xl font-bold text-transparent">
-                Joyixir
+                PlayCraft
               </h1>
               <p className="text-xs text-gray-500">Game Builder</p>
             </div>

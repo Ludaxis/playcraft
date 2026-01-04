@@ -2,7 +2,7 @@
 layout: home
 
 hero:
-  name: Joyixir
+  name: PlayCraft
   text: AI-Powered Game Builder
   tagline: Create games with natural language. No coding required.
   actions:
@@ -11,7 +11,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/joyixir
+      link: https://github.com/playcraft
 
 features:
   - icon: 🤖

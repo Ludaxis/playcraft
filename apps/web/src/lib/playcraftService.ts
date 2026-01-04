@@ -28,8 +28,8 @@ export interface GenerateRequest {
 }
 
 /**
- * Generate code using the Joyixir AI service.
- * This calls the generate-joyixir edge function to modify/create files
+ * Generate code using the PlayCraft AI service.
+ * This calls the generate-playcraft edge function to modify/create files
  * within the Next.js template structure.
  */
 export async function generateCode(
@@ -48,7 +48,7 @@ export async function generateCode(
     async () => {
       const supabaseUrl = getSupabaseUrl();
       const response = await fetch(
-        `${supabaseUrl}/functions/v1/generate-joyixir`,
+        `${supabaseUrl}/functions/v1/generate-playcraft`,
         {
           method: 'POST',
           headers: {
@@ -72,7 +72,7 @@ export async function generateCode(
       maxAttempts: 3,
       onRetry: (attempt, error) => {
         logger.warn('Generation retry', {
-          component: 'joyixirService',
+          component: 'playcraftService',
           action: 'generateCode',
           attempt,
           error: error.message,

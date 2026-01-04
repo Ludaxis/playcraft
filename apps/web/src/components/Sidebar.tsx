@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { SidebarItem, SidebarSection } from './SidebarItem';
 import { WorkspaceDropdown } from './WorkspaceDropdown';
-import type { JoyixirProject, NavItem } from '../types';
+import type { PlayCraftProject, NavItem } from '../types';
 
 interface SidebarProps {
   user: User;
@@ -30,8 +30,8 @@ interface SidebarProps {
   onToggleCollapse: () => void;
   activeNav: NavItem;
   onNavChange: (nav: NavItem) => void;
-  recentProjects?: JoyixirProject[];
-  onSelectProject?: (project: JoyixirProject) => void;
+  recentProjects?: PlayCraftProject[];
+  onSelectProject?: (project: PlayCraftProject) => void;
   onOpenSettings: () => void;
   onOpenSearch: () => void;
   onOpenFeedback?: () => void;
@@ -80,7 +80,7 @@ export function Sidebar({
           </div>
           {!isCollapsed && (
             <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-lg font-bold text-transparent">
-              Joyixir
+              PlayCraft
             </span>
           )}
         </div>

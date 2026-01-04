@@ -1,22 +1,22 @@
-export class JoyixirError extends Error {
+export class PlayCraftError extends Error {
   constructor(
     message: string,
     public code: string,
     public cause?: unknown
   ) {
     super(message);
-    this.name = 'JoyixirError';
+    this.name = 'PlayCraftError';
   }
 }
 
-export class NetworkError extends JoyixirError {
+export class NetworkError extends PlayCraftError {
   constructor(message: string, cause?: unknown) {
     super(message, 'NETWORK_ERROR', cause);
     this.name = 'NetworkError';
   }
 }
 
-export class ValidationError extends JoyixirError {
+export class ValidationError extends PlayCraftError {
   constructor(message: string, cause?: unknown) {
     super(message, 'VALIDATION_ERROR', cause);
     this.name = 'ValidationError';
@@ -26,7 +26,7 @@ export class ValidationError extends JoyixirError {
 const RETRYABLE_CODES = ['NETWORK_ERROR', 'TIMEOUT', 'SERVICE_UNAVAILABLE'];
 
 export function isRetryable(error: unknown): boolean {
-  if (error instanceof JoyixirError) {
+  if (error instanceof PlayCraftError) {
     return RETRYABLE_CODES.includes(error.code);
   }
   if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -36,7 +36,7 @@ export function isRetryable(error: unknown): boolean {
 }
 
 export function formatUserMessage(error: unknown): string {
-  if (error instanceof JoyixirError) {
+  if (error instanceof PlayCraftError) {
     return error.message;
   }
   if (error instanceof Error) {

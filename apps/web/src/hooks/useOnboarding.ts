@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = 'joyixir-onboarding-completed';
+const STORAGE_KEY = 'playcraft-onboarding-completed';
 
 export interface OnboardingStep {
   id: string;

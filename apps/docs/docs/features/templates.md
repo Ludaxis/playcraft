@@ -39,7 +39,7 @@ React Three Fiber for 3D experiences.
 
 ## Auto-Detection
 
-Joyixir automatically upgrades to Three.js when you use:
+PlayCraft automatically upgrades to Three.js when you use:
 
 - "3D", "three.js", "WebGL"
 - "first-person", "third-person"

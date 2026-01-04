@@ -11,7 +11,7 @@ interface ExportModalProps {
 export const ExportModal = memo(function ExportModal({
   isOpen,
   onClose,
-  projectName = 'joyixir-project',
+  projectName = 'playcraft-project',
 }: ExportModalProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');

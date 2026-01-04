@@ -13,7 +13,7 @@ export async function getChatSessions(projectId: string): Promise<ChatSession[]>
   const supabase = getSupabase();
 
   const { data, error } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .select('*')
     .eq('project_id', projectId)
     .order('updated_at', { ascending: false });
@@ -33,7 +33,7 @@ export async function getChatSession(id: string): Promise<ChatSession | null> {
   const supabase = getSupabase();
 
   const { data, error } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .select('*')
     .eq('id', id)
     .single();
@@ -57,7 +57,7 @@ export async function createChatSession(
   const supabase = getSupabase();
 
   const { data, error } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .insert({
       project_id: input.project_id,
       title: input.title,
@@ -85,7 +85,7 @@ export async function updateChatSession(
   const supabase = getSupabase();
 
   const { data, error } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .update(input)
     .eq('id', id)
     .select()
@@ -105,7 +105,7 @@ export async function deleteChatSession(id: string): Promise<void> {
   const supabase = getSupabase();
 
   const { error } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .delete()
     .eq('id', id);
 
@@ -124,7 +124,7 @@ export async function saveChatSessionMessages(
   const supabase = getSupabase();
 
   const { error } = await supabase
-    .from('joyixir_chat_sessions')
+    .from('playcraft_chat_sessions')
     .update({ messages })
     .eq('id', id);
 

@@ -1,8 +1,8 @@
 {
-  "name": "joyixir",
+  "name": "playcraft",
   "private": true,
   "version": "1.0.0",
-  "description": "Joyixir - AI-powered application builder",
+  "description": "PlayCraft - AI-powered application builder",
   "keywords": [
     "ai",
     "app-builder",
@@ -10,21 +10,21 @@
     "react",
     "vite"
   ],
-  "homepage": "https://joyixir.com",
+  "homepage": "https://playcraft.dev",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mohammadreza87/joyixir.git"
+    "url": "https://github.com/mohammadreza87/playcraft.git"
   },
-  "author": "Joyixir Team",
+  "author": "PlayCraft Team",
   "license": "MIT",
   "workspaces": [
     "apps/*"
   ],
   "scripts": {
-    "dev": "pnpm --filter @joyixir/web dev",
-    "dev:docs": "pnpm --filter @joyixir/docs dev",
-    "build": "pnpm --filter @joyixir/web build",
-    "build:docs": "pnpm --filter @joyixir/docs build",
+    "dev": "pnpm --filter @playcraft/web dev",
+    "dev:docs": "pnpm --filter @playcraft/docs dev",
+    "build": "pnpm --filter @playcraft/web build",
+    "build:docs": "pnpm --filter @playcraft/docs build",
     "build:all": "pnpm -r build",
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint:fix",

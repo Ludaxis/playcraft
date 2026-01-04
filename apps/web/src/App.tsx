@@ -7,7 +7,7 @@ import { LandingPage } from './pages/Landing';
 import { HomePage } from './pages/Home';
 import { FeedbackPage } from './pages/Feedback';
 import { ErrorBoundary } from './components';
-import { createProject, type JoyixirProject } from './lib/projectService';
+import { createProject, type PlayCraftProject } from './lib/projectService';
 
 type View = 'landing' | 'home' | 'builder';
 
@@ -17,7 +17,7 @@ function AppRoutes() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentView, setCurrentView] = useState<View>('landing');
-  const [currentProject, setCurrentProject] = useState<JoyixirProject | null>(null);
+  const [currentProject, setCurrentProject] = useState<PlayCraftProject | null>(null);
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,7 +58,7 @@ function AppRoutes() {
     navigate('/');
   };
 
-  const handleSelectProject = (project: JoyixirProject) => {
+  const handleSelectProject = (project: PlayCraftProject) => {
     setCurrentProject(project);
     setInitialPrompt(null); // Existing project, no initial prompt
     setCurrentView('builder');

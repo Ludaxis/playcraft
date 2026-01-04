@@ -5,11 +5,11 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import type { JoyixirProject, NavItem, ViewMode } from '../types';
+import type { PlayCraftProject, NavItem, ViewMode } from '../types';
 
 interface AppState {
   // Current project
-  currentProject: JoyixirProject | null;
+  currentProject: PlayCraftProject | null;
   initialPrompt: string | null;
 
   // UI State
@@ -19,7 +19,7 @@ interface AppState {
   bottomPanelOpen: boolean;
 
   // Actions
-  setCurrentProject: (project: JoyixirProject | null) => void;
+  setCurrentProject: (project: PlayCraftProject | null) => void;
   setInitialPrompt: (prompt: string | null) => void;
   setActiveNav: (nav: NavItem) => void;
   setViewMode: (mode: ViewMode) => void;
@@ -73,7 +73,7 @@ export const useAppStore = create<AppState>()(
           set(initialState, false, 'reset'),
       }),
       {
-        name: 'joyixir-app-storage',
+        name: 'playcraft-app-storage',
         partialize: (state) => ({
           viewMode: state.viewMode,
           leftPanelOpen: state.leftPanelOpen,

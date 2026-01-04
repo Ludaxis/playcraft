@@ -59,7 +59,7 @@ export function AccountPanel({
     <div>
       <h2 className="text-2xl font-bold text-white">Account settings</h2>
       <p className="mt-1 text-gray-400">
-        Personalize how others see and interact with you on Joyixir.
+        Personalize how others see and interact with you on PlayCraft.
       </p>
 
       <div className="mt-8 space-y-8">
@@ -93,7 +93,7 @@ export function AccountPanel({
               href={`/u/${username}`}
               className="mt-1 flex items-center gap-1 text-sm text-violet-400 hover:text-violet-300"
             >
-              joyixir.app/@{username}
+              playcraft.app/@{username}
               <ExternalLink className="h-3 w-3" />
             </a>
           )}
@@ -259,7 +259,7 @@ export function AccountPanel({
         <div className="border-t border-gray-800 pt-8">
           <h3 className="font-medium text-white">Delete account</h3>
           <p className="mt-1 text-sm text-gray-400">
-            Permanently delete your Joyixir account. This cannot be undone.
+            Permanently delete your PlayCraft account. This cannot be undone.
           </p>
           <button
             onClick={onDelete}

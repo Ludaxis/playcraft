@@ -2,7 +2,7 @@ import { getSupabase } from './supabase';
 import { withRetry } from './retry';
 import { logger } from './logger';
 
-export interface JoyixirProject {
+export interface PlayCraftProject {
   id: string;
   user_id: string;
   name: string;
@@ -27,16 +27,16 @@ export interface UpdateProjectInput {
   name?: string;
   description?: string;
   has_three_js?: boolean;
-  status?: JoyixirProject['status'];
+  status?: PlayCraftProject['status'];
   files?: Record<string, string>;
-  conversation?: JoyixirProject['conversation'];
+  conversation?: PlayCraftProject['conversation'];
   active_chat_session_id?: string | null;
 }
 
 /**
  * Get all projects for the current user
  */
-export async function getProjects(): Promise<JoyixirProject[]> {
+export async function getProjects(): Promise<PlayCraftProject[]> {
   const supabase = getSupabase();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -50,7 +50,7 @@ export async function getProjects(): Promise<JoyixirProject[]> {
   }
 
   const { data, error } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .select('*')
     .order('updated_at', { ascending: false });
 
@@ -66,11 +66,11 @@ export async function getProjects(): Promise<JoyixirProject[]> {
 /**
  * Get a single project by ID
  */
-export async function getProject(id: string): Promise<JoyixirProject | null> {
+export async function getProject(id: string): Promise<PlayCraftProject | null> {
   const supabase = getSupabase();
 
   const { data, error } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .select('*')
     .eq('id', id)
     .single();
@@ -84,7 +84,7 @@ export async function getProject(id: string): Promise<JoyixirProject | null> {
 
   // Update last_opened_at
   await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .update({ last_opened_at: new Date().toISOString() })
     .eq('id', id);
 
@@ -94,7 +94,7 @@ export async function getProject(id: string): Promise<JoyixirProject | null> {
 /**
  * Create a new project
  */
-export async function createProject(input: CreateProjectInput): Promise<JoyixirProject> {
+export async function createProject(input: CreateProjectInput): Promise<PlayCraftProject> {
   const supabase = getSupabase();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -112,7 +112,7 @@ export async function createProject(input: CreateProjectInput): Promise<JoyixirP
   return withRetry(
     async () => {
       const { data, error } = await supabase
-        .from('joyixir_projects')
+        .from('playcraft_projects')
         .insert({
           user_id: user.id,
           name: input.name,
@@ -145,13 +145,13 @@ export async function createProject(input: CreateProjectInput): Promise<JoyixirP
 /**
  * Update a project
  */
-export async function updateProject(id: string, input: UpdateProjectInput): Promise<JoyixirProject> {
+export async function updateProject(id: string, input: UpdateProjectInput): Promise<PlayCraftProject> {
   const supabase = getSupabase();
 
   return withRetry(
     async () => {
       const { data, error } = await supabase
-        .from('joyixir_projects')
+        .from('playcraft_projects')
         .update(input)
         .eq('id', id)
         .select()
@@ -179,7 +179,7 @@ export async function deleteProject(id: string): Promise<void> {
   const supabase = getSupabase();
 
   const { error } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .delete()
     .eq('id', id);
 
@@ -198,7 +198,7 @@ export async function saveProjectFiles(
   const supabase = getSupabase();
 
   const { error } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .update({ files })
     .eq('id', id);
 
@@ -212,12 +212,12 @@ export async function saveProjectFiles(
  */
 export async function saveProjectConversation(
   id: string,
-  conversation: JoyixirProject['conversation']
+  conversation: PlayCraftProject['conversation']
 ): Promise<void> {
   const supabase = getSupabase();
 
   const { error } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .update({ conversation })
     .eq('id', id);
 
@@ -231,12 +231,12 @@ export async function saveProjectConversation(
  */
 export async function updateProjectStatus(
   id: string,
-  status: JoyixirProject['status']
+  status: PlayCraftProject['status']
 ): Promise<void> {
   const supabase = getSupabase();
 
   const { error } = await supabase
-    .from('joyixir_projects')
+    .from('playcraft_projects')
     .update({ status })
     .eq('id', id);
 

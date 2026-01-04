@@ -5,8 +5,8 @@ export type {
   UseWebContainerReturn,
 } from './useWebContainer';
 
-export { useJoyixirChat } from './useJoyixirChat';
-export type { ChatMessage, UseJoyixirChatReturn } from './useJoyixirChat';
+export { usePlayCraftChat } from './usePlayCraftChat';
+export type { ChatMessage, UsePlayCraftChatReturn } from './usePlayCraftChat';
 
 export { useSidebar } from './useSidebar';
 export type { UseSidebarReturn } from './useSidebar';

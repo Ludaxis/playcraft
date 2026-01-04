@@ -10,7 +10,7 @@ export const nextjsCanvasTemplate: FileSystemTree = {
     file: {
       contents: JSON.stringify(
         {
-          name: 'joyixir-canvas-game',
+          name: 'playcraft-canvas-game',
           version: '0.1.0',
           private: true,
           scripts: {
@@ -122,7 +122,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Canvas Game',
-  description: 'Built with Joyixir',
+  description: 'Built with PlayCraft',
 }
 
 export default function RootLayout({

@@ -10,7 +10,7 @@ export const nextjsPhaserTemplate: FileSystemTree = {
     file: {
       contents: JSON.stringify(
         {
-          name: 'joyixir-phaser-game',
+          name: 'playcraft-phaser-game',
           version: '0.1.0',
           private: true,
           scripts: {
@@ -127,7 +127,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Phaser Game',
-  description: 'Built with Joyixir + Phaser 3',
+  description: 'Built with PlayCraft + Phaser 3',
 }
 
 export default function RootLayout({

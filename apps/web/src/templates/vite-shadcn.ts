@@ -10,7 +10,7 @@ export const viteShadcnTemplate: FileSystemTree = {
     file: {
       contents: JSON.stringify(
         {
-          name: 'joyixir-game',
+          name: 'playcraft-game',
           private: true,
           version: '0.0.0',
           type: 'module',
@@ -262,7 +262,7 @@ export default config
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/placeholder.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Joyixir Game</title>
+    <title>PlayCraft Game</title>
   </head>
   <body>
     <div id="root"></div>
@@ -390,7 +390,7 @@ export default function Index() {
           </div>
           <CardTitle className="text-2xl">Welcome to Your Game</CardTitle>
           <CardDescription>
-            Built with Joyixir - Start creating your game!
+            Built with PlayCraft - Start creating your game!
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

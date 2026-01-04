@@ -15,7 +15,7 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
               <Sparkles className="h-5 w-5 text-white" />
             </div>
             <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-xl font-extrabold text-transparent">
-              Joyixir
+              PlayCraft
             </span>
           </div>
           <button
@@ -123,7 +123,7 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
                 step: '1',
                 title: 'Describe Your App',
                 description:
-                  'Tell Joyixir what you want to build. "Create a todo app with dark mode and Supabase backend."',
+                  'Tell PlayCraft what you want to build. "Create a todo app with dark mode and Supabase backend."',
               },
               {
                 step: '2',
@@ -203,7 +203,7 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div className="flex items-center gap-2 text-gray-500">
             <Sparkles className="h-4 w-4" />
-            <span className="text-sm">Joyixir</span>
+            <span className="text-sm">PlayCraft</span>
           </div>
           <div className="flex gap-6 text-sm text-gray-500">
             <a href="/privacy" className="hover:text-white">

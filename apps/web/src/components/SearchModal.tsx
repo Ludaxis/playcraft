@@ -5,14 +5,14 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Gamepad2 } from 'lucide-react';
-import type { JoyixirProject } from '../lib/projectService';
+import type { PlayCraftProject } from '../lib/projectService';
 import { Avatar } from './Avatar';
 
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projects: JoyixirProject[];
-  onSelectProject: (project: JoyixirProject) => void;
+  projects: PlayCraftProject[];
+  onSelectProject: (project: PlayCraftProject) => void;
   userAvatar?: string;
   userName?: string;
 }
@@ -83,7 +83,7 @@ export function SearchModal({
     return then.toLocaleDateString();
   };
 
-  const handleSelectProject = (project: JoyixirProject) => {
+  const handleSelectProject = (project: PlayCraftProject) => {
     onSelectProject(project);
     onClose();
   };

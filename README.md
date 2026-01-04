@@ -1,6 +1,6 @@
-# Joyixir
+# PlayCraft
 
-The magic potion for building apps. Create full-stack applications with AI using natural language.
+Craft amazing apps with AI. Create full-stack applications using natural language.
 
 ## Getting Started
 
@@ -14,8 +14,8 @@ The magic potion for building apps. Create full-stack applications with AI using
 
 ```bash
 # Clone the repository
-git clone https://github.com/mohammadreza87/joyixir.git
-cd joyixir
+git clone https://github.com/mohammadreza87/playcraft.git
+cd playcraft
 
 # Install dependencies
 pnpm install
@@ -31,9 +31,9 @@ pnpm dev
 ### Project Structure
 
 ```
-joyixir/
+playcraft/
 ├── apps/
-│   ├── web/      # Main Joyixir application
+│   ├── web/      # Main PlayCraft application
 │   └── docs/     # VitePress documentation
 └── supabase/     # Supabase functions and migrations
 ```
@@ -51,7 +51,7 @@ joyixir/
 This project uses Supabase for backend services. To deploy functions:
 
 ```bash
-supabase functions deploy generate-joyixir
+supabase functions deploy generate-playcraft
 ```
 
 ## License

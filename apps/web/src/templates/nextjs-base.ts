@@ -16,7 +16,7 @@ import { FileSystemTree } from '@webcontainer/api';
 // PACKAGE.JSON
 // =============================================================================
 const packageJson = {
-  name: 'joyixir-app',
+  name: 'playcraft-app',
   version: '0.1.0',
   private: true,
   scripts: {
@@ -242,8 +242,8 @@ import { Providers } from '@/components/providers';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Joyixir App',
-  description: 'Built with Joyixir - The magic potion for building apps',
+  title: 'PlayCraft App',
+  description: 'Built with PlayCraft - The magic potion for building apps',
 };
 
 export default function RootLayout({

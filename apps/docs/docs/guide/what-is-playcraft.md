@@ -1,6 +1,6 @@
-# What is Joyixir?
+# What is PlayCraft?
 
-Joyixir is an **AI-powered game builder** that lets you create games using natural language. Just describe what you want, and our AI generates the code instantly.
+PlayCraft is an **AI-powered game builder** that lets you create games using natural language. Just describe what you want, and our AI generates the code instantly.
 
 ## How It Works
 
@@ -48,7 +48,7 @@ Download your code or deploy to Vercel with one click.
 
 ## Tech Stack
 
-Joyixir generates games using:
+PlayCraft generates games using:
 
 - **React 18** - UI framework
 - **Vite** - Build tool

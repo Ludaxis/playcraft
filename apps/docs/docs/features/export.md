@@ -1,6 +1,6 @@
 # Export & Deploy
 
-Get your game out of Joyixir.
+Get your game out of PlayCraft.
 
 ## Export Options
 

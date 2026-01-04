@@ -132,7 +132,7 @@ export function FeedbackPage() {
               Thank you for your feedback!
             </h1>
             <p className="mb-8 text-gray-400">
-              We appreciate you taking the time to help us improve Joyixir.
+              We appreciate you taking the time to help us improve PlayCraft.
               Your feedback helps us make the product better for everyone.
             </p>
             <div className="flex items-center justify-center gap-4">
@@ -146,7 +146,7 @@ export function FeedbackPage() {
                 onClick={() => navigate('/')}
                 className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500"
               >
-                Back to Joyixir
+                Back to PlayCraft
               </button>
             </div>
           </div>
@@ -157,7 +157,7 @@ export function FeedbackPage() {
               Send us feedback
             </h1>
             <p className="mb-8 text-gray-400">
-              Help us improve Joyixir by sharing your thoughts, reporting bugs,
+              Help us improve PlayCraft by sharing your thoughts, reporting bugs,
               or suggesting new features.
             </p>
 

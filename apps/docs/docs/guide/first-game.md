@@ -12,7 +12,7 @@ A classic **Snake game** with:
 
 ## Step 1: Create the Game
 
-Open Joyixir and type:
+Open PlayCraft and type:
 
 ```
 Create a snake game with a green snake on a dark background

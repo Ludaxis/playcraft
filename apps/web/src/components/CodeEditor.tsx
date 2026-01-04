@@ -66,7 +66,7 @@ export const CodeEditor = memo(function CodeEditor({
 }: CodeEditorProps) {
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     // Define custom theme
-    monaco.editor.defineTheme('joyixir-dark', {
+    monaco.editor.defineTheme('playcraft-dark', {
       base: 'vs-dark',
       inherit: true,
       rules: [
@@ -107,7 +107,7 @@ export const CodeEditor = memo(function CodeEditor({
     });
 
     // Set theme
-    monaco.editor.setTheme('joyixir-dark');
+    monaco.editor.setTheme('playcraft-dark');
 
     // Configure TypeScript/JavaScript defaults
     monaco.languages.typescript.typescriptDefaults.setCompilerOptions({

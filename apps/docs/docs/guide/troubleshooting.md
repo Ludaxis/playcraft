@@ -44,6 +44,6 @@ WebContainer has limited resources. Export and run locally for better performanc
 
 ## Getting Help
 
-- Check our [Discord](https://discord.gg/joyixir)
-- Email support@joyixir.app
-- Open an issue on [GitHub](https://github.com/joyixir)
+- Check our [Discord](https://discord.gg/playcraft)
+- Email support@playcraft.app
+- Open an issue on [GitHub](https://github.com/playcraft)

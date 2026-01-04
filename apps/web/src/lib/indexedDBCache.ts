@@ -7,7 +7,7 @@
  * 2. Vite cache - Skip dependency pre-bundling
  */
 
-const DB_NAME = 'joyixir-cache';
+const DB_NAME = 'playcraft-cache';
 const DB_VERSION = 1;
 
 // Store names

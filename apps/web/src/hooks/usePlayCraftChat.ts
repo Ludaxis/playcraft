@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
-import { generateCode, type GenerateRequest } from '../lib/joyixirService';
+import { generateCode, type GenerateRequest } from '../lib/playcraftService';
 import type { ChatMessage, NextStep } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
@@ -65,14 +65,14 @@ function parseAIResponse(message: string): {
   };
 }
 
-interface UseJoyixirChatOptions {
+interface UsePlayCraftChatOptions {
   onFilesGenerated?: (files: Array<{ path: string; content: string }>) => Promise<void>;
   onNeedsThreeJs?: () => Promise<void>; // Called when AI requests Three.js
   readFile?: (path: string) => Promise<string>;
   hasThreeJs?: boolean; // Whether Three.js template is already loaded
 }
 
-export interface UseJoyixirChatReturn {
+export interface UsePlayCraftChatReturn {
   messages: ChatMessage[];
   isGenerating: boolean;
   error: string | null;
@@ -81,7 +81,7 @@ export interface UseJoyixirChatReturn {
   addSystemMessage: (content: string) => void;
 }
 
-export function useJoyixirChat(options: UseJoyixirChatOptions = {}): UseJoyixirChatReturn {
+export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlayCraftChatReturn {
   const { onFilesGenerated, onNeedsThreeJs, readFile, hasThreeJs = false } = options;
 
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -89,7 +89,7 @@ export function useJoyixirChat(options: UseJoyixirChatOptions = {}): UseJoyixirC
       id: '1',
       role: 'assistant',
       content:
-        "Hi! I'm Joyixir, your AI game builder. Describe the game you want to create and I'll build it for you!",
+        "Hi! I'm PlayCraft, your AI game builder. Describe the game you want to create and I'll build it for you!",
       timestamp: new Date(),
       nextSteps: [
         { label: 'Create a snake game', prompt: 'Create a classic snake game with arrow key controls, food collection, and score tracking' },
@@ -124,7 +124,7 @@ export function useJoyixirChat(options: UseJoyixirChatOptions = {}): UseJoyixirC
         id: '1',
         role: 'assistant',
         content:
-          "Hi! I'm Joyixir, your AI game builder. Choose a template below to get started, then tell me what game you want to create!",
+          "Hi! I'm PlayCraft, your AI game builder. Choose a template below to get started, then tell me what game you want to create!",
         timestamp: new Date(),
       },
     ]);

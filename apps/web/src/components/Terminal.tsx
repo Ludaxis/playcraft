@@ -71,7 +71,7 @@ export const Terminal = memo(function Terminal({ output, className = '' }: Termi
 
     // Write welcome message
     terminal.writeln('\x1b[1;35m╭─────────────────────────────────────╮\x1b[0m');
-    terminal.writeln('\x1b[1;35m│\x1b[0m   \x1b[1;36mJoyixir Terminal\x1b[0m                  \x1b[1;35m│\x1b[0m');
+    terminal.writeln('\x1b[1;35m│\x1b[0m   \x1b[1;36mPlayCraft Terminal\x1b[0m                  \x1b[1;35m│\x1b[0m');
     terminal.writeln('\x1b[1;35m╰─────────────────────────────────────╯\x1b[0m');
     terminal.writeln('');
 

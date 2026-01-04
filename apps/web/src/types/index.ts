@@ -1,5 +1,5 @@
 /**
- * Shared TypeScript types for Joyixir
+ * Shared TypeScript types for PlayCraft
  * All types should be defined here to avoid circular dependencies
  */
 
@@ -71,7 +71,7 @@ export interface UpdateChatSessionInput {
 
 export type ProjectStatus = 'draft' | 'building' | 'ready' | 'published';
 
-export interface JoyixirProject {
+export interface PlayCraftProject {
   id: string;
   user_id: string;
   name: string;

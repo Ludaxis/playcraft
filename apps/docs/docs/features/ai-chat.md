@@ -1,6 +1,6 @@
 # AI Chat
 
-The heart of Joyixir is the AI chat interface. Describe what you want, and watch it happen.
+The heart of PlayCraft is the AI chat interface. Describe what you want, and watch it happen.
 
 ## Chat Panel Overview
 
@@ -24,7 +24,7 @@ The chat panel (left side) includes:
 
 ## Chat History
 
-Joyixir automatically saves your chat sessions. To access them:
+PlayCraft automatically saves your chat sessions. To access them:
 
 1. Click the **History** button (clock icon) in the chat header
 2. Browse your previous chat sessions

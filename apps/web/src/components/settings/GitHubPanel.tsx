@@ -82,7 +82,7 @@ export function GitHubPanel({ settings }: GitHubPanelProps) {
             <li className="flex items-start gap-2">
               <span className="text-violet-400">•</span>
               <span>
-                Pull changes from your repo to continue editing in Joyixir
+                Pull changes from your repo to continue editing in PlayCraft
               </span>
             </li>
             <li className="flex items-start gap-2">

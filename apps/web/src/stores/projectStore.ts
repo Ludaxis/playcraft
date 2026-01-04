@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import type { JoyixirProject, CreateProjectInput } from '../types';
+import type { PlayCraftProject, CreateProjectInput } from '../types';
 import {
   getProjects as fetchProjects,
   createProject as createNewProject,
@@ -15,7 +15,7 @@ import {
 
 interface ProjectState {
   // Data
-  projects: JoyixirProject[];
+  projects: PlayCraftProject[];
 
   // Loading states
   isLoading: boolean;
@@ -28,9 +28,9 @@ interface ProjectState {
 
   // Actions
   fetchProjects: () => Promise<void>;
-  createProject: (input: CreateProjectInput) => Promise<JoyixirProject>;
+  createProject: (input: CreateProjectInput) => Promise<PlayCraftProject>;
   deleteProject: (id: string) => Promise<void>;
-  updateProject: (id: string, updates: Partial<JoyixirProject>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<PlayCraftProject>) => Promise<void>;
   clearError: () => void;
   invalidateCache: () => void;
 }

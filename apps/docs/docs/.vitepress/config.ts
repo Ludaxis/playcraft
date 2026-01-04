@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Joyixir',
+  title: 'PlayCraft',
   description: 'AI-Powered Game Builder - Create games with natural language',
 
   head: [
@@ -15,7 +15,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Features', link: '/features/ai-chat' },
       { text: 'Changelog', link: '/changelog' },
-      { text: 'App', link: 'https://joyixir.app' }
+      { text: 'App', link: 'https://playcraft.app' }
     ],
 
     sidebar: {
@@ -23,7 +23,7 @@ export default defineConfig({
         {
           text: 'Introduction',
           items: [
-            { text: 'What is Joyixir?', link: '/guide/what-is-joyixir' },
+            { text: 'What is PlayCraft?', link: '/guide/what-is-playcraft' },
             { text: 'Getting Started', link: '/guide/getting-started' },
             { text: 'Your First Game', link: '/guide/first-game' },
           ]
@@ -52,13 +52,13 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/joyixir' },
-      { icon: 'twitter', link: 'https://twitter.com/joyixir' }
+      { icon: 'github', link: 'https://github.com/playcraft' },
+      { icon: 'twitter', link: 'https://twitter.com/playcraft' }
     ],
 
     footer: {
       message: 'Build games with AI',
-      copyright: 'Copyright © 2024 Joyixir'
+      copyright: 'Copyright © 2024 PlayCraft'
     },
 
     search: {
