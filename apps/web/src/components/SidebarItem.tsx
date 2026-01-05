@@ -34,8 +34,8 @@ export function SidebarItem({
       onClick={onClick}
       className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-all duration-200 ${
         active
-          ? 'bg-gray-800 text-white'
-          : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+          ? 'bg-surface-overlay text-content'
+          : 'text-content-muted hover:bg-surface-overlay hover:text-content'
       } ${collapsed ? 'justify-center px-2' : ''}`}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -45,7 +45,7 @@ export function SidebarItem({
             {label}
           </span>
           {badge !== undefined && (
-            <span className="rounded-full bg-violet-600/20 px-2 py-0.5 text-xs text-violet-400">
+            <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
               {badge}
             </span>
           )}
@@ -85,7 +85,7 @@ export function SidebarSection({
   return (
     <div className="mb-4">
       {!collapsed && (
-        <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-gray-500 transition-opacity duration-150">
+        <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-content-subtle transition-opacity duration-150">
           {title}
         </p>
       )}

@@ -188,10 +188,75 @@ export async function deleteProject(id: string): Promise<void> {
   }
 }
 
+// =============================================================================
+// SAVE THROTTLING
+// =============================================================================
+// Prevents excessive saves by throttling requests per project
+
+interface ThrottleState {
+  lastSave: number;
+  pendingFiles: Record<string, string> | null;
+  timeoutId: ReturnType<typeof setTimeout> | null;
+}
+
+const saveThrottleMap = new Map<string, ThrottleState>();
+const SAVE_THROTTLE_MS = 3000; // Minimum 3 seconds between saves
+
 /**
- * Save project files (debounced save for auto-save)
+ * Save project files with throttling to prevent excessive database writes
  */
 export async function saveProjectFiles(
+  id: string,
+  files: Record<string, string>
+): Promise<void> {
+  const now = Date.now();
+  let state = saveThrottleMap.get(id);
+
+  if (!state) {
+    state = { lastSave: 0, pendingFiles: null, timeoutId: null };
+    saveThrottleMap.set(id, state);
+  }
+
+  const timeSinceLastSave = now - state.lastSave;
+
+  // If enough time has passed, save immediately
+  if (timeSinceLastSave >= SAVE_THROTTLE_MS) {
+    await doSaveProjectFiles(id, files);
+    state.lastSave = Date.now();
+    state.pendingFiles = null;
+    return;
+  }
+
+  // Otherwise, schedule a delayed save
+  state.pendingFiles = files;
+
+  if (!state.timeoutId) {
+    const delay = SAVE_THROTTLE_MS - timeSinceLastSave;
+    state.timeoutId = setTimeout(async () => {
+      const currentState = saveThrottleMap.get(id);
+      if (currentState?.pendingFiles) {
+        try {
+          await doSaveProjectFiles(id, currentState.pendingFiles);
+          currentState.lastSave = Date.now();
+          currentState.pendingFiles = null;
+        } catch (error) {
+          logger.error('Throttled save failed', error instanceof Error ? error : new Error(String(error)), {
+            component: 'projectService',
+            projectId: id,
+          });
+        }
+      }
+      if (currentState) {
+        currentState.timeoutId = null;
+      }
+    }, delay);
+  }
+}
+
+/**
+ * Internal: Actually save files to database (JSON blob - for backward compatibility)
+ */
+async function doSaveProjectFiles(
   id: string,
   files: Record<string, string>
 ): Promise<void> {
@@ -205,6 +270,222 @@ export async function saveProjectFiles(
   if (error) {
     throw new Error(`Failed to save files: ${error.message}`);
   }
+}
+
+/**
+ * Force immediate save (bypasses throttle) - use for critical saves
+ */
+export async function saveProjectFilesImmediate(
+  id: string,
+  files: Record<string, string>
+): Promise<void> {
+  // Clear any pending throttled save
+  const state = saveThrottleMap.get(id);
+  if (state?.timeoutId) {
+    clearTimeout(state.timeoutId);
+    state.timeoutId = null;
+  }
+
+  await doSaveProjectFiles(id, files);
+
+  if (state) {
+    state.lastSave = Date.now();
+    state.pendingFiles = null;
+  }
+}
+
+// =============================================================================
+// PER-FILE STORAGE (New API - for future migration)
+// =============================================================================
+// These functions use the new per-file storage table for better scalability
+
+export interface ProjectFile {
+  id: string;
+  project_id: string;
+  path: string;
+  content: string | null;
+  is_directory: boolean;
+  size_bytes: number;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Get all files for a project (per-file storage)
+ */
+export async function getProjectFilesV2(projectId: string): Promise<ProjectFile[]> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('playcraft_project_files')
+    .select('*')
+    .eq('project_id', projectId)
+    .order('path');
+
+  if (error) {
+    throw new Error(`Failed to fetch project files: ${error.message}`);
+  }
+
+  return data || [];
+}
+
+/**
+ * Save a single file (per-file storage with optimistic locking)
+ */
+export async function saveProjectFileV2(
+  projectId: string,
+  path: string,
+  content: string,
+  expectedVersion?: number
+): Promise<ProjectFile> {
+  const supabase = getSupabase();
+
+  // Check if file exists
+  const { data: existing } = await supabase
+    .from('playcraft_project_files')
+    .select('id, version')
+    .eq('project_id', projectId)
+    .eq('path', path)
+    .single();
+
+  if (existing) {
+    // Update existing file with optimistic locking
+    if (expectedVersion !== undefined && existing.version !== expectedVersion) {
+      throw new Error(`Conflict: File "${path}" was modified. Expected version ${expectedVersion}, got ${existing.version}`);
+    }
+
+    const { data, error } = await supabase
+      .from('playcraft_project_files')
+      .update({
+        content,
+        size_bytes: content.length,
+      })
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update file: ${error.message}`);
+    }
+
+    return data;
+  } else {
+    // Insert new file
+    const { data, error } = await supabase
+      .from('playcraft_project_files')
+      .insert({
+        project_id: projectId,
+        path,
+        content,
+        is_directory: false,
+        size_bytes: content.length,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to create file: ${error.message}`);
+    }
+
+    return data;
+  }
+}
+
+/**
+ * Delete a file (per-file storage)
+ */
+export async function deleteProjectFileV2(projectId: string, path: string): Promise<void> {
+  const supabase = getSupabase();
+
+  const { error } = await supabase
+    .from('playcraft_project_files')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('path', path);
+
+  if (error) {
+    throw new Error(`Failed to delete file: ${error.message}`);
+  }
+}
+
+/**
+ * Convert per-file storage to Record format (for compatibility)
+ */
+export function filesToRecord(files: ProjectFile[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const file of files) {
+    if (!file.is_directory && file.content !== null) {
+      result[file.path] = file.content;
+    }
+  }
+  return result;
+}
+
+/**
+ * Get project with version for optimistic locking
+ */
+export async function getProjectWithVersion(id: string): Promise<(PlayCraftProject & { version: number }) | null> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('playcraft_projects')
+    .select('*, version')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    throw new Error(`Failed to fetch project: ${error.message}`);
+  }
+
+  return data;
+}
+
+/**
+ * Update project with optimistic locking
+ */
+export async function updateProjectWithVersion(
+  id: string,
+  input: UpdateProjectInput,
+  expectedVersion: number
+): Promise<PlayCraftProject & { version: number }> {
+  const supabase = getSupabase();
+
+  // First verify the version matches
+  const { data: current, error: checkError } = await supabase
+    .from('playcraft_projects')
+    .select('version')
+    .eq('id', id)
+    .single();
+
+  if (checkError) {
+    throw new Error(`Failed to check project version: ${checkError.message}`);
+  }
+
+  if (current.version !== expectedVersion) {
+    throw new Error(
+      `Conflict: Project was modified by another session. ` +
+      `Expected version ${expectedVersion}, got ${current.version}. ` +
+      `Please refresh and try again.`
+    );
+  }
+
+  // Perform the update
+  const { data, error } = await supabase
+    .from('playcraft_projects')
+    .update(input)
+    .eq('id', id)
+    .select('*, version')
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update project: ${error.message}`);
+  }
+
+  return data;
 }
 
 /**

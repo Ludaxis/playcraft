@@ -38,27 +38,27 @@ export function StudioSettingsPanel({
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white">Studio settings</h2>
-      <p className="mt-1 text-gray-400">
+      <h2 className="text-2xl font-bold text-content">Studio settings</h2>
+      <p className="mt-1 text-content-muted">
         Manage your game development studio settings.
       </p>
 
       <div className="mt-8 space-y-8">
         {/* Studio Avatar */}
         <div>
-          <h3 className="font-medium text-white">Studio avatar</h3>
-          <p className="mt-1 text-sm text-gray-400">
+          <h3 className="font-medium text-content">Studio avatar</h3>
+          <p className="mt-1 text-sm text-content-muted">
             Set an avatar for your studio.
           </p>
-          <div className="mt-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600 text-2xl font-bold text-white">
+          <div className="mt-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-secondary text-2xl font-bold text-content">
             {studioName.charAt(0).toUpperCase() || 'S'}
           </div>
         </div>
 
         {/* Studio Name */}
         <div>
-          <h3 className="font-medium text-white">Studio name</h3>
-          <p className="mt-1 text-sm text-gray-400">
+          <h3 className="font-medium text-content">Studio name</h3>
+          <p className="mt-1 text-sm text-content-muted">
             Your studio name, as visible to others.
           </p>
           <div className="mt-3">
@@ -68,9 +68,9 @@ export function StudioSettingsPanel({
               onChange={(e) => setStudioName(e.target.value)}
               onBlur={handleSave}
               maxLength={100}
-              className="w-full max-w-md rounded-lg border border-gray-700 bg-gray-800 px-4 py-2.5 text-white outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+              className="w-full max-w-md rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content outline-none ring-accent focus:border-transparent focus:ring-2"
             />
-            <p className="mt-1 text-right text-xs text-gray-500">
+            <p className="mt-1 text-right text-xs text-content-subtle">
               {studioName.length} / 100 characters
             </p>
           </div>
@@ -78,8 +78,8 @@ export function StudioSettingsPanel({
 
         {/* Studio Description */}
         <div>
-          <h3 className="font-medium text-white">Studio description</h3>
-          <p className="mt-1 text-sm text-gray-400">
+          <h3 className="font-medium text-content">Studio description</h3>
+          <p className="mt-1 text-sm text-content-muted">
             A short description about your studio or team.
           </p>
           <div className="mt-3">
@@ -90,9 +90,9 @@ export function StudioSettingsPanel({
               maxLength={500}
               rows={4}
               placeholder="Description"
-              className="w-full max-w-md resize-none rounded-lg border border-gray-700 bg-gray-800 px-4 py-2.5 text-white placeholder-gray-500 outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+              className="w-full max-w-md resize-none rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
             />
-            <p className="mt-1 text-right text-xs text-gray-500">
+            <p className="mt-1 text-right text-xs text-content-subtle">
               {studioDescription.length} / 500 characters
             </p>
           </div>
@@ -100,7 +100,7 @@ export function StudioSettingsPanel({
       </div>
 
       {isSaving && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-gray-400">
+        <div className="mt-4 flex items-center gap-2 text-sm text-content-muted">
           <Loader2 className="h-4 w-4 animate-spin" />
           Saving...
         </div>

@@ -97,21 +97,21 @@ export function SearchModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-gray-700 bg-gray-900 shadow-2xl">
+      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-surface-elevated shadow-2xl">
         {/* Search input */}
-        <div className="flex items-center gap-3 border-b border-gray-800 px-5 py-4">
-          <Search className="h-5 w-5 text-gray-500" />
+        <div className="flex items-center gap-3 border-b border-border-muted px-5 py-4">
+          <Search className="h-5 w-5 text-content-subtle" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search projects"
-            className="flex-1 bg-transparent text-lg text-white placeholder-gray-500 outline-none"
+            className="flex-1 bg-transparent text-lg text-content placeholder-content-subtle outline-none"
           />
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+            className="rounded-lg p-1.5 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
           >
             <X className="h-5 w-5" />
           </button>
@@ -121,7 +121,7 @@ export function SearchModal({
         <div className="max-h-[400px] overflow-y-auto p-3">
           {recentProjects.length > 0 ? (
             <>
-              <p className="mb-3 px-2 text-xs font-medium uppercase tracking-wider text-gray-500">
+              <p className="mb-3 px-2 text-xs font-medium uppercase tracking-wider text-content-subtle">
                 {query.trim() ? 'Results' : 'Recent Projects'}
               </p>
               <div className="space-y-1">
@@ -129,10 +129,10 @@ export function SearchModal({
                   <button
                     key={project.id}
                     onClick={() => handleSelectProject(project)}
-                    className="flex w-full items-center gap-3 rounded-xl bg-gray-800/50 p-3 text-left transition-colors hover:bg-gray-800"
+                    className="flex w-full items-center gap-3 rounded-xl bg-surface-overlay/50 p-3 text-left transition-colors hover:bg-surface-overlay"
                   >
                     {/* Thumbnail */}
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-gray-700 bg-gradient-to-br from-violet-900/30 to-fuchsia-900/20">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-gradient-to-br from-accent/30 to-secondary/20">
                       {project.thumbnail_url ? (
                         <img
                           src={project.thumbnail_url}
@@ -141,14 +141,14 @@ export function SearchModal({
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
-                          <Gamepad2 className="h-6 w-6 text-gray-600" />
+                          <Gamepad2 className="h-6 w-6 text-content-subtle" />
                         </div>
                       )}
                     </div>
 
                     {/* Info */}
                     <div className="flex-1 overflow-hidden">
-                      <p className="truncate font-medium text-white">
+                      <p className="truncate font-medium text-content">
                         {project.name}
                       </p>
                       <div className="mt-0.5 flex items-center gap-1.5">
@@ -158,14 +158,14 @@ export function SearchModal({
                           size="sm"
                           className="h-4 w-4"
                         />
-                        <span className="text-sm text-gray-400">
+                        <span className="text-sm text-content-muted">
                           {userName || 'You'}
                         </span>
                       </div>
                     </div>
 
                     {/* Time */}
-                    <span className="shrink-0 text-sm text-gray-500">
+                    <span className="shrink-0 text-sm text-content-subtle">
                       {formatTimeAgo(project.updated_at)}
                     </span>
                   </button>
@@ -174,7 +174,7 @@ export function SearchModal({
             </>
           ) : (
             <div className="py-8 text-center">
-              <p className="text-gray-400">
+              <p className="text-content-muted">
                 {query.trim()
                   ? `No projects found matching "${query}"`
                   : 'No recent projects'}
@@ -184,9 +184,9 @@ export function SearchModal({
         </div>
 
         {/* Footer hint */}
-        <div className="border-t border-gray-800 px-5 py-3">
-          <p className="text-xs text-gray-500">
-            Press <kbd className="rounded bg-gray-800 px-1.5 py-0.5 text-gray-400">Esc</kbd> to close
+        <div className="border-t border-border-muted px-5 py-3">
+          <p className="text-xs text-content-subtle">
+            Press <kbd className="rounded bg-surface-overlay px-1.5 py-0.5 text-content-muted">Esc</kbd> to close
           </p>
         </div>
       </div>

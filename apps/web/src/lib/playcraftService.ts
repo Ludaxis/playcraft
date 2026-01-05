@@ -1,4 +1,4 @@
-import { getSupabase, getSupabaseUrl } from './supabase';
+import { getSupabase } from './supabase';
 import { withRetry } from './retry';
 import { logger } from './logger';
 
@@ -12,11 +12,6 @@ export interface GenerateResponse {
   files: FileContent[];
   explanation: string;
   needsThreeJs?: boolean;
-}
-
-interface GenerateError {
-  error: string;
-  message?: string;
 }
 
 export interface GenerateRequest {
@@ -36,34 +31,22 @@ export async function generateCode(
   request: GenerateRequest
 ): Promise<GenerateResponse> {
   const supabase = getSupabase();
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
 
-  if (!session) {
+  // Verify user is authenticated
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
     throw new Error('Not authenticated');
   }
 
   return withRetry(
     async () => {
-      const supabaseUrl = getSupabaseUrl();
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/generate-playcraft`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify(request),
-        }
-      );
+      // Use Supabase's built-in function invocation (handles auth automatically)
+      const { data, error } = await supabase.functions.invoke('generate-playcraft', {
+        body: request,
+      });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        const error = data as GenerateError;
-        throw new Error(error.message || error.error || 'Generation failed');
+      if (error) {
+        throw new Error(error.message || 'Generation failed');
       }
 
       return data as GenerateResponse;

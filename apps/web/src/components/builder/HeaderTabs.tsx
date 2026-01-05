@@ -14,13 +14,13 @@ interface HeaderTabsProps {
 
 export function HeaderTabs({ viewMode, onViewModeChange }: HeaderTabsProps) {
   return (
-    <div className="flex items-center rounded-lg bg-gray-800/50 p-1">
+    <div className="flex items-center rounded-lg bg-surface-overlay/50 p-1">
       <button
         onClick={() => onViewModeChange('preview')}
         className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
           viewMode === 'preview'
-            ? 'bg-gray-700 text-white'
-            : 'text-gray-400 hover:text-white'
+            ? 'bg-surface-overlay text-content'
+            : 'text-content-muted hover:text-content'
         }`}
       >
         <Eye className="h-4 w-4" />
@@ -30,8 +30,8 @@ export function HeaderTabs({ viewMode, onViewModeChange }: HeaderTabsProps) {
         onClick={() => onViewModeChange('code')}
         className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
           viewMode === 'code'
-            ? 'bg-gray-700 text-white'
-            : 'text-gray-400 hover:text-white'
+            ? 'bg-surface-overlay text-content'
+            : 'text-content-muted hover:text-content'
         }`}
       >
         <Code2 className="h-4 w-4" />

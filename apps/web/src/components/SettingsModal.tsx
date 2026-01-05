@@ -195,20 +195,20 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative flex h-[85vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-800 bg-gray-900">
+      <div className="relative flex h-[85vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated">
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+          className="absolute right-4 top-4 z-10 rounded-lg p-2 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
         >
           <X className="h-5 w-5" />
         </button>
 
         {/* Sidebar */}
-        <aside className="w-60 shrink-0 border-r border-gray-800 bg-gray-950 p-3">
+        <aside className="w-60 shrink-0 border-r border-border-muted bg-surface p-3">
           {sidebarItems.map((section) => (
             <div key={section.section} className="mb-4">
-              <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-gray-500">
+              <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-content-subtle">
                 {section.section}
               </p>
               <div className="space-y-1">
@@ -218,8 +218,8 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
                     onClick={() => setActiveTab(item.id)}
                     className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition-colors ${
                       activeTab === item.id
-                        ? 'bg-gray-800 text-white'
-                        : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                        ? 'bg-surface-overlay text-content'
+                        : 'text-content-muted hover:bg-surface-overlay/50 hover:text-content'
                     }`}
                   >
                     <item.icon className="h-4 w-4" />
@@ -235,7 +235,7 @@ export function SettingsModal({ isOpen, onClose, user }: SettingsModalProps) {
         <main className="flex-1 overflow-y-auto p-8">
           {isLoading ? (
             <div className="flex h-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+              <Loader2 className="h-8 w-8 animate-spin text-accent-light" />
             </div>
           ) : error ? (
             <div className="rounded-lg border border-red-800 bg-red-900/20 p-4 text-red-300">

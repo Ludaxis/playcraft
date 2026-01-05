@@ -1,10 +1,106 @@
-import { WebContainer, FileSystemTree } from '@webcontainer/api';
+import { WebContainer, FileSystemTree, WebContainerProcess } from '@webcontainer/api';
+import {
+  hasCachedNodeModules,
+  cacheNodeModules,
+  restoreNodeModules,
+} from './indexedDBCache';
 
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
 
 // Track if node_modules exists to avoid redundant installs
 let nodeModulesInstalled = false;
+
+// =============================================================================
+// PROCESS MANAGEMENT
+// =============================================================================
+// Track running processes to enable cleanup on unmount/project switch
+
+interface TrackedProcess {
+  id: string;
+  process: WebContainerProcess;
+  command: string;
+  startedAt: number;
+}
+
+const runningProcesses = new Map<string, TrackedProcess>();
+let processIdCounter = 0;
+
+/**
+ * Generate a unique process ID
+ */
+function generateProcessId(): string {
+  return `proc-${++processIdCounter}-${Date.now()}`;
+}
+
+/**
+ * Track a spawned process for later cleanup
+ */
+function trackProcess(process: WebContainerProcess, command: string): string {
+  const id = generateProcessId();
+  runningProcesses.set(id, {
+    id,
+    process,
+    command,
+    startedAt: Date.now(),
+  });
+
+  // Auto-remove when process exits
+  process.exit.then(() => {
+    runningProcesses.delete(id);
+  }).catch(() => {
+    runningProcesses.delete(id);
+  });
+
+  return id;
+}
+
+/**
+ * Kill a specific process by ID
+ */
+export function killProcess(id: string): boolean {
+  const tracked = runningProcesses.get(id);
+  if (tracked) {
+    try {
+      tracked.process.kill();
+      runningProcesses.delete(id);
+      return true;
+    } catch (e) {
+      console.warn(`Failed to kill process ${id}:`, e);
+      runningProcesses.delete(id);
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Kill all running processes (for cleanup on unmount/project switch)
+ */
+export function killAllProcesses(): number {
+  let killed = 0;
+  for (const [id, tracked] of runningProcesses) {
+    try {
+      tracked.process.kill();
+      killed++;
+    } catch (e) {
+      console.warn(`Failed to kill process ${id}:`, e);
+    }
+    runningProcesses.delete(id);
+  }
+  return killed;
+}
+
+/**
+ * Get list of running processes (for debugging/monitoring)
+ */
+export function getRunningProcesses(): Array<{ id: string; command: string; startedAt: number }> {
+  return Array.from(runningProcesses.values()).map(({ id, command, startedAt }) => ({
+    id,
+    command,
+    startedAt,
+  }));
+}
 
 /**
  * Boot the WebContainer instance (singleton).
@@ -163,6 +259,174 @@ export function resetNodeModulesState(): void {
 }
 
 /**
+ * Get current package.json content
+ */
+async function getPackageJsonContent(): Promise<string | null> {
+  try {
+    const instance = await bootWebContainer();
+    return await instance.fs.readFile('/package.json', 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Restore node_modules from IndexedDB cache
+ * Returns true if cache was restored successfully
+ * NOTE: After restore, we run `npm rebuild` to recreate .bin links
+ */
+export async function restoreFromCache(
+  projectId: string,
+  onOutput?: (data: string) => void
+): Promise<boolean> {
+  try {
+    const packageJson = await getPackageJsonContent();
+    if (!packageJson) {
+      onOutput?.('[Cache] No package.json found\n');
+      return false;
+    }
+
+    // Check if we have valid cached dependencies
+    const hasCache = await hasCachedNodeModules(projectId, packageJson);
+    if (!hasCache) {
+      onOutput?.('[Cache] No valid cache found\n');
+      return false;
+    }
+
+    onOutput?.('[Cache] Restoring node_modules from cache...\n');
+
+    // Restore files from IndexedDB
+    const cachedFiles = await restoreNodeModules(projectId);
+    if (!cachedFiles || cachedFiles.size === 0) {
+      onOutput?.('[Cache] Cache was empty\n');
+      return false;
+    }
+
+    const instance = await bootWebContainer();
+
+    // Create node_modules directory
+    try {
+      await instance.fs.mkdir('/node_modules', { recursive: true });
+    } catch {
+      // Directory might already exist
+    }
+
+    // Restore each file
+    let restoredCount = 0;
+    for (const [path, content] of cachedFiles) {
+      try {
+        // Ensure parent directory exists
+        const dir = path.substring(0, path.lastIndexOf('/'));
+        if (dir && dir !== '/node_modules') {
+          await instance.fs.mkdir(dir, { recursive: true });
+        }
+
+        // Write file
+        if (typeof content === 'string') {
+          await instance.fs.writeFile(path, content);
+        } else {
+          await instance.fs.writeFile(path, content);
+        }
+        restoredCount++;
+      } catch (e) {
+        // Skip files that fail to restore
+        console.warn(`[Cache] Failed to restore ${path}:`, e);
+      }
+    }
+
+    onOutput?.(`[Cache] Restored ${restoredCount} files from cache\n`);
+
+    // Run npm rebuild to recreate .bin links and fix permissions
+    // This is necessary because .bin directory was not cached
+    onOutput?.('[Cache] Running npm rebuild to restore bin links...\n');
+    try {
+      const rebuildProcess = await spawn('npm', ['rebuild']);
+
+      // Wait for rebuild to complete
+      const exitCode = await rebuildProcess.exit;
+      if (exitCode === 0) {
+        onOutput?.('[Cache] Rebuild complete!\n');
+      } else {
+        console.warn('[Cache] npm rebuild exited with code:', exitCode);
+        // Still mark as installed - might work anyway
+      }
+    } catch (rebuildErr) {
+      console.error('[Cache] npm rebuild failed:', rebuildErr);
+      // Continue anyway - the cache restore might still work
+    }
+
+    nodeModulesInstalled = true;
+    return true;
+  } catch (err) {
+    console.error('[Cache] Failed to restore from cache:', err);
+    onOutput?.(`[Cache] Restore failed: ${err}\n`);
+    return false;
+  }
+}
+
+/**
+ * Cache node_modules to IndexedDB after successful install
+ * NOTE: We skip .bin directories because executables need permissions
+ * that are lost during cache/restore. They'll be recreated by npm rebuild.
+ */
+export async function saveToCache(
+  projectId: string,
+  onOutput?: (data: string) => void
+): Promise<void> {
+  try {
+    const packageJson = await getPackageJsonContent();
+    if (!packageJson) {
+      return;
+    }
+
+    onOutput?.('[Cache] Caching node_modules for faster future loads...\n');
+
+    const instance = await bootWebContainer();
+    const files = new Map<string, Uint8Array | string>();
+
+    // Recursively collect all files from node_modules
+    async function collectFiles(dirPath: string): Promise<void> {
+      try {
+        const entries = await instance.fs.readdir(dirPath, { withFileTypes: true });
+
+        for (const entry of entries) {
+          const fullPath = `${dirPath}/${entry.name}`;
+
+          if (entry.isDirectory()) {
+            // Skip .cache, .vite, and .bin directories
+            // .bin contains executables that need special permissions
+            if (entry.name === '.cache' || entry.name === '.vite' || entry.name === '.bin') {
+              continue;
+            }
+            await collectFiles(fullPath);
+          } else {
+            try {
+              // Read as binary for proper handling
+              const content = await instance.fs.readFile(fullPath);
+              files.set(fullPath, content);
+            } catch {
+              // Skip unreadable files
+            }
+          }
+        }
+      } catch {
+        // Skip unreadable directories
+      }
+    }
+
+    await collectFiles('/node_modules');
+
+    if (files.size > 0) {
+      await cacheNodeModules(projectId, packageJson, files);
+      onOutput?.(`[Cache] Saved ${files.size} files to cache\n`);
+    }
+  } catch (err) {
+    console.error('[Cache] Failed to save cache:', err);
+    // Don't throw - caching is optional
+  }
+}
+
+/**
  * Outdated dependency info
  */
 export interface OutdatedDependency {
@@ -244,23 +508,40 @@ export async function updateDependencies(
   return process.exit;
 }
 
+// Track server-ready listener to avoid duplicates
+let serverReadyListenerRegistered = false;
+let currentServerReadyCallback: ((port: number, url: string) => void) | null = null;
+
 /**
  * Start the dev server.
+ * Returns a process ID that can be used to kill the server later.
  */
 export async function startDevServer(
   onOutput?: (data: string) => void,
   onServerReady?: (port: number, url: string) => void
-): Promise<void> {
+): Promise<string> {
+  console.log('[WebContainer] startDevServer called');
   const instance = await bootWebContainer();
 
-  // Listen for server ready event
-  if (onServerReady) {
+  // Store callback for server-ready event
+  currentServerReadyCallback = onServerReady || null;
+
+  // Register server-ready listener only once (avoid duplicates)
+  if (!serverReadyListenerRegistered && onServerReady) {
+    console.log('[WebContainer] Registering server-ready event listener');
     instance.on('server-ready', (port, url) => {
-      onServerReady(port, url);
+      console.log('[WebContainer] server-ready event fired:', { port, url });
+      if (currentServerReadyCallback) {
+        currentServerReadyCallback(port, url);
+      }
     });
+    serverReadyListenerRegistered = true;
   }
 
+  console.log('[WebContainer] Spawning npm run dev...');
   const process = await spawn('npm', ['run', 'dev']);
+  const processId = trackProcess(process, 'npm run dev');
+  console.log('[WebContainer] Dev server process started with ID:', processId);
 
   if (onOutput) {
     process.output.pipeTo(
@@ -271,6 +552,18 @@ export async function startDevServer(
       })
     );
   }
+
+  // Also monitor process exit for errors
+  process.exit.then((exitCode) => {
+    console.log('[WebContainer] Dev server process exited with code:', exitCode);
+    if (exitCode !== 0) {
+      console.error('[WebContainer] Dev server exited with non-zero exit code');
+    }
+  }).catch((err) => {
+    console.error('[WebContainer] Dev server process error:', err);
+  });
+
+  return processId;
 }
 
 interface FileTreeNode {

@@ -18,46 +18,46 @@ export function PlansPanel({ usageStats }: PlansPanelProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white">Plans & credits</h2>
+      <h2 className="text-2xl font-bold text-content">Plans & credits</h2>
 
       {/* Current Plan & Credits */}
       <div className="mt-8 grid gap-4 lg:grid-cols-2">
         {/* Current Plan */}
-        <div className="rounded-xl border border-gray-800 bg-gray-800/50 p-6">
+        <div className="rounded-xl border border-border-muted bg-surface-overlay/50 p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
-              <CreditCard className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-secondary">
+              <CreditCard className="h-5 w-5 text-content" />
             </div>
             <div>
-              <p className="font-medium text-white">You're on Free Plan</p>
-              <p className="text-sm text-gray-400">Upgrade anytime</p>
+              <p className="font-medium text-content">You're on Free Plan</p>
+              <p className="text-sm text-content-muted">Upgrade anytime</p>
             </div>
           </div>
-          <button className="mt-4 rounded-lg border border-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-800">
+          <button className="mt-4 rounded-lg border border-border px-4 py-2 text-sm text-content hover:bg-surface-overlay">
             Manage
           </button>
         </div>
 
         {/* Credits Remaining */}
-        <div className="rounded-xl border border-gray-800 bg-gray-800/50 p-6">
+        <div className="rounded-xl border border-border-muted bg-surface-overlay/50 p-6">
           <div className="flex items-center justify-between">
-            <p className="font-medium text-white">Credits remaining</p>
-            <p className="text-sm text-gray-400">
+            <p className="font-medium text-content">Credits remaining</p>
+            <p className="text-sm text-content-muted">
               {creditsRemaining.toFixed(1)} of {totalCredits}
             </p>
           </div>
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-gray-700">
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-surface-elevated">
             <div
-              className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500"
+              className="h-full bg-gradient-to-r from-accent-light to-secondary"
               style={{ width: `${100 - usagePercent}%` }}
             />
           </div>
-          <div className="mt-3 flex items-center gap-4 text-xs text-gray-400">
+          <div className="mt-3 flex items-center gap-4 text-xs text-content-muted">
             <span className="flex items-center gap-1">
               <X className="h-3 w-3" /> No credits will rollover
             </span>
             <span className="flex items-center gap-1">
-              <Check className="h-3 w-3 text-violet-400" /> Daily credits reset
+              <Check className="h-3 w-3 text-accent" /> Daily credits reset
               at midnight UTC
             </span>
           </div>
@@ -139,30 +139,30 @@ function PlanCard({
   features,
 }: PlanCardProps) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-800/30 p-6">
-      <h3 className="text-xl font-bold text-white">{name}</h3>
-      <p className="mt-2 text-sm text-gray-400">{description}</p>
+    <div className="rounded-xl border border-border-muted bg-surface-overlay/30 p-6">
+      <h3 className="text-xl font-bold text-content">{name}</h3>
+      <p className="mt-2 text-sm text-content-muted">{description}</p>
       <div className="mt-4">
-        <span className="text-3xl font-bold text-white">{price}</span>
-        {period && <span className="text-gray-400"> {period}</span>}
+        <span className="text-3xl font-bold text-content">{price}</span>
+        {period && <span className="text-content-muted"> {period}</span>}
       </div>
-      <p className="text-sm text-gray-500">{subtitle}</p>
+      <p className="text-sm text-content-subtle">{subtitle}</p>
       <button
-        className={`mt-4 w-full rounded-lg py-2.5 font-medium text-white ${
+        className={`mt-4 w-full rounded-lg py-2.5 font-medium text-content ${
           buttonVariant === 'primary'
-            ? 'bg-violet-600 hover:bg-violet-500'
-            : 'bg-gray-700 hover:bg-gray-600'
+            ? 'bg-accent hover:bg-accent-light'
+            : 'bg-surface-elevated hover:bg-surface-overlay'
         }`}
       >
         {buttonText}
       </button>
-      <div className="mt-4 space-y-2 text-sm text-gray-400">
+      <div className="mt-4 space-y-2 text-sm text-content-muted">
         {features.map((feature, index) => (
           <p
             key={index}
             className={index === 0 ? '' : 'flex items-center gap-2'}
           >
-            {index > 0 && <Check className="h-4 w-4 text-violet-400" />}
+            {index > 0 && <Check className="h-4 w-4 text-accent" />}
             {feature}
           </p>
         ))}

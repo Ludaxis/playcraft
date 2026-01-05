@@ -4,6 +4,7 @@ import { nextjsThreeJsTemplate } from './nextjs-threejs';
 import { nextjsCanvasTemplate } from './nextjs-canvas';
 import { nextjsPhaserTemplate } from './nextjs-phaser';
 import { viteShadcnTemplate } from './vite-shadcn';
+import { viteGameShellTemplate } from './vite-game-shell';
 
 export interface ProjectTemplate {
   id: string;
@@ -28,6 +29,17 @@ export const viteStarterTemplate: ProjectTemplate = {
   category: 'starter',
   tags: ['vite', 'react', 'shadcn', 'tailwind', 'typescript'],
   files: viteShadcnTemplate,
+  framework: 'vite',
+};
+
+export const viteGameShellTemplateConfig: ProjectTemplate = {
+  id: 'vite-game-shell',
+  name: 'Game Shell',
+  description: 'Complete mobile game UI with menus, shop, leaderboard & LiveOps',
+  icon: '🎮',
+  category: 'game',
+  tags: ['vite', 'react', 'game', 'mobile', 'ui-shell', 'retention', 'gsap'],
+  files: viteGameShellTemplate,
   framework: 'vite',
 };
 
@@ -84,6 +96,7 @@ export const nextjsPhaserGameTemplate: ProjectTemplate = {
 // =============================================================================
 
 export const templates: ProjectTemplate[] = [
+  viteGameShellTemplateConfig,
   viteStarterTemplate,
   nextjsCanvasGameTemplate,
   nextjsPhaserGameTemplate,
@@ -103,6 +116,7 @@ export function getTemplatesByCategory(
 
 // Re-export for convenience
 export { viteShadcnTemplate } from './vite-shadcn';
+export { viteGameShellTemplate } from './vite-game-shell';
 export { nextjsBaseTemplate } from './nextjs-base';
 export { nextjsThreeJsTemplate } from './nextjs-threejs';
 export { nextjsCanvasTemplate } from './nextjs-canvas';

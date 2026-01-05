@@ -56,9 +56,16 @@ export async function createChatSession(
 ): Promise<ChatSession> {
   const supabase = getSupabase();
 
+  // Get current user for RLS compliance
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
   const { data, error } = await supabase
     .from('playcraft_chat_sessions')
     .insert({
+      user_id: user.id, // Required for RLS policy
       project_id: input.project_id,
       title: input.title,
       messages: input.messages || [],

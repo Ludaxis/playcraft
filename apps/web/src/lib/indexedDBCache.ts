@@ -8,7 +8,11 @@
  */
 
 const DB_NAME = 'playcraft-cache';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bump to invalidate old caches with .bin files
+
+// Cache format version - bump this when changing what we cache
+// This is stored in the metadata and checked on restore
+const CACHE_FORMAT_VERSION = 2; // v2: Skip .bin directory, use npm rebuild
 
 // Store names
 const STORES = {
@@ -22,6 +26,7 @@ interface ProjectMeta {
   packageJsonHash: string;
   cachedAt: number;
   nodeModulesSize: number;
+  cacheFormatVersion?: number; // Added in v2 to track cache format
 }
 
 interface CachedFile {
@@ -116,11 +121,19 @@ export async function hasCachedNodeModules(
           return;
         }
 
+        // Check cache format version - invalidate old format caches
+        const cacheVersion = meta.cacheFormatVersion || 1;
+        if (cacheVersion < CACHE_FORMAT_VERSION) {
+          console.log('[IndexedDB] Cache format outdated (v' + cacheVersion + ' < v' + CACHE_FORMAT_VERSION + '), invalidating...');
+          resolve(false);
+          return;
+        }
+
         const currentHash = hashPackageJson(packageJsonContent);
         const isValid = meta.packageJsonHash === currentHash;
 
         if (isValid) {
-          console.log('[IndexedDB] Cache is valid! Cached at:', new Date(meta.cachedAt).toLocaleString());
+          console.log('[IndexedDB] Cache is valid! Format v' + cacheVersion + ', cached at:', new Date(meta.cachedAt).toLocaleString());
         } else {
           console.log('[IndexedDB] Cache invalidated - package.json changed');
         }
@@ -182,12 +195,13 @@ export async function cacheNodeModules(
       });
     }
 
-    // Save metadata
+    // Save metadata with cache format version
     const meta: ProjectMeta = {
       projectId,
       packageJsonHash: hashPackageJson(packageJsonContent),
       cachedAt: Date.now(),
       nodeModulesSize: totalSize,
+      cacheFormatVersion: CACHE_FORMAT_VERSION,
     };
     metaStore.put(meta);
 

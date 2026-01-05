@@ -25,14 +25,14 @@ export function DeviceToggle({
   return (
     <div className="flex items-center gap-2">
       {/* Device mode buttons */}
-      <div className="flex items-center rounded-lg bg-gray-800 p-1">
+      <div className="flex items-center rounded-lg bg-surface-overlay p-1">
         <button
           onClick={() => onChange('desktop')}
           disabled={disabled}
           className={`rounded p-1.5 transition-colors ${
             mode === 'desktop'
-              ? 'bg-violet-600 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-accent text-content'
+              : 'text-content-muted hover:text-content'
           } disabled:opacity-50`}
           title="Desktop"
         >
@@ -43,8 +43,8 @@ export function DeviceToggle({
           disabled={disabled}
           className={`rounded p-1.5 transition-colors ${
             mode === 'tablet'
-              ? 'bg-violet-600 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-accent text-content'
+              : 'text-content-muted hover:text-content'
           } disabled:opacity-50`}
           title="Tablet"
         >
@@ -55,8 +55,8 @@ export function DeviceToggle({
           disabled={disabled}
           className={`rounded p-1.5 transition-colors ${
             mode === 'mobile'
-              ? 'bg-violet-600 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'bg-accent text-content'
+              : 'text-content-muted hover:text-content'
           } disabled:opacity-50`}
           title="Mobile"
         >
@@ -69,7 +69,7 @@ export function DeviceToggle({
         <button
           onClick={onRefresh}
           disabled={disabled}
-          className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white disabled:opacity-50"
+          className="rounded p-1.5 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content disabled:opacity-50"
           title="Refresh preview"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />

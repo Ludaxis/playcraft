@@ -42,7 +42,7 @@ export function ChatHeader({
   onCopyChat,
 }: ChatHeaderProps) {
   return (
-    <header className="flex h-12 shrink-0 items-center justify-between border-b border-gray-800 bg-gray-900 px-3">
+    <header className="flex h-12 shrink-0 items-center justify-between border-b border-border-muted bg-surface-elevated px-3">
       {/* Left - Project Dropdown */}
       <div className="min-w-0 flex-1">
         <ProjectDropdown
@@ -66,14 +66,14 @@ export function ChatHeader({
       <div className="flex items-center gap-1">
         <button
           onClick={onShowHistory}
-          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+          className="rounded-lg p-2 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
           title="Chat history"
         >
           <History className="h-4 w-4" />
         </button>
         <button
           onClick={onCopyChat}
-          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+          className="rounded-lg p-2 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
           title="Copy chat"
         >
           <Copy className="h-4 w-4" />

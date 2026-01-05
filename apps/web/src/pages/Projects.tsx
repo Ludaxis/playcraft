@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus,
@@ -10,12 +10,8 @@ import {
   LogOut,
   Gamepad2,
 } from 'lucide-react';
-import {
-  getProjects,
-  createProject,
-  deleteProject,
-  type PlayCraftProject,
-} from '../lib/projectService';
+import type { PlayCraftProject } from '../lib/projectService';
+import { useProjects, useCreateProject, useDeleteProject } from '../hooks/useProjects';
 
 interface ProjectsPageProps {
   user: User;
@@ -24,43 +20,29 @@ interface ProjectsPageProps {
 }
 
 export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageProps) {
-  const [projects, setProjects] = useState<PlayCraftProject[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
+  // UI state
   const [showNewModal, setShowNewModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Load projects
-  useEffect(() => {
-    loadProjects();
-  }, []);
+  // Data fetching with TanStack Query
+  const { data: projects = [], isLoading } = useProjects();
+  const createProjectMutation = useCreateProject();
+  const deleteProjectMutation = useDeleteProject();
 
-  const loadProjects = async () => {
-    try {
-      setIsLoading(true);
-      const data = await getProjects();
-      setProjects(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load projects');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Derived state
+  const isCreating = createProjectMutation.isPending;
 
   const handleCreateProject = async () => {
     if (!newProjectName.trim() || isCreating) return;
 
     try {
-      setIsCreating(true);
-      const project = await createProject({ name: newProjectName.trim() });
+      const project = await createProjectMutation.mutateAsync({ name: newProjectName.trim() });
       setShowNewModal(false);
       setNewProjectName('');
       onSelectProject(project);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project');
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -69,8 +51,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
     if (!confirm('Delete this project? This cannot be undone.')) return;
 
     try {
-      await deleteProject(id);
-      setProjects((prev) => prev.filter((p) => p.id !== id));
+      await deleteProjectMutation.mutateAsync(id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete project');
     }

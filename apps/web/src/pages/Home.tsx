@@ -8,16 +8,15 @@ import {
   MoreHorizontal,
   Grid3X3,
   List,
+  Play,
+  Sparkles,
 } from 'lucide-react';
-import {
-  getProjects,
-  createProject,
-  type PlayCraftProject,
-} from '../lib/projectService';
-import { getUserSettings, getUsageStats } from '../lib/settingsService';
+import type { PlayCraftProject } from '../lib/projectService';
 import { SettingsModal, SearchModal, Avatar, Sidebar } from '../components';
 import { useSidebar } from '../hooks';
-import type { NavItem, UsageStats } from '../types';
+import { useProjects, useCreateProject, selectRecentProjects } from '../hooks/useProjects';
+import { useUserSettings, useUsageStats } from '../hooks/useUserSettings';
+import type { NavItem } from '../types';
 
 interface HomePageProps {
   user: User;
@@ -26,16 +25,40 @@ interface HomePageProps {
   onStartNewProject: (prompt: string) => void;
 }
 
-// Game template suggestions
-const TEMPLATES = [
-  { id: 'snake', name: 'Snake Game', icon: '🐍', prompt: 'Create a classic snake game' },
-  { id: 'platformer', name: '2D Platformer', icon: '🏃', prompt: 'Create a 2D platformer game' },
-  { id: 'puzzle', name: 'Puzzle Game', icon: '🧩', prompt: 'Create a puzzle matching game' },
-  { id: '3d-scene', name: '3D Experience', icon: '🎮', prompt: 'Create an interactive 3D scene' },
+// Featured games made with PlayCraft
+const FEATURED_GAMES = [
+  {
+    id: 'space-shooter',
+    name: 'Space Invaders',
+    author: 'Alex Chen',
+    thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=300&fit=crop',
+    plays: '2.4k'
+  },
+  {
+    id: 'puzzle-quest',
+    name: 'Puzzle Quest',
+    author: 'Maria Santos',
+    thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400&h=300&fit=crop',
+    plays: '1.8k'
+  },
+  {
+    id: 'neon-racer',
+    name: 'Neon Racer',
+    author: 'Jake Wilson',
+    thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop',
+    plays: '3.1k'
+  },
+  {
+    id: 'tower-defense',
+    name: 'Tower Defense',
+    author: 'Emma Liu',
+    thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=300&fit=crop',
+    plays: '956'
+  },
 ];
 
 export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }: HomePageProps) {
-  const [projects, setProjects] = useState<PlayCraftProject[]>([]);
+  // UI state
   const [inputValue, setInputValue] = useState('');
   const [activeNav, setActiveNav] = useState<NavItem>('home');
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -43,12 +66,19 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [isCreatingProject, setIsCreatingProject] = useState(false);
-  const [studioName, setStudioName] = useState('My Studio');
-  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
 
   // Sidebar collapse state
   const { isCollapsed, toggle: toggleSidebar } = useSidebar();
+
+  // Data fetching with TanStack Query
+  const { data: projects = [] } = useProjects();
+  const { data: settings } = useUserSettings();
+  const { data: usageStats } = useUsageStats();
+  const createProjectMutation = useCreateProject();
+
+  // Derived state
+  const studioName = settings?.studio_name || 'My Studio';
+  const isCreatingProject = createProjectMutation.isPending;
 
   // Keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
@@ -62,56 +92,19 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Load projects
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  // Load settings and usage stats
-  useEffect(() => {
-    const loadSettingsAndStats = async () => {
-      try {
-        const [settings, stats] = await Promise.all([
-          getUserSettings(),
-          getUsageStats(),
-        ]);
-        setStudioName(settings.studio_name || 'My Studio');
-        setUsageStats(stats);
-      } catch (err) {
-        console.error('Failed to load settings:', err);
-      }
-    };
-    loadSettingsAndStats();
-  }, []);
-
-  const loadProjects = async () => {
-    try {
-      const data = await getProjects();
-      setProjects(data);
-    } catch (err) {
-      console.error('Failed to load projects:', err);
-    }
-  };
-
   const handleSubmit = async () => {
     if (!inputValue.trim()) return;
     onStartNewProject(inputValue.trim());
   };
 
-  const handleTemplateClick = (prompt: string) => {
-    onStartNewProject(prompt);
-  };
 
   const handleCreateNewProject = async () => {
     if (isCreatingProject) return;
-    setIsCreatingProject(true);
     try {
-      const project = await createProject({ name: 'Untitled Game' });
+      const project = await createProjectMutation.mutateAsync({ name: 'Untitled Game' });
       onSelectProject(project);
     } catch (err) {
       console.error('Failed to create project:', err);
-    } finally {
-      setIsCreatingProject(false);
     }
   };
 
@@ -134,11 +127,11 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const recentProjects = projects.slice(0, 5);
+  const recentProjects = selectRecentProjects(projects);
   const firstName = user.user_metadata?.full_name?.split(' ')[0] || 'there';
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="flex h-screen bg-surface">
       {/* Collapsible Sidebar */}
       <Sidebar
         user={user}
@@ -163,14 +156,14 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
       <main className="flex flex-1 flex-col overflow-hidden">
         {activeNav === 'projects' || activeNav === 'starred' || activeNav === 'shared' ? (
           /* Projects View */
-          <div className="flex-1 overflow-y-auto bg-gray-950 p-8">
+          <div className="flex-1 overflow-y-auto bg-surface p-8">
             {/* Header */}
             <div className="mb-6 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-white">
+                <h1 className="text-2xl font-bold text-content">
                   {activeNav === 'projects' ? 'Projects' : activeNav === 'starred' ? 'Starred' : 'Shared with me'}
                 </h1>
-                <button className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-white">
+                <button className="rounded-lg p-1.5 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content">
                   <MoreHorizontal className="h-5 w-5" />
                 </button>
               </div>
@@ -179,29 +172,29 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
             {/* Search and filters */}
             <div className="mb-6 flex items-center justify-between">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-content-subtle" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search projects..."
-                  className="w-72 rounded-lg border border-gray-700 bg-gray-800 py-2 pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+                  className="w-72 rounded-lg border border-border bg-surface-overlay py-2 pl-10 pr-4 text-sm text-content placeholder-content-subtle outline-none ring-accent transition-all focus:border-transparent focus:ring-2 focus:shadow-glow-sm"
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 {/* Filters */}
-                <select className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-300 outline-none">
+                <select className="rounded-lg border border-border bg-surface-overlay px-3 py-2 text-sm text-content-muted outline-none transition-colors hover:border-accent/30">
                   <option>Last edited</option>
                   <option>Name</option>
                   <option>Created</option>
                 </select>
-                <select className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-300 outline-none">
+                <select className="rounded-lg border border-border bg-surface-overlay px-3 py-2 text-sm text-content-muted outline-none transition-colors hover:border-accent/30">
                   <option>Any visibility</option>
                   <option>Public</option>
                   <option>Private</option>
                 </select>
-                <select className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-300 outline-none">
+                <select className="rounded-lg border border-border bg-surface-overlay px-3 py-2 text-sm text-content-muted outline-none transition-colors hover:border-accent/30">
                   <option>Any status</option>
                   <option>Draft</option>
                   <option>Building</option>
@@ -210,16 +203,16 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                 </select>
 
                 {/* View toggle */}
-                <div className="ml-2 flex rounded-lg border border-gray-700 bg-gray-800">
+                <div className="ml-2 flex rounded-lg border border-border bg-surface-overlay">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`rounded-l-lg p-2 ${viewMode === 'grid' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+                    className={`rounded-l-lg p-2 transition-colors ${viewMode === 'grid' ? 'bg-surface-elevated text-content' : 'text-content-muted hover:text-content'}`}
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`rounded-r-lg p-2 ${viewMode === 'list' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-white'}`}
+                    className={`rounded-r-lg p-2 transition-colors ${viewMode === 'list' ? 'bg-surface-elevated text-content' : 'text-content-muted hover:text-content'}`}
                   >
                     <List className="h-4 w-4" />
                   </button>
@@ -233,12 +226,12 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
               <button
                 onClick={handleCreateNewProject}
                 disabled={isCreatingProject}
-                className="group flex aspect-[4/3] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-700 bg-transparent transition-all hover:border-gray-500 hover:bg-gray-900/50"
+                className="group flex aspect-[4/3] flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-transparent transition-all hover:border-content-subtle hover:bg-surface-elevated/50"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-gray-600 text-gray-500 transition-colors group-hover:border-gray-400 group-hover:text-gray-300">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-content-subtle text-content-subtle transition-colors group-hover:border-content-muted group-hover:text-content-muted">
                   <Plus className="h-6 w-6" />
                 </div>
-                <span className="mt-4 text-sm font-medium text-gray-400 group-hover:text-gray-300">
+                <span className="mt-4 text-sm font-medium text-content-muted transition-colors group-hover:text-content">
                   {isCreatingProject ? 'Creating...' : 'Create new project'}
                 </span>
               </button>
@@ -251,7 +244,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                   className="group text-left"
                 >
                   {/* Thumbnail */}
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-gray-800 bg-gradient-to-br from-violet-900/30 via-fuchsia-900/20 to-gray-900 transition-all group-hover:border-violet-500/50">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border-muted bg-gradient-to-br from-accent-muted/30 via-secondary-muted/20 to-surface-elevated transition-all group-hover:border-accent/50 group-hover:shadow-glow-sm">
                     {project.thumbnail_url ? (
                       <img
                         src={project.thumbnail_url}
@@ -260,7 +253,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <Gamepad2 className="h-16 w-16 text-gray-700" />
+                        <Gamepad2 className="h-16 w-16 text-border" />
                       </div>
                     )}
                   </div>
@@ -274,10 +267,10 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                       className="h-8 w-8"
                     />
                     <div className="flex-1 overflow-hidden">
-                      <h3 className="truncate font-medium text-white group-hover:text-violet-400">
+                      <h3 className="truncate font-medium text-content transition-colors group-hover:text-accent">
                         {project.name}
                       </h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-content-subtle">
                         Edited {formatTimeAgo(project.updated_at)}
                       </p>
                     </div>
@@ -289,7 +282,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
             {/* Empty state */}
             {filteredProjects.length === 0 && searchQuery && (
               <div className="mt-12 text-center">
-                <p className="text-gray-400">No projects found matching "{searchQuery}"</p>
+                <p className="text-content-muted">No projects found matching "{searchQuery}"</p>
               </div>
             )}
           </div>
@@ -299,25 +292,25 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
             {/* Gradient background area */}
             <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden">
               {/* Gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-violet-900/30 via-fuchsia-900/20 to-gray-950" />
-              <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full bg-violet-600/20 blur-[120px]" />
-              <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-fuchsia-600/20 blur-[100px]" />
+              <div className="absolute inset-0 bg-gradient-to-br from-accent-muted/30 via-secondary-muted/20 to-surface" />
+              <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full bg-accent/20 blur-[120px]" />
+              <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-secondary/20 blur-[100px]" />
 
               {/* Content */}
               <div className="relative z-10 w-full max-w-2xl px-6">
-                <h1 className="mb-8 text-center text-4xl font-bold text-white">
+                <h1 className="mb-8 text-center text-4xl font-bold text-content">
                   Got an idea, {firstName}?
                 </h1>
 
                 {/* Input box */}
-                <div className="rounded-2xl border border-gray-700 bg-gray-900/80 p-4 backdrop-blur-sm">
+                <div className="glass-elevated rounded-2xl border border-border p-4">
                   <input
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
                     placeholder="Describe the game you want to create..."
-                    className="w-full bg-transparent text-lg text-white placeholder-gray-500 outline-none"
+                    className="w-full bg-transparent text-lg text-content placeholder-content-subtle outline-none"
                   />
                   <div className="mt-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -326,7 +319,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                     <button
                       onClick={handleSubmit}
                       disabled={!inputValue.trim()}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-600 text-white transition-colors hover:bg-violet-500 disabled:opacity-50"
+                      className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-content transition-all hover:bg-accent-light hover:shadow-glow-sm disabled:opacity-50"
                     >
                       <Send className="h-5 w-5" />
                     </button>
@@ -335,30 +328,55 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
               </div>
             </div>
 
-            {/* Templates section */}
-            <div className="border-t border-gray-800 bg-gray-900/50 px-6 py-6">
+            {/* Made with PlayCraft section */}
+            <div className="border-t border-border-muted bg-surface-elevated/50 px-6 py-6">
               <div className="mx-auto max-w-5xl">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-sm font-medium text-white">Templates</h2>
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    <h2 className="text-sm font-medium text-content">Made with PlayCraft</h2>
+                  </div>
                   <button
-                    onClick={() => setActiveNav('templates')}
-                    className="text-sm text-violet-400 hover:text-violet-300"
+                    onClick={() => setActiveNav('discover')}
+                    className="text-sm text-accent transition-colors hover:text-accent-light"
                   >
-                    Browse all →
+                    Explore all →
                   </button>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
-                  {TEMPLATES.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => handleTemplateClick(template.prompt)}
-                      className="group rounded-xl border border-gray-800 bg-gray-900 p-4 text-left transition-all hover:border-violet-500/50 hover:bg-gray-800"
+                  {FEATURED_GAMES.map((game) => (
+                    <div
+                      key={game.id}
+                      className="group cursor-pointer overflow-hidden rounded-xl border border-border-muted bg-surface-elevated transition-all hover:border-accent/50 hover:shadow-glow-sm"
                     >
-                      <span className="mb-2 block text-2xl">{template.icon}</span>
-                      <span className="text-sm font-medium text-white group-hover:text-violet-400">
-                        {template.name}
-                      </span>
-                    </button>
+                      {/* Thumbnail */}
+                      <div className="relative aspect-video overflow-hidden">
+                        <img
+                          src={game.thumbnail}
+                          alt={game.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        {/* Play overlay */}
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
+                          <div className="flex h-10 w-10 scale-0 items-center justify-center rounded-full bg-accent/90 text-content transition-transform group-hover:scale-100">
+                            <Play className="h-5 w-5 fill-current" />
+                          </div>
+                        </div>
+                      </div>
+                      {/* Info */}
+                      <div className="p-3">
+                        <h3 className="text-sm font-medium text-content transition-colors group-hover:text-accent">
+                          {game.name}
+                        </h3>
+                        <div className="mt-1 flex items-center justify-between">
+                          <span className="text-xs text-content-subtle">by {game.author}</span>
+                          <span className="flex items-center gap-1 text-xs text-content-subtle">
+                            <Play className="h-3 w-3" />
+                            {game.plays}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>

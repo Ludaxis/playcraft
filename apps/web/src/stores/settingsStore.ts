@@ -100,14 +100,8 @@ export const useSettingsStore = create<SettingsState>()(
       fetchUsageStats: async () => {
         try {
           const stats = await fetchUsageStats();
-          set({
-            usageStats: {
-              ...stats,
-              totalCredits: 5,
-              dailyAverage: 0,
-              daysEdited: 1,
-            },
-          });
+          // Use actual stats from service - don't override with hardcoded values
+          set({ usageStats: stats });
         } catch (err) {
           console.error('Failed to fetch usage stats:', err);
         }

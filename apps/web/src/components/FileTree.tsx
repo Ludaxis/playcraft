@@ -51,7 +51,7 @@ function getFileIcon(filename: string) {
       return <FileCode className="h-4 w-4 text-orange-400" />;
     case 'md':
     case 'mdx':
-      return <FileText className="h-4 w-4 text-gray-400" />;
+      return <FileText className="h-4 w-4 text-content-muted" />;
     case 'png':
     case 'jpg':
     case 'jpeg':
@@ -60,7 +60,7 @@ function getFileIcon(filename: string) {
     case 'webp':
       return <Image className="h-4 w-4 text-purple-400" />;
     default:
-      return <File className="h-4 w-4 text-gray-400" />;
+      return <File className="h-4 w-4 text-content-muted" />;
   }
 }
 
@@ -89,8 +89,8 @@ const FileTreeNode = memo(function FileTreeNode({
       <div
         className={`
           flex cursor-pointer items-center gap-1 rounded px-2 py-1
-          hover:bg-gray-800
-          ${isSelected ? 'bg-violet-600/30 text-white' : 'text-gray-300'}
+          hover:bg-surface-overlay
+          ${isSelected ? 'bg-accent/30 text-content' : 'text-content-muted'}
         `}
         style={{ paddingLeft: `${depth * 12 + 8}px` }}
         onClick={handleClick}
@@ -98,14 +98,14 @@ const FileTreeNode = memo(function FileTreeNode({
         {isDirectory ? (
           <>
             {isExpanded ? (
-              <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
+              <ChevronDown className="h-4 w-4 shrink-0 text-content-subtle" />
             ) : (
-              <ChevronRight className="h-4 w-4 shrink-0 text-gray-500" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-content-subtle" />
             )}
             {isExpanded ? (
-              <FolderOpen className="h-4 w-4 shrink-0 text-violet-400" />
+              <FolderOpen className="h-4 w-4 shrink-0 text-accent" />
             ) : (
-              <Folder className="h-4 w-4 shrink-0 text-violet-400" />
+              <Folder className="h-4 w-4 shrink-0 text-accent" />
             )}
           </>
         ) : (
@@ -173,7 +173,7 @@ export function FileTree({
 
   if (files.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-500">
+      <div className="flex h-full items-center justify-center p-4 text-center text-sm text-content-subtle">
         No files yet. Start a conversation to generate your project.
       </div>
     );

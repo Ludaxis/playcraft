@@ -224,10 +224,11 @@ export async function getUsageStats(): Promise<{
     .select('*', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
-  // Get chat sessions count for credits used approximation
+  // Get chat sessions count for credits used approximation (SCOPED TO USER)
   const { count: chatSessionsCount } = await supabase
     .from('playcraft_chat_sessions')
-    .select('*', { count: 'exact', head: true });
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
 
   // Calculate credits (for now, each chat session = 1 credit used)
   const creditsUsed = chatSessionsCount || 0;

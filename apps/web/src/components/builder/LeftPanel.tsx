@@ -97,20 +97,20 @@ export function LeftPanel({
     <>
       {/* Panel content */}
       <div
-        className={`flex shrink-0 flex-col border-r border-gray-800 bg-gray-900 transition-all ${
+        className={`flex shrink-0 flex-col border-r border-border-muted bg-surface-elevated transition-all ${
           isOpen ? 'w-96' : 'w-0'
         }`}
       >
         {isOpen && (
           <div className="flex h-full flex-col">
             {/* Header - Tab buttons */}
-            <div className="flex border-b border-gray-800">
+            <div className="flex border-b border-border-muted">
               <button
                 onClick={() => setActiveTab('chat')}
                 className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
                   activeTab === 'chat'
-                    ? 'border-b-2 border-violet-500 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'border-b-2 border-accent text-content'
+                    : 'text-content-muted hover:text-content'
                 }`}
               >
                 <MessageSquare className="h-4 w-4" />
@@ -120,8 +120,8 @@ export function LeftPanel({
                 onClick={() => setActiveTab('history')}
                 className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
                   activeTab === 'history'
-                    ? 'border-b-2 border-violet-500 text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'border-b-2 border-accent text-content'
+                    : 'text-content-muted hover:text-content'
                 }`}
               >
                 <History className="h-4 w-4" />
@@ -150,17 +150,17 @@ export function LeftPanel({
 
                 {/* Back to Preview button (shown when in Code mode) */}
                 {viewMode === 'code' && onBackToPreview && (
-                  <div className="border-t border-gray-800 p-3">
+                  <div className="border-t border-border-muted p-3">
                     <button
                       onClick={onBackToPreview}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
                     >
                       <ArrowLeft className="h-4 w-4" />
                       Back to Preview
                     </button>
-                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-gray-800/50 px-3 py-2">
-                      <Code2 className="h-4 w-4 text-violet-400" />
-                      <span className="text-sm text-white">Code</span>
+                    <div className="mt-2 flex items-center gap-2 rounded-lg bg-surface-overlay/50 px-3 py-2">
+                      <Code2 className="h-4 w-4 text-accent" />
+                      <span className="text-sm text-content">Code</span>
                     </div>
                   </div>
                 )}
@@ -193,7 +193,7 @@ export function LeftPanel({
       {/* Toggle button */}
       <button
         onClick={onToggle}
-        className="flex h-full w-5 items-center justify-center bg-gray-900 text-gray-500 transition-colors hover:bg-gray-800 hover:text-white"
+        className="flex h-full w-5 items-center justify-center bg-surface-elevated text-content-subtle transition-colors hover:bg-surface-overlay hover:text-content"
       >
         {isOpen ? (
           <PanelLeftClose className="h-4 w-4" />

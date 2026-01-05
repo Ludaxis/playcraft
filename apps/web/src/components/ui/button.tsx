@@ -5,16 +5,20 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  // 2026: Smoother transitions, glow on focus, slightly larger radius
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-surface transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:shadow-glow-sm focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-        destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-        outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-accent hover:text-accent-foreground',
-        link: 'text-primary underline-offset-4 hover:underline',
+        // 2026: Lighter hover states, glow effects
+        default: 'bg-accent text-content hover:bg-accent-light hover:shadow-glow-sm active:bg-accent',
+        destructive: 'bg-error text-content hover:bg-error-light hover:shadow-glow-error active:bg-error',
+        outline: 'border border-border bg-surface hover:bg-surface-elevated hover:border-accent/30 hover:text-content',
+        secondary: 'bg-surface-elevated text-content hover:bg-surface-overlay hover:shadow-glow-sm',
+        ghost: 'hover:bg-surface-elevated hover:text-content',
+        link: 'text-accent underline-offset-4 hover:text-accent-light hover:underline',
+        // 2026: New cyan accent variant for gaming DNA
+        accent: 'bg-secondary text-content hover:bg-secondary-light hover:shadow-glow-cyan active:bg-secondary',
       },
       size: {
         default: 'h-10 px-4 py-2',

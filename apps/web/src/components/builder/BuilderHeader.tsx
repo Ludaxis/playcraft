@@ -91,7 +91,7 @@ export function BuilderHeader({
   // Code mode header (simplified)
   if (viewMode === 'code') {
     return (
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-gray-800 bg-gray-900 px-4">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-border-muted bg-surface-elevated px-4">
         {/* Left section - Project dropdown and View tabs */}
         <div className="flex items-center gap-4">
           {/* Project Dropdown */}
@@ -114,14 +114,14 @@ export function BuilderHeader({
           </div>
 
           {/* Separator */}
-          <div className="h-6 w-px bg-gray-700" />
+          <div className="h-6 w-px bg-border" />
 
           <HeaderTabs viewMode={viewMode} onViewModeChange={onViewModeChange} />
         </div>
 
         {/* Right section - Simplified for Code mode */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Read only</span>
+          <span className="text-sm text-content-subtle">Read only</span>
 
           {/* Upgrade button */}
           <button
@@ -134,7 +134,7 @@ export function BuilderHeader({
           {/* Close button */}
           <button
             onClick={onCloseCodeView || (() => onViewModeChange('preview'))}
-            className="flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-gray-700"
+            className="flex items-center gap-2 rounded-lg bg-surface-overlay px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-surface-overlay"
           >
             Close
           </button>
@@ -168,13 +168,13 @@ export function BuilderHeader({
         </div>
 
         {/* Separator */}
-        <div className="h-6 w-px bg-gray-700" />
+        <div className="h-6 w-px bg-border" />
 
         {/* Preview/Code tabs */}
         <HeaderTabs viewMode={viewMode} onViewModeChange={onViewModeChange} />
 
         {/* Separator */}
-        <div className="h-6 w-px bg-gray-700" />
+        <div className="h-6 w-px bg-border" />
 
         {/* Device toggles with refresh */}
         <DeviceToggle
@@ -191,7 +191,7 @@ export function BuilderHeader({
         {/* Share button */}
         <button
           onClick={onShare}
-          className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:border-gray-600 hover:bg-gray-800 hover:text-white"
+          className="flex items-center gap-2 rounded-lg border border-border bg-surface-overlay/50 px-3 py-1.5 text-sm text-content-muted transition-colors hover:border-gray-600 hover:bg-surface-overlay hover:text-content"
         >
           <Share2 className="h-4 w-4" />
           Share
@@ -212,7 +212,7 @@ export function BuilderHeader({
             href={publishedUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-green-500"
+            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-green-500"
           >
             <ExternalLink className="h-4 w-4" />
             View Live
@@ -221,7 +221,7 @@ export function BuilderHeader({
           <button
             onClick={onPublish}
             disabled={status !== 'running'}
-            className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Rocket className="h-4 w-4" />
             Publish
@@ -234,7 +234,7 @@ export function BuilderHeader({
         {/* Help button */}
         <button
           onClick={onOpenHelp}
-          className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+          className="rounded-lg p-2 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
           title="Help & FAQ"
           data-onboarding="help"
         >
@@ -245,14 +245,14 @@ export function BuilderHeader({
         <button
           onClick={onExport}
           disabled={status !== 'running'}
-          className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:border-gray-600 hover:bg-gray-800 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-border bg-surface-overlay/50 px-3 py-1.5 text-sm text-content-muted transition-colors hover:border-gray-600 hover:bg-surface-overlay hover:text-content disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Download className="h-4 w-4" />
           Export
         </button>
 
         {/* User section */}
-        <div className="ml-2 flex items-center gap-2 border-l border-gray-700 pl-4">
+        <div className="ml-2 flex items-center gap-2 border-l border-border pl-4">
           <Avatar
             src={user.user_metadata?.avatar_url}
             name={user.user_metadata?.full_name || user.email}
@@ -260,7 +260,7 @@ export function BuilderHeader({
           />
           <button
             onClick={onSignOut}
-            className="rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+            className="rounded-lg p-1.5 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
             title="Sign out"
           >
             <LogOut className="h-4 w-4" />

@@ -2,11 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * 2026 HYPER-DIGITAL DESIGN TOKENS (see tailwind.config.js)
+ *
+ * Surface (OLED-optimized):
+ *   - surface:          #0a0a0f (bg-surface)
+ *   - surface-elevated: #12121a (bg-surface-elevated)
+ *   - surface-overlay:  #1a1a24 (bg-surface-overlay)
+ *   - surface-muted:    #0f0f14 (bg-surface-muted)
+ *
+ * Borders (softer, warmer):
+ *   - border:           #2a2a35 (border)
+ *   - border-muted:     #1e1e28 (border-muted)
+ *   - border-accent:    rgba(139, 92, 246, 0.3)
+ *
+ * Content (off-white, zinc-based):
+ *   - content:          #fafafa (text-content)
+ *   - content-muted:    #a1a1aa (text-content-muted)
+ *   - content-subtle:   #71717a (text-content-subtle)
+ *
+ * Accents:
+ *   - accent:           #8b5cf6 (violet-500)
+ *   - accent-light:     #a78bfa (violet-400, hover states)
+ *   - secondary:        #06b6d4 (cyan-500, gaming DNA)
+ */
+
 :root {
+  /* Safe area insets for mobile/notch support */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
+
+  /* 2026 Design tokens as CSS custom properties */
+  /* Surface colors (OLED-optimized) */
+  --color-surface: #0a0a0f;
+  --color-surface-elevated: #12121a;
+  --color-surface-overlay: #1a1a24;
+  --color-surface-muted: #0f0f14;
+
+  /* Border colors (softer, warmer) */
+  --color-border: #2a2a35;
+  --color-border-muted: #1e1e28;
+  --color-border-accent: rgba(139, 92, 246, 0.3);
+
+  /* Content colors (off-white, zinc-based) */
+  --color-content: #fafafa;
+  --color-content-muted: #a1a1aa;
+  --color-content-subtle: #71717a;
+
+  /* Primary accent (Violet) */
+  --color-accent: #8b5cf6;
+  --color-accent-light: #a78bfa;
+  --color-accent-glow: #c4b5fd;
+  --color-accent-muted: #6d28d9;
+  --color-accent-subtle: rgba(139, 92, 246, 0.15);
+
+  /* Secondary accent (Cyan - gaming DNA) */
+  --color-secondary: #06b6d4;
+  --color-secondary-light: #22d3ee;
+  --color-secondary-glow: #67e8f9;
+  --color-secondary-subtle: rgba(6, 182, 212, 0.15);
+
+  /* Status colors (softer, more accessible) */
+  --color-success: #4ade80;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+
+  /* Glow effects */
+  --glow-accent: 0 0 20px rgba(139, 92, 246, 0.25);
+  --glow-accent-lg: 0 0 30px rgba(139, 92, 246, 0.3);
+  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
 }
 
 html {
@@ -17,16 +83,15 @@ html {
 body {
   margin: 0;
   min-height: 100%;
-  background-color: #030712;
-  color: white;
+  background-color: var(--color-surface);
+  color: var(--color-content);
   font-family:
+    'Geist',
+    'Inter',
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -38,10 +103,10 @@ body {
   flex-direction: column;
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar (2026: thinner, subtler) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -49,15 +114,102 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #374151;
-  border-radius: 4px;
+  background: var(--color-border);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: var(--color-content-subtle);
 }
 
 /* Selection */
 ::selection {
-  background-color: rgba(139, 92, 246, 0.3);
+  background-color: var(--color-accent-subtle);
+}
+
+/* =======================================================================
+   GLOW UTILITIES (2026 Luminous Interactions)
+   ======================================================================= */
+
+@layer utilities {
+  /* Glow on hover */
+  .hover-glow {
+    transition: box-shadow 0.3s ease;
+  }
+  .hover-glow:hover {
+    box-shadow: var(--glow-accent);
+  }
+
+  /* Glow on focus */
+  .focus-glow:focus {
+    box-shadow: var(--glow-accent);
+    outline: none;
+  }
+
+  /* Animated glow pulse */
+  .glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+    }
+  }
+
+  /* Gradient text utility */
+  .text-gradient-accent {
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Dual accent gradient */
+  .text-gradient-dual {
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Border glow effect */
+  .border-glow {
+    position: relative;
+  }
+  .border-glow::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+    filter: blur(8px);
+  }
+  .border-glow:hover::before {
+    opacity: 0.5;
+  }
+}
+
+/* =======================================================================
+   GLASS MORPHISM (2026 Trend)
+   ======================================================================= */
+
+@layer utilities {
+  .glass {
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-elevated {
+    background: rgba(18, 18, 26, 0.9);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
 }

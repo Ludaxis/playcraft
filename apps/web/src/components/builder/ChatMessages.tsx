@@ -25,7 +25,7 @@ function FeatureList({ features }: { features: string[] }) {
       {features.map((feature, index) => (
         <div key={index} className="flex items-start gap-2 text-sm">
           <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-          <span className="text-gray-300">{feature}</span>
+          <span className="text-content-muted">{feature}</span>
         </div>
       ))}
     </div>
@@ -46,7 +46,7 @@ function MessageBubble({
   if (isSystem) {
     return (
       <div className="flex items-center justify-center">
-        <div className="rounded-full bg-gray-800/50 px-3 py-1 text-xs text-gray-500">
+        <div className="rounded-full bg-surface-overlay/50 px-3 py-1 text-xs text-content-subtle">
           {message.content}
         </div>
       </div>
@@ -59,14 +59,14 @@ function MessageBubble({
       <div
         className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
           isUser
-            ? 'bg-gray-700'
-            : 'bg-gradient-to-br from-violet-600 to-fuchsia-600'
+            ? 'bg-surface-overlay'
+            : 'bg-gradient-to-br from-accent to-secondary'
         }`}
       >
         {isUser ? (
-          <User className="h-4 w-4 text-gray-300" />
+          <User className="h-4 w-4 text-content-muted" />
         ) : (
-          <Sparkles className="h-4 w-4 text-white" />
+          <Sparkles className="h-4 w-4 text-content" />
         )}
       </div>
 
@@ -75,8 +75,8 @@ function MessageBubble({
         <div
           className={`inline-block rounded-2xl px-4 py-3 ${
             isUser
-              ? 'bg-violet-600 text-white'
-              : 'bg-gray-800 text-gray-200'
+              ? 'bg-accent text-content'
+              : 'bg-surface-overlay text-gray-200'
           }`}
           style={{ maxWidth: isUser ? '85%' : '100%' }}
         >
@@ -132,25 +132,25 @@ export function ChatMessages({
         {/* Generating indicator */}
         {isGenerating && (
           <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600">
-              <Sparkles className="h-4 w-4 text-white" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-secondary">
+              <Sparkles className="h-4 w-4 text-content" />
             </div>
-            <div className="flex items-center gap-2 rounded-2xl bg-gray-800 px-4 py-3">
-              <Loader2 className="h-4 w-4 animate-spin text-violet-400" />
-              <span className="text-sm text-gray-400">Generating your game...</span>
+            <div className="flex items-center gap-2 rounded-2xl bg-surface-overlay px-4 py-3">
+              <Loader2 className="h-4 w-4 animate-spin text-accent" />
+              <span className="text-sm text-content-muted">Generating your game...</span>
             </div>
           </div>
         )}
 
         {/* Getting started hint when no project is ready */}
         {!projectReady && !isSettingUp && messages.length === 1 && (
-          <div className="mt-4 rounded-xl border border-gray-700 bg-gradient-to-b from-gray-800/50 to-gray-900/50 p-6">
-            <h3 className="mb-2 font-medium text-white">Get Started</h3>
-            <p className="mb-4 text-sm text-gray-400">
+          <div className="mt-4 rounded-xl border border-border bg-gradient-to-b from-surface-overlay/50 to-surface-elevated/50 p-6">
+            <h3 className="mb-2 font-medium text-content">Get Started</h3>
+            <p className="mb-4 text-sm text-content-muted">
               Describe the game you want to build and I'll create it for you.
               Be specific about gameplay, visuals, and controls.
             </p>
-            <div className="space-y-2 text-sm text-gray-500">
+            <div className="space-y-2 text-sm text-content-subtle">
               <p>Try something like:</p>
               <ul className="ml-4 list-disc space-y-1">
                 <li>"Create a snake game with retro graphics"</li>

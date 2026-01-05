@@ -15,8 +15,8 @@ export function NextStepsCards({ steps, onStepClick }: NextStepsCardsProps) {
   if (!steps || steps.length === 0) return null;
 
   return (
-    <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-3">
-      <p className="mb-3 text-xs font-medium text-gray-400">
+    <div className="rounded-lg border border-border bg-surface-overlay/50 p-3">
+      <p className="mb-3 text-xs font-medium text-content-muted">
         Next steps you might want
       </p>
       <div className="space-y-2">
@@ -24,13 +24,13 @@ export function NextStepsCards({ steps, onStepClick }: NextStepsCardsProps) {
           <button
             key={index}
             onClick={() => onStepClick(step.prompt)}
-            className="flex w-full items-center justify-between rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-left text-sm text-gray-200 transition-colors hover:border-violet-500/50 hover:bg-gray-800"
+            className="flex w-full items-center justify-between rounded-lg border border-border bg-surface-overlay/50 px-4 py-3 text-left text-sm text-gray-200 transition-colors hover:border-accent/50 hover:bg-surface-overlay"
           >
             <div className="flex items-center gap-2">
-              <Wand2 className="h-4 w-4 text-violet-400" />
+              <Wand2 className="h-4 w-4 text-accent" />
               <span>{step.label}</span>
             </div>
-            <ArrowRight className="h-4 w-4 text-gray-500" />
+            <ArrowRight className="h-4 w-4 text-content-subtle" />
           </button>
         ))}
       </div>

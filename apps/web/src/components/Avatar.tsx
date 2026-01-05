@@ -66,7 +66,7 @@ export function Avatar({ src, name, size = 'sm', className = '' }: AvatarProps) 
   if (showFallback) {
     return (
       <div
-        className={`flex items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-600 font-medium text-white ${sizeClasses[size]} ${className}`}
+        className={`flex items-center justify-center rounded-full bg-gradient-to-br from-accent to-secondary font-medium text-content ${sizeClasses[size]} ${className}`}
       >
         {initials || <User className={iconSizes[size]} />}
       </div>
@@ -77,7 +77,7 @@ export function Avatar({ src, name, size = 'sm', className = '' }: AvatarProps) 
     <img
       src={src}
       alt={name || 'User avatar'}
-      className={`rounded-full bg-gray-800 ${sizeClasses[size]} ${className}`}
+      className={`rounded-full bg-surface-overlay ${sizeClasses[size]} ${className}`}
       onError={() => setHasError(true)}
     />
   );

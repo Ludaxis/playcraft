@@ -47,15 +47,15 @@ export function FileBrowserPanel({
     : files;
 
   return (
-    <div className="flex w-64 flex-col border-r border-gray-800 bg-gray-900">
+    <div className="flex w-64 flex-col border-r border-border-muted bg-surface-elevated">
       {/* Tab buttons */}
-      <div className="flex border-b border-gray-800">
+      <div className="flex border-b border-border-muted">
         <button
           onClick={() => setActiveTab('files')}
           className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
             activeTab === 'files'
-              ? 'border-b-2 border-violet-500 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'border-b-2 border-accent text-content'
+              : 'text-content-muted hover:text-content'
           }`}
         >
           <FolderTree className="h-4 w-4" />
@@ -65,8 +65,8 @@ export function FileBrowserPanel({
           onClick={() => setActiveTab('search')}
           className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
             activeTab === 'search'
-              ? 'border-b-2 border-violet-500 text-white'
-              : 'text-gray-400 hover:text-white'
+              ? 'border-b-2 border-accent text-content'
+              : 'text-content-muted hover:text-content'
           }`}
         >
           <Search className="h-4 w-4" />
@@ -81,7 +81,7 @@ export function FileBrowserPanel({
           placeholder="Search files"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full rounded-lg bg-gray-800 px-3 py-2 text-sm text-white placeholder-gray-500 outline-none ring-violet-500/50 focus:ring-1"
+          className="w-full rounded-lg bg-surface-overlay px-3 py-2 text-sm text-content placeholder-content-subtle outline-none ring-accent/50 focus:ring-1"
         />
       </div>
 

@@ -21,24 +21,24 @@ export function CreditsPanel({
   if (isDismissed) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-800 bg-gray-900/80 px-3 py-2">
+    <div className="flex items-center justify-between border-t border-border-muted bg-surface-elevated/80 px-3 py-2">
       <div className="flex items-center gap-2 text-sm">
         <Zap className="h-4 w-4 text-yellow-500" />
-        <span className="text-gray-400">
-          <span className="font-medium text-gray-300">{creditsRemaining}</span>{' '}
+        <span className="text-content-muted">
+          <span className="font-medium text-content-muted">{creditsRemaining}</span>{' '}
           credits remaining
         </span>
       </div>
       <div className="flex items-center gap-2">
         <button
           onClick={onAddCredits}
-          className="rounded-lg bg-violet-600 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-violet-500"
+          className="rounded-lg bg-accent px-3 py-1 text-xs font-medium text-content transition-colors hover:bg-accent-light"
         >
           Add credits
         </button>
         <button
           onClick={onDismiss}
-          className="rounded p-1 text-gray-500 transition-colors hover:bg-gray-800 hover:text-gray-300"
+          className="rounded p-1 text-content-subtle transition-colors hover:bg-surface-overlay hover:text-content-muted"
           title="Dismiss"
         >
           <X className="h-4 w-4" />

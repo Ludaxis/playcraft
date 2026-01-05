@@ -19,8 +19,8 @@ export function LabsPanel({ settings, onSave, isSaving }: LabsPanelProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white">Labs</h2>
-      <p className="mt-1 text-gray-400">
+      <h2 className="text-2xl font-bold text-content">Labs</h2>
+      <p className="mt-1 text-content-muted">
         These are experimental features that might be modified or removed.
       </p>
 
@@ -35,15 +35,15 @@ export function LabsPanel({ settings, onSave, isSaving }: LabsPanelProps) {
         />
 
         {/* Placeholder for future lab features */}
-        <div className="rounded-lg border border-dashed border-gray-700 p-6 text-center">
-          <p className="text-sm text-gray-500">
+        <div className="rounded-lg border border-dashed border-border p-6 text-center">
+          <p className="text-sm text-content-subtle">
             More experimental features coming soon...
           </p>
         </div>
       </div>
 
       {isSaving && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-gray-400">
+        <div className="mt-4 flex items-center gap-2 text-sm text-content-muted">
           <Loader2 className="h-4 w-4 animate-spin" />
           Saving...
         </div>
@@ -68,13 +68,13 @@ function LabFeature({
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h3 className="font-medium text-white">{title}</h3>
-        <p className="mt-1 text-sm text-gray-400">{description}</p>
+        <h3 className="font-medium text-content">{title}</h3>
+        <p className="mt-1 text-sm text-content-muted">{description}</p>
       </div>
       <button
         onClick={() => onToggle(!enabled)}
         className={`relative h-6 w-11 rounded-full transition-colors ${
-          enabled ? 'bg-violet-600' : 'bg-gray-700'
+          enabled ? 'bg-accent' : 'bg-surface-overlay'
         }`}
       >
         <span

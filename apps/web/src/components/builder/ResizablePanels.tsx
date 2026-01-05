@@ -103,14 +103,14 @@ export function ResizablePanels({
       {/* Resizable Divider */}
       <div
         onMouseDown={startResize}
-        className={`group relative flex h-full w-1 shrink-0 cursor-col-resize items-center justify-center bg-gray-800 transition-colors hover:bg-violet-500 ${
-          isResizing ? 'bg-violet-500' : ''
+        className={`group relative flex h-full w-1 shrink-0 cursor-col-resize items-center justify-center bg-surface-overlay transition-colors hover:bg-accent ${
+          isResizing ? 'bg-accent' : ''
         }`}
       >
         {/* Visual indicator */}
         <div
-          className={`absolute h-8 w-1 rounded-full bg-gray-600 transition-colors group-hover:bg-violet-400 ${
-            isResizing ? 'bg-violet-400' : ''
+          className={`absolute h-8 w-1 rounded-full bg-content-subtle transition-colors group-hover:bg-accent ${
+            isResizing ? 'bg-accent' : ''
           }`}
         />
       </div>

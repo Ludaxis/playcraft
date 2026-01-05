@@ -56,10 +56,10 @@ export class ErrorBoundary extends Component<
       return (
         <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-800 bg-red-900/20 p-8">
           <AlertTriangle className="h-12 w-12 text-red-400" />
-          <h2 className="mt-4 text-xl font-semibold text-white">
+          <h2 className="mt-4 text-xl font-semibold text-content">
             Something went wrong
           </h2>
-          <p className="mt-2 max-w-md text-center text-gray-400">
+          <p className="mt-2 max-w-md text-center text-content-muted">
             {this.state.error?.message || 'An unexpected error occurred'}
           </p>
           <button
@@ -71,10 +71,10 @@ export class ErrorBoundary extends Component<
           </button>
           {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
             <details className="mt-4 w-full max-w-2xl">
-              <summary className="cursor-pointer text-sm text-gray-500">
+              <summary className="cursor-pointer text-sm text-content-subtle">
                 Error details (development only)
               </summary>
-              <pre className="mt-2 overflow-auto rounded bg-gray-800 p-4 text-xs text-gray-300">
+              <pre className="mt-2 overflow-auto rounded bg-surface-overlay p-4 text-xs text-content-muted">
                 {this.state.error?.stack}
                 {'\n\nComponent Stack:\n'}
                 {this.state.errorInfo.componentStack}

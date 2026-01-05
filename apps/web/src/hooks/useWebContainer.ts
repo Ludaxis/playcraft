@@ -16,6 +16,9 @@ import {
   resetNodeModulesState,
   checkDependencies,
   updateDependencies,
+  killAllProcesses,
+  restoreFromCache,
+  saveToCache,
   type OutdatedDependency,
 } from '../lib/webcontainer';
 
@@ -46,12 +49,12 @@ export interface UseWebContainerReturn {
 
   // Actions
   boot: () => Promise<void>;
-  mountProject: (files: FileSystemTree) => Promise<void>;
+  mountProject: (files: FileSystemTree, projectId?: string) => Promise<void>;
   writeProjectFile: (path: string, contents: string) => Promise<void>;
   readProjectFile: (path: string) => Promise<string>;
   deleteFile: (path: string) => Promise<void>;
   createDirectory: (path: string) => Promise<void>;
-  install: () => Promise<void>;
+  install: (projectId?: string) => Promise<void>;
   startDev: () => Promise<void>;
   refreshFileTree: () => Promise<void>;
   runCommand: (command: string, args?: string[]) => Promise<number>;
@@ -74,6 +77,17 @@ export function useWebContainer(): UseWebContainerReturn {
   const [isUpdatingDeps, setIsUpdatingDeps] = useState(false);
 
   const containerRef = useRef<WebContainer | null>(null);
+  const devServerProcessIdRef = useRef<string | null>(null);
+
+  // Cleanup on unmount - kill any running processes
+  useEffect(() => {
+    return () => {
+      const killed = killAllProcesses();
+      if (killed > 0) {
+        console.log(`[useWebContainer] Cleanup: killed ${killed} process(es)`);
+      }
+    };
+  }, []);
 
   // Append to terminal output
   const appendOutput = useCallback((data: string) => {
@@ -92,12 +106,19 @@ export function useWebContainer(): UseWebContainerReturn {
 
   // Reset state for a new project (but keep WebContainer)
   const resetForNewProject = useCallback(() => {
+    // Kill any running processes (dev server, etc.)
+    const killed = killAllProcesses();
+    if (killed > 0) {
+      console.log(`[useWebContainer] Reset: killed ${killed} process(es)`);
+    }
+    devServerProcessIdRef.current = null;
+
     resetNodeModulesState();
     setPreviewUrl(null);
     setFileTree([]);
     setTerminalOutput([]);
     setError(null);
-    // Keep status as is - we want to keep WebContainer running
+    setStatus('ready'); // Reset to ready state since we killed the dev server
   }, []);
 
   // Boot the WebContainer
@@ -121,10 +142,18 @@ export function useWebContainer(): UseWebContainerReturn {
     }
   }, [status, appendOutput]);
 
+  // Current project ID ref for caching
+  const projectIdRef = useRef<string | null>(null);
+
   // Mount project files
-  const mountProject = useCallback(async (files: FileSystemTree) => {
+  const mountProject = useCallback(async (files: FileSystemTree, projectId?: string) => {
     if (!containerRef.current && status !== 'ready') {
       await boot();
+    }
+
+    // Set project ID for cache scoping
+    if (projectId) {
+      projectIdRef.current = projectId;
     }
 
     appendOutput('Mounting project files...\n');
@@ -188,22 +217,49 @@ export function useWebContainer(): UseWebContainerReturn {
     }
   }, []);
 
-  // Install dependencies (skips if already installed)
-  const install = useCallback(async () => {
+  // Install dependencies (uses cache when available)
+  const install = useCallback(async (projectId?: string) => {
+    console.log('[useWebContainer] install called with projectId:', projectId);
+
+    // Use provided projectId or fall back to ref
+    const currentProjectId = projectId || projectIdRef.current;
+    console.log('[useWebContainer] currentProjectId:', currentProjectId);
+
     // Check if we can skip install
     const alreadyInstalled = await hasNodeModules();
+    console.log('[useWebContainer] alreadyInstalled:', alreadyInstalled);
 
     if (alreadyInstalled) {
       appendOutput('\nDependencies already installed, skipping npm install...\n');
       setStatus('ready');
+      console.log('[useWebContainer] Skipping install - already installed');
       return;
     }
 
     setStatus('installing');
+
+    // Try to restore from IndexedDB cache first
+    if (currentProjectId) {
+      appendOutput('\nChecking dependency cache...\n');
+      console.log('[useWebContainer] Attempting cache restore...');
+      const restored = await restoreFromCache(currentProjectId, appendOutput);
+      console.log('[useWebContainer] Cache restore result:', restored);
+      if (restored) {
+        appendOutput('\nDependencies restored from cache!\n');
+        setStatus('ready');
+        console.log('[useWebContainer] Dependencies restored from cache, status set to ready');
+        await refreshFileTree();
+        return;
+      }
+    }
+
+    // No cache - do full npm install
     appendOutput('\n$ npm install\n');
+    console.log('[useWebContainer] Starting full npm install...');
 
     try {
       const exitCode = await installDependencies(appendOutput);
+      console.log('[useWebContainer] npm install exit code:', exitCode);
 
       if (exitCode !== 0) {
         throw new Error(`npm install failed with exit code ${exitCode}`);
@@ -211,8 +267,17 @@ export function useWebContainer(): UseWebContainerReturn {
 
       setStatus('ready');
       appendOutput('\nDependencies installed!\n');
+
+      // Cache node_modules for next time (in background)
+      if (currentProjectId) {
+        saveToCache(currentProjectId, appendOutput).catch(err => {
+          console.warn('[Cache] Background caching failed:', err);
+        });
+      }
+
       await refreshFileTree();
     } catch (err) {
+      console.error('[useWebContainer] install error:', err);
       const message = err instanceof Error ? err.message : 'Failed to install dependencies';
       setError(message);
       setStatus('error');
@@ -223,18 +288,33 @@ export function useWebContainer(): UseWebContainerReturn {
 
   // Start dev server
   const startDev = useCallback(async () => {
+    console.log('[useWebContainer] startDev called');
+
+    // Kill ALL running processes first to ensure clean slate
+    // This handles zombie processes from page refreshes
+    const killed = killAllProcesses();
+    if (killed > 0) {
+      console.log('[useWebContainer] Killed', killed, 'existing process(es) before starting dev server');
+    }
+    devServerProcessIdRef.current = null;
+
     setStatus('running');
     appendOutput('\n$ npm run dev\n');
 
     try {
-      await startDevServer(
+      console.log('[useWebContainer] Calling startDevServer...');
+      const processId = await startDevServer(
         appendOutput,
         (port, url) => {
+          console.log('[useWebContainer] Server ready callback received:', { port, url });
           setPreviewUrl(url);
           appendOutput(`\nServer running at ${url}\n`);
         }
       );
+      devServerProcessIdRef.current = processId;
+      console.log('[useWebContainer] Dev server started, processId:', processId);
     } catch (err) {
+      console.error('[useWebContainer] startDevServer error:', err);
       const message = err instanceof Error ? err.message : 'Failed to start dev server';
       setError(message);
       setStatus('error');

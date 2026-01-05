@@ -17,25 +17,25 @@ export function UsagePanel({ usageStats }: UsagePanelProps) {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white">Usage</h2>
-      <p className="mt-1 text-gray-400">Monitor your AI usage and activity.</p>
+      <h2 className="text-2xl font-bold text-content">Usage</h2>
+      <p className="mt-1 text-content-muted">Monitor your AI usage and activity.</p>
 
       {/* Remaining Messages - Prominent Display */}
-      <div className="mt-8 rounded-xl border border-violet-500/30 bg-gradient-to-r from-violet-600/10 to-fuchsia-600/10 p-6">
+      <div className="mt-8 rounded-xl border border-accent/30 bg-gradient-to-r from-accent/10 to-secondary/10 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-600/20">
-              <MessageSquare className="h-6 w-6 text-violet-400" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/20">
+              <MessageSquare className="h-6 w-6 text-accent" />
             </div>
             <div>
-              <p className="text-sm text-gray-400">Remaining Messages</p>
-              <p className="text-3xl font-bold text-white">
+              <p className="text-sm text-content-muted">Remaining Messages</p>
+              <p className="text-3xl font-bold text-content">
                 {creditsRemaining}
-                <span className="ml-1 text-lg font-normal text-gray-500">/ {totalCredits}</span>
+                <span className="ml-1 text-lg font-normal text-content-subtle">/ {totalCredits}</span>
               </p>
             </div>
           </div>
-          <button className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-violet-500">
+          <button className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-content transition-colors hover:bg-accent-light">
             <Zap className="h-4 w-4" />
             Upgrade
           </button>
@@ -43,30 +43,30 @@ export function UsagePanel({ usageStats }: UsagePanelProps) {
 
         {/* Progress Bar */}
         <div className="mt-4">
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-700">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-surface-overlay">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300"
+              className="h-full rounded-full bg-gradient-to-r from-accent-light to-secondary transition-all duration-300"
               style={{ width: `${usagePercentage}%` }}
             />
           </div>
-          <p className="mt-2 text-xs text-gray-500">
+          <p className="mt-2 text-xs text-content-subtle">
             {usagePercentage.toFixed(0)}% of your monthly messages used
           </p>
         </div>
       </div>
 
       {/* Activity Graph */}
-      <div className="mt-6 rounded-xl border border-gray-800 bg-gray-800/30 p-6">
-        <h3 className="font-medium text-white">Activity this year</h3>
+      <div className="mt-6 rounded-xl border border-border-muted bg-surface-overlay/30 p-6">
+        <h3 className="font-medium text-content">Activity this year</h3>
         <div className="mt-4 grid grid-cols-[repeat(52,1fr)] gap-1">
           {Array.from({ length: 364 }).map((_, i) => {
             // Create some visual variation based on index
             const intensity = Math.random();
-            let bgColor = 'bg-gray-700';
+            let bgColor = 'bg-surface-elevated';
             if (i > 300) {
-              if (intensity > 0.8) bgColor = 'bg-violet-500';
-              else if (intensity > 0.6) bgColor = 'bg-violet-600/70';
-              else if (intensity > 0.4) bgColor = 'bg-violet-700/50';
+              if (intensity > 0.8) bgColor = 'bg-accent-light';
+              else if (intensity > 0.6) bgColor = 'bg-accent/70';
+              else if (intensity > 0.4) bgColor = 'bg-accent/50';
             }
             return <div key={i} className={`aspect-square rounded-sm ${bgColor}`} />;
           })}
@@ -108,12 +108,12 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value }: StatCardProps) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-800/30 p-4">
+    <div className="rounded-xl border border-border-muted bg-surface-overlay/30 p-4">
       <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4 text-gray-500" />
-        <p className="text-xs text-gray-400">{label}</p>
+        <Icon className="h-4 w-4 text-content-subtle" />
+        <p className="text-xs text-content-muted">{label}</p>
       </div>
-      <p className="mt-2 text-2xl font-bold text-white">{value}</p>
+      <p className="mt-2 text-2xl font-bold text-content">{value}</p>
     </div>
   );
 }

@@ -1,6 +1,16 @@
 /**
  * Project store using Zustand
  * Manages project list with caching and CRUD operations
+ *
+ * @deprecated This store is being replaced by TanStack Query hooks.
+ * Use the hooks from `src/hooks/useProjects.ts` instead:
+ * - useProjects() - fetch all projects
+ * - useCreateProject() - create a new project
+ * - useUpdateProject() - update a project
+ * - useDeleteProject() - delete a project
+ *
+ * This file is kept for backwards compatibility and will be removed
+ * in a future version.
  */
 
 import { create } from 'zustand';

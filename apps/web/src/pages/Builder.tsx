@@ -316,12 +316,17 @@ export function BuilderPage({
 
   // Start project - restore saved files or use fresh template
   const startProject = useCallback(async () => {
-    if (isSettingUp || projectReady) return;
+    console.log('[Builder] startProject called', { isSettingUp, projectReady });
+    if (isSettingUp || projectReady) {
+      console.log('[Builder] startProject early return - already setting up or ready');
+      return;
+    }
 
     setIsSettingUp(true);
 
     // Check if project has saved files
     const hasSavedFiles = Object.keys(project.files || {}).length > 0;
+    console.log('[Builder] hasSavedFiles:', hasSavedFiles, 'files count:', Object.keys(project.files || {}).length);
 
     if (hasSavedFiles) {
       addSystemMessage('Restoring your project...');
@@ -333,17 +338,27 @@ export function BuilderPage({
       await updateProjectStatus(project.id, 'building');
 
       if (status === 'idle') {
+        console.log('[Builder] Booting WebContainer...');
         await boot();
+        console.log('[Builder] WebContainer booted');
       }
 
       if (hasSavedFiles) {
-        // Restore saved files
+        // Restore saved files merged with template (to ensure package.json exists)
         console.log('[Builder] Restoring saved files:', Object.keys(project.files).length);
+
+        // First mount the template to ensure all required files (package.json, etc.)
+        await mountProject(viteStarterTemplate.files, project.id);
+        console.log('[Builder] Template base mounted');
+
+        // Then overlay the saved files (user modifications take precedence)
         const savedFilesTree = filesToFileSystemTree(project.files);
-        await mountProject(savedFilesTree);
+        await mountProject(savedFilesTree, project.id);
+        console.log('[Builder] Saved files overlaid');
       } else {
         // Mount fresh template
-        await mountProject(viteStarterTemplate.files);
+        console.log('[Builder] Mounting fresh template');
+        await mountProject(viteStarterTemplate.files, project.id);
 
         // Save template files to database immediately (not debounced)
         const templateFiles: Record<string, string> = {};
@@ -373,13 +388,17 @@ export function BuilderPage({
       }
 
       addSystemMessage('Installing dependencies... (this takes about a minute)');
-      await install();
+      console.log('[Builder] Calling install...');
+      await install(project.id);
+      console.log('[Builder] Install complete, calling startDev...');
       addSystemMessage('Starting development server...');
       await startDev();
+      console.log('[Builder] startDev complete');
 
       setProjectReady(true);
       setIsSettingUp(false);
       await updateProjectStatus(project.id, 'ready');
+      console.log('[Builder] Project setup complete');
 
       if (hasSavedFiles) {
         addSystemMessage('Project restored! Continue building your game.');
@@ -387,6 +406,7 @@ export function BuilderPage({
         addSystemMessage('Ready! Describe the game you want to build.');
       }
     } catch (err) {
+      console.error('[Builder] startProject error:', err);
       setIsSettingUp(false);
       await updateProjectStatus(project.id, 'draft');
       addSystemMessage(
@@ -623,16 +643,16 @@ export function BuilderPage({
   // Show loading while fetching fresh project data
   if (isLoadingProject) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-gray-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
-        <p className="mt-4 text-gray-400">Loading project...</p>
+      <div className="flex h-screen flex-col items-center justify-center bg-surface">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+        <p className="mt-4 text-content-muted">Loading project...</p>
       </div>
     );
   }
 
   // Left Panel Content - Chat section with its own header
   const leftPanelContent = (
-    <div className="flex h-full flex-col bg-gray-900">
+    <div className="flex h-full flex-col bg-surface-elevated">
       {/* Chat Header */}
       <ChatHeader
         projectName={project.name}
@@ -698,7 +718,7 @@ export function BuilderPage({
 
   // Right Panel Content - Preview/Code section with its own header
   const rightPanelContent = (
-    <div className="flex h-full flex-col bg-gray-950">
+    <div className="flex h-full flex-col bg-surface">
       {/* Preview Header */}
       <PreviewHeader
         user={user}
@@ -743,21 +763,21 @@ export function BuilderPage({
       )}
 
       {/* Bottom Bar - Terminal toggle */}
-      <div className="flex h-10 shrink-0 items-center justify-between border-t border-gray-800 bg-gray-900 px-4">
+      <div className="flex h-10 shrink-0 items-center justify-between border-t border-border-muted bg-surface-elevated px-4">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowTerminal(!showTerminal)}
-            className={`flex items-center gap-1.5 rounded px-2 py-1 text-xs transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-all ${
               showTerminal
-                ? 'bg-violet-600/20 text-violet-300'
-                : 'text-gray-500 hover:text-gray-300'
+                ? 'bg-accent/20 text-accent-light shadow-glow-sm'
+                : 'text-content-subtle hover:text-content-muted'
             }`}
           >
             <TerminalIcon className="h-3.5 w-3.5" />
             Terminal
           </button>
         </div>
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-content-subtle">
           {status === 'running' ? 'Server running' : status}
         </div>
       </div>
@@ -774,7 +794,7 @@ export function BuilderPage({
   );
 
   return (
-    <div className="flex h-screen bg-gray-950">
+    <div className="flex h-screen bg-surface">
       {/* Resizable split layout - Chat on left, Preview on right */}
       <ResizablePanels
         leftPanel={leftPanelContent}

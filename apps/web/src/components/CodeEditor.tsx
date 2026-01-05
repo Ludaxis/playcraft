@@ -154,7 +154,7 @@ export const CodeEditor = memo(function CodeEditor({
 
   if (!filePath) {
     return (
-      <div className={`flex h-full items-center justify-center bg-[#0d0d0d] text-gray-500 ${className}`}>
+      <div className={`flex h-full items-center justify-center bg-[#0d0d0d] text-content-subtle ${className}`}>
         Select a file to edit
       </div>
     );
@@ -208,7 +208,7 @@ export const CodeEditor = memo(function CodeEditor({
           },
         }}
         loading={
-          <div className="flex h-full items-center justify-center bg-[#0d0d0d] text-gray-500">
+          <div className="flex h-full items-center justify-center bg-[#0d0d0d] text-content-subtle">
             Loading editor...
           </div>
         }

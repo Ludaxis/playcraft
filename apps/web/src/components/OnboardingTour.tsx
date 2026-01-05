@@ -153,7 +153,7 @@ export function OnboardingTour({
       {/* Spotlight border highlight */}
       {targetRect && (
         <div
-          className="pointer-events-none absolute rounded-lg ring-2 ring-violet-500 ring-offset-2 ring-offset-transparent transition-all duration-300"
+          className="pointer-events-none absolute rounded-lg ring-2 ring-accent ring-offset-2 ring-offset-transparent transition-all duration-300"
           style={{
             top: targetRect.top - 4,
             left: targetRect.left - 4,
@@ -165,7 +165,7 @@ export function OnboardingTour({
 
       {/* Tooltip */}
       <div
-        className="absolute z-10 w-80 rounded-xl border border-gray-700 bg-gray-900 p-5 shadow-2xl transition-all duration-300"
+        className="absolute z-10 w-80 rounded-xl border border-border bg-surface-elevated p-5 shadow-2xl transition-all duration-300"
         style={{
           top: tooltipPosition.top,
           left: tooltipPosition.left,
@@ -174,7 +174,7 @@ export function OnboardingTour({
         {/* Close button */}
         <button
           onClick={onSkip}
-          className="absolute right-3 top-3 rounded-lg p-1 text-gray-500 transition-colors hover:bg-gray-800 hover:text-white"
+          className="absolute right-3 top-3 rounded-lg p-1 text-content-subtle transition-colors hover:bg-surface-overlay hover:text-content"
         >
           <X className="h-4 w-4" />
         </button>
@@ -185,17 +185,17 @@ export function OnboardingTour({
             <div
               key={i}
               className={`h-1.5 w-6 rounded-full transition-colors ${
-                i === stepNumber ? 'bg-violet-500' : 'bg-gray-700'
+                i === stepNumber ? 'bg-accent-light' : 'bg-surface-overlay'
               }`}
             />
           ))}
         </div>
 
         {/* Content */}
-        <h3 className="mb-2 text-lg font-semibold text-white">
+        <h3 className="mb-2 text-lg font-semibold text-content">
           {currentStep.title}
         </h3>
-        <p className="mb-5 text-sm leading-relaxed text-gray-400">
+        <p className="mb-5 text-sm leading-relaxed text-content-muted">
           {currentStep.description}
         </p>
 
@@ -203,7 +203,7 @@ export function OnboardingTour({
         <div className="flex items-center justify-between">
           <button
             onClick={onSkip}
-            className="text-sm text-gray-500 transition-colors hover:text-gray-300"
+            className="text-sm text-content-subtle transition-colors hover:text-content-muted"
           >
             Skip tour
           </button>
@@ -212,7 +212,7 @@ export function OnboardingTour({
             {stepNumber > 0 && (
               <button
                 onClick={onPrev}
-                className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+                className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Back
@@ -220,7 +220,7 @@ export function OnboardingTour({
             )}
             <button
               onClick={onNext}
-              className="flex items-center gap-1 rounded-lg bg-violet-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-violet-500"
+              className="flex items-center gap-1 rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light"
             >
               {stepNumber === totalSteps - 1 ? 'Done' : 'Next'}
               {stepNumber < totalSteps - 1 && <ChevronRight className="h-4 w-4" />}

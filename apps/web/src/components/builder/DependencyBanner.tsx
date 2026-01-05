@@ -83,7 +83,7 @@ export function DependencyBanner({
                 <div className="truncate text-yellow-200" title={dep.name}>
                   {dep.name}
                 </div>
-                <div className="text-gray-400">{dep.current}</div>
+                <div className="text-content-muted">{dep.current}</div>
                 <div className="text-yellow-300">{dep.wanted}</div>
                 <div className="text-green-400">{dep.latest}</div>
               </div>

@@ -60,36 +60,36 @@ export function FAQModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="relative flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-gray-800 bg-gray-900">
+      <div className="relative flex h-[80vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-800 p-5">
+        <div className="flex items-center justify-between border-b border-border-muted p-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-600/20">
-              <HelpCircle className="h-5 w-5 text-violet-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/20">
+              <HelpCircle className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Help & FAQ</h2>
-              <p className="text-sm text-gray-500">Find answers to common questions</p>
+              <h2 className="text-lg font-semibold text-content">Help & FAQ</h2>
+              <p className="text-sm text-content-subtle">Find answers to common questions</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+            className="rounded-lg p-2 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Search */}
-        <div className="border-b border-gray-800 p-4">
+        <div className="border-b border-border-muted p-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-content-subtle" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for help..."
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 py-2.5 pl-10 pr-4 text-sm text-white placeholder-gray-500 outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+              className="w-full rounded-lg border border-border bg-surface-overlay py-2.5 pl-10 pr-4 text-sm text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
               autoFocus
             />
           </div>
@@ -102,14 +102,14 @@ export function FAQModal({
             <div className="space-y-2">
               {filteredItems.length === 0 ? (
                 <div className="py-12 text-center">
-                  <p className="text-gray-400">No results found for "{searchQuery}"</p>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="text-content-muted">No results found for "{searchQuery}"</p>
+                  <p className="mt-2 text-sm text-content-subtle">
                     Try different keywords or browse categories below
                   </p>
                 </div>
               ) : (
                 <>
-                  <p className="mb-3 text-sm text-gray-500">
+                  <p className="mb-3 text-sm text-content-subtle">
                     Found {filteredItems.length} result{filteredItems.length !== 1 ? 's' : ''}
                   </p>
                   {filteredItems.map((item) => (
@@ -136,14 +136,14 @@ export function FAQModal({
                       onClose();
                       onStartTour();
                     }}
-                    className="flex items-center gap-3 rounded-lg border border-gray-700 bg-gray-800/50 p-4 text-left transition-colors hover:border-violet-500/50 hover:bg-gray-800"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-surface-overlay/50 p-4 text-left transition-colors hover:border-accent/50 hover:bg-surface-overlay"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-600/20">
-                      <Sparkles className="h-5 w-5 text-violet-400" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/20">
+                      <Sparkles className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <p className="font-medium text-white">Take a tour</p>
-                      <p className="text-sm text-gray-500">Learn the basics</p>
+                      <p className="font-medium text-content">Take a tour</p>
+                      <p className="text-sm text-content-subtle">Learn the basics</p>
                     </div>
                   </button>
                 )}
@@ -153,14 +153,14 @@ export function FAQModal({
                       onClose();
                       onOpenFeedback();
                     }}
-                    className="flex items-center gap-3 rounded-lg border border-gray-700 bg-gray-800/50 p-4 text-left transition-colors hover:border-violet-500/50 hover:bg-gray-800"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-surface-overlay/50 p-4 text-left transition-colors hover:border-accent/50 hover:bg-surface-overlay"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600/20">
                       <MessageSquare className="h-5 w-5 text-blue-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-white">Send feedback</p>
-                      <p className="text-sm text-gray-500">Report issues or ideas</p>
+                      <p className="font-medium text-content">Send feedback</p>
+                      <p className="text-sm text-content-subtle">Report issues or ideas</p>
                     </div>
                   </button>
                 )}
@@ -178,8 +178,8 @@ export function FAQModal({
                     }
                     className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                       activeCategory === category.id
-                        ? 'bg-violet-600 text-white'
-                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white'
+                        ? 'bg-accent text-content'
+                        : 'bg-surface-overlay text-content-muted hover:bg-surface-elevated hover:text-content'
                     }`}
                   >
                     {category.name}
@@ -193,7 +193,7 @@ export function FAQModal({
               ).map((category) => (
                 <div key={category.id} className="space-y-2">
                   {!activeCategory && (
-                    <h3 className="text-sm font-medium text-gray-400">
+                    <h3 className="text-sm font-medium text-content-muted">
                       {category.name}
                     </h3>
                   )}
@@ -213,8 +213,8 @@ export function FAQModal({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-800 p-4">
-          <p className="text-center text-sm text-gray-500">
+        <div className="border-t border-border-muted p-4">
+          <p className="text-center text-sm text-content-subtle">
             Can't find what you're looking for?{' '}
             {onOpenFeedback ? (
               <button
@@ -222,12 +222,12 @@ export function FAQModal({
                   onClose();
                   onOpenFeedback();
                 }}
-                className="text-violet-400 hover:text-violet-300"
+                className="text-accent hover:text-accent-light"
               >
                 Send us feedback
               </button>
             ) : (
-              <span className="text-gray-400">Contact support</span>
+              <span className="text-content-muted">Contact support</span>
             )}
           </p>
         </div>
@@ -246,28 +246,28 @@ interface FAQItemProps {
 
 function FAQItem({ question, answer, category, isExpanded, onToggle }: FAQItemProps) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-800/30 transition-colors hover:border-gray-700">
+    <div className="rounded-lg border border-border-muted bg-surface-overlay/30 transition-colors hover:border-border">
       <button
         onClick={onToggle}
         className="flex w-full items-start gap-3 p-4 text-left"
       >
         <ChevronDown
-          className={`mt-0.5 h-4 w-4 shrink-0 text-gray-500 transition-transform ${
+          className={`mt-0.5 h-4 w-4 shrink-0 text-content-subtle transition-transform ${
             isExpanded ? 'rotate-180' : ''
           }`}
         />
         <div className="flex-1">
-          <p className="font-medium text-white">{question}</p>
+          <p className="font-medium text-content">{question}</p>
           {category && !isExpanded && (
-            <span className="mt-1 inline-block rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-500">
+            <span className="mt-1 inline-block rounded-full bg-surface-overlay px-2 py-0.5 text-xs text-content-subtle">
               {category}
             </span>
           )}
         </div>
       </button>
       {isExpanded && (
-        <div className="border-t border-gray-800 px-4 py-3 pl-11">
-          <p className="text-sm leading-relaxed text-gray-400">{answer}</p>
+        <div className="border-t border-border-muted px-4 py-3 pl-11">
+          <p className="text-sm leading-relaxed text-content-muted">{answer}</p>
         </div>
       )}
     </div>

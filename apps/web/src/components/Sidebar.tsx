@@ -68,18 +68,18 @@ export function Sidebar({
 }: SidebarProps) {
   return (
     <aside
-      className={`flex flex-col border-r border-gray-800 bg-gray-900 transition-all duration-200 ease-out ${
+      className={`flex flex-col border-r border-border-muted bg-surface-muted transition-all duration-300 ease-out ${
         isCollapsed ? 'w-16' : 'w-60'
       }`}
     >
       {/* Logo + Collapse toggle */}
-      <div className="flex h-14 items-center justify-between border-b border-gray-800 px-3">
+      <div className="flex h-14 items-center justify-between border-b border-border-muted px-3">
         <div className={`flex items-center gap-2 ${isCollapsed ? 'justify-center w-full' : ''}`}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
-            <Sparkles className="h-4 w-4 text-white" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-secondary shadow-glow-sm">
+            <Sparkles className="h-4 w-4 text-content" />
           </div>
           {!isCollapsed && (
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-lg font-bold text-transparent">
+            <span className="text-gradient-dual text-lg font-bold">
               PlayCraft
             </span>
           )}
@@ -88,7 +88,7 @@ export function Sidebar({
           <button
             onClick={onToggleCollapse}
             title="Collapse sidebar (⌘B)"
-            className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-800 hover:text-white"
+            className="rounded-lg p-1.5 text-content-subtle transition-colors hover:bg-surface-overlay hover:text-content"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -100,14 +100,14 @@ export function Sidebar({
         <button
           onClick={onToggleCollapse}
           title="Expand sidebar (⌘B)"
-          className="mx-auto my-2 rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-800 hover:text-white"
+          className="mx-auto my-2 rounded-lg p-1.5 text-content-subtle transition-colors hover:bg-surface-overlay hover:text-content"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
       )}
 
       {/* Workspace dropdown */}
-      <div className="border-b border-gray-800 p-3">
+      <div className="border-b border-border-muted p-3">
         <WorkspaceDropdown
           user={user}
           studioName={studioName}
@@ -196,7 +196,7 @@ export function Sidebar({
               <button
                 key={project.id}
                 onClick={() => onSelectProject?.(project)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-gray-400 hover:bg-gray-800 hover:text-white"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
               >
                 <Gamepad2 className="h-4 w-4 shrink-0" />
                 <span className="truncate">{project.name}</span>
@@ -207,7 +207,7 @@ export function Sidebar({
       </nav>
 
       {/* Bottom section */}
-      <div className="border-t border-gray-800 p-3 space-y-2">
+      <div className="border-t border-border-muted p-3 space-y-2">
         {/* Feedback button */}
         {onOpenFeedback && (
           <SidebarItem
@@ -222,12 +222,12 @@ export function Sidebar({
         {!isCollapsed ? (
           <button
             onClick={onOpenSettings}
-            className="flex w-full items-center gap-3 rounded-lg bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 px-3 py-2.5 text-left hover:from-violet-600/30 hover:to-fuchsia-600/30"
+            className="flex w-full items-center gap-3 rounded-lg bg-gradient-to-r from-accent/20 to-secondary/20 px-3 py-2.5 text-left transition-all hover:from-accent/30 hover:to-secondary/30 hover:shadow-glow-sm"
           >
-            <Zap className="h-4 w-4 text-violet-400" />
+            <Zap className="h-4 w-4 text-accent" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-white">Upgrade to Pro</p>
-              <p className="text-xs text-gray-500">Unlock more features</p>
+              <p className="text-sm font-medium text-content">Upgrade to Pro</p>
+              <p className="text-xs text-content-subtle">Unlock more features</p>
             </div>
           </button>
         ) : (

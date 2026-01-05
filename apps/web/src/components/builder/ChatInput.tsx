@@ -53,7 +53,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="border-t border-gray-800 bg-gray-900/50 p-3">
+    <div className="border-t border-border-muted bg-surface-elevated/50 p-3">
       {/* Quick suggestion chips */}
       <div className="mb-3 flex flex-wrap gap-2">
         {suggestions.map((suggestion, index) => (
@@ -61,7 +61,7 @@ export function ChatInput({
             key={index}
             onClick={() => handleSuggestionClick(suggestion.prompt)}
             disabled={disabled}
-            className="flex items-center gap-1 rounded-full border border-gray-700 bg-gray-800/50 px-2.5 py-1 text-xs text-gray-400 transition-colors hover:border-violet-500/50 hover:bg-violet-600/10 hover:text-violet-300 disabled:opacity-50"
+            className="flex items-center gap-1 rounded-full border border-border bg-surface-overlay/50 px-2.5 py-1 text-xs text-content-muted transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-accent-light disabled:opacity-50"
           >
             <Sparkles className="h-3 w-3" />
             {suggestion.label}
@@ -78,13 +78,13 @@ export function ChatInput({
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="w-full rounded-xl bg-gray-800 py-3 pl-4 pr-12 text-sm text-white placeholder-gray-500 outline-none ring-violet-500/50 transition-shadow focus:ring-2"
+            className="w-full rounded-xl bg-surface-overlay py-3 pl-4 pr-12 text-sm text-content placeholder-content-subtle outline-none ring-accent/50 transition-shadow focus:ring-2"
             disabled={disabled}
           />
           <button
             onClick={onSend}
             disabled={disabled || !value.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-violet-600 p-2 text-white transition-colors hover:bg-violet-500 disabled:opacity-50 disabled:hover:bg-violet-600"
+            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-accent p-2 text-content transition-colors hover:bg-accent-light disabled:opacity-50 disabled:hover:bg-accent"
           >
             <Send className="h-4 w-4" />
           </button>
@@ -92,7 +92,7 @@ export function ChatInput({
       </div>
 
       {/* Hint text */}
-      <div className="mt-2 text-right text-xs text-gray-600">
+      <div className="mt-2 text-right text-xs text-content-subtle">
         Press Enter to send
       </div>
     </div>

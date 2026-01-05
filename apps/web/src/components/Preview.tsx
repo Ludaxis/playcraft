@@ -46,7 +46,7 @@ export const Preview = memo(function Preview({
   return (
     <div
       className={`
-        relative flex flex-col bg-gray-900
+        relative flex flex-col bg-surface-elevated
         ${isFullscreen ? 'fixed inset-0 z-50' : 'h-full'}
         ${className}
       `}
@@ -56,7 +56,7 @@ export const Preview = memo(function Preview({
         {url && (
           <button
             onClick={handleOpenExternal}
-            className="rounded bg-gray-800/80 p-1.5 text-gray-400 backdrop-blur-sm transition-colors hover:bg-gray-700 hover:text-white"
+            className="rounded bg-surface-overlay/80 p-1.5 text-content-muted backdrop-blur-sm transition-colors hover:bg-surface-elevated hover:text-content"
             title="Open in new tab"
           >
             <ExternalLink className="h-4 w-4" />
@@ -64,7 +64,7 @@ export const Preview = memo(function Preview({
         )}
         <button
           onClick={handleFullscreen}
-          className="rounded bg-gray-800/80 p-1.5 text-gray-400 backdrop-blur-sm transition-colors hover:bg-gray-700 hover:text-white"
+          className="rounded bg-surface-overlay/80 p-1.5 text-content-muted backdrop-blur-sm transition-colors hover:bg-surface-elevated hover:text-content"
           title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
         >
           {isFullscreen ? (
@@ -78,7 +78,7 @@ export const Preview = memo(function Preview({
       {/* Preview content */}
       <div className="relative flex-1 overflow-hidden">
         {url ? (
-          <div className="flex h-full w-full items-center justify-center overflow-auto bg-gray-950 p-4">
+          <div className="flex h-full w-full items-center justify-center overflow-auto bg-surface p-4">
             <div
               style={{
                 width: deviceSize.width,
@@ -87,7 +87,7 @@ export const Preview = memo(function Preview({
                 maxHeight: '100%',
               }}
               className={`overflow-hidden rounded-lg bg-white shadow-2xl ${
-                deviceMode !== 'desktop' ? 'border-8 border-gray-800' : ''
+                deviceMode !== 'desktop' ? 'border-8 border-surface-overlay' : ''
               }`}
             >
               <iframe
@@ -104,16 +104,16 @@ export const Preview = memo(function Preview({
             <div className="text-center">
               {isLoading ? (
                 <>
-                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-violet-500 border-t-transparent" />
-                  <p className="text-gray-400">Starting development server...</p>
+                  <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-4 border-accent-light border-t-transparent" />
+                  <p className="text-content-muted">Starting development server...</p>
                 </>
               ) : (
                 <>
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800">
-                    <Monitor className="h-8 w-8 text-gray-500" />
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-overlay">
+                    <Monitor className="h-8 w-8 text-content-subtle" />
                   </div>
-                  <p className="text-gray-400">No preview available</p>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="text-content-muted">No preview available</p>
+                  <p className="mt-1 text-sm text-content-subtle">
                     Generate a project to see the live preview
                   </p>
                 </>
