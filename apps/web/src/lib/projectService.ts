@@ -1,6 +1,11 @@
 import { getSupabase } from './supabase';
 import { withRetry } from './retry';
 import { logger } from './logger';
+import {
+  uploadProjectFiles,
+  downloadProjectFiles,
+  deleteAllProjectFiles,
+} from './fileStorageService';
 
 export interface PlayCraftProject {
   id: string;
@@ -17,6 +22,7 @@ export interface PlayCraftProject {
   is_public?: boolean;
   play_count?: number;
   is_starred?: boolean;
+  use_storage?: boolean; // If true, files are in Supabase Storage instead of JSON blob
   created_at: string;
   updated_at: string;
   last_opened_at: string;
@@ -69,6 +75,7 @@ export async function getProjects(): Promise<PlayCraftProject[]> {
 
 /**
  * Get a single project by ID
+ * If use_storage is true, fetches files from Supabase Storage
  */
 export async function getProject(id: string): Promise<PlayCraftProject | null> {
   const supabase = getSupabase();
@@ -84,6 +91,33 @@ export async function getProject(id: string): Promise<PlayCraftProject | null> {
       return null; // Not found
     }
     throw new Error(`Failed to fetch project: ${error.message}`);
+  }
+
+  // If using Storage, fetch files from there instead of JSON blob
+  if (data.use_storage) {
+    try {
+      logger.debug('Fetching files from Storage', {
+        component: 'projectService',
+        action: 'getProject',
+        projectId: id,
+      });
+
+      const files = await downloadProjectFiles(data.user_id, id);
+      data.files = files;
+
+      logger.debug(`Loaded ${Object.keys(files).length} files from Storage`, {
+        component: 'projectService',
+        projectId: id,
+      });
+    } catch (err) {
+      logger.error('Failed to fetch files from Storage, falling back to JSON', err instanceof Error ? err : new Error(String(err)), {
+        component: 'projectService',
+        action: 'getProject',
+        projectId: id,
+      });
+      // Fall back to JSON blob if Storage fails
+      // data.files already has the JSON blob value
+    }
   }
 
   // Update last_opened_at
@@ -123,8 +157,9 @@ export async function createProject(input: CreateProjectInput): Promise<PlayCraf
           description: input.description || null,
           has_three_js: false,
           status: 'draft',
-          files: {},
+          files: {}, // Empty JSON for backward compatibility
           conversation: [],
+          use_storage: true, // New projects use Supabase Storage
         })
         .select()
         .single();
@@ -134,7 +169,7 @@ export async function createProject(input: CreateProjectInput): Promise<PlayCraf
         throw new Error(`Failed to create project: ${error.message}`);
       }
 
-      logger.info(`Created project ${data.id}`, { component: 'projectService' });
+      logger.info(`Created project ${data.id} with storage mode`, { component: 'projectService' });
       return data;
     },
     {
@@ -178,10 +213,21 @@ export async function updateProject(id: string, input: UpdateProjectInput): Prom
 
 /**
  * Delete a project and all related data
- * This includes: project memory, file hashes, conversation summaries, published games
+ * This includes: project memory, file hashes, conversation summaries, published games, Storage files
  */
 export async function deleteProject(id: string): Promise<void> {
   const supabase = getSupabase();
+
+  // First, get the project to check if it uses Storage and get user_id
+  const { data: project, error: fetchError } = await supabase
+    .from('playcraft_projects')
+    .select('user_id, use_storage')
+    .eq('id', id)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') {
+    throw new Error(`Failed to fetch project for deletion: ${fetchError.message}`);
+  }
 
   // Delete in order due to foreign key constraints (cascade should handle most, but being explicit)
   // 1. Delete conversation summaries
@@ -208,13 +254,28 @@ export async function deleteProject(id: string): Promise<void> {
     .delete()
     .eq('project_id', id);
 
-  // 5. Delete project files (per-file storage)
+  // 5. Delete project files (per-file storage table)
   await supabase
     .from('playcraft_project_files')
     .delete()
     .eq('project_id', id);
 
-  // 6. Finally delete the project itself
+  // 6. Delete files from Supabase Storage (if project uses storage)
+  if (project?.use_storage && project.user_id) {
+    try {
+      await deleteAllProjectFiles(project.user_id, id);
+      logger.debug('Deleted Storage files', { component: 'projectService', projectId: id });
+    } catch (err) {
+      // Log but don't fail - DB deletion is more important
+      logger.warn('Failed to delete Storage files', {
+        component: 'projectService',
+        projectId: id,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+  }
+
+  // 7. Finally delete the project itself
   const { error } = await supabase
     .from('playcraft_projects')
     .delete()
@@ -293,7 +354,7 @@ export async function saveProjectFiles(
 }
 
 /**
- * Internal: Actually save files to database (JSON blob - for backward compatibility)
+ * Internal: Actually save files (routes to Storage or JSON blob based on project settings)
  */
 async function doSaveProjectFiles(
   id: string,
@@ -301,13 +362,43 @@ async function doSaveProjectFiles(
 ): Promise<void> {
   const supabase = getSupabase();
 
-  const { error } = await supabase
+  // Check if project uses Storage
+  const { data: project, error: fetchError } = await supabase
     .from('playcraft_projects')
-    .update({ files })
-    .eq('id', id);
+    .select('user_id, use_storage')
+    .eq('id', id)
+    .single();
 
-  if (error) {
-    throw new Error(`Failed to save files: ${error.message}`);
+  if (fetchError) {
+    throw new Error(`Failed to fetch project: ${fetchError.message}`);
+  }
+
+  if (project.use_storage) {
+    // Save to Supabase Storage
+    try {
+      await uploadProjectFiles(project.user_id, id, files);
+      logger.debug(`Saved ${Object.keys(files).length} files to Storage`, {
+        component: 'projectService',
+        action: 'doSaveProjectFiles',
+        projectId: id,
+      });
+    } catch (err) {
+      logger.error('Failed to save files to Storage', err instanceof Error ? err : new Error(String(err)), {
+        component: 'projectService',
+        projectId: id,
+      });
+      throw err;
+    }
+  } else {
+    // Save to JSON blob (legacy mode)
+    const { error } = await supabase
+      .from('playcraft_projects')
+      .update({ files })
+      .eq('id', id);
+
+    if (error) {
+      throw new Error(`Failed to save files: ${error.message}`);
+    }
   }
 }
 

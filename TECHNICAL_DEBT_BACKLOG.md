@@ -131,10 +131,10 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 
 ---
 
-### 8. Move Files from JSON Blob to Object Storage
+### 8. ~~Move Files from JSON Blob to Object Storage~~
 | Attribute | Value |
 |-----------|-------|
-| **Status** | ⏳ PENDING |
+| **Status** | ✅ COMPLETED |
 | **Effort** | 8 hours |
 | **Risk** | HIGH - Database bottleneck at scale |
 | **Files** | New migration, service updates |
@@ -145,6 +145,14 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 - Use Supabase Storage for file content
 - Keep metadata in database
 - Implement streaming for large files
+
+**Implementation:**
+- Created `project-files` storage bucket with RLS policies
+- Added `fileStorageService.ts` with upload/download/delete operations
+- Updated `projectService.ts` with dual-mode support (`use_storage` flag)
+- New projects automatically use Storage mode
+- Backward compatible with existing JSON blob projects
+- Files stored at: `{user_id}/{project_id}/{file_path}`
 
 ---
 
@@ -290,10 +298,10 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 | Category | Total | Completed | In Progress | Pending |
 |----------|-------|-----------|-------------|---------|
 | Critical | 5 | 4 | 0 | 1 |
-| High | 5 | 3 | 0 | 2 |
+| High | 5 | 4 | 0 | 1 |
 | Medium | 5 | 0 | 0 | 5 |
 | Low | 4 | 0 | 0 | 4 |
-| **Total** | **19** | **7** | **0** | **12** |
+| **Total** | **19** | **8** | **0** | **11** |
 
 ---
 
@@ -319,7 +327,7 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 5. ⏳ Add basic error alerting (Sentry rules)
 6. ✅ ~~Tighten CORS~~
 7. ✅ ~~Add structured logging~~
-8. ⏳ Move files to Object Storage
+8. ✅ ~~Move files to Object Storage~~
 9. ⏳ Add async queue for AI generation
 10. ⏳ Set up Infrastructure as Code
 
