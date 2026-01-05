@@ -24,6 +24,12 @@ vi.mock('../logger', () => ({
   },
 }));
 
+vi.mock('../fileStorageService', () => ({
+  uploadProjectFiles: vi.fn(),
+  downloadProjectFiles: vi.fn(),
+  deleteAllProjectFiles: vi.fn(),
+}));
+
 import { getProjects, createProject, updateProject, deleteProject } from '../projectService';
 
 describe('projectService', () => {
@@ -166,24 +172,73 @@ describe('projectService', () => {
 
   describe('deleteProject', () => {
     it('deletes project successfully', async () => {
-      mockSupabase.from.mockReturnValue({
-        delete: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
+      // Mock the select call to get project info first
+      const selectMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { user_id: 'user-1', use_storage: false },
             error: null,
           }),
         }),
+      });
+
+      // Mock the delete call
+      const deleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({
+          error: null,
+        }),
+      });
+
+      // Return different mocks based on the call
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return {
+            select: selectMock,
+            delete: deleteMock,
+          };
+        }
+        return {
+          delete: deleteMock,
+        };
       });
 
       await expect(deleteProject('1')).resolves.toBeUndefined();
     });
 
     it('throws on delete error', async () => {
-      mockSupabase.from.mockReturnValue({
-        delete: vi.fn().mockReturnValue({
-          eq: vi.fn().mockResolvedValue({
-            error: { message: 'Delete failed' },
+      // Mock the select call to get project info first
+      const selectMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: { user_id: 'user-1', use_storage: false },
+            error: null,
           }),
         }),
+      });
+
+      // Mock delete to fail on the final project delete
+      let deleteCallCount = 0;
+      const deleteMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockImplementation(() => {
+          deleteCallCount++;
+          // Fail on the last delete (the project itself)
+          if (deleteCallCount >= 6) {
+            return Promise.resolve({ error: { message: 'Delete failed' } });
+          }
+          return Promise.resolve({ error: null });
+        }),
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return {
+            select: selectMock,
+            delete: deleteMock,
+          };
+        }
+        return {
+          delete: deleteMock,
+        };
       });
 
       await expect(deleteProject('1')).rejects.toThrow('Failed to delete project');
