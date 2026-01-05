@@ -156,21 +156,31 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 
 ---
 
-### 9. Add Async Queue for AI Generation
+### 9. ~~Add Async Queue for AI Generation~~
 | Attribute | Value |
 |-----------|-------|
-| **Status** | ⏳ PENDING |
+| **Status** | ✅ COMPLETED |
 | **Effort** | 16 hours |
 | **Risk** | HIGH - Poor UX on slow generations |
-| **Files** | New queue system (Inngest/Trigger.dev) |
+| **Files** | New queue system (Supabase-based) |
 
 **Problem:** AI generation is synchronous. Long generations block the request.
 
 **Solution:**
-- Add job queue (Inngest, Trigger.dev, or BullMQ)
-- Return job ID immediately
-- Poll or WebSocket for completion
-- Add timeout and retry logic
+- Added `playcraft_generation_jobs` table for job queue
+- Jobs submitted return immediately with jobId
+- Real-time updates via Supabase Realtime subscriptions
+- Polling fallback for connection issues
+- Automatic retry logic (up to 3 attempts)
+- 55s timeout with stale job detection
+
+**Implementation:**
+- `supabase/migrations/20260105100000_add_generation_jobs.sql` - Job queue schema
+- `supabase/functions/process-generation/index.ts` - Worker function
+- `apps/web/src/lib/generationQueueService.ts` - Queue operations
+- `apps/web/src/hooks/useGenerationJob.ts` - React hook
+- `apps/web/src/components/builder/JobProgress.tsx` - Progress UI component
+- `supabase/functions/generate-playcraft/index.ts` - Added async mode option
 
 ---
 
@@ -297,11 +307,11 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 
 | Category | Total | Completed | In Progress | Pending |
 |----------|-------|-----------|-------------|---------|
-| Critical | 5 | 4 | 0 | 1 |
-| High | 5 | 4 | 0 | 1 |
+| Critical | 5 | 4 | 1 | 0 |
+| High | 5 | 5 | 0 | 0 |
 | Medium | 5 | 0 | 0 | 5 |
 | Low | 4 | 0 | 0 | 4 |
-| **Total** | **19** | **8** | **0** | **11** |
+| **Total** | **19** | **9** | **1** | **9** |
 
 ---
 
@@ -328,7 +338,7 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 6. ✅ ~~Tighten CORS~~
 7. ✅ ~~Add structured logging~~
 8. ✅ ~~Move files to Object Storage~~
-9. ⏳ Add async queue for AI generation
+9. ✅ ~~Add async queue for AI generation~~
 10. ⏳ Set up Infrastructure as Code
 
 ---

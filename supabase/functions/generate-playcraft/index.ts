@@ -403,6 +403,7 @@ interface GenerateRequest {
 interface ContextAwareRequest extends GenerateRequest {
   projectId?: string;
   useSmartContext?: boolean;
+  async?: boolean; // If true, queue job and return immediately
   contextPackage?: {
     projectMemory: {
       project_summary: string | null;
@@ -1041,6 +1042,8 @@ Deno.serve(async (req: Request) => {
       hasThreeJs = false,
       templateId = 'vite-starter',
       useSmartContext = false,
+      async: asyncMode = false,
+      projectId,
       contextPackage,
     }: ContextAwareRequest = await req.json();
 
@@ -1067,7 +1070,79 @@ Deno.serve(async (req: Request) => {
     }
 
     // ==========================================================================
-    // LOG REQUEST DETAILS
+    // ASYNC MODE: Queue job and return immediately
+    // ==========================================================================
+    if (asyncMode) {
+      logger.info('Async mode requested, creating job', { projectId });
+
+      // Create a service role client to insert job (bypasses RLS)
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+      // Build context for the job
+      const jobContext = {
+        currentFiles,
+        selectedFile,
+        conversationHistory,
+        hasThreeJs,
+        templateId,
+        useSmartContext,
+        contextPackage,
+      };
+
+      // Determine action based on context
+      let action: 'create' | 'modify' | 'fix_error' = 'modify';
+      if (Object.keys(currentFiles).length === 0) {
+        action = 'create';
+      } else if (prompt.toLowerCase().includes('fix') || prompt.toLowerCase().includes('error')) {
+        action = 'fix_error';
+      }
+
+      const { data: job, error: jobError } = await supabaseAdmin
+        .from('playcraft_generation_jobs')
+        .insert({
+          user_id: user.id,
+          project_id: projectId || null,
+          prompt,
+          action,
+          context: jobContext,
+        })
+        .select('id')
+        .single();
+
+      if (jobError) {
+        logger.error('Failed to create async job', { error: jobError.message });
+        return new Response(
+          JSON.stringify({ error: 'Failed to queue generation job', details: jobError.message }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+          }
+        );
+      }
+
+      logger.info('Async job created', { jobId: job.id, action });
+
+      return new Response(
+        JSON.stringify({
+          async: true,
+          jobId: job.id,
+          message: 'Generation queued. Subscribe to job updates for progress.',
+        }),
+        {
+          status: 202, // Accepted
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'X-Request-Id': requestId,
+            'X-Job-Id': job.id,
+          },
+        }
+      );
+    }
+
+    // ==========================================================================
+    // LOG REQUEST DETAILS (Synchronous mode)
     // ==========================================================================
     logger.info('Generation request received', {
       templateId,

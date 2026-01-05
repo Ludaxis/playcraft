@@ -22,3 +22,6 @@ export { ProjectDropdown } from './ProjectDropdown';
 export { ResizablePanels } from './ResizablePanels';
 export { ChatHeader } from './ChatHeader';
 export { PreviewHeader } from './PreviewHeader';
+
+// Async job components
+export { JobProgress } from './JobProgress';
