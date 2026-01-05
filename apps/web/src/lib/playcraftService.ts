@@ -1,7 +1,7 @@
 import { getSupabase } from './supabase';
 import { withRetry } from './retry';
 import { logger } from './logger';
-import type { ContextPackage, ProjectMemory, RelevantFile } from './contextBuilder';
+import type { ProjectMemory, RelevantFile } from './contextBuilder';
 
 interface FileContent {
   path: string;

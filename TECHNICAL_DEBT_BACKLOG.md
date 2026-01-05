@@ -106,10 +106,10 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 
 ---
 
-### 7. Add Structured Logging
+### 7. ~~Add Structured Logging~~
 | Attribute | Value |
 |-----------|-------|
-| **Status** | ⏳ PENDING |
+| **Status** | ✅ COMPLETED |
 | **Effort** | 2 hours |
 | **Risk** | MEDIUM - Poor observability |
 | **File** | `supabase/functions/generate-playcraft/index.ts` |
@@ -120,6 +120,14 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 - Add request ID to all logs
 - Use JSON structured logging format
 - Add timing metrics for AI calls
+
+**Implementation:** Added `Logger` class with:
+- Unique request IDs (`req_<timestamp>_<random>`)
+- JSON structured output for log ingestion
+- Timer utilities for duration tracking
+- Automatic PII sanitization (email, cards, tokens)
+- Log levels: debug, info, warn, error
+- `X-Request-Id` header in all responses
 
 ---
 
@@ -282,10 +290,10 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 | Category | Total | Completed | In Progress | Pending |
 |----------|-------|-----------|-------------|---------|
 | Critical | 5 | 4 | 0 | 1 |
-| High | 5 | 2 | 0 | 3 |
+| High | 5 | 3 | 0 | 2 |
 | Medium | 5 | 0 | 0 | 5 |
 | Low | 4 | 0 | 0 | 4 |
-| **Total** | **19** | **6** | **0** | **13** |
+| **Total** | **19** | **7** | **0** | **12** |
 
 ---
 
@@ -308,10 +316,12 @@ This backlog tracks technical debt that must be resolved before PlayCraft can sa
 2. ✅ ~~Move rate limiting to database~~
 3. ✅ ~~Add per-user credit tracking~~
 4. ✅ ~~Fix CI pipeline~~
-5. 🔄 Add basic error alerting (Sentry rules)
+5. ⏳ Add basic error alerting (Sentry rules)
 6. ✅ ~~Tighten CORS~~
-7. ⏳ Add structured logging
-8. ⏳ Plan file storage migration
+7. ✅ ~~Add structured logging~~
+8. ⏳ Move files to Object Storage
+9. ⏳ Add async queue for AI generation
+10. ⏳ Set up Infrastructure as Code
 
 ---
 

@@ -5,7 +5,7 @@ import {
   type GenerateRequest,
   type ContextAwareRequest,
 } from '../lib/playcraftService';
-import { buildContext, needsFullContext } from '../lib/contextBuilder';
+import { buildContext } from '../lib/contextBuilder';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
 import { updateMemoryFromResponse } from '../lib/memoryUpdater';
 import { getConversationContext, summarizeInBackground } from '../lib/conversationSummarizer';

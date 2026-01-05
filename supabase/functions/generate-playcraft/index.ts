@@ -2,6 +2,143 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.57.4';
 
 // =============================================================================
+// STRUCTURED LOGGING SYSTEM
+// =============================================================================
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogContext {
+  requestId: string;
+  userId?: string;
+  [key: string]: unknown;
+}
+
+interface StructuredLog {
+  timestamp: string;
+  level: LogLevel;
+  requestId: string;
+  service: string;
+  message: string;
+  durationMs?: number;
+  userId?: string;
+  [key: string]: unknown;
+}
+
+class Logger {
+  private context: LogContext;
+  private timers: Map<string, number> = new Map();
+  private static readonly SERVICE_NAME = 'playcraft-generate';
+
+  constructor(requestId: string) {
+    this.context = { requestId };
+  }
+
+  setUserId(userId: string): void {
+    // Hash the user ID for privacy in logs
+    this.context.userId = this.hashUserId(userId);
+  }
+
+  private hashUserId(userId: string): string {
+    let hash = 0;
+    for (let i = 0; i < userId.length; i++) {
+      const char = userId.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16).slice(0, 8);
+  }
+
+  private sanitize(text: string, maxLength: number = 100): string {
+    return text
+      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]')
+      .replace(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g, '[CARD]')
+      .replace(/password\s*[:=]\s*\S+/gi, 'password:[REDACTED]')
+      .replace(/api[_-]?key\s*[:=]\s*\S+/gi, 'apikey:[REDACTED]')
+      .replace(/token\s*[:=]\s*["']?\w+["']?/gi, 'token:[REDACTED]')
+      .replace(/bearer\s+\S+/gi, 'bearer:[REDACTED]')
+      .slice(0, maxLength) + (text.length > maxLength ? '...' : '');
+  }
+
+  private formatLog(level: LogLevel, message: string, data?: Record<string, unknown>): StructuredLog {
+    const log: StructuredLog = {
+      timestamp: new Date().toISOString(),
+      level,
+      requestId: this.context.requestId,
+      service: Logger.SERVICE_NAME,
+      message,
+    };
+
+    if (this.context.userId) {
+      log.userId = this.context.userId;
+    }
+
+    if (data) {
+      // Sanitize sensitive fields
+      for (const [key, value] of Object.entries(data)) {
+        if (typeof value === 'string') {
+          log[key] = this.sanitize(value);
+        } else {
+          log[key] = value;
+        }
+      }
+    }
+
+    return log;
+  }
+
+  private output(log: StructuredLog): void {
+    // Output as JSON for structured logging ingestion
+    console.log(JSON.stringify(log));
+  }
+
+  // Start a timer for measuring duration
+  startTimer(name: string): void {
+    this.timers.set(name, Date.now());
+  }
+
+  // End a timer and return duration in ms
+  endTimer(name: string): number {
+    const start = this.timers.get(name);
+    if (!start) return 0;
+    const duration = Date.now() - start;
+    this.timers.delete(name);
+    return duration;
+  }
+
+  debug(message: string, data?: Record<string, unknown>): void {
+    this.output(this.formatLog('debug', message, data));
+  }
+
+  info(message: string, data?: Record<string, unknown>): void {
+    this.output(this.formatLog('info', message, data));
+  }
+
+  warn(message: string, data?: Record<string, unknown>): void {
+    this.output(this.formatLog('warn', message, data));
+  }
+
+  error(message: string, data?: Record<string, unknown>): void {
+    this.output(this.formatLog('error', message, data));
+  }
+
+  // Log with timing information
+  infoWithDuration(message: string, timerName: string, data?: Record<string, unknown>): void {
+    const duration = this.endTimer(timerName);
+    this.output({
+      ...this.formatLog('info', message, data),
+      durationMs: duration,
+    });
+  }
+}
+
+// Generate a unique request ID
+function generateRequestId(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 8);
+  return `req_${timestamp}_${random}`;
+}
+
+// =============================================================================
 // SECURITY CONFIGURATION
 // =============================================================================
 
@@ -75,8 +212,10 @@ interface CreditCheckResult {
 
 async function checkRateLimit(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  logger: Logger
 ): Promise<RateLimitResult> {
+  logger.startTimer('rateLimit');
   try {
     // Use database function for atomic rate limit check
     const { data, error } = await supabase.rpc('check_and_increment_rate_limit', {
@@ -85,7 +224,7 @@ async function checkRateLimit(
     });
 
     if (error) {
-      console.error('[rate-limit] Database error:', error.message);
+      logger.error('Rate limit database error', { error: error.message, code: error.code });
       // Fail open but log - we don't want to block users on DB issues
       // In production, consider fail-closed with alerting
       return {
@@ -99,7 +238,7 @@ async function checkRateLimit(
 
     const result = data?.[0];
     if (!result) {
-      console.warn('[rate-limit] No result from rate limit check');
+      logger.warn('Rate limit check returned no result');
       return {
         allowed: true,
         minuteRemaining: 10,
@@ -109,9 +248,15 @@ async function checkRateLimit(
       };
     }
 
+    const duration = logger.endTimer('rateLimit');
     if (!result.allowed) {
       const limitType = result.minute_remaining === 0 ? 'minute' :
                        result.hourly_remaining === 0 ? 'hourly' : 'daily';
+      logger.warn('Rate limit exceeded', {
+        limitType,
+        retryAfter: result.retry_after_seconds,
+        durationMs: duration
+      });
       return {
         allowed: false,
         minuteRemaining: result.minute_remaining,
@@ -122,6 +267,13 @@ async function checkRateLimit(
       };
     }
 
+    logger.debug('Rate limit check passed', {
+      minuteRemaining: result.minute_remaining,
+      hourlyRemaining: result.hourly_remaining,
+      dailyRemaining: result.daily_remaining,
+      durationMs: duration
+    });
+
     return {
       allowed: true,
       minuteRemaining: result.minute_remaining,
@@ -130,7 +282,9 @@ async function checkRateLimit(
       retryAfter: 0,
     };
   } catch (e) {
-    console.error('[rate-limit] Exception:', e);
+    logger.error('Rate limit check exception', {
+      error: e instanceof Error ? e.message : 'Unknown error'
+    });
     // Fail open on unexpected errors
     return {
       allowed: true,
@@ -144,25 +298,37 @@ async function checkRateLimit(
 
 async function checkUserCredits(
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  logger: Logger
 ): Promise<CreditCheckResult> {
+  logger.startTimer('creditCheck');
   try {
     const { data, error } = await supabase.rpc('check_user_credits', {
       p_user_id: userId,
     });
 
+    const duration = logger.endTimer('creditCheck');
+
     if (error) {
-      console.error('[credits] Database error:', error.message);
+      logger.error('Credit check database error', { error: error.message, code: error.code });
       // Fail open but log
       return { hasCredits: true, dailyRequestsRemaining: 100, monthlyRequestsRemaining: 2000 };
     }
 
     const result = data?.[0];
     if (!result) {
+      logger.warn('Credit check returned no result');
       return { hasCredits: true, dailyRequestsRemaining: 100, monthlyRequestsRemaining: 2000 };
     }
 
     if (!result.has_credits) {
+      const reason = result.daily_requests_remaining === 0 ? 'daily' : 'monthly';
+      logger.warn('User out of credits', {
+        reason,
+        dailyRemaining: result.daily_requests_remaining,
+        monthlyRemaining: result.monthly_requests_remaining,
+        durationMs: duration
+      });
       return {
         hasCredits: false,
         dailyRequestsRemaining: result.daily_requests_remaining,
@@ -173,13 +339,21 @@ async function checkUserCredits(
       };
     }
 
+    logger.debug('Credit check passed', {
+      dailyRemaining: result.daily_requests_remaining,
+      monthlyRemaining: result.monthly_requests_remaining,
+      durationMs: duration
+    });
+
     return {
       hasCredits: true,
       dailyRequestsRemaining: result.daily_requests_remaining,
       monthlyRequestsRemaining: result.monthly_requests_remaining,
     };
   } catch (e) {
-    console.error('[credits] Exception:', e);
+    logger.error('Credit check exception', {
+      error: e instanceof Error ? e.message : 'Unknown error'
+    });
     return { hasCredits: true, dailyRequestsRemaining: 100, monthlyRequestsRemaining: 2000 };
   }
 }
@@ -187,46 +361,27 @@ async function checkUserCredits(
 async function recordUsage(
   supabase: SupabaseClient,
   userId: string,
-  tokensUsed: number
+  tokensUsed: number,
+  logger: Logger
 ): Promise<void> {
   try {
     await supabase.rpc('record_usage', {
       p_user_id: userId,
       p_tokens_used: tokensUsed,
     });
+    logger.debug('Usage recorded', { tokensUsed });
   } catch (e) {
-    console.error('[usage] Failed to record usage:', e);
+    logger.error('Failed to record usage', {
+      tokensUsed,
+      error: e instanceof Error ? e.message : 'Unknown error'
+    });
     // Non-blocking - don't fail the request if usage tracking fails
   }
 }
 
 // =============================================================================
-// LOGGING UTILITIES (Sanitized)
+// TYPE DEFINITIONS
 // =============================================================================
-
-function sanitizeForLogging(text: string, maxLength: number = 50): string {
-  // Truncate and remove potential sensitive data
-  const sanitized = text
-    .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]')
-    .replace(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g, '[CARD]')
-    .replace(/password\s*[:=]\s*\S+/gi, 'password:[REDACTED]')
-    .replace(/api[_-]?key\s*[:=]\s*\S+/gi, 'apikey:[REDACTED]')
-    .replace(/token\s*[:=]\s*\S+/gi, 'token:[REDACTED]')
-    .slice(0, maxLength);
-
-  return sanitized + (text.length > maxLength ? '...' : '');
-}
-
-function hashUserId(userId: string): string {
-  // Simple hash for logging (not cryptographic, just for privacy)
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    const char = userId.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).slice(0, 8);
-}
 
 interface FileContent {
   path: string;
@@ -597,7 +752,8 @@ async function callGemini(
   apiKey: string,
   hasThreeJs: boolean = false,
   templateId: string = 'vite-starter',
-  contextPackage?: ContextAwareRequest['contextPackage']
+  contextPackage: ContextAwareRequest['contextPackage'] | undefined,
+  logger: Logger
 ): Promise<GeneratedResponse> {
   // Select the appropriate system prompt based on template
   const systemPrompt = templateId === 'vite-game-shell' ? GAME_SHELL_PROMPT : SYSTEM_PROMPT;
@@ -608,9 +764,10 @@ async function callGemini(
   if (contextPackage && contextPackage.relevantFiles.length > 0) {
     userPrompt = buildSmartContextPrompt(contextPackage, prompt, hasThreeJs);
 
-    console.log(
-      `[generate] Using smart context: ${contextPackage.relevantFiles.length} files, ~${contextPackage.estimatedTokens} tokens`
-    );
+    logger.info('Using smart context', {
+      filesCount: contextPackage.relevantFiles.length,
+      estimatedTokens: contextPackage.estimatedTokens
+    });
   } else {
     // Legacy context building
     let fileContext = '';
@@ -663,6 +820,9 @@ ${prompt}
 Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boolean.`;
   }
 
+  // Start timer for AI generation
+  logger.startTimer('geminiApi');
+
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${apiKey}`,
     {
@@ -685,9 +845,15 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
     }
   );
 
+  const apiDuration = logger.endTimer('geminiApi');
+
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Gemini API error:', errorText);
+    logger.error('Gemini API error', {
+      status: response.status,
+      statusText: response.statusText,
+      durationMs: apiDuration
+    });
     throw new Error(`Gemini API request failed: ${response.status}`);
   }
 
@@ -695,6 +861,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   if (!responseText) {
+    logger.error('Gemini returned empty response', { durationMs: apiDuration });
     throw new Error('Gemini returned empty response');
   }
 
@@ -706,15 +873,29 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
     // Try to extract JSON from response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      console.error('Failed to find JSON in response:', responseText.slice(0, 500));
+      logger.error('Failed to parse Gemini JSON response', {
+        responsePreview: responseText.slice(0, 200),
+        durationMs: apiDuration
+      });
       throw new Error('Gemini did not return valid JSON');
     }
     parsed = JSON.parse(jsonMatch[0]);
   }
 
   if (!parsed.message || !Array.isArray(parsed.files)) {
+    logger.error('Gemini response missing required fields', {
+      hasMessage: !!parsed.message,
+      hasFiles: Array.isArray(parsed.files),
+      durationMs: apiDuration
+    });
     throw new Error('Response missing required fields');
   }
+
+  logger.info('Gemini API call successful', {
+    filesGenerated: parsed.files.length,
+    needsThreeJs: parsed.needsThreeJs === true,
+    durationMs: apiDuration
+  });
 
   return {
     message: parsed.message,
@@ -728,6 +909,13 @@ Deno.serve(async (req: Request) => {
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
 
+  // Generate unique request ID for correlation
+  const requestId = generateRequestId();
+  const logger = new Logger(requestId);
+
+  // Start timing the entire request
+  logger.startTimer('totalRequest');
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -735,9 +923,10 @@ Deno.serve(async (req: Request) => {
 
   // Only allow POST
   if (req.method !== 'POST') {
+    logger.warn('Invalid method', { method: req.method });
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
     });
   }
 
@@ -745,11 +934,13 @@ Deno.serve(async (req: Request) => {
     // ==========================================================================
     // AUTHENTICATION
     // ==========================================================================
+    logger.startTimer('auth');
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      logger.warn('Missing authorization header');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
       });
     }
 
@@ -764,19 +955,25 @@ Deno.serve(async (req: Request) => {
       error: userError,
     } = await supabase.auth.getUser();
 
+    const authDuration = logger.endTimer('auth');
+
     if (userError || !user) {
+      logger.warn('Authentication failed', { error: userError?.message, durationMs: authDuration });
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
       });
     }
+
+    // Set user ID in logger context (hashed for privacy)
+    logger.setUserId(user.id);
+    logger.info('Authentication successful', { durationMs: authDuration });
 
     // ==========================================================================
     // RATE LIMITING (Database-backed)
     // ==========================================================================
-    const rateLimit = await checkRateLimit(supabase, user.id);
+    const rateLimit = await checkRateLimit(supabase, user.id, logger);
     if (!rateLimit.allowed) {
-      console.warn(`[rate-limit] Exceeded for user ${hashUserId(user.id)}: ${rateLimit.error}`);
       return new Response(
         JSON.stringify({
           error: rateLimit.error,
@@ -787,6 +984,7 @@ Deno.serve(async (req: Request) => {
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json',
+            'X-Request-Id': requestId,
             'Retry-After': String(rateLimit.retryAfter),
             'X-RateLimit-Minute-Remaining': String(rateLimit.minuteRemaining),
             'X-RateLimit-Hourly-Remaining': String(rateLimit.hourlyRemaining),
@@ -799,9 +997,8 @@ Deno.serve(async (req: Request) => {
     // ==========================================================================
     // CREDIT/USAGE CHECK
     // ==========================================================================
-    const credits = await checkUserCredits(supabase, user.id);
+    const credits = await checkUserCredits(supabase, user.id, logger);
     if (!credits.hasCredits) {
-      console.warn(`[credits] Exhausted for user ${hashUserId(user.id)}: ${credits.error}`);
       return new Response(
         JSON.stringify({
           error: credits.error,
@@ -813,6 +1010,7 @@ Deno.serve(async (req: Request) => {
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json',
+            'X-Request-Id': requestId,
             'X-Credits-Daily-Remaining': String(credits.dailyRequestsRemaining),
             'X-Credits-Monthly-Remaining': String(credits.monthlyRequestsRemaining),
           },
@@ -825,9 +1023,10 @@ Deno.serve(async (req: Request) => {
     // ==========================================================================
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
     if (!geminiApiKey) {
+      logger.error('Gemini API key not configured');
       return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
       });
     }
 
@@ -846,35 +1045,41 @@ Deno.serve(async (req: Request) => {
     }: ContextAwareRequest = await req.json();
 
     if (!prompt) {
+      logger.warn('Missing prompt in request');
       return new Response(JSON.stringify({ error: 'prompt is required' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
       });
     }
 
     // Validate prompt length (spend guard)
     if (prompt.length > RATE_LIMIT.MAX_PROMPT_LENGTH) {
+      logger.warn('Prompt too long', { promptLength: prompt.length, maxLength: RATE_LIMIT.MAX_PROMPT_LENGTH });
       return new Response(
         JSON.stringify({
           error: `Prompt too long. Maximum ${RATE_LIMIT.MAX_PROMPT_LENGTH} characters allowed.`,
         }),
         {
           status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
         }
       );
     }
 
     // ==========================================================================
-    // SANITIZED LOGGING
+    // LOG REQUEST DETAILS
     // ==========================================================================
-    const contextInfo = useSmartContext && contextPackage
-      ? `smart_context=true files=${contextPackage.relevantFiles.length} tokens=~${contextPackage.estimatedTokens}`
-      : `smart_context=false files=${Object.keys(currentFiles).length}`;
-
-    console.log(
-      `[generate] user=${hashUserId(user.id)} template=${templateId} ${contextInfo} prompt_len=${prompt.length} preview="${sanitizeForLogging(prompt)}"`
-    );
+    logger.info('Generation request received', {
+      templateId,
+      useSmartContext,
+      promptLength: prompt.length,
+      filesCount: useSmartContext && contextPackage
+        ? contextPackage.relevantFiles.length
+        : Object.keys(currentFiles).length,
+      estimatedContextTokens: contextPackage?.estimatedTokens,
+      hasThreeJs,
+      selectedFile: selectedFile || null,
+    });
 
     // ==========================================================================
     // GENERATE CODE
@@ -887,7 +1092,8 @@ Deno.serve(async (req: Request) => {
       geminiApiKey,
       hasThreeJs,
       templateId,
-      useSmartContext ? contextPackage : undefined
+      useSmartContext ? contextPackage : undefined,
+      logger
     );
 
     // Estimate tokens used (rough estimate: 4 chars per token for output)
@@ -896,33 +1102,46 @@ Deno.serve(async (req: Request) => {
     );
 
     // Record usage for billing/tracking (non-blocking)
-    recordUsage(supabase, user.id, estimatedTokens);
+    recordUsage(supabase, user.id, estimatedTokens, logger);
 
-    console.log(
-      `[generate] user=${hashUserId(user.id)} files_generated=${generated.files.length} tokens=~${estimatedTokens} success=true`
-    );
+    // Log successful completion with total timing
+    const totalDuration = logger.endTimer('totalRequest');
+    logger.info('Generation completed successfully', {
+      filesGenerated: generated.files.length,
+      estimatedTokens,
+      needsThreeJs: generated.needsThreeJs,
+      durationMs: totalDuration,
+    });
 
     return new Response(JSON.stringify(generated), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
+        'X-Request-Id': requestId,
         'X-RateLimit-Minute-Remaining': String(rateLimit.minuteRemaining),
         'X-RateLimit-Daily-Remaining': String(rateLimit.dailyRemaining),
         'X-Credits-Daily-Remaining': String(credits.dailyRequestsRemaining - 1),
       },
     });
   } catch (error) {
-    // Sanitize error logging
+    // Log error with full context
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[generate] error="${sanitizeForLogging(errorMessage, 100)}"`);
+    const totalDuration = logger.endTimer('totalRequest');
+
+    logger.error('Generation failed', {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 3).join(' ') : undefined,
+      durationMs: totalDuration,
+    });
 
     return new Response(
       JSON.stringify({
         error: errorMessage,
+        requestId, // Include request ID for support debugging
       }),
       {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
       }
     );
   }

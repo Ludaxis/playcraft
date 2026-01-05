@@ -17,7 +17,7 @@ export function PlayPage({ gameId }: PlayPageProps) {
   const [game, setGame] = useState<PublishedGame | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [, setIsFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {

@@ -6,7 +6,7 @@
  * maximizing understanding.
  */
 
-import { getProjectFileHashes, getImportGraph, type FileHash } from './fileHashService';
+import { getProjectFileHashes, getImportGraph } from './fileHashService';
 
 // ============================================================================
 // TYPES
@@ -102,8 +102,6 @@ interface UserIntent {
  * Analyze user prompt to understand intent
  */
 function analyzeUserIntent(prompt: string): UserIntent {
-  const lowerPrompt = prompt.toLowerCase();
-
   // Determine primary action
   let action: UserIntent['action'] = 'modify';
   if (/^(create|make|build|generate|start)/i.test(prompt)) {
@@ -122,7 +120,7 @@ function analyzeUserIntent(prompt: string): UserIntent {
 
   // Extract mentioned file paths
   const targetFiles: string[] = [];
-  const filePathRegex = /(?:\/src\/[\w\/.-]+\.(?:tsx?|css|json))|(?:(?:Index|App|GameplayPage)\.tsx)/gi;
+  const filePathRegex = /(?:\/src\/[\w/.-]+\.(?:tsx?|css|json))|(?:(?:Index|App|GameplayPage)\.tsx)/gi;
   let match;
   while ((match = filePathRegex.exec(prompt)) !== null) {
     let path = match[0];
@@ -184,7 +182,7 @@ async function scoreFiles(
   projectMemory: ProjectMemory | null
 ): Promise<FileScore[]> {
   const scores: FileScore[] = [];
-  const importGraph = await getImportGraph(projectId);
+  await getImportGraph(projectId); // Populate cache for later use
   const fileHashes = await getProjectFileHashes(projectId);
 
   // Files that are directly relevant (for import chain scoring)
@@ -400,13 +398,11 @@ export async function buildContext(
  * Get a minimal context for simple requests (color changes, small tweaks)
  */
 export async function buildMinimalContext(
-  projectId: string,
-  prompt: string,
+  _projectId: string,
+  _prompt: string,
   files: Record<string, string>,
   selectedFile: string | undefined
 ): Promise<ContextPackage> {
-  const intent = analyzeUserIntent(prompt);
-
   // For simple visual changes, only include the selected file
   const relevantFiles: RelevantFile[] = [];
 
@@ -447,8 +443,6 @@ export async function buildMinimalContext(
  * Determine if a request needs full context or minimal context
  */
 export function needsFullContext(prompt: string): boolean {
-  const lowerPrompt = prompt.toLowerCase();
-
   // Simple changes that don't need full context
   const simplePatterns = [
     /^(change|make|set).{0,20}(color|colour|background|font|size|text) to/i,
