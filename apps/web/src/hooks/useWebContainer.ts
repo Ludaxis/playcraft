@@ -268,11 +268,14 @@ export function useWebContainer(): UseWebContainerReturn {
       setStatus('ready');
       appendOutput('\nDependencies installed!\n');
 
-      // Cache node_modules for next time (in background)
+      // Cache node_modules for next time
+      // Note: We await this to ensure cache is saved before user can navigate away
       if (currentProjectId) {
-        saveToCache(currentProjectId, appendOutput).catch(err => {
-          console.warn('[Cache] Background caching failed:', err);
-        });
+        try {
+          await saveToCache(currentProjectId, appendOutput);
+        } catch (err) {
+          console.warn('[Cache] Caching failed (non-blocking):', err);
+        }
       }
 
       await refreshFileTree();

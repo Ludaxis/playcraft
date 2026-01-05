@@ -117,7 +117,7 @@ export async function upsertProjectMemory(
 }
 
 /**
- * Initialize memory for a new project
+ * Initialize memory for a new project (uses upsert to avoid conflicts)
  */
 export async function initializeProjectMemory(
   projectId: string,
@@ -125,23 +125,29 @@ export async function initializeProjectMemory(
 ): Promise<void> {
   const supabase = getSupabase();
 
-  const { error } = await supabase.from('playcraft_project_memory').insert({
-    project_id: projectId,
-    project_summary: initialSummary || null,
-    game_type: null,
-    tech_stack: [],
-    completed_tasks: [],
-    file_importance: {},
-    key_entities: [],
-    active_context: {
-      focusFiles: [],
-      lastModified: [],
-      currentFeature: null,
+  // Use upsert with ignoreDuplicates to silently skip if already exists
+  const { error } = await supabase.from('playcraft_project_memory').upsert(
+    {
+      project_id: projectId,
+      project_summary: initialSummary || null,
+      game_type: null,
+      tech_stack: [],
+      completed_tasks: [],
+      file_importance: {},
+      key_entities: [],
+      active_context: {
+        focusFiles: [],
+        lastModified: [],
+        currentFeature: null,
+      },
     },
-  });
+    {
+      onConflict: 'project_id',
+      ignoreDuplicates: true, // Don't update if exists, just skip
+    }
+  );
 
-  if (error && error.code !== '23505') {
-    // Ignore duplicate key error
+  if (error) {
     console.error('[ProjectMemoryService] Failed to initialize memory:', error);
   }
 }
