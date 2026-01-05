@@ -183,9 +183,9 @@ export function Sidebar({
           <SidebarItem
             icon={BookOpen}
             label="Learn"
-            active={activeNav === 'learn'}
             collapsed={isCollapsed}
-            onClick={() => onNavChange('learn')}
+            onClick={() => window.open('https://docs.playcraft.games', '_blank')}
+            external
           />
         </SidebarSection>
 

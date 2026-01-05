@@ -5,6 +5,7 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -18,6 +19,7 @@ interface SidebarItemProps {
   active?: boolean;
   collapsed?: boolean;
   badge?: string | number;
+  external?: boolean;
   onClick?: () => void;
 }
 
@@ -27,6 +29,7 @@ export function SidebarItem({
   active = false,
   collapsed = false,
   badge,
+  external = false,
   onClick,
 }: SidebarItemProps) {
   const button = (
@@ -44,6 +47,9 @@ export function SidebarItem({
           <span className="flex-1 truncate transition-opacity duration-150">
             {label}
           </span>
+          {external && (
+            <ExternalLink className="h-3 w-3 text-content-subtle opacity-0 transition-opacity group-hover:opacity-100" />
+          )}
           {badge !== undefined && (
             <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs text-accent">
               {badge}

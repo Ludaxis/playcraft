@@ -15,7 +15,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Features', link: '/features/ai-chat' },
       { text: 'Changelog', link: '/changelog' },
-      { text: 'App', link: 'https://playcraft.app' }
+      { text: 'App', link: 'https://playcraft.games' }
     ],
 
     sidebar: {

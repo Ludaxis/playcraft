@@ -6,6 +6,7 @@ import { BuilderPage } from './pages/Builder';
 import { LandingPage } from './pages/Landing';
 import { HomePage } from './pages/Home';
 import { FeedbackPage } from './pages/Feedback';
+import { PlayPage } from './pages/Play';
 import { ErrorBoundary } from './components';
 import { createProject, type PlayCraftProject } from './lib/projectService';
 
@@ -95,6 +96,14 @@ function AppRoutes() {
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
       </div>
     );
+  }
+
+  // Handle /play/:gameId route - PUBLIC, no auth required
+  if (location.pathname.startsWith('/play/')) {
+    const gameId = location.pathname.split('/play/')[1];
+    if (gameId) {
+      return <PlayPage gameId={gameId} />;
+    }
   }
 
   // Handle /feedback route - accessible to authenticated users

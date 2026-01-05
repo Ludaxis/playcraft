@@ -82,6 +82,12 @@ export interface PlayCraftProject {
   files: Record<string, string>;
   conversation: ConversationMessage[];
   active_chat_session_id: string | null;
+  // Publishing fields
+  published_url: string | null;
+  published_at: string | null;
+  play_count: number;
+  is_public: boolean;
+  is_starred?: boolean;
   created_at: string;
   updated_at: string;
   last_opened_at: string;
@@ -100,6 +106,26 @@ export interface UpdateProjectInput {
   files?: Record<string, string>;
   conversation?: ConversationMessage[];
   active_chat_session_id?: string | null;
+  // Publishing fields
+  published_url?: string | null;
+  published_at?: string | null;
+  is_public?: boolean;
+  is_starred?: boolean;
+}
+
+// Published game for showcase/discover
+export interface PublishedGame {
+  id: string;
+  name: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  published_url: string;
+  published_at: string;
+  play_count: number;
+  user_id: string;
+  // Author info (joined from user_settings)
+  author_name?: string;
+  author_avatar?: string | null;
 }
 
 // ============================================================================

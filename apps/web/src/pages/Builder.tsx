@@ -10,7 +10,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { Terminal as TerminalIcon } from 'lucide-react';
-import { Preview, ExportModal } from '../components';
+import { Preview, ExportModal, PublishModal } from '../components';
 import {
   EditorPanel,
   TerminalPanel,
@@ -142,6 +142,7 @@ export function BuilderPage({
   const [isFileLoading, setIsFileLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState(false);
   const [projectReady, setProjectReady] = useState(false);
   const [hasThreeJs, setHasThreeJs] = useState(project.has_three_js);
   const [isSettingUp, setIsSettingUp] = useState(false);
@@ -305,6 +306,14 @@ export function BuilderPage({
 
           // Update project's active session
           await updateProject(project.id, { active_chat_session_id: newSession.id });
+
+          // Auto-rename project if it's still "Untitled Game"
+          if (project.name === 'Untitled Game') {
+            const newName = title;
+            await updateProject(project.id, { name: newName });
+            setProject(prev => ({ ...prev, name: newName }));
+            console.log('[Builder] Auto-renamed project from "Untitled Game" to:', newName);
+          }
         }
       } catch (err) {
         console.error('[Builder] Failed to save conversation to session:', err);
@@ -724,7 +733,7 @@ export function BuilderPage({
         user={user}
         status={status}
         onShare={() => console.log('Share clicked')}
-        onPublish={() => console.log('Publish clicked')}
+        onPublish={() => setShowPublishModal(true)}
         onUpgrade={() => console.log('Upgrade clicked')}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -732,6 +741,8 @@ export function BuilderPage({
         onDeviceModeChange={setDeviceMode}
         onRefresh={handleRefresh}
         isRefreshing={status === 'installing' || status === 'booting'}
+        isPublished={project.status === 'published'}
+        publishedUrl={project.published_url}
       />
 
       {/* Main Content */}
@@ -807,6 +818,25 @@ export function BuilderPage({
       <ExportModal
         isOpen={showExportModal}
         onClose={() => setShowExportModal(false)}
+      />
+
+      <PublishModal
+        isOpen={showPublishModal}
+        onClose={() => setShowPublishModal(false)}
+        projectId={project.id}
+        userId={user.id}
+        projectName={project.name}
+        isAlreadyPublished={project.status === 'published'}
+        existingUrl={project.published_url}
+        onPublishSuccess={(url) => {
+          // Update local project state with published info
+          setProject(prev => ({
+            ...prev,
+            status: 'published',
+            published_url: url,
+            published_at: new Date().toISOString(),
+          }));
+        }}
       />
     </div>
   );

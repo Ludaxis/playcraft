@@ -12,11 +12,12 @@ import {
   Sparkles,
 } from 'lucide-react';
 import type { PlayCraftProject } from '../lib/projectService';
+import { getPublishedGames } from '../lib/publishService';
 import { SettingsModal, SearchModal, Avatar, Sidebar } from '../components';
 import { useSidebar } from '../hooks';
 import { useProjects, useCreateProject, selectRecentProjects } from '../hooks/useProjects';
 import { useUserSettings, useUsageStats } from '../hooks/useUserSettings';
-import type { NavItem } from '../types';
+import type { NavItem, PublishedGame } from '../types';
 
 interface HomePageProps {
   user: User;
@@ -69,6 +70,14 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
 
   // Sidebar collapse state
   const { isCollapsed, toggle: toggleSidebar } = useSidebar();
+
+  // Featured published games
+  const [featuredGames, setFeaturedGames] = useState<PublishedGame[]>([]);
+
+  // Fetch published games on mount
+  useEffect(() => {
+    getPublishedGames(4).then(setFeaturedGames).catch(console.error);
+  }, []);
 
   // Data fetching with TanStack Query
   const { data: projects = [] } = useProjects();
@@ -344,40 +353,51 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                   </button>
                 </div>
                 <div className="grid grid-cols-4 gap-4">
-                  {FEATURED_GAMES.map((game) => (
-                    <div
-                      key={game.id}
-                      className="group cursor-pointer overflow-hidden rounded-xl border border-border-muted bg-surface-elevated transition-all hover:border-accent/50 hover:shadow-glow-sm"
-                    >
-                      {/* Thumbnail */}
-                      <div className="relative aspect-video overflow-hidden">
-                        <img
-                          src={game.thumbnail}
-                          alt={game.name}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                        {/* Play overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
-                          <div className="flex h-10 w-10 scale-0 items-center justify-center rounded-full bg-accent/90 text-content transition-transform group-hover:scale-100">
-                            <Play className="h-5 w-5 fill-current" />
+                  {(featuredGames.length > 0 ? featuredGames : FEATURED_GAMES).map((game) => {
+                    // Handle both PublishedGame and mock game types
+                    const isRealGame = 'published_url' in game;
+                    const thumbnail = isRealGame
+                      ? (game.thumbnail_url || 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=300&fit=crop')
+                      : (game as typeof FEATURED_GAMES[0]).thumbnail;
+                    const author = isRealGame ? (game.author_name || 'PlayCraft Creator') : (game as typeof FEATURED_GAMES[0]).author;
+                    const plays = isRealGame ? game.play_count.toLocaleString() : (game as typeof FEATURED_GAMES[0]).plays;
+
+                    return (
+                      <a
+                        key={game.id}
+                        href={isRealGame ? `/play/${game.id}` : '#'}
+                        className="group cursor-pointer overflow-hidden rounded-xl border border-border-muted bg-surface-elevated transition-all hover:border-accent/50 hover:shadow-glow-sm"
+                      >
+                        {/* Thumbnail */}
+                        <div className="relative aspect-video overflow-hidden">
+                          <img
+                            src={thumbnail}
+                            alt={game.name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {/* Play overlay */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
+                            <div className="flex h-10 w-10 scale-0 items-center justify-center rounded-full bg-accent/90 text-content transition-transform group-hover:scale-100">
+                              <Play className="h-5 w-5 fill-current" />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      {/* Info */}
-                      <div className="p-3">
-                        <h3 className="text-sm font-medium text-content transition-colors group-hover:text-accent">
-                          {game.name}
-                        </h3>
-                        <div className="mt-1 flex items-center justify-between">
-                          <span className="text-xs text-content-subtle">by {game.author}</span>
-                          <span className="flex items-center gap-1 text-xs text-content-subtle">
-                            <Play className="h-3 w-3" />
-                            {game.plays}
-                          </span>
+                        {/* Info */}
+                        <div className="p-3">
+                          <h3 className="text-sm font-medium text-content transition-colors group-hover:text-accent">
+                            {game.name}
+                          </h3>
+                          <div className="mt-1 flex items-center justify-between">
+                            <span className="text-xs text-content-subtle">by {author}</span>
+                            <span className="flex items-center gap-1 text-xs text-content-subtle">
+                              <Play className="h-3 w-3" />
+                              {plays}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
             </div>
