@@ -40,4 +40,5 @@ client_id = "env(GITHUB_CLIENT_ID)"
 secret = "env(GITHUB_CLIENT_SECRET)"
 
 [functions.generate-playcraft]
-verify_jwt = false
+# JWT verification enabled for security - requires valid auth token
+verify_jwt = true

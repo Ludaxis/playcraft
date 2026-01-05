@@ -5,42 +5,45 @@ import { createClient, SupabaseClient } from 'npm:@supabase/supabase-js@2.57.4';
 // SECURITY CONFIGURATION
 // =============================================================================
 
-// Allowed origins for CORS (add your production domains)
+// Allowed origins for CORS - STRICT whitelist only
+// DO NOT allow wildcard patterns for production security
 const ALLOWED_ORIGINS = [
+  // Local development
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:5175',
-  'http://localhost:5176',
-  'http://localhost:5177',
-  'http://localhost:5178',
-  'http://localhost:5179',
-  'http://localhost:3000',
   'http://127.0.0.1:5173',
   'http://127.0.0.1:5174',
+  // Production domains
   'https://playcraft.app',
   'https://www.playcraft.app',
+  // Vercel production deployment (specific subdomain only)
   'https://playcraft.vercel.app',
-  // Add staging/preview URLs as needed
 ];
 
-// Rate limiting configuration
+// Preview deployments allowed pattern (Vercel preview URLs)
+// Only allow playcraft-* prefixed preview deployments
+const ALLOWED_PREVIEW_PATTERN = /^https:\/\/playcraft-[a-z0-9-]+\.vercel\.app$/;
+
+// Rate limiting configuration (enforced via database)
 const RATE_LIMIT = {
-  MAX_REQUESTS_PER_MINUTE: 10,
-  MAX_REQUESTS_PER_HOUR: 100,
-  MAX_REQUESTS_PER_DAY: 500,
   MAX_TOKENS_PER_REQUEST: 32768,
   MAX_PROMPT_LENGTH: 10000, // Characters
 };
 
-// In-memory rate limit cache (resets on cold start, but provides basic protection)
-// For production, use Redis or Supabase table
-const rateLimitCache = new Map<string, { count: number; resetAt: number }>();
-
 function getCorsHeaders(origin: string | null): Record<string, string> {
-  // Check if origin is allowed
-  const allowedOrigin = origin && ALLOWED_ORIGINS.some(allowed =>
-    origin === allowed || origin.endsWith('.vercel.app')
-  ) ? origin : ALLOWED_ORIGINS[0];
+  // Check if origin is in strict whitelist
+  let allowedOrigin = ALLOWED_ORIGINS[0]; // Default to first allowed origin
+
+  if (origin) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      allowedOrigin = origin;
+    } else if (ALLOWED_PREVIEW_PATTERN.test(origin)) {
+      // Allow only playcraft-prefixed Vercel preview deployments
+      allowedOrigin = origin;
+    }
+    // Otherwise, fall back to default (won't match, request will fail CORS)
+  }
 
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
@@ -51,13 +54,22 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 }
 
 // =============================================================================
-// RATE LIMITING
+// RATE LIMITING (Database-backed for persistence across instances)
 // =============================================================================
 
 interface RateLimitResult {
   allowed: boolean;
-  remaining: number;
-  resetAt: number;
+  minuteRemaining: number;
+  hourlyRemaining: number;
+  dailyRemaining: number;
+  retryAfter: number;
+  error?: string;
+}
+
+interface CreditCheckResult {
+  hasCredits: boolean;
+  dailyRequestsRemaining: number;
+  monthlyRequestsRemaining: number;
   error?: string;
 }
 
@@ -65,53 +77,127 @@ async function checkRateLimit(
   supabase: SupabaseClient,
   userId: string
 ): Promise<RateLimitResult> {
-  const now = Date.now();
-  const minuteKey = `${userId}:minute`;
-  const hourKey = `${userId}:hour`;
-
-  // Check minute limit (in-memory for speed)
-  const minuteData = rateLimitCache.get(minuteKey);
-  if (minuteData && now < minuteData.resetAt) {
-    if (minuteData.count >= RATE_LIMIT.MAX_REQUESTS_PER_MINUTE) {
-      return {
-        allowed: false,
-        remaining: 0,
-        resetAt: minuteData.resetAt,
-        error: `Rate limit exceeded. Max ${RATE_LIMIT.MAX_REQUESTS_PER_MINUTE} requests per minute.`,
-      };
-    }
-    minuteData.count++;
-  } else {
-    rateLimitCache.set(minuteKey, { count: 1, resetAt: now + 60000 });
-  }
-
-  // Check hourly limit via database for persistence across instances
   try {
-    const hourAgo = new Date(now - 3600000).toISOString();
-    const { count, error } = await supabase
-      .from('playcraft_chat_sessions')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .gte('created_at', hourAgo);
+    // Use database function for atomic rate limit check
+    const { data, error } = await supabase.rpc('check_and_increment_rate_limit', {
+      p_user_id: userId,
+      p_endpoint: 'generate',
+    });
 
-    if (!error && count !== null && count >= RATE_LIMIT.MAX_REQUESTS_PER_HOUR) {
+    if (error) {
+      console.error('[rate-limit] Database error:', error.message);
+      // Fail open but log - we don't want to block users on DB issues
+      // In production, consider fail-closed with alerting
       return {
-        allowed: false,
-        remaining: 0,
-        resetAt: now + 3600000,
-        error: `Hourly limit exceeded. Max ${RATE_LIMIT.MAX_REQUESTS_PER_HOUR} requests per hour.`,
+        allowed: true,
+        minuteRemaining: 10,
+        hourlyRemaining: 100,
+        dailyRemaining: 500,
+        retryAfter: 0,
       };
     }
-  } catch (e) {
-    // Log but don't block on rate limit check failure
-    console.warn('Rate limit check failed:', e);
-  }
 
-  return {
-    allowed: true,
-    remaining: RATE_LIMIT.MAX_REQUESTS_PER_MINUTE - (minuteData?.count || 1),
-    resetAt: now + 60000,
-  };
+    const result = data?.[0];
+    if (!result) {
+      console.warn('[rate-limit] No result from rate limit check');
+      return {
+        allowed: true,
+        minuteRemaining: 10,
+        hourlyRemaining: 100,
+        dailyRemaining: 500,
+        retryAfter: 0,
+      };
+    }
+
+    if (!result.allowed) {
+      const limitType = result.minute_remaining === 0 ? 'minute' :
+                       result.hourly_remaining === 0 ? 'hourly' : 'daily';
+      return {
+        allowed: false,
+        minuteRemaining: result.minute_remaining,
+        hourlyRemaining: result.hourly_remaining,
+        dailyRemaining: result.daily_remaining,
+        retryAfter: result.retry_after_seconds,
+        error: `Rate limit exceeded (${limitType}). Please try again later.`,
+      };
+    }
+
+    return {
+      allowed: true,
+      minuteRemaining: result.minute_remaining,
+      hourlyRemaining: result.hourly_remaining,
+      dailyRemaining: result.daily_remaining,
+      retryAfter: 0,
+    };
+  } catch (e) {
+    console.error('[rate-limit] Exception:', e);
+    // Fail open on unexpected errors
+    return {
+      allowed: true,
+      minuteRemaining: 10,
+      hourlyRemaining: 100,
+      dailyRemaining: 500,
+      retryAfter: 0,
+    };
+  }
+}
+
+async function checkUserCredits(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<CreditCheckResult> {
+  try {
+    const { data, error } = await supabase.rpc('check_user_credits', {
+      p_user_id: userId,
+    });
+
+    if (error) {
+      console.error('[credits] Database error:', error.message);
+      // Fail open but log
+      return { hasCredits: true, dailyRequestsRemaining: 100, monthlyRequestsRemaining: 2000 };
+    }
+
+    const result = data?.[0];
+    if (!result) {
+      return { hasCredits: true, dailyRequestsRemaining: 100, monthlyRequestsRemaining: 2000 };
+    }
+
+    if (!result.has_credits) {
+      return {
+        hasCredits: false,
+        dailyRequestsRemaining: result.daily_requests_remaining,
+        monthlyRequestsRemaining: result.monthly_requests_remaining,
+        error: result.daily_requests_remaining === 0
+          ? 'Daily request limit reached. Resets at midnight UTC.'
+          : 'Monthly request limit reached. Please upgrade your plan.',
+      };
+    }
+
+    return {
+      hasCredits: true,
+      dailyRequestsRemaining: result.daily_requests_remaining,
+      monthlyRequestsRemaining: result.monthly_requests_remaining,
+    };
+  } catch (e) {
+    console.error('[credits] Exception:', e);
+    return { hasCredits: true, dailyRequestsRemaining: 100, monthlyRequestsRemaining: 2000 };
+  }
+}
+
+async function recordUsage(
+  supabase: SupabaseClient,
+  userId: string,
+  tokensUsed: number
+): Promise<void> {
+  try {
+    await supabase.rpc('record_usage', {
+      p_user_id: userId,
+      p_tokens_used: tokensUsed,
+    });
+  } catch (e) {
+    console.error('[usage] Failed to record usage:', e);
+    // Non-blocking - don't fail the request if usage tracking fails
+  }
 }
 
 // =============================================================================
@@ -147,6 +233,7 @@ interface FileContent {
   content: string;
 }
 
+// Legacy request format
 interface GenerateRequest {
   prompt: string;
   currentFiles?: Record<string, string>; // Current project files
@@ -155,6 +242,33 @@ interface GenerateRequest {
   hasThreeJs?: boolean; // Whether Three.js is already installed
   isFirstPrompt?: boolean; // Is this the first prompt (need to determine template)?
   templateId?: string; // Which template is being used (e.g., 'vite-game-shell')
+}
+
+// New context-aware request format
+interface ContextAwareRequest extends GenerateRequest {
+  projectId?: string;
+  useSmartContext?: boolean;
+  contextPackage?: {
+    projectMemory: {
+      project_summary: string | null;
+      game_type: string | null;
+      tech_stack: string[];
+      completed_tasks: Array<{ task: string; timestamp: string }>;
+      file_importance: Record<string, number>;
+      key_entities: Array<{ name: string; type: string; file: string }>;
+    } | null;
+    conversationSummaries: string[];
+    recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
+    relevantFiles: Array<{
+      path: string;
+      content: string;
+      relevanceScore: number;
+      relevanceReason: string;
+    }>;
+    changedSinceLastRequest: string[];
+    fileTree: string[];
+    estimatedTokens: number;
+  };
 }
 
 interface GeneratedResponse {
@@ -395,6 +509,86 @@ CRITICAL RULES:
 6. Include game over detection that triggers handleWin or handleLose
 7. Use state.player.currentLevel to adjust difficulty`;
 
+// Build context using smart context package (new system)
+function buildSmartContextPrompt(
+  contextPackage: ContextAwareRequest['contextPackage'],
+  prompt: string,
+  hasThreeJs: boolean
+): string {
+  if (!contextPackage) return '';
+
+  const parts: string[] = [];
+
+  // 1. Project Memory (if available)
+  if (contextPackage.projectMemory) {
+    const mem = contextPackage.projectMemory;
+    const memoryParts: string[] = [];
+
+    if (mem.project_summary) {
+      memoryParts.push(`Project: ${mem.project_summary}`);
+    }
+    if (mem.game_type) {
+      memoryParts.push(`Type: ${mem.game_type}`);
+    }
+    if (mem.tech_stack.length > 0) {
+      memoryParts.push(`Tech: ${mem.tech_stack.join(', ')}`);
+    }
+    if (mem.completed_tasks.length > 0) {
+      const recentTasks = mem.completed_tasks.slice(0, 5).map(t => t.task);
+      memoryParts.push(`Recent work: ${recentTasks.join('; ')}`);
+    }
+
+    if (memoryParts.length > 0) {
+      parts.push('PROJECT CONTEXT:\n' + memoryParts.join('\n'));
+    }
+  }
+
+  // 2. Conversation Summaries (compressed history)
+  if (contextPackage.conversationSummaries.length > 0) {
+    parts.push('CONVERSATION HISTORY:\n' + contextPackage.conversationSummaries.join('\n'));
+  }
+
+  // 3. Recent Messages (last 5 in full)
+  if (contextPackage.recentMessages.length > 0) {
+    const recentContext = contextPackage.recentMessages
+      .map(m => `${m.role.toUpperCase()}: ${m.content}`)
+      .join('\n');
+    parts.push('RECENT CONVERSATION:\n' + recentContext);
+  }
+
+  // 4. Relevant Files (smart-selected)
+  if (contextPackage.relevantFiles.length > 0) {
+    const fileContext = contextPackage.relevantFiles
+      .map(f => `--- ${f.path} (${f.relevanceReason}) ---\n${f.content}`)
+      .join('\n\n');
+    parts.push('RELEVANT FILES:\n' + fileContext);
+  }
+
+  // 5. Changed Files (for awareness)
+  if (contextPackage.changedSinceLastRequest.length > 0) {
+    parts.push('RECENTLY CHANGED: ' + contextPackage.changedSinceLastRequest.join(', '));
+  }
+
+  // 6. File Tree (awareness of full project)
+  if (contextPackage.fileTree.length > 0) {
+    parts.push('ALL PROJECT FILES:\n' + contextPackage.fileTree.join('\n'));
+  }
+
+  // 7. 3D Status
+  const threeJsContext = hasThreeJs
+    ? 'Three.js/React Three Fiber is ALREADY INSTALLED.'
+    : 'Three.js is NOT installed. Set needsThreeJs: true if 3D is needed.';
+  parts.push('3D STATUS: ' + threeJsContext);
+
+  // 8. User Request
+  parts.push(`USER REQUEST:\n${prompt}`);
+
+  // 9. Instructions
+  parts.push('Generate ONLY the necessary code changes. Return valid JSON with needsThreeJs boolean.');
+
+  return parts.join('\n\n');
+}
+
 async function callGemini(
   prompt: string,
   currentFiles: Record<string, string>,
@@ -402,47 +596,59 @@ async function callGemini(
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
   apiKey: string,
   hasThreeJs: boolean = false,
-  templateId: string = 'vite-starter'
+  templateId: string = 'vite-starter',
+  contextPackage?: ContextAwareRequest['contextPackage']
 ): Promise<GeneratedResponse> {
   // Select the appropriate system prompt based on template
   const systemPrompt = templateId === 'vite-game-shell' ? GAME_SHELL_PROMPT : SYSTEM_PROMPT;
-  // Build context from current files - prioritize based on template
-  let fileContext = '';
-  const importantFiles = templateId === 'vite-game-shell'
-    ? [
-        '/src/pages/GameplayPage.tsx',
-        '/src/store/GameContext.tsx',
-        '/src/store/NavigationContext.tsx',
-        selectedFile,
-      ]
-    : [
-        '/src/pages/Index.tsx',
-        '/src/App.tsx',
-        '/src/main.tsx',
-        selectedFile,
-      ];
-  const filteredFiles = importantFiles.filter(Boolean);
 
-  for (const filePath of filteredFiles) {
-    if (filePath && currentFiles[filePath]) {
-      fileContext += `\n--- ${filePath} ---\n${currentFiles[filePath]}\n`;
+  let userPrompt: string;
+
+  // Use smart context if provided
+  if (contextPackage && contextPackage.relevantFiles.length > 0) {
+    userPrompt = buildSmartContextPrompt(contextPackage, prompt, hasThreeJs);
+
+    console.log(
+      `[generate] Using smart context: ${contextPackage.relevantFiles.length} files, ~${contextPackage.estimatedTokens} tokens`
+    );
+  } else {
+    // Legacy context building
+    let fileContext = '';
+    const importantFiles = templateId === 'vite-game-shell'
+      ? [
+          '/src/pages/GameplayPage.tsx',
+          '/src/store/GameContext.tsx',
+          '/src/store/NavigationContext.tsx',
+          selectedFile,
+        ]
+      : [
+          '/src/pages/Index.tsx',
+          '/src/App.tsx',
+          '/src/main.tsx',
+          selectedFile,
+        ];
+    const filteredFiles = importantFiles.filter(Boolean);
+
+    for (const filePath of filteredFiles) {
+      if (filePath && currentFiles[filePath]) {
+        fileContext += `\n--- ${filePath} ---\n${currentFiles[filePath]}\n`;
+      }
     }
-  }
 
-  // Build conversation context
-  let conversationContext = '';
-  if (conversationHistory.length > 0) {
-    conversationContext = '\n\nPREVIOUS CONVERSATION:\n';
-    for (const msg of conversationHistory.slice(-5)) {
-      conversationContext += `${msg.role.toUpperCase()}: ${msg.content}\n`;
+    // Build conversation context
+    let conversationContext = '';
+    if (conversationHistory.length > 0) {
+      conversationContext = '\n\nPREVIOUS CONVERSATION:\n';
+      for (const msg of conversationHistory.slice(-5)) {
+        conversationContext += `${msg.role.toUpperCase()}: ${msg.content}\n`;
+      }
     }
-  }
 
-  const threeJsContext = hasThreeJs
-    ? 'Three.js/React Three Fiber is ALREADY INSTALLED. You can use @react-three/fiber, @react-three/drei, and three imports.'
-    : 'Three.js is NOT installed yet. If this game needs 3D, set needsThreeJs: true and the system will install it.';
+    const threeJsContext = hasThreeJs
+      ? 'Three.js/React Three Fiber is ALREADY INSTALLED. You can use @react-three/fiber, @react-three/drei, and three imports.'
+      : 'Three.js is NOT installed yet. If this game needs 3D, set needsThreeJs: true and the system will install it.';
 
-  const userPrompt = `${conversationContext}
+    userPrompt = `${conversationContext}
 
 CURRENT PROJECT FILES:
 ${fileContext || '(No files available - starting fresh)'}
@@ -455,6 +661,7 @@ USER REQUEST:
 ${prompt}
 
 Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boolean.`;
+  }
 
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${apiKey}`,
@@ -565,24 +772,49 @@ Deno.serve(async (req: Request) => {
     }
 
     // ==========================================================================
-    // RATE LIMITING
+    // RATE LIMITING (Database-backed)
     // ==========================================================================
     const rateLimit = await checkRateLimit(supabase, user.id);
     if (!rateLimit.allowed) {
-      console.warn(`Rate limit exceeded for user ${hashUserId(user.id)}`);
+      console.warn(`[rate-limit] Exceeded for user ${hashUserId(user.id)}: ${rateLimit.error}`);
       return new Response(
         JSON.stringify({
           error: rateLimit.error,
-          retryAfter: Math.ceil((rateLimit.resetAt - Date.now()) / 1000),
+          retryAfter: rateLimit.retryAfter,
         }),
         {
           status: 429,
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json',
-            'Retry-After': String(Math.ceil((rateLimit.resetAt - Date.now()) / 1000)),
-            'X-RateLimit-Remaining': String(rateLimit.remaining),
-            'X-RateLimit-Reset': String(rateLimit.resetAt),
+            'Retry-After': String(rateLimit.retryAfter),
+            'X-RateLimit-Minute-Remaining': String(rateLimit.minuteRemaining),
+            'X-RateLimit-Hourly-Remaining': String(rateLimit.hourlyRemaining),
+            'X-RateLimit-Daily-Remaining': String(rateLimit.dailyRemaining),
+          },
+        }
+      );
+    }
+
+    // ==========================================================================
+    // CREDIT/USAGE CHECK
+    // ==========================================================================
+    const credits = await checkUserCredits(supabase, user.id);
+    if (!credits.hasCredits) {
+      console.warn(`[credits] Exhausted for user ${hashUserId(user.id)}: ${credits.error}`);
+      return new Response(
+        JSON.stringify({
+          error: credits.error,
+          dailyRemaining: credits.dailyRequestsRemaining,
+          monthlyRemaining: credits.monthlyRequestsRemaining,
+        }),
+        {
+          status: 402, // Payment Required
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'X-Credits-Daily-Remaining': String(credits.dailyRequestsRemaining),
+            'X-Credits-Monthly-Remaining': String(credits.monthlyRequestsRemaining),
           },
         }
       );
@@ -609,7 +841,9 @@ Deno.serve(async (req: Request) => {
       conversationHistory = [],
       hasThreeJs = false,
       templateId = 'vite-starter',
-    }: GenerateRequest = await req.json();
+      useSmartContext = false,
+      contextPackage,
+    }: ContextAwareRequest = await req.json();
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'prompt is required' }), {
@@ -634,8 +868,12 @@ Deno.serve(async (req: Request) => {
     // ==========================================================================
     // SANITIZED LOGGING
     // ==========================================================================
+    const contextInfo = useSmartContext && contextPackage
+      ? `smart_context=true files=${contextPackage.relevantFiles.length} tokens=~${contextPackage.estimatedTokens}`
+      : `smart_context=false files=${Object.keys(currentFiles).length}`;
+
     console.log(
-      `[generate] user=${hashUserId(user.id)} template=${templateId} prompt_len=${prompt.length} preview="${sanitizeForLogging(prompt)}"`
+      `[generate] user=${hashUserId(user.id)} template=${templateId} ${contextInfo} prompt_len=${prompt.length} preview="${sanitizeForLogging(prompt)}"`
     );
 
     // ==========================================================================
@@ -648,18 +886,29 @@ Deno.serve(async (req: Request) => {
       conversationHistory,
       geminiApiKey,
       hasThreeJs,
-      templateId
+      templateId,
+      useSmartContext ? contextPackage : undefined
     );
 
+    // Estimate tokens used (rough estimate: 4 chars per token for output)
+    const estimatedTokens = Math.ceil(
+      (prompt.length + JSON.stringify(generated).length) / 4
+    );
+
+    // Record usage for billing/tracking (non-blocking)
+    recordUsage(supabase, user.id, estimatedTokens);
+
     console.log(
-      `[generate] user=${hashUserId(user.id)} files_generated=${generated.files.length} success=true`
+      `[generate] user=${hashUserId(user.id)} files_generated=${generated.files.length} tokens=~${estimatedTokens} success=true`
     );
 
     return new Response(JSON.stringify(generated), {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
-        'X-RateLimit-Remaining': String(rateLimit.remaining),
+        'X-RateLimit-Minute-Remaining': String(rateLimit.minuteRemaining),
+        'X-RateLimit-Daily-Remaining': String(rateLimit.dailyRemaining),
+        'X-Credits-Daily-Remaining': String(credits.dailyRequestsRemaining - 1),
       },
     });
   } catch (error) {

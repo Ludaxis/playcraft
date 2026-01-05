@@ -7,12 +7,16 @@ export interface PlayCraftProject {
   user_id: string;
   name: string;
   description: string | null;
-  thumbnail_url: string | null;
   has_three_js: boolean;
   status: 'draft' | 'building' | 'ready' | 'published';
   files: Record<string, string>;
   conversation: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
   active_chat_session_id: string | null;
+  published_url?: string | null;
+  published_at?: string | null;
+  is_public?: boolean;
+  play_count?: number;
+  is_starred?: boolean;
   created_at: string;
   updated_at: string;
   last_opened_at: string;
@@ -173,11 +177,44 @@ export async function updateProject(id: string, input: UpdateProjectInput): Prom
 }
 
 /**
- * Delete a project
+ * Delete a project and all related data
+ * This includes: project memory, file hashes, conversation summaries, published games
  */
 export async function deleteProject(id: string): Promise<void> {
   const supabase = getSupabase();
 
+  // Delete in order due to foreign key constraints (cascade should handle most, but being explicit)
+  // 1. Delete conversation summaries
+  await supabase
+    .from('playcraft_conversation_summaries')
+    .delete()
+    .eq('project_id', id);
+
+  // 2. Delete file hashes
+  await supabase
+    .from('playcraft_file_hashes')
+    .delete()
+    .eq('project_id', id);
+
+  // 3. Delete project memory
+  await supabase
+    .from('playcraft_project_memory')
+    .delete()
+    .eq('project_id', id);
+
+  // 4. Delete published game (if any)
+  await supabase
+    .from('playcraft_published_games')
+    .delete()
+    .eq('project_id', id);
+
+  // 5. Delete project files (per-file storage)
+  await supabase
+    .from('playcraft_project_files')
+    .delete()
+    .eq('project_id', id);
+
+  // 6. Finally delete the project itself
   const { error } = await supabase
     .from('playcraft_projects')
     .delete()
@@ -186,6 +223,8 @@ export async function deleteProject(id: string): Promise<void> {
   if (error) {
     throw new Error(`Failed to delete project: ${error.message}`);
   }
+
+  logger.info(`Deleted project ${id} and all related data`, { component: 'projectService' });
 }
 
 // =============================================================================

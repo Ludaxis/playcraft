@@ -1,6 +1,7 @@
 import { getSupabase } from './supabase';
 import { withRetry } from './retry';
 import { logger } from './logger';
+import type { ContextPackage, ProjectMemory, RelevantFile } from './contextBuilder';
 
 interface FileContent {
   path: string;
@@ -14,12 +15,32 @@ export interface GenerateResponse {
   needsThreeJs?: boolean;
 }
 
+// Legacy request format (for backwards compatibility)
 export interface GenerateRequest {
   prompt: string;
   currentFiles?: Record<string, string>;
   selectedFile?: string;
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
   hasThreeJs?: boolean;
+}
+
+// New context-aware request format
+export interface ContextAwareRequest {
+  prompt: string;
+  projectId: string;
+  templateId?: string;
+  hasThreeJs?: boolean;
+
+  // Smart context (from contextBuilder)
+  contextPackage: {
+    projectMemory: ProjectMemory | null;
+    conversationSummaries: string[];
+    recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
+    relevantFiles: RelevantFile[];
+    changedSinceLastRequest: string[];
+    fileTree: string[];
+    estimatedTokens: number;
+  };
 }
 
 /**
@@ -57,6 +78,55 @@ export async function generateCode(
         logger.warn('Generation retry', {
           component: 'playcraftService',
           action: 'generateCode',
+          attempt,
+          error: error.message,
+        });
+      },
+    }
+  );
+}
+
+/**
+ * Generate code using the PlayCraft AI service with smart context.
+ * Uses the new context package for minimal token usage and precise iterations.
+ */
+export async function generateCodeWithContext(
+  request: ContextAwareRequest
+): Promise<GenerateResponse> {
+  const supabase = getSupabase();
+
+  // Verify user is authenticated
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  return withRetry(
+    async () => {
+      const { data, error } = await supabase.functions.invoke('generate-playcraft', {
+        body: {
+          prompt: request.prompt,
+          projectId: request.projectId,
+          templateId: request.templateId,
+          hasThreeJs: request.hasThreeJs,
+          // New context package format
+          useSmartContext: true,
+          contextPackage: request.contextPackage,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Generation failed');
+      }
+
+      return data as GenerateResponse;
+    },
+    {
+      maxAttempts: 3,
+      onRetry: (attempt, error) => {
+        logger.warn('Context-aware generation retry', {
+          component: 'playcraftService',
+          action: 'generateCodeWithContext',
           attempt,
           error: error.message,
         });

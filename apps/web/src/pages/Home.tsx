@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import {
   Search,
@@ -10,12 +10,15 @@ import {
   List,
   Play,
   Sparkles,
+  Trash2,
+  X,
+  AlertTriangle,
 } from 'lucide-react';
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
 import { SettingsModal, SearchModal, Avatar, Sidebar } from '../components';
 import { useSidebar } from '../hooks';
-import { useProjects, useCreateProject, selectRecentProjects } from '../hooks/useProjects';
+import { useProjects, useCreateProject, useDeleteProject, selectRecentProjects } from '../hooks/useProjects';
 import { useUserSettings, useUsageStats } from '../hooks/useUserSettings';
 import type { NavItem, PublishedGame } from '../types';
 
@@ -68,6 +71,11 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // Delete confirmation state
+  const [projectToDelete, setProjectToDelete] = useState<PlayCraftProject | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   // Sidebar collapse state
   const { isCollapsed, toggle: toggleSidebar } = useSidebar();
 
@@ -84,10 +92,34 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   const { data: settings } = useUserSettings();
   const { data: usageStats } = useUsageStats();
   const createProjectMutation = useCreateProject();
+  const deleteProjectMutation = useDeleteProject();
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Derived state
   const studioName = settings?.studio_name || 'My Studio';
   const isCreatingProject = createProjectMutation.isPending;
+  const isDeletingProject = deleteProjectMutation.isPending;
+
+  // Handle delete project
+  const handleDeleteProject = async () => {
+    if (!projectToDelete) return;
+    try {
+      await deleteProjectMutation.mutateAsync(projectToDelete.id);
+      setProjectToDelete(null);
+    } catch (err) {
+      console.error('Failed to delete project:', err);
+    }
+  };
 
   // Keyboard shortcut for search (Cmd/Ctrl + K)
   useEffect(() => {
@@ -247,44 +279,75 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
 
               {/* Project Cards */}
               {filteredProjects.map((project) => (
-                <button
-                  key={project.id}
-                  onClick={() => onSelectProject(project)}
-                  className="group text-left"
-                >
-                  {/* Thumbnail */}
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border-muted bg-gradient-to-br from-accent-muted/30 via-secondary-muted/20 to-surface-elevated transition-all group-hover:border-accent/50 group-hover:shadow-glow-sm">
-                    {project.thumbnail_url ? (
-                      <img
-                        src={project.thumbnail_url}
-                        alt={project.name}
-                        className="h-full w-full object-cover"
+                <div key={project.id} className="group relative">
+                  <button
+                    onClick={() => onSelectProject(project)}
+                    className="w-full text-left"
+                  >
+                    {/* Thumbnail */}
+                    <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border-muted bg-gradient-to-br from-accent-muted/30 via-secondary-muted/20 to-surface-elevated transition-all group-hover:border-accent/50 group-hover:shadow-glow-sm">
+                      {project.thumbnail_url ? (
+                        <img
+                          src={project.thumbnail_url}
+                          alt={project.name}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <Gamepad2 className="h-16 w-16 text-border" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Project info */}
+                    <div className="mt-3 flex items-start gap-3">
+                      <Avatar
+                        src={user.user_metadata?.avatar_url}
+                        name={user.user_metadata?.full_name || user.email}
+                        size="sm"
+                        className="h-8 w-8"
                       />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center">
-                        <Gamepad2 className="h-16 w-16 text-border" />
+                      <div className="flex-1 overflow-hidden">
+                        <h3 className="truncate font-medium text-content transition-colors group-hover:text-accent">
+                          {project.name}
+                        </h3>
+                        <p className="text-sm text-content-subtle">
+                          Edited {formatTimeAgo(project.updated_at)}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Context Menu Button */}
+                  <div className="absolute right-2 top-2" ref={openMenuId === project.id ? menuRef : null}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === project.id ? null : project.id);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-elevated/80 text-content-muted opacity-0 backdrop-blur-sm transition-all hover:bg-surface-elevated hover:text-content group-hover:opacity-100"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {openMenuId === project.id && (
+                      <div className="absolute right-0 top-10 z-20 w-40 overflow-hidden rounded-lg border border-border bg-surface-elevated shadow-xl">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(null);
+                            setProjectToDelete(project);
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-error transition-colors hover:bg-error/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete project
+                        </button>
                       </div>
                     )}
                   </div>
-
-                  {/* Project info */}
-                  <div className="mt-3 flex items-start gap-3">
-                    <Avatar
-                      src={user.user_metadata?.avatar_url}
-                      name={user.user_metadata?.full_name || user.email}
-                      size="sm"
-                      className="h-8 w-8"
-                    />
-                    <div className="flex-1 overflow-hidden">
-                      <h3 className="truncate font-medium text-content transition-colors group-hover:text-accent">
-                        {project.name}
-                      </h3>
-                      <p className="text-sm text-content-subtle">
-                        Edited {formatTimeAgo(project.updated_at)}
-                      </p>
-                    </div>
-                  </div>
-                </button>
+                </div>
               ))}
             </div>
 
@@ -421,6 +484,65 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
         userAvatar={user.user_metadata?.avatar_url}
         userName={user.user_metadata?.full_name}
       />
+
+      {/* Delete Confirmation Modal */}
+      {projectToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6 shadow-2xl">
+            {/* Header */}
+            <div className="mb-4 flex items-start gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-error/10">
+                <AlertTriangle className="h-6 w-6 text-error" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-semibold text-content">Delete project?</h2>
+                <p className="mt-1 text-sm text-content-muted">
+                  This will permanently delete <strong>"{projectToDelete.name}"</strong> and all its data including files, chat history, and published games.
+                </p>
+              </div>
+              <button
+                onClick={() => setProjectToDelete(null)}
+                className="rounded-lg p-1 text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Warning */}
+            <div className="mb-6 rounded-lg bg-error/5 p-3 text-sm text-error">
+              This action cannot be undone.
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setProjectToDelete(null)}
+                disabled={isDeletingProject}
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-content transition-colors hover:bg-surface-overlay disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProject}
+                disabled={isDeletingProject}
+                className="flex items-center gap-2 rounded-lg bg-error px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-error/90 disabled:opacity-50"
+              >
+                {isDeletingProject ? (
+                  <>
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Delete project
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

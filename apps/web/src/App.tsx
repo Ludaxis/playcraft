@@ -75,6 +75,10 @@ function AppRoutes() {
     try {
       // Auto-create project
       const project = await createProject({ name: projectName });
+
+      // Save initial prompt to localStorage so it survives page refresh
+      localStorage.setItem(`playcraft_initial_prompt_${project.id}`, prompt);
+
       setCurrentProject(project);
       setInitialPrompt(prompt); // Pass the initial prompt to builder
       setCurrentView('builder');

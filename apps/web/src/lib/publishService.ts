@@ -358,7 +358,6 @@ export async function getPublishedGames(limit = 10): Promise<PublishedGame[]> {
         id,
         name,
         description,
-        thumbnail_url,
         published_url,
         published_at,
         play_count,
@@ -379,7 +378,7 @@ export async function getPublishedGames(limit = 10): Promise<PublishedGame[]> {
       id: game.id,
       name: game.name,
       description: game.description,
-      thumbnail_url: game.thumbnail_url,
+      thumbnail_url: null, // Column doesn't exist in DB yet
       published_url: game.published_url,
       published_at: game.published_at,
       play_count: game.play_count || 0,
@@ -407,7 +406,6 @@ export async function getPublishedGame(gameId: string): Promise<PublishedGame | 
         id,
         name,
         description,
-        thumbnail_url,
         published_url,
         published_at,
         play_count,
@@ -426,7 +424,7 @@ export async function getPublishedGame(gameId: string): Promise<PublishedGame | 
       id: data.id,
       name: data.name,
       description: data.description,
-      thumbnail_url: data.thumbnail_url,
+      thumbnail_url: null, // Column doesn't exist in DB yet
       published_url: data.published_url,
       published_at: data.published_at,
       play_count: data.play_count || 0,

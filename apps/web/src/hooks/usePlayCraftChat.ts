@@ -1,5 +1,15 @@
-import { useState, useCallback, useRef } from 'react';
-import { generateCode, type GenerateRequest } from '../lib/playcraftService';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import {
+  generateCode,
+  generateCodeWithContext,
+  type GenerateRequest,
+  type ContextAwareRequest,
+} from '../lib/playcraftService';
+import { buildContext, needsFullContext } from '../lib/contextBuilder';
+import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
+import { updateMemoryFromResponse } from '../lib/memoryUpdater';
+import { getConversationContext, summarizeInBackground } from '../lib/conversationSummarizer';
+import { detectChanges } from '../lib/fileHashService';
 import type { ChatMessage, NextStep } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
@@ -66,10 +76,15 @@ function parseAIResponse(message: string): {
 }
 
 interface UsePlayCraftChatOptions {
+  projectId?: string; // Project ID for context tracking
+  templateId?: string; // Template being used
   onFilesGenerated?: (files: Array<{ path: string; content: string }>) => Promise<void>;
   onNeedsThreeJs?: () => Promise<void>; // Called when AI requests Three.js
   readFile?: (path: string) => Promise<string>;
+  readAllFiles?: () => Promise<Record<string, string>>; // Read all project files
   hasThreeJs?: boolean; // Whether Three.js template is already loaded
+  useSmartContext?: boolean; // Enable smart context system (default: true if projectId provided)
+  initialMessages?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>; // Restore previous conversation
 }
 
 export interface UsePlayCraftChatReturn {
@@ -81,28 +96,91 @@ export interface UsePlayCraftChatReturn {
   addSystemMessage: (content: string) => void;
 }
 
-export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlayCraftChatReturn {
-  const { onFilesGenerated, onNeedsThreeJs, readFile, hasThreeJs = false } = options;
+// Default welcome message
+const DEFAULT_WELCOME_MESSAGE: ChatMessage = {
+  id: '1',
+  role: 'assistant',
+  content:
+    "Hi! I'm PlayCraft, your AI game builder. Describe the game you want to create and I'll build it for you!",
+  timestamp: new Date(),
+  nextSteps: [
+    { label: 'Create a snake game', prompt: 'Create a classic snake game with arrow key controls, food collection, and score tracking' },
+    { label: 'Build a platformer', prompt: 'Create a 2D platformer game with a jumping character, platforms, and collectible coins' },
+    { label: 'Make a puzzle game', prompt: 'Create a match-3 puzzle game like Candy Crush with colorful tiles and scoring' },
+  ],
+};
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      role: 'assistant',
-      content:
-        "Hi! I'm PlayCraft, your AI game builder. Describe the game you want to create and I'll build it for you!",
-      timestamp: new Date(),
-      nextSteps: [
-        { label: 'Create a snake game', prompt: 'Create a classic snake game with arrow key controls, food collection, and score tracking' },
-        { label: 'Build a platformer', prompt: 'Create a 2D platformer game with a jumping character, platforms, and collectible coins' },
-        { label: 'Make a puzzle game', prompt: 'Create a match-3 puzzle game like Candy Crush with colorful tiles and scoring' },
-      ],
-    },
-  ]);
+// Convert stored messages to ChatMessage format
+function convertToDisplayMessages(
+  storedMessages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>
+): ChatMessage[] {
+  if (!storedMessages || storedMessages.length === 0) {
+    return [DEFAULT_WELCOME_MESSAGE];
+  }
+
+  return storedMessages.map((m, i) => ({
+    id: `restored-${i}-${Date.now()}`,
+    role: m.role,
+    content: m.content,
+    timestamp: new Date(),
+  }));
+}
+
+export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlayCraftChatReturn {
+  const {
+    projectId,
+    templateId,
+    onFilesGenerated,
+    onNeedsThreeJs,
+    readFile,
+    readAllFiles,
+    hasThreeJs = false,
+    useSmartContext,
+    initialMessages,
+  } = options;
+
+  // Determine if we should use smart context
+  const enableSmartContext = useSmartContext ?? !!projectId;
+
+  // Initialize messages from stored conversation or default welcome
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    convertToDisplayMessages(initialMessages || [])
+  );
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Track if initial messages were provided to avoid re-initialization
+  const initializedRef = useRef(false);
+
+  // Update messages when initialMessages changes (e.g., switching chat sessions)
+  useEffect(() => {
+    // Skip the first render since useState already handles it
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      return;
+    }
+
+    // Only update if we have new initial messages
+    if (initialMessages && initialMessages.length > 0) {
+      console.log('[usePlayCraftChat] Restoring', initialMessages.length, 'messages from session');
+      setMessages(convertToDisplayMessages(initialMessages));
+    }
+  }, [initialMessages]);
+
   // Keep track of generated files for context
   const filesRef = useRef<Record<string, string>>({});
+
+  // Track message count for summarization
+  const messageCountRef = useRef(0);
+
+  // Initialize project memory when project ID is set
+  useEffect(() => {
+    if (projectId && enableSmartContext) {
+      initializeProjectMemory(projectId).catch(err => {
+        console.warn('[usePlayCraftChat] Failed to initialize memory:', err);
+      });
+    }
+  }, [projectId, enableSmartContext]);
 
   const addMessage = useCallback((message: Omit<ChatMessage, 'id'> & { timestamp?: Date }) => {
     const newMessage: ChatMessage = {
@@ -119,15 +197,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   }, [addMessage]);
 
   const clearMessages = useCallback(() => {
-    setMessages([
-      {
-        id: '1',
-        role: 'assistant',
-        content:
-          "Hi! I'm PlayCraft, your AI game builder. Choose a template below to get started, then tell me what game you want to create!",
-        timestamp: new Date(),
-      },
-    ]);
+    setMessages([DEFAULT_WELCOME_MESSAGE]);
     filesRef.current = {};
   }, []);
 
@@ -140,40 +210,122 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
       // Add user message
       addMessage({ role: 'user', content: prompt });
+      messageCountRef.current++;
 
       try {
-        // Build current files context
-        const currentFiles: Record<string, string> = { ...filesRef.current };
+        let response;
 
-        // Try to read the selected file if provided
-        if (selectedFile && readFile) {
-          try {
-            const content = await readFile(selectedFile);
-            currentFiles[selectedFile] = content;
-          } catch {
-            // File might not exist yet, that's ok
+        // Use smart context if enabled and we have a project ID
+        if (enableSmartContext && projectId) {
+          // Get all current files
+          let currentFiles: Record<string, string> = { ...filesRef.current };
+
+          // Try to read all files from WebContainer
+          if (readAllFiles) {
+            try {
+              const allFiles = await readAllFiles();
+              currentFiles = { ...currentFiles, ...allFiles };
+            } catch {
+              // Fall back to cached files
+            }
+          } else if (selectedFile && readFile) {
+            // At minimum, read the selected file
+            try {
+              const content = await readFile(selectedFile);
+              currentFiles[selectedFile] = content;
+            } catch {
+              // File might not exist yet
+            }
           }
+
+          // Detect what changed since last request
+          const changes = await detectChanges(projectId, currentFiles);
+          const changedFiles = [...changes.created, ...changes.modified];
+
+          // Get project memory
+          const projectMemory = await getProjectMemory(projectId);
+
+          // Get conversation context (summaries + recent messages)
+          const { summaries, recentMessages } = await getConversationContext(
+            projectId,
+            messages.map(m => ({ role: m.role, content: m.content }))
+          );
+
+          // Build smart context package
+          const contextPackage = await buildContext(
+            projectId,
+            prompt,
+            currentFiles,
+            selectedFile,
+            recentMessages,
+            changedFiles,
+            projectMemory,
+            summaries.map((s, i) => ({
+              summary_text: s,
+              tasks_completed: [],
+              files_modified: [],
+              sequence_number: i,
+            }))
+          );
+
+          // Log context efficiency
+          console.log(
+            `[usePlayCraftChat] Smart context: ${contextPackage.relevantFiles.length} files, ~${contextPackage.estimatedTokens} tokens`
+          );
+
+          // Make context-aware request
+          const request: ContextAwareRequest = {
+            prompt,
+            projectId,
+            templateId,
+            hasThreeJs,
+            contextPackage,
+          };
+
+          response = await generateCodeWithContext(request);
+
+          // Update memory from response (background)
+          updateMemoryFromResponse(projectId, prompt, response, selectedFile).catch(err => {
+            console.warn('[usePlayCraftChat] Failed to update memory:', err);
+          });
+
+          // Trigger background summarization
+          summarizeInBackground(
+            projectId,
+            messages.map(m => ({ role: m.role, content: m.content })),
+            messageCountRef.current
+          );
+        } else {
+          // Legacy mode: Use old context system
+          const currentFiles: Record<string, string> = { ...filesRef.current };
+
+          if (selectedFile && readFile) {
+            try {
+              const content = await readFile(selectedFile);
+              currentFiles[selectedFile] = content;
+            } catch {
+              // File might not exist yet
+            }
+          }
+
+          const conversationHistory = messages
+            .filter((m) => m.role === 'user' || m.role === 'assistant')
+            .slice(-10)
+            .map((m) => ({
+              role: m.role as 'user' | 'assistant',
+              content: m.content,
+            }));
+
+          const request: GenerateRequest = {
+            prompt,
+            currentFiles,
+            selectedFile,
+            conversationHistory,
+            hasThreeJs,
+          };
+
+          response = await generateCode(request);
         }
-
-        // Build conversation history for context
-        const conversationHistory = messages
-          .filter((m) => m.role === 'user' || m.role === 'assistant')
-          .slice(-10)
-          .map((m) => ({
-            role: m.role as 'user' | 'assistant',
-            content: m.content,
-          }));
-
-        // Call the AI
-        const request: GenerateRequest = {
-          prompt,
-          currentFiles,
-          selectedFile,
-          conversationHistory,
-          hasThreeJs,
-        };
-
-        const response = await generateCode(request);
 
         // Check if AI requested Three.js
         if (response.needsThreeJs && !hasThreeJs && onNeedsThreeJs) {
@@ -207,6 +359,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           features: parsed.features,
           nextSteps: parsed.nextSteps,
         });
+        messageCountRef.current++;
 
         // Add system message about files modified
         if (response.files.length > 0) {
@@ -226,7 +379,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         setIsGenerating(false);
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, readFile]
+    [isGenerating, messages, addMessage, onFilesGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs]
   );
 
   return {

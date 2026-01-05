@@ -76,17 +76,17 @@ export interface PlayCraftProject {
   user_id: string;
   name: string;
   description: string | null;
-  thumbnail_url: string | null;
+  thumbnail_url?: string | null; // Optional - column doesn't exist in DB yet
   has_three_js: boolean;
   status: ProjectStatus;
   files: Record<string, string>;
   conversation: ConversationMessage[];
   active_chat_session_id: string | null;
   // Publishing fields
-  published_url: string | null;
-  published_at: string | null;
-  play_count: number;
-  is_public: boolean;
+  published_url?: string | null;
+  published_at?: string | null;
+  play_count?: number;
+  is_public?: boolean;
   is_starred?: boolean;
   created_at: string;
   updated_at: string;
@@ -118,7 +118,7 @@ export interface PublishedGame {
   id: string;
   name: string;
   description: string | null;
-  thumbnail_url: string | null;
+  thumbnail_url?: string | null; // Optional - column doesn't exist in DB yet
   published_url: string;
   published_at: string;
   play_count: number;

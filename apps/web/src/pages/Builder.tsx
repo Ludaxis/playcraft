@@ -90,12 +90,30 @@ interface BuilderPageProps {
 export function BuilderPage({
   user,
   project: initialProject,
-  initialPrompt,
+  initialPrompt: initialPromptProp,
   onBackToHome,
 }: BuilderPageProps) {
   // Project state - use fresh data from database
   const [project, setProject] = useState<PlayCraftProject>(initialProject);
   const [isLoadingProject, setIsLoadingProject] = useState(true);
+
+  // Recover initial prompt from localStorage if not provided as prop
+  // This handles page refresh case
+  const [initialPrompt, setInitialPrompt] = useState<string | null>(() => {
+    if (initialPromptProp) return initialPromptProp;
+    // Try to recover from localStorage
+    const stored = localStorage.getItem(`playcraft_initial_prompt_${initialProject.id}`);
+    if (stored) {
+      console.log('[Builder] Recovered initial prompt from localStorage');
+      return stored;
+    }
+    return null;
+  });
+
+  // Clear localStorage prompt after it's been used (do this in effect after sending)
+  const clearStoredPrompt = () => {
+    localStorage.removeItem(`playcraft_initial_prompt_${initialProject.id}`);
+  };
 
   // Fetch fresh project data on mount
   useEffect(() => {
@@ -153,6 +171,7 @@ export function BuilderPage({
   // Chat session state
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatSessionId, setActiveChatSessionId] = useState<string | null>(null);
+  const [activeSessionMessages, setActiveSessionMessages] = useState<ConversationMessage[]>([]);
   const [isLoadingChatSessions, setIsLoadingChatSessions] = useState(true);
 
   // Project dropdown state
@@ -181,10 +200,19 @@ export function BuilderPage({
         setChatSessions(sessions);
 
         // Set active session from project or use the most recent one
+        let activeSession: ChatSession | undefined;
         if (project.active_chat_session_id && sessions.find(s => s.id === project.active_chat_session_id)) {
           setActiveChatSessionId(project.active_chat_session_id);
+          activeSession = sessions.find(s => s.id === project.active_chat_session_id);
         } else if (sessions.length > 0) {
           setActiveChatSessionId(sessions[0].id);
+          activeSession = sessions[0];
+        }
+
+        // Load messages from the active session
+        if (activeSession && activeSession.messages && activeSession.messages.length > 0) {
+          console.log('[Builder] Restoring', activeSession.messages.length, 'messages from session:', activeSession.title);
+          setActiveSessionMessages(activeSession.messages);
         }
 
         console.log('[Builder] Loaded', sessions.length, 'chat sessions');
@@ -248,9 +276,11 @@ export function BuilderPage({
   // AI Chat hook with file generation callback
   const { messages, isGenerating, sendMessage: sendAiMessage, addSystemMessage } =
     usePlayCraftChat({
+      projectId: project.id,
       readFile: readProjectFile,
       hasThreeJs,
       onNeedsThreeJs: upgradeToThreeJs,
+      initialMessages: activeSessionMessages, // Restore previous conversation
       onFilesGenerated: async (files) => {
         // Apply files to WebContainer
         await applyGeneratedFiles(files, writeProjectFile);
@@ -459,6 +489,10 @@ export function BuilderPage({
   useEffect(() => {
     if (initialPrompt && initialPromptProcessed && projectReady && messages.length <= 1) {
       sendAiMessage(initialPrompt, undefined);
+      // Clear the stored prompt after sending
+      clearStoredPrompt();
+      // Clear the state to prevent re-sending
+      setInitialPrompt(null);
     }
   }, [initialPrompt, initialPromptProcessed, projectReady, messages.length, sendAiMessage]);
 
@@ -577,8 +611,13 @@ export function BuilderPage({
     // Update project's active session
     await updateProject(project.id, { active_chat_session_id: session.id });
 
-    // TODO: Load session messages into chat (would need to extend usePlayCraftChat hook)
-    // For now, this just sets the active session for saving
+    // Load session messages into chat
+    if (session.messages && session.messages.length > 0) {
+      console.log('[Builder] Loading', session.messages.length, 'messages from session');
+      setActiveSessionMessages(session.messages);
+    } else {
+      setActiveSessionMessages([]);
+    }
   }, [project.id]);
 
   // Handle creating a new chat session
@@ -590,8 +629,8 @@ export function BuilderPage({
     // Update project to clear active session
     await updateProject(project.id, { active_chat_session_id: null });
 
-    // TODO: Clear chat messages (would need to extend usePlayCraftChat hook)
-    // For now, this just prepares for a new session
+    // Clear messages to start fresh
+    setActiveSessionMessages([]);
   }, [project.id]);
 
   // Project dropdown handlers
@@ -649,12 +688,49 @@ export function BuilderPage({
     setInputValue(prompt);
   }, []);
 
-  // Show loading while fetching fresh project data
-  if (isLoadingProject) {
+  // Show loading while fetching fresh project data or setting up
+  if (isLoadingProject || (isSettingUp && !projectReady)) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-surface">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
-        <p className="mt-4 text-content-muted">Loading project...</p>
+      <div className="flex h-screen flex-col items-center justify-center bg-surface px-4">
+        <div className="w-full max-w-md text-center">
+          {/* Loading spinner */}
+          <div className="mx-auto mb-6 h-12 w-12 animate-spin rounded-full border-3 border-accent/30 border-t-accent" />
+
+          {/* Status message */}
+          <h2 className="mb-2 text-xl font-semibold text-content">
+            {isLoadingProject ? 'Loading project...' : 'Setting up your environment...'}
+          </h2>
+
+          {/* Show user's prompt if they just submitted one */}
+          {initialPrompt && (
+            <div className="mt-6 rounded-xl border border-border-muted bg-surface-elevated p-4">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-content-subtle">
+                Your request
+              </p>
+              <p className="text-sm text-content-muted line-clamp-3">
+                "{initialPrompt}"
+              </p>
+              <p className="mt-3 text-xs text-accent">
+                Will be processed once setup is complete...
+              </p>
+            </div>
+          )}
+
+          {/* Progress hints */}
+          {isSettingUp && (
+            <div className="mt-6 space-y-2 text-sm text-content-subtle">
+              <p className={status === 'booting' ? 'text-accent' : ''}>
+                {status === 'booting' ? '▶' : '✓'} Starting container...
+              </p>
+              <p className={status === 'installing' ? 'text-accent' : status === 'running' ? '' : 'opacity-50'}>
+                {status === 'installing' ? '▶' : status === 'running' || status === 'ready' ? '✓' : '○'} Installing dependencies...
+              </p>
+              <p className={status === 'running' ? 'text-accent' : 'opacity-50'}>
+                {status === 'running' ? '▶' : '○'} Starting dev server...
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
