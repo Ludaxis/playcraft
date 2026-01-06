@@ -47,7 +47,6 @@ export function usePreviewErrors(
 
   // Use ref to store errors to avoid re-renders on every error
   const errorsRef = useRef<PreviewError[]>([]);
-  const setErrorsRef = useRef<(errors: PreviewError[]) => void>(() => {});
 
   // Force update function
   const [, forceUpdate] = useReducer((x: number) => x + 1, 0);

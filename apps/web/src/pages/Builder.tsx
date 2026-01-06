@@ -43,7 +43,6 @@ import {
   generateSessionTitle,
 } from '../lib/chatSessionService';
 import { getUserSettings } from '../lib/settingsService';
-import { updateOutcomeFeedback } from '../lib/outcomeService';
 import type { ChatSession, ConversationMessage } from '../types';
 import type { PreviewError } from '../lib/codeValidator';
 import type { FileSystemTree } from '@webcontainer/api';
@@ -195,7 +194,7 @@ export function BuilderPage({
   const lastAiGenerationRef = useRef<{ files: string[]; timestamp: number } | null>(null);
 
   // Preview error listener
-  const { errors: livePreviewErrors, clearErrors: clearPreviewErrors, hasErrors: hasPreviewErrors } = usePreviewErrors({
+  const { clearErrors: clearPreviewErrors } = usePreviewErrors({
     onError: (error) => {
       console.warn('[Preview Error]', error.type, error.message);
       setPreviewErrors(prev => [...prev.slice(-9), error]); // Keep last 10

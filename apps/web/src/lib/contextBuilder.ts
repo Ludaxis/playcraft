@@ -7,7 +7,7 @@
  */
 
 import { getProjectFileHashes, getImportGraph } from './fileHashService';
-import { getFileContentOrOutline, generateFileOutline } from './astOutlineService';
+import { getFileContentOrOutline } from './astOutlineService';
 
 // ============================================================================
 // TYPES
@@ -121,7 +121,6 @@ interface UserIntent {
  * Analyze user prompt to understand intent
  */
 function analyzeUserIntent(prompt: string): UserIntent {
-  const lowerPrompt = prompt.toLowerCase();
   let action: IntentAction = 'modify';
   let confidence = 0.5;
 

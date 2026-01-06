@@ -4,9 +4,8 @@ import {
   generateCodeWithContext,
   type GenerateRequest,
   type ContextAwareRequest,
-  type GenerateResponse,
 } from '../lib/playcraftService';
-import { buildContext, shouldSuggestEditMode } from '../lib/contextBuilder';
+import { buildContext } from '../lib/contextBuilder';
 import type { FileEdit } from '../lib/editApplyService';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
 import { updateMemoryFromResponse } from '../lib/memoryUpdater';
