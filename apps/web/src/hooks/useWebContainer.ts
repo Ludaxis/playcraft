@@ -6,6 +6,7 @@ import {
   mountFiles,
   writeFile,
   readFile,
+  readAllProjectFiles,
   mkdir,
   rm,
   spawn,
@@ -52,6 +53,7 @@ export interface UseWebContainerReturn {
   mountProject: (files: FileSystemTree, projectId?: string) => Promise<void>;
   writeProjectFile: (path: string, contents: string) => Promise<void>;
   readProjectFile: (path: string) => Promise<string>;
+  readAllFiles: () => Promise<Record<string, string>>;
   deleteFile: (path: string) => Promise<void>;
   createDirectory: (path: string) => Promise<void>;
   install: (projectId?: string) => Promise<void>;
@@ -78,6 +80,7 @@ export function useWebContainer(): UseWebContainerReturn {
 
   const containerRef = useRef<WebContainer | null>(null);
   const devServerProcessIdRef = useRef<string | null>(null);
+  const isBootingRef = useRef(false); // Synchronous lock to prevent race conditions
 
   // Cleanup on unmount - kill any running processes
   useEffect(() => {
@@ -123,8 +126,14 @@ export function useWebContainer(): UseWebContainerReturn {
 
   // Boot the WebContainer
   const boot = useCallback(async () => {
+    // Use ref for synchronous lock (React state is async)
+    if (isBootingRef.current || containerRef.current) {
+      console.log('[useWebContainer] Boot skipped - already booting or booted');
+      return;
+    }
     if (status !== 'idle') return;
 
+    isBootingRef.current = true;
     setStatus('booting');
     setError(null);
     appendOutput('Booting WebContainer...\n');
@@ -139,6 +148,8 @@ export function useWebContainer(): UseWebContainerReturn {
       setError(message);
       setStatus('error');
       appendOutput(`Error: ${message}\n`);
+    } finally {
+      isBootingRef.current = false;
     }
   }, [status, appendOutput]);
 
@@ -188,6 +199,17 @@ export function useWebContainer(): UseWebContainerReturn {
       return await readFile(path);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to read file';
+      setError(message);
+      throw err;
+    }
+  }, []);
+
+  // Read all project files (for AI context)
+  const readAllFiles = useCallback(async (): Promise<Record<string, string>> => {
+    try {
+      return await readAllProjectFiles();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to read all files';
       setError(message);
       throw err;
     }
@@ -416,6 +438,7 @@ export function useWebContainer(): UseWebContainerReturn {
     mountProject,
     writeProjectFile,
     readProjectFile,
+    readAllFiles,
     deleteFile,
     createDirectory,
     install,

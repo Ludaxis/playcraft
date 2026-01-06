@@ -107,17 +107,38 @@ export function getRunningProcesses(): Array<{ id: string; command: string; star
  * Can only be called once - subsequent calls return the same instance.
  */
 export async function bootWebContainer(): Promise<WebContainer> {
+  // Return existing instance if already booted
   if (webcontainerInstance) {
     return webcontainerInstance;
   }
 
+  // Return existing promise if boot is in progress
   if (bootPromise) {
     return bootPromise;
   }
 
-  bootPromise = WebContainer.boot();
-  webcontainerInstance = await bootPromise;
-  return webcontainerInstance;
+  // Start boot process
+  bootPromise = (async () => {
+    try {
+      const instance = await WebContainer.boot();
+      webcontainerInstance = instance;
+      return instance;
+    } catch (err) {
+      // Handle "already booted" error gracefully
+      if (err instanceof Error && err.message.includes('single WebContainer instance')) {
+        console.warn('[WebContainer] Boot race condition detected, waiting for existing instance...');
+        // Wait a bit and retry - the other boot should complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        if (webcontainerInstance) {
+          return webcontainerInstance;
+        }
+      }
+      bootPromise = null; // Reset so we can retry
+      throw err;
+    }
+  })();
+
+  return bootPromise;
 }
 
 /**
@@ -160,6 +181,76 @@ export async function readDir(path: string): Promise<string[]> {
   const instance = await bootWebContainer();
   const entries = await instance.fs.readdir(path);
   return entries;
+}
+
+/**
+ * Read all project source files from the WebContainer filesystem.
+ * Returns a map of file paths to their contents.
+ * Excludes node_modules, dist, and other non-source files.
+ */
+export async function readAllProjectFiles(): Promise<Record<string, string>> {
+  const instance = await bootWebContainer();
+  const files: Record<string, string> = {};
+
+  // Directories to scan for source files
+  const sourceDirs = ['/src'];
+
+  // File extensions to include
+  const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.css', '.json', '.html'];
+
+  // Always include root config files
+  const rootConfigs = ['package.json', 'tsconfig.json', 'tailwind.config.ts', 'vite.config.ts'];
+
+  // Read root config files
+  for (const configFile of rootConfigs) {
+    try {
+      const content = await instance.fs.readFile(`/${configFile}`, 'utf-8');
+      files[`/${configFile}`] = content;
+    } catch {
+      // File doesn't exist, skip
+    }
+  }
+
+  // Recursively read source directories
+  async function readDirRecursive(dirPath: string): Promise<void> {
+    try {
+      const entries = await instance.fs.readdir(dirPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = dirPath === '/' ? `/${entry.name}` : `${dirPath}/${entry.name}`;
+
+        // Skip non-source directories
+        if (entry.isDirectory()) {
+          // Skip node_modules, dist, .git, etc.
+          if (['node_modules', 'dist', '.git', '.next', 'build'].includes(entry.name)) {
+            continue;
+          }
+          await readDirRecursive(fullPath);
+        } else if (entry.isFile()) {
+          // Check if it's a source file
+          const hasSourceExt = sourceExtensions.some(ext => entry.name.endsWith(ext));
+          if (hasSourceExt) {
+            try {
+              const content = await instance.fs.readFile(fullPath, 'utf-8');
+              files[fullPath] = content;
+            } catch {
+              // Failed to read file, skip
+            }
+          }
+        }
+      }
+    } catch {
+      // Directory doesn't exist or can't be read
+    }
+  }
+
+  // Read all source directories
+  for (const dir of sourceDirs) {
+    await readDirRecursive(dir);
+  }
+
+  console.log(`[WebContainer] Read ${Object.keys(files).length} project files`);
+  return files;
 }
 
 /**

@@ -7,7 +7,7 @@
  * - Collapsible terminal at bottom
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { Terminal as TerminalIcon } from 'lucide-react';
 import { Preview, ExportModal, PublishModal } from '../components';
@@ -144,6 +144,7 @@ export function BuilderPage({
     mountProject,
     writeProjectFile,
     readProjectFile,
+    readAllFiles,
     install,
     startDev,
     refreshFileTree,
@@ -164,6 +165,7 @@ export function BuilderPage({
   const [projectReady, setProjectReady] = useState(false);
   const [hasThreeJs, setHasThreeJs] = useState(project.has_three_js);
   const [isSettingUp, setIsSettingUp] = useState(false);
+  const isSettingUpRef = useRef(false); // Synchronous lock to prevent race conditions
   const [initialPromptProcessed, setInitialPromptProcessed] = useState(false);
   const [creditsDismissed, setCreditsDismissed] = useState(false);
   const [chatPanelTab, setChatPanelTab] = useState<'chat' | 'history'>('chat');
@@ -278,6 +280,7 @@ export function BuilderPage({
     usePlayCraftChat({
       projectId: project.id,
       readFile: readProjectFile,
+      readAllFiles, // Pass function to read all project files for AI context
       hasThreeJs,
       onNeedsThreeJs: upgradeToThreeJs,
       initialMessages: activeSessionMessages, // Restore previous conversation
@@ -355,12 +358,14 @@ export function BuilderPage({
 
   // Start project - restore saved files or use fresh template
   const startProject = useCallback(async () => {
-    console.log('[Builder] startProject called', { isSettingUp, projectReady });
-    if (isSettingUp || projectReady) {
+    // Use ref for synchronous check (React state is async)
+    if (isSettingUpRef.current || projectReady) {
       console.log('[Builder] startProject early return - already setting up or ready');
       return;
     }
+    console.log('[Builder] startProject called', { isSettingUp, projectReady });
 
+    isSettingUpRef.current = true;
     setIsSettingUp(true);
 
     // Check if project has saved files
@@ -435,6 +440,7 @@ export function BuilderPage({
       console.log('[Builder] startDev complete');
 
       setProjectReady(true);
+      isSettingUpRef.current = false;
       setIsSettingUp(false);
       await updateProjectStatus(project.id, 'ready');
       console.log('[Builder] Project setup complete');
@@ -446,6 +452,7 @@ export function BuilderPage({
       }
     } catch (err) {
       console.error('[Builder] startProject error:', err);
+      isSettingUpRef.current = false;
       setIsSettingUp(false);
       await updateProjectStatus(project.id, 'draft');
       addSystemMessage(

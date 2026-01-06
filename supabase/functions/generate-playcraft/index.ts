@@ -527,7 +527,15 @@ IMPORTANT:
 - Provide COMPLETE file contents, not patches
 - Make sure all imports are correct
 - Test that the code is syntactically valid
-- The main entry point is /src/pages/Index.tsx, NOT /src/app/page.tsx`;
+- The main entry point is /src/pages/Index.tsx, NOT /src/app/page.tsx
+
+ITERATION RULES (when existing files are provided):
+- ALWAYS build upon the existing code - DO NOT recreate from scratch
+- When modifying an existing game, preserve ALL existing features unless explicitly asked to remove them
+- Only change the specific aspects requested by the user
+- Keep the same game structure, state management, and component architecture
+- If user asks to "change tiles to emojis", modify ONLY the tile rendering, not the game logic`;
+
 
 // Game Shell Template specific prompt
 const GAME_SHELL_PROMPT = `You are an expert game developer working in PlayCraft with the GAME SHELL template.
@@ -739,8 +747,20 @@ function buildSmartContextPrompt(
   // 8. User Request
   parts.push(`USER REQUEST:\n${prompt}`);
 
-  // 9. Instructions
-  parts.push('Generate ONLY the necessary code changes. Return valid JSON with needsThreeJs boolean.');
+  // 9. Instructions - emphasize iteration when files exist
+  if (contextPackage.relevantFiles.length > 0) {
+    parts.push(`CRITICAL INSTRUCTION:
+You are ITERATING on an EXISTING project. The files above show the CURRENT state of the code.
+- DO NOT recreate the project from scratch
+- MODIFY the existing code to implement the user's request
+- Preserve ALL existing features, game logic, and structure
+- Only change what is specifically requested
+- Return the COMPLETE updated file(s), not patches
+
+Generate ONLY the necessary code changes. Return valid JSON with needsThreeJs boolean.`);
+  } else {
+    parts.push('Generate ONLY the necessary code changes. Return valid JSON with needsThreeJs boolean.');
+  }
 
   return parts.join('\n\n');
 }
