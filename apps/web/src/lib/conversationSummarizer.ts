@@ -7,15 +7,7 @@
 
 import { getSupabase } from './supabase';
 import type { ConversationSummary } from './contextBuilder';
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-export interface ChatMessage {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
+import type { ConversationMessage } from '../types';
 
 interface SummaryRow {
   id: string;
@@ -125,7 +117,7 @@ async function saveSummary(
  * Generate a summary from messages using rule-based extraction
  * This avoids API calls for cost savings
  */
-function generateLocalSummary(messages: ChatMessage[]): {
+function generateLocalSummary(messages: ConversationMessage[]): {
   summary: string;
   tasks: string[];
   files: string[];
@@ -231,7 +223,7 @@ function extractCompletedTask(content: string): string | null {
  */
 export async function checkAndSummarize(
   projectId: string,
-  messages: ChatMessage[],
+  messages: ConversationMessage[],
   currentMessageIndex: number
 ): Promise<void> {
   // Get existing summaries to know where we left off
@@ -277,7 +269,7 @@ export async function checkAndSummarize(
  */
 export async function getConversationContext(
   projectId: string,
-  allMessages: ChatMessage[]
+  allMessages: ConversationMessage[]
 ): Promise<{
   summaries: string[];
   recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
@@ -322,7 +314,7 @@ export async function clearConversationSummaries(projectId: string): Promise<voi
  */
 export function summarizeInBackground(
   projectId: string,
-  messages: ChatMessage[],
+  messages: ConversationMessage[],
   currentMessageIndex: number
 ): void {
   // Run summarization without waiting
