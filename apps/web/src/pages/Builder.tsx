@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Terminal as TerminalIcon } from 'lucide-react';
+import { Terminal as TerminalIcon, AlertTriangle } from 'lucide-react';
 import { Preview, ExportModal, PublishModal } from '../components';
 import {
   EditorPanel,
@@ -25,7 +25,7 @@ import {
 } from '../components/builder';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
 import type { DeviceMode } from '../components/builder/DeviceToggle';
-import { useWebContainer, usePlayCraftChat } from '../hooks';
+import { useWebContainer, usePlayCraftChat, usePreviewErrors } from '../hooks';
 import { viteStarterTemplate } from '../templates';
 import { applyGeneratedFiles, applyGeneratedEdits } from '../lib/playcraftService';
 import type { FileEdit } from '../lib/editApplyService';
@@ -43,7 +43,9 @@ import {
   generateSessionTitle,
 } from '../lib/chatSessionService';
 import { getUserSettings } from '../lib/settingsService';
+import { updateOutcomeFeedback } from '../lib/outcomeService';
 import type { ChatSession, ConversationMessage } from '../types';
+import type { PreviewError } from '../lib/codeValidator';
 import type { FileSystemTree } from '@webcontainer/api';
 
 // Convert flat file map to WebContainer FileSystemTree
@@ -150,6 +152,8 @@ export function BuilderPage({
     startDev,
     refreshFileTree,
     runCommand,
+    runTypeCheck,
+    runESLint,
   } = useWebContainer();
 
   // UI state - modern split view
@@ -183,6 +187,21 @@ export function BuilderPage({
 
   // Track files in memory for saving to database
   const [projectFiles, setProjectFiles] = useState<Record<string, string>>({});
+
+  // Preview errors from iframe
+  const [previewErrors, setPreviewErrors] = useState<PreviewError[]>([]);
+
+  // Track last AI generation for outcome feedback
+  const lastAiGenerationRef = useRef<{ files: string[]; timestamp: number } | null>(null);
+
+  // Preview error listener
+  const { errors: livePreviewErrors, clearErrors: clearPreviewErrors, hasErrors: hasPreviewErrors } = usePreviewErrors({
+    onError: (error) => {
+      console.warn('[Preview Error]', error.type, error.message);
+      setPreviewErrors(prev => [...prev.slice(-9), error]); // Keep last 10
+    },
+    logToConsole: false, // We handle logging ourselves
+  });
 
   // Sync projectFiles when project data loads
   useEffect(() => {
@@ -285,6 +304,10 @@ export function BuilderPage({
       hasThreeJs,
       onNeedsThreeJs: upgradeToThreeJs,
       initialMessages: activeSessionMessages, // Restore previous conversation
+      runTypeCheck, // Enable auto-fix by running TypeScript checks
+      runESLint, // Enable ESLint validation
+      enableAutoFix: true, // Auto-fix errors after generation
+      maxRetries: 3, // Max auto-fix attempts
       onFilesGenerated: async (files) => {
         // Apply files to WebContainer
         await applyGeneratedFiles(files, writeProjectFile);
@@ -297,6 +320,16 @@ export function BuilderPage({
           updatedFiles[normalizedPath] = file.content;
         }
         setProjectFiles(updatedFiles);
+
+        // Track AI-generated files for outcome feedback
+        lastAiGenerationRef.current = {
+          files: files.map(f => f.path.startsWith('/') ? f.path : `/${f.path}`),
+          timestamp: Date.now(),
+        };
+
+        // Clear preview errors when new code is generated
+        clearPreviewErrors();
+        setPreviewErrors([]);
 
         // Save immediately after AI generation (important for persistence!)
         console.log('[Builder] Saving AI-generated files to database:', files.length, 'new files');
@@ -326,6 +359,16 @@ export function BuilderPage({
             }
           }
           setProjectFiles(updatedFiles);
+
+          // Track AI-edited files for outcome feedback
+          lastAiGenerationRef.current = {
+            files: Array.from(modifiedPaths),
+            timestamp: Date.now(),
+          };
+
+          // Clear preview errors when new code is generated
+          clearPreviewErrors();
+          setPreviewErrors([]);
 
           // Save immediately
           console.log('[Builder] Saving edited files to database');
@@ -575,6 +618,20 @@ export function BuilderPage({
             debouncedSaveFiles(updated);
             return updated;
           });
+
+          // Track user edits to AI-generated files for outcome feedback
+          if (lastAiGenerationRef.current) {
+            const { files: aiFiles, timestamp } = lastAiGenerationRef.current;
+            const timeSinceGeneration = Date.now() - timestamp;
+
+            // If user edits an AI-generated file within 5 minutes, record feedback
+            if (timeSinceGeneration < 5 * 60 * 1000 && aiFiles.includes(normalizedPath)) {
+              console.log('[Builder] User edited AI-generated file:', normalizedPath);
+              // Note: We don't have the outcomeId here directly - this is tracked via the service
+              // The outcome was already recorded in usePlayCraftChat
+              // We could add a callback from usePlayCraftChat to get the outcomeId
+            }
+          }
         } catch (err) {
           console.error('Failed to save file:', err);
         }
@@ -890,7 +947,7 @@ export function BuilderPage({
         </div>
       )}
 
-      {/* Bottom Bar - Terminal toggle */}
+      {/* Bottom Bar - Terminal toggle + Error indicator */}
       <div className="flex h-10 shrink-0 items-center justify-between border-t border-border-muted bg-surface-elevated px-4">
         <div className="flex items-center gap-2">
           <button
@@ -904,6 +961,23 @@ export function BuilderPage({
             <TerminalIcon className="h-3.5 w-3.5" />
             Terminal
           </button>
+
+          {/* Preview errors indicator */}
+          {previewErrors.length > 0 && (
+            <div
+              className="flex items-center gap-1.5 rounded-lg bg-red-500/20 px-2 py-1 text-xs text-red-400 cursor-pointer hover:bg-red-500/30 transition-all"
+              onClick={() => {
+                // Show the most recent error in console for now
+                const latestError = previewErrors[previewErrors.length - 1];
+                console.error('[Preview Error Details]', latestError);
+                // Could open a modal or panel here in the future
+              }}
+              title={previewErrors[previewErrors.length - 1]?.message || 'Runtime errors detected'}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {previewErrors.length} error{previewErrors.length > 1 ? 's' : ''}
+            </div>
+          )}
         </div>
         <div className="text-xs text-content-subtle">
           {status === 'running' ? 'Server running' : status}

@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen } from 'lucide-react';
+import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen, Search, RefreshCw } from 'lucide-react';
 import type { ChatMessage, GenerationProgress } from '../../types';
 import { NextStepsCards } from './NextStepsCards';
 
@@ -128,6 +128,10 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
         return <Sparkles className="h-4 w-4 text-accent animate-pulse" />;
       case 'applying':
         return <Save className="h-4 w-4 text-accent animate-pulse" />;
+      case 'validating':
+        return <Search className="h-4 w-4 text-yellow-400 animate-pulse" />;
+      case 'retrying':
+        return <RefreshCw className="h-4 w-4 text-orange-400 animate-spin" />;
       case 'complete':
         return <Check className="h-4 w-4 text-green-400" />;
       case 'error':

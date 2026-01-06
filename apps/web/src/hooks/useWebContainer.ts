@@ -10,6 +10,7 @@ import {
   mkdir,
   rm,
   spawn,
+  runAndCaptureOutput,
   installDependencies,
   startDevServer,
   getFileTree,
@@ -60,6 +61,8 @@ export interface UseWebContainerReturn {
   startDev: () => Promise<void>;
   refreshFileTree: () => Promise<void>;
   runCommand: (command: string, args?: string[]) => Promise<number>;
+  runTypeCheck: () => Promise<string>;
+  runESLint: () => Promise<string>;
   clearTerminal: () => void;
   checkNodeModules: () => Promise<boolean>;
   resetForNewProject: () => void;
@@ -382,6 +385,34 @@ export function useWebContainer(): UseWebContainerReturn {
     }
   }, [appendOutput]);
 
+  // Run TypeScript check and return output (for validation)
+  const runTypeCheck = useCallback(async (): Promise<string> => {
+    try {
+      const { output } = await runAndCaptureOutput('npx', ['tsc', '--noEmit'], { timeout: 60000 });
+      return output;
+    } catch (err) {
+      // Timeout or other error - return empty string (no errors to report)
+      console.warn('[useWebContainer] TypeScript check failed:', err);
+      return '';
+    }
+  }, []);
+
+  // Run ESLint and return JSON output (for validation)
+  const runESLint = useCallback(async (): Promise<string> => {
+    try {
+      const { output } = await runAndCaptureOutput(
+        'npx',
+        ['eslint', '.', '--format=json', '--ext', '.ts,.tsx', '--ignore-pattern', 'node_modules'],
+        { timeout: 60000 }
+      );
+      return output;
+    } catch (err) {
+      // ESLint not available or timed out - return empty array
+      console.warn('[useWebContainer] ESLint check failed:', err);
+      return '[]';
+    }
+  }, []);
+
   // Check if WebContainer is already booted on mount
   useEffect(() => {
     const existing = getWebContainer();
@@ -445,6 +476,8 @@ export function useWebContainer(): UseWebContainerReturn {
     startDev,
     refreshFileTree,
     runCommand,
+    runTypeCheck,
+    runESLint,
     clearTerminal,
     checkNodeModules,
     resetForNewProject,

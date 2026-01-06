@@ -42,6 +42,10 @@ export const viteGameShellTemplate: FileSystemTree = {
             tailwindcss: '^3.4.11',
             typescript: '^5.5.3',
             vite: '^5.4.1',
+            eslint: '^9.9.0',
+            '@eslint/js': '^9.9.0',
+            'typescript-eslint': '^8.3.0',
+            'eslint-plugin-react-hooks': '^5.1.0',
           },
         },
         null,
@@ -175,6 +179,29 @@ export default config
 `,
     },
   },
+  'eslint.config.js': {
+    file: {
+      contents: `import js from '@eslint/js'
+import tseslint from 'typescript-eslint'
+import reactHooks from 'eslint-plugin-react-hooks'
+
+export default tseslint.config(
+  { ignores: ['dist', 'node_modules'] },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  }
+)
+`,
+    },
+  },
   'index.html': {
     file: {
       contents: `<!DOCTYPE html>
@@ -212,9 +239,102 @@ export default config
   },
   src: {
     directory: {
+      'errorBridge.ts': {
+        file: {
+          contents: `/**
+ * Error Bridge - Captures runtime errors and sends them to parent window
+ * This enables PlayCraft to detect and auto-fix runtime issues
+ */
+
+// Only run if we're in an iframe (PlayCraft preview)
+if (window.parent !== window) {
+  // Capture console.error
+  const originalError = console.error;
+  console.error = (...args: unknown[]) => {
+    try {
+      window.parent.postMessage({
+        type: 'playcraft-console-error',
+        payload: {
+          level: 'error',
+          message: args.map(arg =>
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+          ).join(' '),
+          timestamp: Date.now(),
+        },
+      }, '*');
+    } catch {
+      // Ignore postMessage errors
+    }
+    originalError.apply(console, args);
+  };
+
+  // Capture console.warn
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    try {
+      window.parent.postMessage({
+        type: 'playcraft-console-warn',
+        payload: {
+          level: 'warn',
+          message: args.map(arg =>
+            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+          ).join(' '),
+          timestamp: Date.now(),
+        },
+      }, '*');
+    } catch {
+      // Ignore postMessage errors
+    }
+    originalWarn.apply(console, args);
+  };
+
+  // Capture uncaught errors
+  window.onerror = (message, source, line, col, error) => {
+    try {
+      window.parent.postMessage({
+        type: 'playcraft-runtime-error',
+        payload: {
+          message: String(message),
+          source: source || '',
+          line: line || 0,
+          col: col || 0,
+          stack: error?.stack || '',
+          timestamp: Date.now(),
+        },
+      }, '*');
+    } catch {
+      // Ignore postMessage errors
+    }
+    return false; // Let default handler run too
+  };
+
+  // Capture unhandled promise rejections
+  window.onunhandledrejection = (event: PromiseRejectionEvent) => {
+    try {
+      const reason = event.reason;
+      window.parent.postMessage({
+        type: 'playcraft-unhandled-rejection',
+        payload: {
+          message: reason?.message || String(reason),
+          stack: reason?.stack || '',
+          timestamp: Date.now(),
+        },
+      }, '*');
+    } catch {
+      // Ignore postMessage errors
+    }
+  };
+}
+
+export {};
+`,
+        },
+      },
       'main.tsx': {
         file: {
-          contents: `import { StrictMode } from 'react'
+          contents: `// Error bridge must be imported first to capture early errors
+import './errorBridge'
+import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import './index.css'

@@ -282,6 +282,42 @@ export async function spawn(
 }
 
 /**
+ * Run a command and capture its output (stdout + stderr).
+ * Returns the combined output as a string.
+ * Useful for validation commands like `tsc --noEmit`.
+ */
+export async function runAndCaptureOutput(
+  command: string,
+  args: string[] = [],
+  options?: { cwd?: string; timeout?: number }
+): Promise<{ output: string; exitCode: number }> {
+  const instance = await bootWebContainer();
+  const process = await instance.spawn(command, args, options);
+
+  let output = '';
+
+  // Capture output
+  const outputWriter = new WritableStream({
+    write(data) {
+      output += data;
+    },
+  });
+
+  process.output.pipeTo(outputWriter);
+
+  // Wait for process to exit with optional timeout
+  const timeout = options?.timeout || 30000; // Default 30s timeout
+  const exitCode = await Promise.race([
+    process.exit,
+    new Promise<number>((_, reject) =>
+      setTimeout(() => reject(new Error(`Command timed out after ${timeout}ms`)), timeout)
+    ),
+  ]);
+
+  return { output, exitCode };
+}
+
+/**
  * Check if node_modules already exists and has content.
  * Used to skip npm install when dependencies are already installed.
  */

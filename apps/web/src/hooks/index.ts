@@ -13,3 +13,6 @@ export type { UseSidebarReturn } from './useSidebar';
 
 export { useOnboarding, ONBOARDING_STEPS } from './useOnboarding';
 export type { OnboardingStep, UseOnboardingReturn } from './useOnboarding';
+
+export { usePreviewErrors } from './usePreviewErrors';
+export type { PreviewError } from './usePreviewErrors';

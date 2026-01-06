@@ -231,6 +231,8 @@ export type GenerationStage =
   | 'generating'          // Gemini writing code
   | 'processing'          // Parsing response, preparing files
   | 'applying'            // Writing files to container
+  | 'validating'          // Running TypeScript check, detecting errors
+  | 'retrying'            // Auto-fixing errors with AI
   | 'complete'
   | 'error';
 
@@ -249,6 +251,8 @@ export const GENERATION_STAGES: Record<GenerationStage, { label: string; icon: s
   generating: { label: 'Gemini is writing code...', icon: 'code', duration: 10000 },
   processing: { label: 'Processing response...', icon: 'sparkles', duration: 1000 },
   applying: { label: 'Applying changes...', icon: 'save', duration: 500 },
+  validating: { label: 'Checking for errors...', icon: 'search', duration: 2000 },
+  retrying: { label: 'Auto-fixing errors...', icon: 'refresh', duration: 5000 },
   complete: { label: 'Done!', icon: 'check' },
   error: { label: 'Something went wrong', icon: 'alert' },
 };

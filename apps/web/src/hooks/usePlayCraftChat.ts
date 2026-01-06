@@ -12,6 +12,14 @@ import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryS
 import { updateMemoryFromResponse } from '../lib/memoryUpdater';
 import { getConversationContext, summarizeInBackground } from '../lib/conversationSummarizer';
 import { detectChanges } from '../lib/fileHashService';
+import {
+  validateCode,
+  createErrorFixPrompt,
+  areErrorsAutoFixable,
+  parseESLintErrors,
+  type CodeError,
+} from '../lib/codeValidator';
+import { recordGenerationOutcome } from '../lib/outcomeService';
 import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
@@ -89,6 +97,10 @@ interface UsePlayCraftChatOptions {
   hasThreeJs?: boolean; // Whether Three.js template is already loaded
   useSmartContext?: boolean; // Enable smart context system (default: true if projectId provided)
   initialMessages?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>; // Restore previous conversation
+  runTypeCheck?: () => Promise<string>; // Run TypeScript check, return error output
+  runESLint?: () => Promise<string>; // Run ESLint, return JSON output
+  enableAutoFix?: boolean; // Enable automatic error fixing (default: true)
+  maxRetries?: number; // Max auto-fix attempts (default: 3)
 }
 
 export interface UsePlayCraftChatReturn {
@@ -143,6 +155,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     hasThreeJs = false,
     useSmartContext,
     initialMessages,
+    runTypeCheck,
+    runESLint,
+    enableAutoFix = true,
+    maxRetries = 3,
   } = options;
 
   // Determine if we should use smart context
@@ -165,6 +181,8 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
       generating: 'Gemini is writing code...',
       processing: 'Processing response...',
       applying: 'Applying changes...',
+      validating: 'Checking for errors...',
+      retrying: 'Auto-fixing errors...',
       complete: 'Done!',
       error: 'Something went wrong',
     };
@@ -240,6 +258,9 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
       setError(null);
       setIsGenerating(true);
       updateProgress('preparing', 'Building context...');
+
+      // Track generation timing
+      const generationStartTime = Date.now();
 
       // Add user message
       addMessage({ role: 'user', content: prompt });
@@ -425,6 +446,152 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           }
         }
 
+        // Run validation and auto-fix if enabled
+        let validationErrors: CodeError[] = [];
+        let eslintErrors: CodeError[] = [];
+        let autoFixAttempts = 0;
+        let autoFixSucceeded = false;
+
+        if (runTypeCheck && enableAutoFix && (filesApplied > 0 || editsApplied > 0)) {
+          updateProgress('validating', 'Running TypeScript check...');
+
+          try {
+            const tsOutput = await runTypeCheck();
+            const validationResult = validateCode(tsOutput);
+
+            // Also run ESLint if available
+            if (runESLint) {
+              try {
+                const eslintOutput = await runESLint();
+                eslintErrors = parseESLintErrors(eslintOutput).filter(e => e.severity === 'error');
+                if (eslintErrors.length > 0) {
+                  console.log('[Chat] Found', eslintErrors.length, 'ESLint errors');
+                }
+              } catch (eslintErr) {
+                console.warn('[Chat] ESLint check failed:', eslintErr);
+              }
+            }
+
+            if (!validationResult.success && validationResult.errors.length > 0) {
+              validationErrors = validationResult.errors;
+              console.log('[Chat] Found', validationErrors.length, 'errors, attempting auto-fix...');
+
+              // Check if errors are auto-fixable
+              if (areErrorsAutoFixable(validationErrors)) {
+                let currentErrors = validationErrors;
+
+                while (currentErrors.length > 0 && autoFixAttempts < maxRetries) {
+                  autoFixAttempts++;
+                  updateProgress('retrying', `Auto-fix attempt ${autoFixAttempts}/${maxRetries}...`);
+
+                  // Create error fix prompt
+                  const fixPrompt = createErrorFixPrompt(prompt, currentErrors, filesRef.current);
+
+                  // Call AI to fix errors (use simple generation, not full context rebuild)
+                  const fixRequest: GenerateRequest = {
+                    prompt: fixPrompt,
+                    currentFiles: filesRef.current,
+                    selectedFile: currentErrors[0]?.file, // Focus on first file with error
+                    conversationHistory: [],
+                    hasThreeJs,
+                  };
+
+                  const fixResponse = await generateCode(fixRequest);
+                  updateProgress('applying', 'Applying fixes...');
+
+                  // Apply fixed files
+                  if (fixResponse.files && fixResponse.files.length > 0) {
+                    for (const file of fixResponse.files) {
+                      const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
+                      filesRef.current[normalizedPath] = file.content;
+                    }
+                    if (onFilesGenerated) {
+                      await onFilesGenerated(fixResponse.files);
+                    }
+                  }
+
+                  // Apply fixed edits
+                  if (fixResponse.edits && fixResponse.edits.length > 0 && onEditsGenerated && readFile) {
+                    await onEditsGenerated(fixResponse.edits, async (path: string) => {
+                      return await readFile(path);
+                    });
+                    // Update cache with edited files
+                    for (const edit of fixResponse.edits) {
+                      const normalizedPath = edit.file.startsWith('/') ? edit.file : `/${edit.file}`;
+                      try {
+                        const updatedContent = await readFile(normalizedPath);
+                        filesRef.current[normalizedPath] = updatedContent;
+                      } catch {
+                        // File might not exist
+                      }
+                    }
+                  }
+
+                  // Re-validate
+                  updateProgress('validating', `Verifying fix ${autoFixAttempts}...`);
+                  const revalidateOutput = await runTypeCheck();
+                  const revalidateResult = validateCode(revalidateOutput);
+
+                  if (revalidateResult.success) {
+                    currentErrors = [];
+                    autoFixSucceeded = true;
+                    addMessage({
+                      role: 'system',
+                      content: `Auto-fixed ${validationErrors.length} error${validationErrors.length > 1 ? 's' : ''} in ${autoFixAttempts} attempt${autoFixAttempts > 1 ? 's' : ''}`,
+                    });
+                  } else {
+                    currentErrors = revalidateResult.errors;
+                    console.log('[Chat] Still have', currentErrors.length, 'errors after fix attempt', autoFixAttempts);
+                  }
+                }
+
+                // If we still have errors after all retries, notify user
+                if (currentErrors.length > 0) {
+                  const errorSummary = currentErrors.slice(0, 3).map(e => `${e.file}:${e.line} - ${e.message}`).join('\n');
+                  addMessage({
+                    role: 'system',
+                    content: `Could not auto-fix all errors after ${maxRetries} attempts. Remaining issues:\n${errorSummary}`,
+                  });
+                }
+              } else {
+                // Errors need user intervention (e.g., missing npm packages)
+                const errorSummary = validationErrors.slice(0, 3).map(e => `${e.file}:${e.line} - ${e.message}`).join('\n');
+                addMessage({
+                  role: 'system',
+                  content: `Some errors need manual intervention:\n${errorSummary}`,
+                });
+              }
+            }
+          } catch (validationErr) {
+            console.warn('[Chat] Validation failed:', validationErr);
+            // Don't fail the whole generation if validation errors
+          }
+        }
+
+        // Record generation outcome for learning system (async, non-blocking)
+        if (projectId) {
+          const durationMs = Date.now() - generationStartTime;
+          const filesChanged = [
+            ...(response.files?.map(f => f.path) || []),
+            ...(response.edits?.map(e => e.file) || []),
+          ];
+
+          recordGenerationOutcome({
+            projectId,
+            prompt,
+            responseMode: response.edits && response.edits.length > 0 ? 'edit' : 'file',
+            filesChanged,
+            durationMs,
+            hadTsErrors: validationErrors.length > 0,
+            hadEslintErrors: eslintErrors.length > 0,
+            errorCount: validationErrors.length + eslintErrors.length,
+            autoFixAttempts,
+            autoFixSucceeded: autoFixAttempts > 0 ? autoFixSucceeded : undefined,
+          }).catch(err => {
+            console.warn('[Chat] Failed to record outcome:', err);
+          });
+        }
+
         // Mark complete briefly before resetting
         updateProgress('complete');
 
@@ -473,7 +640,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         }, 1000);
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress]
+    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries]
   );
 
   return {

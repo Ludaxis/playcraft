@@ -554,12 +554,23 @@ CREATE INDEX idx_chunks_project ON playcraft_code_chunks(project_id);
 
 ## Next Actions
 
-1. [ ] Review and approve this roadmap
-2. [ ] Implement Phase 1 (conversation compaction + hash diffing)
-3. [ ] Test with real sessions to measure improvement
-4. [ ] Decide on Phase 2 priority order
+1. [x] Review and approve this roadmap
+2. [x] Implement Phase 1 (conversation compaction + hash diffing) - DONE
+3. [x] Implement Phase 2 (AST outlines + intent classification) - DONE
+4. [ ] Test with real sessions to measure improvement
 5. [ ] Evaluate embedding providers for Phase 3
+6. [ ] Consider knowledge graph for Phase 4
 
 ---
 
-*This roadmap should be updated as implementation progresses.*
+## Related: Code Generation Improvements
+
+See `CODE_GENERATION_ROADMAP.md` for validation and learning improvements:
+- [x] Error Feedback Loop (TypeScript validation + auto-retry)
+- [x] Code Quality Checks (ESLint validation)
+- [x] Preview Validation (runtime error capture)
+- [x] Learning System (generation outcomes tracking)
+
+---
+
+*Last Updated: January 6, 2026*
