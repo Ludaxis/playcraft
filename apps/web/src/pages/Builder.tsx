@@ -33,6 +33,7 @@ import {
   updateProject,
   updateProjectStatus,
   saveProjectFiles,
+  saveProjectFilesImmediate,
   getProject,
   type PlayCraftProject,
 } from '../lib/projectService';
@@ -419,10 +420,10 @@ export function BuilderPage({
         clearPreviewErrors();
         setPreviewErrors([]);
 
-        // Save immediately after AI generation (important for persistence!)
+        // Save immediately after AI generation (bypasses throttle - critical for persistence!)
         console.log('[Builder] Saving AI-generated files to database:', files.length, 'new files');
         try {
-          await saveProjectFiles(project.id, updatedFiles);
+          await saveProjectFilesImmediate(project.id, updatedFiles);
           console.log('[Builder] AI-generated files saved successfully');
         } catch (err) {
           console.error('[Builder] Failed to save AI-generated files:', err);
@@ -465,10 +466,10 @@ export function BuilderPage({
           clearPreviewErrors();
           setPreviewErrors([]);
 
-          // Save immediately
+          // Save immediately (bypasses throttle - critical for persistence!)
           console.log('[Builder] Saving edited files to database');
           try {
-            await saveProjectFiles(project.id, updatedFiles);
+            await saveProjectFilesImmediate(project.id, updatedFiles);
             console.log('[Builder] Edited files saved successfully');
           } catch (err) {
             console.error('[Builder] Failed to save edited files:', err);
