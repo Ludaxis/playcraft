@@ -115,6 +115,9 @@ export const CodeEditor = memo(function CodeEditor({
       module: monaco.languages.typescript.ModuleKind.ESNext,
       moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       jsx: monaco.languages.typescript.JsxEmit.ReactJSX,
+      // Ensure Monaco accepts our in-memory file names and keeps models in sync
+      allowNonTsExtensions: true,
+      allowArbitraryExtensions: true,
       strict: true,
       esModuleInterop: true,
       allowSyntheticDefaultImports: true,
@@ -151,6 +154,8 @@ export const CodeEditor = memo(function CodeEditor({
   );
 
   const language = getLanguage(filePath);
+  // Use the real file path so Monaco's TS worker treats the model as a real source file
+  const editorPath = filePath || 'untitled.tsx';
 
   if (!filePath) {
     return (
@@ -166,6 +171,7 @@ export const CodeEditor = memo(function CodeEditor({
         height="100%"
         language={language}
         value={content}
+        path={editorPath}
         onChange={handleChange}
         theme="vs-dark"
         onMount={handleEditorMount}
