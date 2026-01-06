@@ -22,6 +22,11 @@ export interface GenerationOutcomeInput {
   warningCount?: number;
   autoFixAttempts?: number;
   autoFixSucceeded?: boolean;
+  // Selection quality metrics
+  filesSelectedForContext?: string[];
+  filesActuallyModified?: string[];
+  selectionAccuracy?: number;
+  missedFiles?: string[];
 }
 
 export interface OutcomeFeedback {
@@ -89,6 +94,11 @@ export async function recordGenerationOutcome(input: GenerationOutcomeInput): Pr
     warning_count: input.warningCount ?? 0,
     auto_fix_attempts: input.autoFixAttempts ?? 0,
     auto_fix_succeeded: input.autoFixSucceeded ?? null,
+    // Selection quality metrics
+    files_selected_for_context: input.filesSelectedForContext || [],
+    files_actually_modified: input.filesActuallyModified || [],
+    selection_accuracy: input.selectionAccuracy ?? null,
+    missed_files: input.missedFiles || [],
   };
 
   const { data, error } = await supabase

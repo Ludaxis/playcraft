@@ -153,6 +153,7 @@ export interface UserSettings {
   chat_suggestions: boolean;
   generation_sound: GenerationSoundOption;
   labs_github_branch_switching: boolean;
+  voyage_api_key: string | null;
   connected_accounts: ConnectedAccounts;
   created_at: string;
   updated_at: string;
@@ -170,6 +171,7 @@ export interface UpdateSettingsInput {
   chat_suggestions?: boolean;
   generation_sound?: GenerationSoundOption;
   labs_github_branch_switching?: boolean;
+  voyage_api_key?: string | null;
   connected_accounts?: ConnectedAccounts;
 }
 

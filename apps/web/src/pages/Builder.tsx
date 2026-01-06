@@ -43,6 +43,9 @@ import {
   generateSessionTitle,
 } from '../lib/chatSessionService';
 import { getUserSettings } from '../lib/settingsService';
+import { indexProjectFiles, getIndexingStatus } from '../lib/embeddingIndexer';
+import { scanProjectForMemory } from '../lib/memoryUpdater';
+import { getProjectMemory } from '../lib/projectMemoryService';
 import type { ChatSession, ConversationMessage } from '../types';
 import type { PreviewError } from '../lib/codeValidator';
 import type { FileSystemTree } from '@webcontainer/api';
@@ -99,6 +102,9 @@ export function BuilderPage({
   const [project, setProject] = useState<PlayCraftProject>(initialProject);
   const [isLoadingProject, setIsLoadingProject] = useState(true);
 
+  // Voyage API key for semantic search
+  const [voyageApiKey, setVoyageApiKey] = useState<string | undefined>();
+
   // Recover initial prompt from localStorage if not provided as prop
   // This handles page refresh case
   const [initialPrompt, setInitialPrompt] = useState<string | null>(() => {
@@ -135,6 +141,68 @@ export function BuilderPage({
     };
     loadProject();
   }, [initialProject.id]);
+
+  // Load Voyage API key from settings for semantic search
+  useEffect(() => {
+    getUserSettings()
+      .then(settings => {
+        if (settings?.voyage_api_key) {
+          setVoyageApiKey(settings.voyage_api_key);
+          console.log('[Builder] Voyage API key loaded for semantic search');
+        }
+      })
+      .catch(err => {
+        console.warn('[Builder] Failed to load settings:', err);
+      });
+  }, []);
+
+  // Trigger initial embedding indexing when project loads and API key is available
+  useEffect(() => {
+    if (!voyageApiKey || !project.id || isLoadingProject) return;
+
+    // Check if project needs indexing
+    getIndexingStatus(project.id)
+      .then(status => {
+        if (status.needsIndexing && project.files) {
+          console.log(`[Builder] Starting background indexing: ${status.pendingFiles} files pending`);
+          indexProjectFiles(project.id, project.files, voyageApiKey)
+            .then(result => {
+              if (result.filesIndexed > 0) {
+                console.log(`[Builder] Indexed ${result.filesIndexed} files, ${result.chunksCreated} chunks`);
+              }
+            })
+            .catch(err => {
+              console.warn('[Builder] Indexing failed:', err);
+            });
+        }
+      })
+      .catch(err => {
+        console.warn('[Builder] Failed to check indexing status:', err);
+      });
+  }, [voyageApiKey, project.id, project.files, isLoadingProject]);
+
+  // Scan project for memory population when project loads
+  useEffect(() => {
+    if (!project.id || isLoadingProject || !project.files) return;
+
+    // Check if project needs memory population
+    getProjectMemory(project.id)
+      .then(memory => {
+        if (!memory || !memory.project_summary) {
+          console.log('[Builder] Starting background memory scan for project');
+          scanProjectForMemory(project.id, project.files)
+            .then(() => {
+              console.log('[Builder] Project memory scan complete');
+            })
+            .catch(err => {
+              console.warn('[Builder] Memory scan failed:', err);
+            });
+        }
+      })
+      .catch(err => {
+        console.warn('[Builder] Failed to check project memory:', err);
+      });
+  }, [project.id, project.files, isLoadingProject]);
 
   // WebContainer state
   const {
@@ -307,6 +375,7 @@ export function BuilderPage({
       runESLint, // Enable ESLint validation
       enableAutoFix: true, // Auto-fix errors after generation
       maxRetries: 3, // Max auto-fix attempts
+      voyageApiKey, // Enable semantic search if API key is available
       onFilesGenerated: async (files) => {
         // Apply files to WebContainer
         await applyGeneratedFiles(files, writeProjectFile);

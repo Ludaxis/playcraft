@@ -372,3 +372,173 @@ export async function updateMemoryFromFileChange(
 
   return changeResult;
 }
+
+// ============================================================================
+// FULL PROJECT SCAN
+// ============================================================================
+
+/**
+ * Scan all project files to populate memory
+ * Called when a project is first loaded and has no memory
+ */
+export async function scanProjectForMemory(
+  projectId: string,
+  files: Record<string, string>
+): Promise<void> {
+  console.log(`[MemoryUpdater] Starting full project scan for ${projectId}`);
+
+  try {
+    // Initialize memory if not exists
+    await initializeProjectMemory(projectId);
+
+    // Get existing memory to check what needs updating
+    const memory = await getProjectMemory(projectId);
+    if (memory?.project_summary) {
+      console.log('[MemoryUpdater] Project already has memory, skipping scan');
+      return;
+    }
+
+    // Filter to code files only
+    const codeFiles = Object.entries(files).filter(([path]) =>
+      /\.(tsx?|jsx?)$/.test(path) && !path.includes('node_modules')
+    );
+
+    if (codeFiles.length === 0) {
+      console.log('[MemoryUpdater] No code files to scan');
+      return;
+    }
+
+    console.log(`[MemoryUpdater] Scanning ${codeFiles.length} code files`);
+
+    // Combine all content for analysis
+    const allContent = codeFiles.map(([, content]) => content).join('\n');
+
+    // 1. Detect game type
+    const gameType = detectGameType(allContent);
+    if (gameType) {
+      console.log(`[MemoryUpdater] Detected game type: ${gameType}`);
+      await updateGameType(projectId, gameType);
+    }
+
+    // 2. Detect tech stack
+    const techStack = detectTechStack(codeFiles.map(([, content]) => ({ content })));
+    if (techStack.length > 0) {
+      console.log(`[MemoryUpdater] Detected tech stack: ${techStack.join(', ')}`);
+      await updateTechStack(projectId, techStack);
+    }
+
+    // 3. Extract entities from all files
+    const allEntities: KeyEntity[] = [];
+    for (const [path, content] of codeFiles) {
+      const entities = extractEntities(path, content);
+      allEntities.push(...entities);
+    }
+
+    // Deduplicate and limit entities
+    const uniqueEntities = deduplicateEntities(allEntities).slice(0, 50);
+    console.log(`[MemoryUpdater] Found ${uniqueEntities.length} unique entities`);
+
+    // Add entities in batch
+    for (const entity of uniqueEntities) {
+      await addKeyEntity(projectId, entity);
+    }
+
+    // 4. Set initial file importance based on file type/location
+    const importantFiles: string[] = [];
+    for (const [path] of codeFiles) {
+      // Prioritize main pages and game components
+      if (
+        path.includes('/pages/') ||
+        path.includes('/components/game') ||
+        path.includes('Index.tsx') ||
+        path.includes('Game')
+      ) {
+        importantFiles.push(path);
+      }
+    }
+    if (importantFiles.length > 0) {
+      await updateFileImportance(projectId, importantFiles);
+    }
+
+    // 5. Generate initial project summary
+    const summary = generateProjectSummary(gameType, techStack, uniqueEntities);
+    if (summary) {
+      console.log(`[MemoryUpdater] Generated summary: ${summary}`);
+      await updateProjectSummary(projectId, summary);
+    }
+
+    console.log('[MemoryUpdater] Project scan complete');
+  } catch (error) {
+    console.error('[MemoryUpdater] Scan failed:', error);
+  }
+}
+
+/**
+ * Deduplicate entities by name
+ */
+function deduplicateEntities(entities: KeyEntity[]): KeyEntity[] {
+  const seen = new Set<string>();
+  return entities.filter((entity) => {
+    const key = `${entity.name}:${entity.type}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+/**
+ * Generate a project summary from detected info
+ */
+function generateProjectSummary(
+  gameType: string | null,
+  techStack: string[],
+  entities: KeyEntity[]
+): string | null {
+  const parts: string[] = [];
+
+  if (gameType) {
+    const gameTypeNames: Record<string, string> = {
+      snake: 'Snake game',
+      platformer: 'Platformer game',
+      match3: 'Match-3 puzzle game',
+      tetris: 'Tetris-style game',
+      pong: 'Pong game',
+      breakout: 'Breakout game',
+      shooter: 'Shooter game',
+      flappy: 'Flappy Bird-style game',
+      memory: 'Memory card game',
+      tictactoe: 'Tic-Tac-Toe game',
+      chess: 'Chess game',
+      sudoku: 'Sudoku puzzle',
+      '2048': '2048 puzzle game',
+      'tower-defense': 'Tower defense game',
+      idle: 'Idle/clicker game',
+      rpg: 'RPG game',
+      racing: 'Racing game',
+      word: 'Word game',
+      quiz: 'Quiz game',
+    };
+    parts.push(gameTypeNames[gameType] || `${gameType} game`);
+  } else {
+    parts.push('Game project');
+  }
+
+  // Add notable tech
+  const notableTech = techStack.filter((t) =>
+    ['canvas', 'three.js', 'websocket', 'audio', 'framer-motion'].includes(t)
+  );
+  if (notableTech.length > 0) {
+    parts.push(`using ${notableTech.join(', ')}`);
+  }
+
+  // Add main components
+  const components = entities
+    .filter((e) => e.type === 'component')
+    .slice(0, 3)
+    .map((e) => e.name);
+  if (components.length > 0) {
+    parts.push(`with ${components.join(', ')}`);
+  }
+
+  return parts.length > 0 ? parts.join(' ') : null;
+}

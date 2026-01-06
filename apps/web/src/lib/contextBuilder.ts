@@ -8,6 +8,9 @@
 
 import { getProjectFileHashes, getImportGraph } from './fileHashService';
 import { getFileContentOrOutline } from './astOutlineService';
+import { semanticCodeSearch } from './embeddingService';
+import { enhanceQueryForSearch } from './queryEnhancer';
+import { getAdaptiveWeights } from './adaptiveWeights';
 
 // ============================================================================
 // TYPES
@@ -59,13 +62,51 @@ export interface ContextPackage {
 
   // Context mode used
   contextMode: 'full' | 'minimal' | 'outline';
+
+  // Classification info (for learning/analytics)
+  classification?: {
+    intentType: IntentAction;
+    contextMode: 'full' | 'minimal' | 'outline';
+    usedSemanticSearch: boolean;
+    confidence: number;
+  };
+}
+
+export interface HybridRetrievalOptions {
+  /** Enable semantic search using embeddings */
+  enableSemanticSearch?: boolean;
+  /** Voyage AI API key for embeddings */
+  voyageApiKey?: string;
+  /** Weight for semantic similarity score (0-1) */
+  semanticWeight?: number;
+  /** Weight for keyword/path matching score (0-1) */
+  keywordWeight?: number;
+  /** Weight for recency score (0-1) */
+  recencyWeight?: number;
+  /** Weight for importance score (0-1) */
+  importanceWeight?: number;
+  /** Minimum similarity threshold for semantic matches */
+  similarityThreshold?: number;
 }
 
 interface FileScore {
   path: string;
   score: number;
   reasons: string[];
+  semanticScore?: number; // Score from embedding similarity
+  keywordScore?: number; // Score from keyword matching
+  recencyScore?: number; // Score from modification time
+  importanceScore?: number; // Score from file importance
 }
+
+// Default weights for hybrid retrieval
+const DEFAULT_HYBRID_WEIGHTS = {
+  semanticWeight: 0.4,
+  keywordWeight: 0.2,
+  recencyWeight: 0.25,
+  importanceWeight: 0.15,
+  similarityThreshold: 0.4,
+};
 
 // ============================================================================
 // CONSTANTS
@@ -382,11 +423,149 @@ function normalizeImportPath(fromFile: string, importPath: string): string {
 }
 
 // ============================================================================
+// HYBRID RETRIEVAL
+// ============================================================================
+
+/**
+ * Perform hybrid retrieval combining semantic search with keyword matching
+ *
+ * This function:
+ * 1. Runs semantic search on the query to find relevant code chunks
+ * 2. Maps chunk relevance back to files
+ * 3. Combines with keyword/path scores
+ * 4. Returns weighted final scores
+ */
+async function hybridRetrieve(
+  projectId: string,
+  prompt: string,
+  fileScores: FileScore[],
+  options: HybridRetrievalOptions,
+  selectedFile?: string,
+  changedFiles?: string[]
+): Promise<FileScore[]> {
+  const {
+    voyageApiKey,
+    similarityThreshold = DEFAULT_HYBRID_WEIGHTS.similarityThreshold,
+  } = options;
+
+  if (!voyageApiKey) {
+    console.log('[HybridRetrieval] No Voyage API key, using keyword-only scoring');
+    return fileScores;
+  }
+
+  try {
+    // Get adaptive weights based on past performance
+    const { weights: adaptiveWeights, confidence } = await getAdaptiveWeights(projectId);
+    const {
+      semanticWeight,
+      keywordWeight,
+      recencyWeight,
+      importanceWeight,
+    } = adaptiveWeights;
+
+    console.log(`[HybridRetrieval] Using adaptive weights (confidence: ${(confidence * 100).toFixed(0)}%): semantic=${semanticWeight}, keyword=${keywordWeight}, recency=${recencyWeight}, importance=${importanceWeight}`);
+
+    // Enhance query for better semantic search
+    const enhancedQuery = enhanceQueryForSearch(prompt, selectedFile, changedFiles);
+    console.log(`[HybridRetrieval] Enhanced query: "${enhancedQuery.slice(0, 100)}..."`);
+
+    // Perform semantic search with enhanced query
+    console.log('[HybridRetrieval] Running semantic search...');
+    const similarChunks = await semanticCodeSearch(
+      projectId,
+      enhancedQuery,
+      voyageApiKey,
+      { limit: 10, similarityThreshold }
+    );
+
+    if (similarChunks.length === 0) {
+      console.log('[HybridRetrieval] No semantic matches found');
+      return fileScores;
+    }
+
+    console.log(`[HybridRetrieval] Found ${similarChunks.length} semantic matches`);
+
+    // Map chunk similarities to files (aggregate by file)
+    const fileSemanticScores = new Map<string, number>();
+    for (const chunk of similarChunks) {
+      const existing = fileSemanticScores.get(chunk.filePath) || 0;
+      // Take the max similarity for each file
+      fileSemanticScores.set(chunk.filePath, Math.max(existing, chunk.similarity));
+    }
+
+    // Normalize existing scores to 0-1 range
+    const maxKeywordScore = Math.max(...fileScores.map(s => s.score), 1);
+
+    // Combine scores with weights
+    const enhancedScores: FileScore[] = fileScores.map(fileScore => {
+      const normalizedKeywordScore = fileScore.score / maxKeywordScore;
+      const semanticScore = fileSemanticScores.get(fileScore.path) || 0;
+
+      // Combine with weights
+      const combinedScore =
+        semanticScore * semanticWeight +
+        normalizedKeywordScore * keywordWeight +
+        (fileScore.reasons.includes('recently modified') ? 1 : 0) * recencyWeight +
+        (fileScore.reasons.includes('high importance') ? 1 : 0) * importanceWeight;
+
+      const enhancedReasons = [...fileScore.reasons];
+      if (semanticScore > 0) {
+        enhancedReasons.push(`semantic: ${(semanticScore * 100).toFixed(0)}%`);
+      }
+
+      return {
+        ...fileScore,
+        score: combinedScore,
+        reasons: enhancedReasons,
+        semanticScore,
+        keywordScore: normalizedKeywordScore,
+      };
+    });
+
+    // Add files that only appeared in semantic search (not in keyword scores)
+    for (const [filePath, similarity] of fileSemanticScores) {
+      if (!enhancedScores.find(s => s.path === filePath)) {
+        enhancedScores.push({
+          path: filePath,
+          score: similarity * semanticWeight,
+          reasons: [`semantic match: ${(similarity * 100).toFixed(0)}%`],
+          semanticScore: similarity,
+          keywordScore: 0,
+        });
+      }
+    }
+
+    // Sort by combined score
+    enhancedScores.sort((a, b) => b.score - a.score);
+
+    console.log('[HybridRetrieval] Top files:', enhancedScores.slice(0, 5).map(s =>
+      `${s.path.split('/').pop()} (${(s.score * 100).toFixed(0)}%)`
+    ).join(', '));
+
+    return enhancedScores;
+  } catch (error) {
+    console.error('[HybridRetrieval] Error:', error);
+    // Fallback to keyword-only scores
+    return fileScores;
+  }
+}
+
+// ============================================================================
 // CONTEXT BUILDING
 // ============================================================================
 
 /**
  * Build a smart context package for AI request
+ *
+ * @param projectId - The project ID
+ * @param prompt - User's prompt/request
+ * @param files - All project files (path -> content)
+ * @param selectedFile - Currently selected file in editor
+ * @param conversationHistory - Recent conversation messages
+ * @param changedFiles - Files that changed since last request
+ * @param projectMemory - Project memory (summary, entities, etc.)
+ * @param conversationSummaries - Summaries of older conversation
+ * @param hybridOptions - Options for hybrid retrieval (optional)
  */
 export async function buildContext(
   projectId: string,
@@ -396,7 +575,8 @@ export async function buildContext(
   conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
   changedFiles: string[],
   projectMemory: ProjectMemory | null,
-  conversationSummaries: ConversationSummary[]
+  conversationSummaries: ConversationSummary[],
+  hybridOptions?: HybridRetrievalOptions
 ): Promise<ContextPackage> {
   // Analyze user intent
   const intent = analyzeUserIntent(prompt);
@@ -421,8 +601,8 @@ export async function buildContext(
   // ============================================
   const useOutlines = intent.action === 'style' || intent.action === 'explain';
 
-  // Score all files
-  const fileScores = await scoreFiles(
+  // Score all files with keyword matching
+  let fileScores = await scoreFiles(
     projectId,
     files,
     selectedFile,
@@ -430,6 +610,23 @@ export async function buildContext(
     intent,
     projectMemory
   );
+
+  // ============================================
+  // HYBRID RETRIEVAL (when enabled)
+  // ============================================
+  let usedSemanticSearch = false;
+  if (hybridOptions?.enableSemanticSearch && hybridOptions.voyageApiKey) {
+    console.log('[ContextBuilder] Using hybrid retrieval with semantic search');
+    fileScores = await hybridRetrieve(
+      projectId,
+      prompt,
+      fileScores,
+      hybridOptions,
+      selectedFile,
+      changedFiles
+    );
+    usedSemanticSearch = true;
+  }
 
   // Select files within token budget
   const relevantFiles: RelevantFile[] = [];
@@ -517,7 +714,7 @@ export async function buildContext(
   const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + 500;
 
   const contextMode = useOutlines ? 'outline' : 'full';
-  console.log(`[ContextBuilder] Built ${contextMode} context: ${relevantFiles.length} files, ~${totalTokens} tokens`);
+  console.log(`[ContextBuilder] Built ${contextMode} context: ${relevantFiles.length} files, ~${totalTokens} tokens${usedSemanticSearch ? ' (with semantic search)' : ''}`);
 
   return {
     projectMemory,
@@ -528,6 +725,12 @@ export async function buildContext(
     changedSinceLastRequest: changedFiles,
     fileTree,
     estimatedTokens: totalTokens,
+    classification: {
+      intentType: intent.action,
+      contextMode,
+      usedSemanticSearch,
+      confidence: intent.confidence,
+    },
   };
 }
 
@@ -582,6 +785,12 @@ function buildMinimalContextInternal(
     } : null,
     conversationSummaries: [], // Skip summaries for minimal
     recentMessages,
+    classification: {
+      intentType: 'tweak' as IntentAction,
+      contextMode: 'minimal' as const,
+      usedSemanticSearch: false,
+      confidence: 0.9,
+    },
     relevantFiles,
     changedSinceLastRequest: [],
     fileTree: [], // Skip file tree for minimal

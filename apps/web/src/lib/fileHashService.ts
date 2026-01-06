@@ -51,6 +51,19 @@ export async function computeHash(content: string): Promise<string> {
 }
 
 /**
+ * Synchronous hash function using djb2 algorithm
+ * Use for non-critical fast hashing (e.g., code chunker)
+ */
+export function computeHashSync(content: string): string {
+  let hash = 5381;
+  for (let i = 0; i < content.length; i++) {
+    hash = ((hash << 5) + hash) ^ content.charCodeAt(i);
+  }
+  // Convert to unsigned 32-bit integer and then to hex
+  return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+/**
  * Analyze a file to extract type, exports, and imports
  */
 function analyzeFile(path: string, content: string): FileAnalysis {

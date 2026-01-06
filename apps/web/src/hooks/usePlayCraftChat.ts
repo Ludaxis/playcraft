@@ -19,6 +19,7 @@ import {
   type CodeError,
 } from '../lib/codeValidator';
 import { recordGenerationOutcome } from '../lib/outcomeService';
+import { indexProjectFiles } from '../lib/embeddingIndexer';
 import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
@@ -100,6 +101,7 @@ interface UsePlayCraftChatOptions {
   runESLint?: () => Promise<string>; // Run ESLint, return JSON output
   enableAutoFix?: boolean; // Enable automatic error fixing (default: true)
   maxRetries?: number; // Max auto-fix attempts (default: 3)
+  voyageApiKey?: string; // Voyage AI API key for semantic search
 }
 
 export interface UsePlayCraftChatReturn {
@@ -158,6 +160,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     runESLint,
     enableAutoFix = true,
     maxRetries = 3,
+    voyageApiKey,
   } = options;
 
   // Determine if we should use smart context
@@ -305,7 +308,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             messages.map(m => ({ role: m.role, content: m.content }))
           );
 
-          // Build smart context package
+          // Build smart context package with optional semantic search
           const contextPackage = await buildContext(
             projectId,
             prompt,
@@ -319,7 +322,12 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
               tasks_completed: [],
               files_modified: [],
               sequence_number: i,
-            }))
+            })),
+            // Enable hybrid retrieval if Voyage API key is available
+            voyageApiKey ? {
+              enableSemanticSearch: true,
+              voyageApiKey,
+            } : undefined
           );
 
           // Log context efficiency
@@ -346,6 +354,24 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           updateMemoryFromResponse(projectId, prompt, response, selectedFile).catch(err => {
             console.warn('[usePlayCraftChat] Failed to update memory:', err);
           });
+
+          // Index new/modified files for semantic search (background)
+          if (voyageApiKey && response.files?.length) {
+            const filesToIndex = response.files.reduce((acc, f) => {
+              acc[f.path] = f.content;
+              return acc;
+            }, {} as Record<string, string>);
+
+            indexProjectFiles(projectId, filesToIndex, voyageApiKey)
+              .then(result => {
+                if (result.chunksCreated > 0) {
+                  console.log(`[usePlayCraftChat] Indexed ${result.filesIndexed} files, ${result.chunksCreated} chunks`);
+                }
+              })
+              .catch(err => {
+                console.warn('[usePlayCraftChat] Failed to index files:', err);
+              });
+          }
 
           // Trigger background summarization
           summarizeInBackground(
@@ -575,6 +601,15 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             ...(response.edits?.map(e => e.file) || []),
           ];
 
+          // Calculate selection quality metrics
+          const filesSelectedForContext = contextPackage?.relevantFiles.map(f => f.path) || [];
+          const filesActuallyModified = filesChanged;
+          const hitCount = filesActuallyModified.filter(f => filesSelectedForContext.includes(f)).length;
+          const selectionAccuracy = filesActuallyModified.length > 0
+            ? hitCount / filesActuallyModified.length
+            : 1;
+          const missedFiles = filesActuallyModified.filter(f => !filesSelectedForContext.includes(f));
+
           recordGenerationOutcome({
             projectId,
             prompt,
@@ -586,6 +621,11 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             errorCount: validationErrors.length + eslintErrors.length,
             autoFixAttempts,
             autoFixSucceeded: autoFixAttempts > 0 ? autoFixSucceeded : undefined,
+            // Selection quality metrics
+            filesSelectedForContext,
+            filesActuallyModified,
+            selectionAccuracy,
+            missedFiles,
           }).catch(err => {
             console.warn('[Chat] Failed to record outcome:', err);
           });

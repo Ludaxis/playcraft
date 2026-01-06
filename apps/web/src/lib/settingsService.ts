@@ -23,6 +23,9 @@ export interface UserSettings {
   // Labs features
   labs_github_branch_switching: boolean;
 
+  // API Keys (optional, for enhanced features)
+  voyage_api_key: string | null;
+
   // Connected accounts
   connected_accounts: {
     google?: { email: string; connected_at: string };
@@ -45,6 +48,7 @@ export interface UpdateSettingsInput {
   chat_suggestions?: boolean;
   generation_sound?: 'first' | 'always' | 'never';
   labs_github_branch_switching?: boolean;
+  voyage_api_key?: string | null;
   connected_accounts?: UserSettings['connected_accounts'];
 }
 
