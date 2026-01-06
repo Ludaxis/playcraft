@@ -555,6 +555,10 @@ async function callClaudeOrchestrator(
   const fullContext = contextParts.join('\n');
 
   try {
+    // Add timeout to prevent edge function from hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -563,14 +567,17 @@ async function callClaudeOrchestrator(
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-3-5-sonnet-latest',
         max_tokens: 2000,
         system: CLAUDE_ORCHESTRATOR_PROMPT,
         messages: [
           { role: 'user', content: fullContext }
         ],
       }),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const duration = logger.endTimer('claudeOrchestrator');
 
@@ -675,7 +682,7 @@ OUTPUT FORMAT (FILE MODE):
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -5,7 +5,7 @@ import {
   type GenerateRequest,
   type ContextAwareRequest,
 } from '../lib/playcraftService';
-import { buildContext } from '../lib/contextBuilder';
+import { buildContext, type ContextPackage } from '../lib/contextBuilder';
 import type { FileEdit } from '../lib/editApplyService';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
 import { updateMemoryFromResponse } from '../lib/memoryUpdater';
@@ -270,6 +270,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
       try {
         let response;
+        let contextPackage: ContextPackage | undefined;
 
         // Use smart context if enabled and we have a project ID
         if (enableSmartContext && projectId) {
@@ -309,7 +310,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           );
 
           // Build smart context package with optional semantic search
-          const contextPackage = await buildContext(
+          contextPackage = await buildContext(
             projectId,
             prompt,
             currentFiles,
