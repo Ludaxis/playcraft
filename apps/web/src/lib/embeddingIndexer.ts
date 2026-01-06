@@ -21,7 +21,8 @@ import {
   type CodeChunk,
   type FileIndex,
 } from './embeddingService';
-import { computeHashSync } from './fileHashService';
+import { computeHashSync, analyzeFile } from './fileHashService';
+import { getSupabase } from './supabase';
 
 // ============================================
 // Types
@@ -81,6 +82,136 @@ const SKIP_PATTERNS = [
 
 // Maximum files to process in one batch
 const MAX_BATCH_SIZE = 20;
+
+// ============================================
+// Import Path Normalization
+// ============================================
+
+/**
+ * Normalize import path to actual file path
+ * Returns null for external packages (react, lodash, etc.)
+ */
+function normalizeImportPath(fromFile: string, importPath: string): string | null {
+  // Skip external packages (no leading . or @/)
+  if (!importPath.startsWith('.') && !importPath.startsWith('@/')) {
+    return null;
+  }
+
+  // Handle @/ alias
+  if (importPath.startsWith('@/')) {
+    const basePath = '/src' + importPath.substring(1);
+    // Try common extensions
+    return basePath + '.tsx'; // Default to .tsx, will be filtered if doesn't exist
+  }
+
+  // Handle relative imports
+  if (importPath.startsWith('.')) {
+    const dir = fromFile.substring(0, fromFile.lastIndexOf('/'));
+    const parts = dir.split('/').filter(Boolean);
+    const importParts = importPath.split('/');
+
+    for (const part of importParts) {
+      if (part === '.') continue;
+      if (part === '..') {
+        parts.pop();
+      } else {
+        parts.push(part);
+      }
+    }
+
+    const resolvedPath = '/' + parts.join('/');
+    // Try common extensions
+    return resolvedPath + '.tsx'; // Default to .tsx
+  }
+
+  return null;
+}
+
+// ============================================
+// Dependency Storage
+// ============================================
+
+interface FileDependency {
+  projectId: string;
+  fromFile: string;
+  toFile: string;
+  dependencyType: string;
+}
+
+/**
+ * Save file dependencies to database
+ */
+async function saveDependencies(deps: FileDependency[]): Promise<void> {
+  if (deps.length === 0) return;
+
+  const supabase = getSupabase();
+
+  const { error } = await supabase
+    .from('playcraft_file_dependencies')
+    .upsert(
+      deps.map(d => ({
+        project_id: d.projectId,
+        from_file: d.fromFile,
+        to_file: d.toFile,
+        dependency_type: d.dependencyType,
+      })),
+      { onConflict: 'project_id,from_file,to_file' }
+    );
+
+  if (error) {
+    console.error('[Indexer] Error saving dependencies:', error);
+  } else {
+    console.log(`[Indexer] Saved ${deps.length} dependencies`);
+  }
+}
+
+/**
+ * Calculate importance scores based on fan-in (how many files import each file)
+ */
+async function calculateImportanceScores(projectId: string): Promise<void> {
+  const supabase = getSupabase();
+
+  // Count how many files import each file
+  const { data, error } = await supabase
+    .from('playcraft_file_dependencies')
+    .select('to_file')
+    .eq('project_id', projectId);
+
+  if (error || !data || data.length === 0) {
+    console.log('[Indexer] No dependencies to calculate importance from');
+    return;
+  }
+
+  // Count occurrences (fan-in)
+  const fanInCounts = new Map<string, number>();
+  for (const row of data) {
+    const count = fanInCounts.get(row.to_file) || 0;
+    fanInCounts.set(row.to_file, count + 1);
+  }
+
+  // Normalize to 0-1 range
+  const maxFanIn = Math.max(...fanInCounts.values(), 1);
+
+  // Update importance scores in batches
+  const updates: Array<{ filePath: string; importance: number }> = [];
+  for (const [filePath, count] of fanInCounts) {
+    updates.push({
+      filePath,
+      importance: count / maxFanIn,
+    });
+  }
+
+  // Update each file's importance score
+  for (const update of updates) {
+    await supabase
+      .from('playcraft_file_index')
+      .update({ importance_score: update.importance })
+      .eq('project_id', projectId)
+      .eq('file_path', update.filePath);
+  }
+
+  console.log(`[Indexer] Calculated importance scores for ${updates.length} files`);
+}
 
 // ============================================
 // Global Progress Tracking
@@ -202,6 +333,9 @@ export async function indexProjectFiles(
       progress: 0,
     });
 
+    // Collect all dependencies across batches
+    const allDependencies: FileDependency[] = [];
+
     // Process files in batches
     for (let i = 0; i < filesToIndex.length; i += MAX_BATCH_SIZE) {
       const batch = filesToIndex.slice(i, i + MAX_BATCH_SIZE);
@@ -223,8 +357,11 @@ export async function indexProjectFiles(
             progress: Math.round((filesIndexed / filesToIndex.length) * 100),
           });
 
+          // Analyze file for imports/exports
+          const analysis = analyzeFile(filePath, content);
+
           // Process file (chunk it)
-          const { chunks, fileType, exports, lineCount } = processFileForIndexing(
+          const { chunks, lineCount } = processFileForIndexing(
             content,
             filePath,
             projectId
@@ -233,6 +370,19 @@ export async function indexProjectFiles(
           // Add chunks to batch
           batchChunks.push(...chunks);
 
+          // Collect dependencies from imports
+          for (const importPath of analysis.imports) {
+            const normalizedPath = normalizeImportPath(filePath, importPath);
+            if (normalizedPath) {
+              allDependencies.push({
+                projectId,
+                fromFile: filePath,
+                toFile: normalizedPath,
+                dependencyType: 'import',
+              });
+            }
+          }
+
           // Create file index entry
           const contentHash = computeHashSync(content);
           batchFileIndexes.push({
@@ -240,9 +390,9 @@ export async function indexProjectFiles(
             filePath,
             contentHash,
             lineCount,
-            fileType,
-            exports,
-            imports: [], // TODO: Extract imports from AST
+            fileType: analysis.type,
+            exports: analysis.exports,
+            imports: analysis.imports,
             importanceScore: 0,
             chunksCount: chunks.length,
           });
@@ -295,6 +445,14 @@ export async function indexProjectFiles(
         }
       }
     }
+
+    // Save all dependencies to database
+    if (allDependencies.length > 0) {
+      await saveDependencies(allDependencies);
+    }
+
+    // Calculate importance scores based on fan-in
+    await calculateImportanceScores(projectId);
 
     // Update progress to complete
     indexingProgress.set(projectId, {
@@ -355,8 +513,11 @@ export async function indexSingleFile(
     // Delete existing chunks for this file
     await deleteFileChunks(projectId, filePath);
 
-    // Process file
-    const { chunks, fileType, exports, lineCount } = processFileForIndexing(
+    // Analyze file for imports/exports
+    const analysis = analyzeFile(filePath, content);
+
+    // Process file (chunk it)
+    const { chunks, lineCount } = processFileForIndexing(
       content,
       filePath,
       projectId
@@ -378,6 +539,23 @@ export async function indexSingleFile(
     // Save chunks
     await saveCodeChunks(chunks);
 
+    // Collect and save dependencies
+    const dependencies: FileDependency[] = [];
+    for (const importPath of analysis.imports) {
+      const normalizedPath = normalizeImportPath(filePath, importPath);
+      if (normalizedPath) {
+        dependencies.push({
+          projectId,
+          fromFile: filePath,
+          toFile: normalizedPath,
+          dependencyType: 'import',
+        });
+      }
+    }
+    if (dependencies.length > 0) {
+      await saveDependencies(dependencies);
+    }
+
     // Save file index
     const contentHash = computeHashSync(content);
     await saveFileIndex({
@@ -385,9 +563,9 @@ export async function indexSingleFile(
       filePath,
       contentHash,
       lineCount,
-      fileType,
-      exports,
-      imports: [],
+      fileType: analysis.type,
+      exports: analysis.exports,
+      imports: analysis.imports,
       importanceScore: 0,
       chunksCount: chunks.length,
       lastEmbeddedAt: new Date().toISOString(),

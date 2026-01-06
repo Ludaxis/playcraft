@@ -11,6 +11,7 @@ import { getFileContentOrOutline } from './astOutlineService';
 import { semanticCodeSearch } from './embeddingService';
 import { enhanceQueryForSearch } from './queryEnhancer';
 import { getAdaptiveWeights } from './adaptiveWeights';
+import { getSupabase } from './supabase';
 
 // ============================================================================
 // TYPES
@@ -120,7 +121,9 @@ const CHARS_PER_TOKEN = 4; // Approximate characters per token
 const SCORE_MENTIONED_IN_PROMPT = 1.0;
 const SCORE_SELECTED_FILE = 0.9;
 const SCORE_RECENTLY_MODIFIED = 0.8;
+const SCORE_DIRECT_DEPENDENCY = 0.8;    // File is imported by target
 const SCORE_IMPORTED_BY_RELEVANT = 0.7;
+const SCORE_REVERSE_DEPENDENCY = 0.6;   // File imports the target
 const SCORE_MAIN_ENTRY_POINT = 0.6;
 const SCORE_KEYWORD_MATCH = 0.5;
 const SCORE_HIGH_MODIFICATION_COUNT = 0.4;
@@ -132,6 +135,70 @@ const ENTRY_POINT_FILES = [
   '/src/pages/GameplayPage.tsx',
   '/src/App.tsx',
 ];
+
+// ============================================================================
+// DEPENDENCY CONTEXT
+// ============================================================================
+
+interface DependencyContext {
+  imports: string[];      // Files this file imports (dependencies)
+  importers: string[];    // Files that import this file (dependents)
+}
+
+/**
+ * Get dependency context for target files from the database
+ * Returns both direct dependencies and reverse dependents
+ */
+async function getDependencyContext(
+  projectId: string,
+  targetFiles: string[]
+): Promise<Map<string, DependencyContext>> {
+  const result = new Map<string, DependencyContext>();
+
+  if (targetFiles.length === 0) {
+    return result;
+  }
+
+  const supabase = getSupabase();
+
+  for (const filePath of targetFiles) {
+    if (!filePath) continue;
+
+    try {
+      // Get files this file imports (dependencies)
+      const { data: deps } = await supabase
+        .rpc('get_file_dependencies', {
+          p_project_id: projectId,
+          p_file_path: filePath,
+        });
+
+      // Get files that import this file (dependents/importers)
+      const { data: dependents } = await supabase
+        .rpc('get_file_dependents', {
+          p_project_id: projectId,
+          p_file_path: filePath,
+        });
+
+      result.set(filePath, {
+        imports: deps?.map((d: { dependency_file: string }) => d.dependency_file) || [],
+        importers: dependents?.map((d: { dependent_file: string }) => d.dependent_file) || [],
+      });
+    } catch (error) {
+      console.warn(`[ContextBuilder] Error getting dependency context for ${filePath}:`, error);
+      result.set(filePath, { imports: [], importers: [] });
+    }
+  }
+
+  console.log(`[ContextBuilder] Dependency context for ${targetFiles.length} files:`,
+    Array.from(result.entries()).map(([f, ctx]) => ({
+      file: f.split('/').pop(),
+      imports: ctx.imports.length,
+      importers: ctx.importers.length,
+    }))
+  );
+
+  return result;
+}
 
 // ============================================================================
 // INTENT ANALYSIS
@@ -465,6 +532,38 @@ async function hybridRetrieve(
 
     console.log(`[HybridRetrieval] Using adaptive weights (confidence: ${(confidence * 100).toFixed(0)}%): semantic=${semanticWeight}, keyword=${keywordWeight}, recency=${recencyWeight}, importance=${importanceWeight}`);
 
+    // Get dependency context for target files
+    const targetFiles = [selectedFile, ...(changedFiles || [])].filter(Boolean) as string[];
+    const dependencyContext = await getDependencyContext(projectId, targetFiles);
+
+    // Collect all related files from dependencies
+    const relatedByDependency = new Map<string, { boost: number; reason: string }>();
+    for (const [targetFile, ctx] of dependencyContext) {
+      const targetName = targetFile.split('/').pop();
+      // Direct dependencies (files the target imports) - higher boost
+      for (const dep of ctx.imports) {
+        if (!relatedByDependency.has(dep)) {
+          relatedByDependency.set(dep, {
+            boost: SCORE_DIRECT_DEPENDENCY,
+            reason: `dependency of ${targetName}`,
+          });
+        }
+      }
+      // Reverse dependencies (files that import the target) - lower boost
+      for (const importer of ctx.importers) {
+        if (!relatedByDependency.has(importer)) {
+          relatedByDependency.set(importer, {
+            boost: SCORE_REVERSE_DEPENDENCY,
+            reason: `imports ${targetName}`,
+          });
+        }
+      }
+    }
+
+    if (relatedByDependency.size > 0) {
+      console.log(`[HybridRetrieval] Found ${relatedByDependency.size} related files via dependencies`);
+    }
+
     // Enhance query for better semantic search
     const enhancedQuery = enhanceQueryForSearch(prompt, selectedFile, changedFiles);
     console.log(`[HybridRetrieval] Enhanced query: "${enhancedQuery.slice(0, 100)}..."`);
@@ -501,16 +600,24 @@ async function hybridRetrieve(
       const normalizedKeywordScore = fileScore.score / maxKeywordScore;
       const semanticScore = fileSemanticScores.get(fileScore.path) || 0;
 
+      // Check for dependency boost
+      const depInfo = relatedByDependency.get(fileScore.path);
+      const dependencyBoost = depInfo?.boost || 0;
+
       // Combine with weights
       const combinedScore =
         semanticScore * semanticWeight +
         normalizedKeywordScore * keywordWeight +
         (fileScore.reasons.includes('recently modified') ? 1 : 0) * recencyWeight +
-        (fileScore.reasons.includes('high importance') ? 1 : 0) * importanceWeight;
+        (fileScore.reasons.includes('high importance') ? 1 : 0) * importanceWeight +
+        dependencyBoost;
 
       const enhancedReasons = [...fileScore.reasons];
       if (semanticScore > 0) {
         enhancedReasons.push(`semantic: ${(semanticScore * 100).toFixed(0)}%`);
+      }
+      if (depInfo) {
+        enhancedReasons.push(depInfo.reason);
       }
 
       return {
@@ -525,11 +632,30 @@ async function hybridRetrieve(
     // Add files that only appeared in semantic search (not in keyword scores)
     for (const [filePath, similarity] of fileSemanticScores) {
       if (!enhancedScores.find(s => s.path === filePath)) {
+        const depInfo = relatedByDependency.get(filePath);
+        const dependencyBoost = depInfo?.boost || 0;
+        const reasons = [`semantic match: ${(similarity * 100).toFixed(0)}%`];
+        if (depInfo) {
+          reasons.push(depInfo.reason);
+        }
         enhancedScores.push({
           path: filePath,
-          score: similarity * semanticWeight,
-          reasons: [`semantic match: ${(similarity * 100).toFixed(0)}%`],
+          score: similarity * semanticWeight + dependencyBoost,
+          reasons,
           semanticScore: similarity,
+          keywordScore: 0,
+        });
+      }
+    }
+
+    // Add dependency-related files that weren't found by keyword or semantic search
+    for (const [filePath, depInfo] of relatedByDependency) {
+      if (!enhancedScores.find(s => s.path === filePath)) {
+        enhancedScores.push({
+          path: filePath,
+          score: depInfo.boost,
+          reasons: [depInfo.reason],
+          semanticScore: 0,
           keywordScore: 0,
         });
       }

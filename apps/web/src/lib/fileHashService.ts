@@ -29,7 +29,7 @@ export interface FileChangeResult {
   unchanged: string[];
 }
 
-interface FileAnalysis {
+export interface FileAnalysis {
   type: string;
   exports: string[];
   imports: string[];
@@ -66,7 +66,7 @@ export function computeHashSync(content: string): string {
 /**
  * Analyze a file to extract type, exports, and imports
  */
-function analyzeFile(path: string, content: string): FileAnalysis {
+export function analyzeFile(path: string, content: string): FileAnalysis {
   // Determine file type from path
   let type = 'unknown';
   if (path.includes('/pages/')) type = 'page';
