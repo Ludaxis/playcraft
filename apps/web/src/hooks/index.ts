@@ -16,3 +16,9 @@ export type { OnboardingStep, UseOnboardingReturn } from './useOnboarding';
 
 export { usePreviewErrors } from './usePreviewErrors';
 export type { PreviewError } from './usePreviewErrors';
+
+export { useFileChangeTracker } from './useFileChangeTracker';
+export type {
+  UseFileChangeTrackerOptions,
+  UseFileChangeTrackerReturn,
+} from './useFileChangeTracker';

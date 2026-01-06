@@ -25,7 +25,7 @@ import {
 } from '../components/builder';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
 import type { DeviceMode } from '../components/builder/DeviceToggle';
-import { useWebContainer, usePlayCraftChat, usePreviewErrors } from '../hooks';
+import { useWebContainer, usePlayCraftChat, usePreviewErrors, useFileChangeTracker } from '../hooks';
 import { viteStarterTemplate } from '../templates';
 import { applyGeneratedFiles, applyGeneratedEdits } from '../lib/playcraftService';
 import type { FileEdit } from '../lib/editApplyService';
@@ -261,6 +261,21 @@ export function BuilderPage({
   // Track last AI generation for outcome feedback
   const lastAiGenerationRef = useRef<{ files: string[]; timestamp: number } | null>(null);
 
+  // File change tracker for live memory refresh
+  const { trackChange, trackBatchChanges } = useFileChangeTracker({
+    projectId: project.id,
+    voyageApiKey,
+    enableEmbedding: !!voyageApiKey,
+    onHashesUpdated: (paths) => {
+      console.log(`[Builder] File hashes updated: ${paths.length} files`);
+    },
+    onEmbeddingComplete: (path, success) => {
+      if (success) {
+        console.log(`[Builder] Live embedding complete: ${path}`);
+      }
+    },
+  });
+
   // Preview error listener
   const { clearErrors: clearPreviewErrors } = usePreviewErrors({
     onError: (error) => {
@@ -383,11 +398,16 @@ export function BuilderPage({
 
         // Update in-memory file state
         const updatedFiles = { ...projectFiles };
+        const trackedFiles: Array<{ path: string; content: string }> = [];
         for (const file of files) {
           const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
           updatedFiles[normalizedPath] = file.content;
+          trackedFiles.push({ path: normalizedPath, content: file.content });
         }
         setProjectFiles(updatedFiles);
+
+        // Track AI-generated files for live memory refresh
+        trackBatchChanges(trackedFiles, 'ai-generation');
 
         // Track AI-generated files for outcome feedback
         lastAiGenerationRef.current = {
@@ -419,14 +439,21 @@ export function BuilderPage({
           // Update in-memory file state - need to re-read modified files
           const updatedFiles = { ...projectFiles };
           const modifiedPaths = new Set(edits.map(e => e.file.startsWith('/') ? e.file : `/${e.file}`));
+          const trackedFiles: Array<{ path: string; content: string }> = [];
 
           for (const path of modifiedPaths) {
             const content = await readProjectFile(path);
             if (content) {
               updatedFiles[path] = content;
+              trackedFiles.push({ path, content });
             }
           }
           setProjectFiles(updatedFiles);
+
+          // Track AI-edited files for live memory refresh
+          if (trackedFiles.length > 0) {
+            trackBatchChanges(trackedFiles, 'ai-edit');
+          }
 
           // Track AI-edited files for outcome feedback
           lastAiGenerationRef.current = {
@@ -687,6 +714,9 @@ export function BuilderPage({
             return updated;
           });
 
+          // Track file change for live memory refresh
+          trackChange(normalizedPath, newContent, 'user-edit');
+
           // Track user edits to AI-generated files for outcome feedback
           if (lastAiGenerationRef.current) {
             const { files: aiFiles, timestamp } = lastAiGenerationRef.current;
@@ -705,7 +735,7 @@ export function BuilderPage({
         }
       }
     },
-    [selectedFile, writeProjectFile, debouncedSaveFiles]
+    [selectedFile, writeProjectFile, debouncedSaveFiles, trackChange]
   );
 
   // Handle send message from input

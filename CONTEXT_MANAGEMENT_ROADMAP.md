@@ -55,7 +55,7 @@
 **Goal:** Improve context accuracy with dependency awareness and persistent task tracking
 
 ### 4.1 Dependency-First Retrieval ⭐ HIGH PRIORITY
-**Status:** Not Started
+**Status:** ✅ Complete (Jan 6, 2026)
 **Effort:** 8-12 hours
 **Impact:** Reduces "missed files" by 40%+
 
@@ -155,31 +155,23 @@ export async function getTaskLedger(
 ---
 
 ### 4.3 Live Memory Refresh
-**Status:** Not Started
+**Status:** ✅ Complete (Jan 6, 2026)
 **Effort:** 4-6 hours
 **Impact:** Keeps model's view current with user edits
 
-Currently only AI-generated edits trigger memory updates. User edits are invisible.
+~~Currently only AI-generated edits trigger memory updates. User edits are invisible.~~
 
 **Implementation:**
-```typescript
-// In useWebContainer.ts or Builder.tsx
-
-// Hook file save events from Monaco editor
-onFileSave(async (path: string, content: string) => {
-  // Update memory
-  await updateMemoryFromFileChange(projectId, path, content);
-
-  // Re-index for semantic search (debounced)
-  await indexSingleFile(projectId, path, content, voyageApiKey);
-});
-
-// Background job for stale re-indexing
-async function reindexStaleFiles(projectId: string): Promise<void> {
-  // Find files where content_hash differs from last indexed
-  // Re-embed in background
-}
-```
+- Created `fileChangeTracker.ts` - Service for debounced file change tracking
+- Created `useFileChangeTracker.ts` - React hook for easy integration
+- Integrated into `Builder.tsx`:
+  - Tracks user edits (source: 'user-edit')
+  - Tracks AI-generated files (source: 'ai-generation')
+  - Tracks AI edits (source: 'ai-edit')
+- Background processing:
+  - Updates file hashes in database (debounced 500ms)
+  - Queues files for re-embedding using `requestIdleCallback`
+  - Non-blocking to maintain UI responsiveness
 
 ---
 
@@ -446,13 +438,13 @@ Target: 4000-12000 tokens (intent-dependent)
 
 ### Immediate (Phase 4) - Recommended Order
 
-| # | Task | Effort | Impact | Dependencies |
-|---|------|--------|--------|--------------|
-| 1 | **Dependency-first retrieval** | 8-12h | High | Extend indexer + contextBuilder |
-| 2 | **Live memory refresh** | 4-6h | Medium | Hook user edits in Builder |
-| 3 | **Task ledger + delta log** | 6-8h | High | New service + DB migration |
-| 4 | **Adaptive token budgets** | 4-6h | Medium | Update contextBuilder |
-| 5 | **Structured planner output** | 2-4h | Medium | Update Claude prompt |
+| # | Task | Effort | Impact | Status |
+|---|------|--------|--------|--------|
+| 1 | **Dependency-first retrieval** | 8-12h | High | ✅ Complete |
+| 2 | **Live memory refresh** | 4-6h | Medium | ✅ Complete |
+| 3 | **Task ledger + delta log** | 6-8h | High | ⏳ Next |
+| 4 | **Adaptive token budgets** | 4-6h | Medium | Pending |
+| 5 | **Structured planner output** | 2-4h | Medium | Pending |
 
 ### Later (Phase 5)
 
@@ -481,11 +473,14 @@ Target: 4000-12000 tokens (intent-dependent)
 ## Next Actions
 
 1. [x] Phase 1-3 Complete
-2. [ ] **Implement dependency-first retrieval** ← START HERE
-   - Extend `embeddingIndexer.ts` to populate `playcraft_file_dependencies`
-   - Update `contextBuilder.ts` to query dependencies before semantic search
-3. [ ] Add live memory refresh (hook user edits)
-4. [ ] Create task ledger service + DB migration
+2. [x] **Implement dependency-first retrieval** (Jan 6, 2026)
+   - Extended `embeddingIndexer.ts` to populate `playcraft_file_dependencies`
+   - Updated `contextBuilder.ts` to query dependencies before semantic search
+   - Added graduated boosting: direct deps +0.8, reverse deps +0.6
+3. [x] Add live memory refresh (Jan 6, 2026)
+   - Created `fileChangeTracker.ts` + `useFileChangeTracker.ts`
+   - Integrated into `Builder.tsx` for user edits + AI generation
+4. [ ] **Create task ledger service + DB migration** ← START HERE
 5. [ ] Implement adaptive token budgets
 6. [ ] Refine planner output structure
 
@@ -505,4 +500,4 @@ Target: 4000-12000 tokens (intent-dependent)
 
 ---
 
-*Last Updated: January 6, 2026 - Added Phase 4 & 5 roadmap*
+*Last Updated: January 6, 2026 - Completed Tasks 1-2 of Phase 4 (Dependency-first retrieval + Live memory refresh)*
