@@ -248,19 +248,13 @@ export async function deleteProject(id: string): Promise<void> {
     .delete()
     .eq('project_id', id);
 
-  // 4. Delete published game (if any)
-  await supabase
-    .from('playcraft_published_games')
-    .delete()
-    .eq('project_id', id);
-
-  // 5. Delete project files (per-file storage table)
+  // 4. Delete project files (per-file storage table)
   await supabase
     .from('playcraft_project_files')
     .delete()
     .eq('project_id', id);
 
-  // 6. Delete files from Supabase Storage (if project uses storage)
+  // 5. Delete files from Supabase Storage (if project uses storage)
   if (project?.use_storage && project.user_id) {
     try {
       await deleteAllProjectFiles(project.user_id, id);
@@ -275,7 +269,7 @@ export async function deleteProject(id: string): Promise<void> {
     }
   }
 
-  // 7. Finally delete the project itself
+  // 6. Finally delete the project itself
   const { error } = await supabase
     .from('playcraft_projects')
     .delete()

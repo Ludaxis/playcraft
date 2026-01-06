@@ -184,7 +184,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     const messages: Record<GenerationStage, string> = {
       idle: '',
       preparing: 'Preparing context...',
-      analyzing: 'Claude is understanding your request...',
+      analyzing: 'Gemini is analyzing your request...',
       generating: 'Gemini is writing code...',
       processing: 'Processing response...',
       applying: 'Applying changes...',
@@ -341,10 +341,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             `[usePlayCraftChat] Smart context: ${contextPackage.relevantFiles.length} files, ~${contextPackage.estimatedTokens} tokens`
           );
 
-          // Update progress to analyzing (Claude)
+          // Update progress to analyzing (Gemini)
           updateProgress('analyzing', `Analyzing ${contextPackage.relevantFiles.length} files...`);
 
-          // Make context-aware request (Claude + Gemini on server)
+          // Make context-aware request (Gemini on server)
           const request: ContextAwareRequest = {
             prompt,
             projectId,

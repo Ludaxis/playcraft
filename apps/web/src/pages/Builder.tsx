@@ -239,6 +239,7 @@ export function BuilderPage({
   const [hasThreeJs, setHasThreeJs] = useState(project.has_three_js);
   const [isSettingUp, setIsSettingUp] = useState(false);
   const isSettingUpRef = useRef(false); // Synchronous lock to prevent race conditions
+  const projectReadyRef = useRef(false); // Track projectReady for async callbacks
   const [initialPromptProcessed, setInitialPromptProcessed] = useState(false);
   const [creditsDismissed, setCreditsDismissed] = useState(false);
   const [chatPanelTab, setChatPanelTab] = useState<'chat' | 'history'>('chat');
@@ -261,6 +262,9 @@ export function BuilderPage({
 
   // Track last AI generation for outcome feedback
   const lastAiGenerationRef = useRef<{ files: string[]; timestamp: number } | null>(null);
+
+  // Queue for files generated before WebContainer is ready
+  const pendingFilesRef = useRef<Array<{ path: string; content: string }>>([]);
 
   // File change tracker for live memory refresh
   const { trackChange, trackBatchChanges } = useFileChangeTracker({
@@ -293,6 +297,11 @@ export function BuilderPage({
       setProjectFiles(project.files);
     }
   }, [isLoadingProject, project.files]);
+
+  // Keep projectReadyRef in sync with projectReady state
+  useEffect(() => {
+    projectReadyRef.current = projectReady;
+  }, [projectReady]);
 
   // Load chat sessions when project loads
   useEffect(() => {
@@ -393,10 +402,6 @@ export function BuilderPage({
       maxRetries: 3, // Max auto-fix attempts
       voyageApiKey, // Enable semantic search if API key is available
       onFilesGenerated: async (files) => {
-        // Apply files to WebContainer
-        await applyGeneratedFiles(files, writeProjectFile);
-        await refreshFileTree();
-
         // Update in-memory file state
         const updatedFiles = { ...projectFiles };
         const trackedFiles: Array<{ path: string; content: string }> = [];
@@ -407,19 +412,6 @@ export function BuilderPage({
         }
         setProjectFiles(updatedFiles);
 
-        // Track AI-generated files for live memory refresh
-        trackBatchChanges(trackedFiles, 'ai-generation');
-
-        // Track AI-generated files for outcome feedback
-        lastAiGenerationRef.current = {
-          files: files.map(f => f.path.startsWith('/') ? f.path : `/${f.path}`),
-          timestamp: Date.now(),
-        };
-
-        // Clear preview errors when new code is generated
-        clearPreviewErrors();
-        setPreviewErrors([]);
-
         // Save immediately after AI generation (bypasses throttle - critical for persistence!)
         console.log('[Builder] Saving AI-generated files to database:', files.length, 'new files');
         try {
@@ -428,6 +420,31 @@ export function BuilderPage({
         } catch (err) {
           console.error('[Builder] Failed to save AI-generated files:', err);
         }
+
+        // Check if WebContainer is ready to receive files
+        if (projectReadyRef.current) {
+          // Apply files to WebContainer immediately
+          console.log('[Builder] WebContainer ready, applying files immediately');
+          await applyGeneratedFiles(files, writeProjectFile);
+          await refreshFileTree();
+
+          // Track AI-generated files for live memory refresh
+          trackBatchChanges(trackedFiles, 'ai-generation');
+
+          // Clear preview errors when new code is generated
+          clearPreviewErrors();
+          setPreviewErrors([]);
+        } else {
+          // Queue files for later - will be applied when project is ready
+          console.log('[Builder] WebContainer not ready, queuing', files.length, 'files for later');
+          pendingFilesRef.current = [...pendingFilesRef.current, ...trackedFiles];
+        }
+
+        // Track AI-generated files for outcome feedback
+        lastAiGenerationRef.current = {
+          files: files.map(f => f.path.startsWith('/') ? f.path : `/${f.path}`),
+          timestamp: Date.now(),
+        };
       },
       // Handle edit mode (search/replace for small changes)
       onEditsGenerated: async (edits: FileEdit[], readFile: (path: string) => Promise<string | null>) => {
@@ -656,24 +673,61 @@ export function BuilderPage({
     }
   }, [isLoadingProject, project.files, isSettingUp, projectReady, initialPrompt, startProject]);
 
-  // Handle initial prompt from home page - auto-start project
+  // Handle initial prompt from home page - auto-start project AND send prompt in parallel
+  // This runs both setup and AI generation concurrently for better perceived performance
   useEffect(() => {
     if (initialPrompt && !initialPromptProcessed && !isSettingUp && !projectReady) {
       setInitialPromptProcessed(true);
-      startProject();
-    }
-  }, [initialPrompt, initialPromptProcessed, isSettingUp, projectReady, startProject]);
 
-  // Send initial prompt to AI once project is ready
-  useEffect(() => {
-    if (initialPrompt && initialPromptProcessed && projectReady && messages.length <= 1) {
-      sendAiMessage(initialPrompt, undefined);
-      // Clear the stored prompt after sending
-      clearStoredPrompt();
-      // Clear the state to prevent re-sending
-      setInitialPrompt(null);
+      // Start project setup (npm install, etc.)
+      startProject();
+
+      // Send prompt to Gemini immediately - don't wait for setup!
+      // The AI generation (~30s) runs in parallel with npm install (~2min)
+      // Files will be applied once both are complete
+      const hasUserMessage = messages.some(m => m.role === 'user');
+      if (!hasUserMessage) {
+        console.log('[Builder] Sending initial prompt IN PARALLEL with setup:', initialPrompt.substring(0, 50) + '...');
+        sendAiMessage(initialPrompt, undefined);
+        // Clear the stored prompt after sending
+        clearStoredPrompt();
+        // Clear the state to prevent re-sending
+        setInitialPrompt(null);
+      }
     }
-  }, [initialPrompt, initialPromptProcessed, projectReady, messages.length, sendAiMessage]);
+  }, [initialPrompt, initialPromptProcessed, isSettingUp, projectReady, messages, startProject, sendAiMessage]);
+
+  // Apply pending files once WebContainer is ready
+  useEffect(() => {
+    const applyPendingFiles = async () => {
+      if (projectReady && pendingFilesRef.current.length > 0) {
+        console.log('[Builder] Applying', pendingFilesRef.current.length, 'pending files to WebContainer');
+        const filesToApply = pendingFilesRef.current;
+        pendingFilesRef.current = []; // Clear immediately to prevent duplicate processing
+
+        try {
+          // Apply each file to WebContainer
+          for (const file of filesToApply) {
+            await writeProjectFile(file.path, file.content);
+          }
+          await refreshFileTree();
+
+          // Track for memory refresh
+          trackBatchChanges(filesToApply, 'ai-generation');
+
+          // Clear preview errors
+          clearPreviewErrors();
+          setPreviewErrors([]);
+
+          console.log('[Builder] Pending files applied successfully');
+        } catch (err) {
+          console.error('[Builder] Failed to apply pending files:', err);
+        }
+      }
+    };
+
+    applyPendingFiles();
+  }, [projectReady, writeProjectFile, refreshFileTree, trackBatchChanges, clearPreviewErrors]);
 
   // Load file content when selected
   useEffect(() => {
