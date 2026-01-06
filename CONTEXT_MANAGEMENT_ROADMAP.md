@@ -21,12 +21,15 @@
 | Rate Limiting | ✅ Done | `playcraft_rate_limits` table |
 | Credit Tracking | ✅ Done | `playcraft_user_usage` table |
 | Async Job Queue | ✅ Done | `playcraft_generation_jobs` table |
+| Read All Project Files | ✅ Done | `webcontainer.ts` (readAllProjectFiles) |
+| AI Iteration Rules | ✅ Done | Edge function system prompt |
 
 ### What's Still Missing (Future Enhancements)
 | Component | Impact | Priority |
 |-----------|--------|----------|
-| Repository Map (AST outlines) | Sends full code instead of structure | P1 |
-| Minimal Context for Simple Requests | Uses full context for color changes | P1 |
+| Repository Map (AST outlines) | ✅ Done | `astOutlineService.ts` |
+| Minimal Context for Simple Requests | ✅ Done | `contextBuilder.ts` |
+| Improved Intent Classification | ✅ Done | `contextBuilder.ts` |
 | Chunk Embeddings | No semantic search | P2 |
 | Hybrid Retrieval (BM25 + vectors) | Keyword-only matching | P2 |
 | Knowledge Graph | No structural code understanding | P3 |
@@ -35,6 +38,32 @@
 ---
 
 ## Implementation Phases
+
+### Phase 2: Smart Context ✅ COMPLETED (Jan 6, 2026)
+**Goal:** Send structure instead of full code, understand dependencies
+
+#### 2.1 AST Outlines ✅
+**Status:** Implemented in `astOutlineService.ts`
+
+- Extracts condensed structural outlines from TypeScript/React files
+- Reduces tokens by ~80% for large files while preserving essential info
+- Example: 200 lines of code → 15 lines of outline
+
+#### 2.2 Aggressive Minimal Context ✅
+**Status:** Implemented in `contextBuilder.ts`
+
+- Trivial changes (color, size, text) use only 1-2 files
+- Style changes use file outlines instead of full code
+- Token budget reduced from 12000 to 3000 for simple requests
+
+#### 2.3 Intent Classification ✅
+**Status:** Implemented in `contextBuilder.ts`
+
+- 9 intent types: create, modify, debug, explain, add, remove, style, rename, tweak
+- Trivial change detection with confidence scoring
+- Context mode selection: full, minimal, outline
+
+---
 
 ### Phase 1: Quick Wins ✅ COMPLETED
 **Goal:** Stop context overflow and redundant file reads
