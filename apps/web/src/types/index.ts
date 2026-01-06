@@ -223,6 +223,36 @@ export interface GenerateCodeResponse {
   needsThreeJs?: boolean;
 }
 
+// Generation progress states for UX feedback
+export type GenerationStage =
+  | 'idle'
+  | 'preparing'           // Building context, reading files
+  | 'analyzing'           // Claude analyzing request and planning
+  | 'generating'          // Gemini writing code
+  | 'processing'          // Parsing response, preparing files
+  | 'applying'            // Writing files to container
+  | 'complete'
+  | 'error';
+
+export interface GenerationProgress {
+  stage: GenerationStage;
+  message: string;
+  startedAt: number;
+  detail?: string;
+}
+
+// Stage configuration for UI display
+export const GENERATION_STAGES: Record<GenerationStage, { label: string; icon: string; duration?: number }> = {
+  idle: { label: '', icon: '' },
+  preparing: { label: 'Preparing context...', icon: 'folder', duration: 1000 },
+  analyzing: { label: 'Claude is understanding your request...', icon: 'brain', duration: 3000 },
+  generating: { label: 'Gemini is writing code...', icon: 'code', duration: 10000 },
+  processing: { label: 'Processing response...', icon: 'sparkles', duration: 1000 },
+  applying: { label: 'Applying changes...', icon: 'save', duration: 500 },
+  complete: { label: 'Done!', icon: 'check' },
+  error: { label: 'Something went wrong', icon: 'alert' },
+};
+
 // ============================================================================
 // Template Types
 // ============================================================================

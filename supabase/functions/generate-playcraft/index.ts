@@ -427,11 +427,426 @@ interface ContextAwareRequest extends GenerateRequest {
   };
 }
 
+// Edit format for small, targeted changes
+interface FileEdit {
+  file: string;
+  find: string;
+  replace: string;
+}
+
 interface GeneratedResponse {
   message: string;
   files: FileContent[];
+  edits?: FileEdit[]; // For small changes - search/replace blocks
   explanation: string;
   needsThreeJs?: boolean; // Signal to add Three.js template
+  useEditMode?: boolean; // Indicates response uses edit mode
+}
+
+// =============================================================================
+// CLAUDE ORCHESTRATOR - Plans and understands, delegates code to Gemini
+// =============================================================================
+
+interface ClaudePlan {
+  understanding: string;           // What the user wants
+  projectState: string;            // Current state of the project
+  changeType: 'create' | 'modify' | 'fix' | 'style' | 'add_feature';
+  responseMode: 'edit' | 'file';   // Should use edits or full files
+  filesToModify: string[];         // Which files need changes
+  filesToCreate: string[];         // New files to create
+  taskDescription: string;         // Detailed task for Gemini
+  preserveFeatures: string[];      // Features to NOT change
+  specificChanges: string[];       // Exact changes to make
+  warnings: string[];              // Things to be careful about
+}
+
+const CLAUDE_ORCHESTRATOR_PROMPT = `You are the orchestrator for PlayCraft, an AI game builder. Your job is to UNDERSTAND what the user wants and CREATE A PLAN for the code generator.
+
+You do NOT write code. You analyze, plan, and delegate.
+
+Your responsibilities:
+1. UNDERSTAND the user's request in context of their existing project
+2. IDENTIFY what type of change this is (new feature, bug fix, style change, etc.)
+3. DETERMINE which files need to be modified or created
+4. DECIDE if this should use edit mode (small changes) or file mode (large changes)
+5. CREATE a detailed task specification for the code generator
+6. LIST features that must be PRESERVED (not broken by the change)
+
+CRITICAL: You must understand the CURRENT STATE of the project from the files provided.
+- If there's existing game logic, the code generator must KEEP IT
+- If there are existing features, they must be PRESERVED
+- Changes should be MINIMAL and TARGETED
+
+Response format (JSON only):
+{
+  "understanding": "User wants to [what they want] in their [type of game]",
+  "projectState": "Current project is a [game type] with [key features]. Main game file has [X lines] with [key components].",
+  "changeType": "modify",
+  "responseMode": "edit",
+  "filesToModify": ["/src/pages/Index.tsx"],
+  "filesToCreate": [],
+  "taskDescription": "In /src/pages/Index.tsx, change [specific thing]. The current code has [describe relevant code]. Change it to [new behavior]. Keep all other logic intact.",
+  "preserveFeatures": ["game loop", "score tracking", "collision detection"],
+  "specificChanges": ["Change tile rendering from colored divs to emoji characters"],
+  "warnings": ["Do not change the board state management", "Keep the same grid size"]
+}
+
+IMPORTANT:
+- Be SPECIFIC about what to change and what to preserve
+- If it's a simple change (color, text, value), use responseMode: "edit"
+- If it's a complex change (new feature, restructure), use responseMode: "file"
+- Always list the features that must NOT be broken`;
+
+async function callClaudeOrchestrator(
+  prompt: string,
+  contextPackage: ContextAwareRequest['contextPackage'],
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  apiKey: string,
+  logger: Logger
+): Promise<ClaudePlan> {
+  logger.startTimer('claudeOrchestrator');
+
+  // Build context for Claude
+  const contextParts: string[] = [];
+
+  // Project files with full content for understanding
+  if (contextPackage?.relevantFiles && contextPackage.relevantFiles.length > 0) {
+    contextParts.push('=== CURRENT PROJECT FILES ===');
+    for (const file of contextPackage.relevantFiles) {
+      const lineCount = file.content.split('\n').length;
+      contextParts.push(`--- ${file.path} (${lineCount} lines) ---`);
+      contextParts.push(file.content);
+      contextParts.push('');
+    }
+  }
+
+  // Conversation history for context
+  if (conversationHistory.length > 0) {
+    contextParts.push('=== RECENT CONVERSATION ===');
+    for (const msg of conversationHistory.slice(-5)) {
+      contextParts.push(`${msg.role.toUpperCase()}: ${msg.content}`);
+    }
+    contextParts.push('');
+  }
+
+  // Project memory if available
+  if (contextPackage?.projectMemory) {
+    const mem = contextPackage.projectMemory;
+    contextParts.push('=== PROJECT MEMORY ===');
+    if (mem.project_summary) contextParts.push(`Summary: ${mem.project_summary}`);
+    if (mem.game_type) contextParts.push(`Game Type: ${mem.game_type}`);
+    if (mem.completed_tasks.length > 0) {
+      contextParts.push(`Completed: ${mem.completed_tasks.slice(-5).map(t => t.task).join('; ')}`);
+    }
+    contextParts.push('');
+  }
+
+  // All file paths
+  if (contextPackage?.fileTree && contextPackage.fileTree.length > 0) {
+    contextParts.push('=== ALL PROJECT FILES ===');
+    contextParts.push(contextPackage.fileTree.join('\n'));
+    contextParts.push('');
+  }
+
+  // User request
+  contextParts.push('=== USER REQUEST ===');
+  contextParts.push(prompt);
+
+  const fullContext = contextParts.join('\n');
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        system: CLAUDE_ORCHESTRATOR_PROMPT,
+        messages: [
+          { role: 'user', content: fullContext }
+        ],
+      }),
+    });
+
+    const duration = logger.endTimer('claudeOrchestrator');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Claude API error', { status: response.status, error: errorText, durationMs: duration });
+      throw new Error(`Claude API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const responseText = data.content?.[0]?.text || '';
+
+    // Parse JSON response
+    let plan: ClaudePlan;
+    try {
+      // Try to extract JSON from response
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        plan = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No JSON found in response');
+      }
+    } catch {
+      logger.warn('Failed to parse Claude response as JSON, using defaults', { responsePreview: responseText.slice(0, 200) });
+      // Default plan if parsing fails
+      plan = {
+        understanding: prompt,
+        projectState: 'Unknown project state',
+        changeType: 'modify',
+        responseMode: 'file',
+        filesToModify: ['/src/pages/Index.tsx'],
+        filesToCreate: [],
+        taskDescription: prompt,
+        preserveFeatures: [],
+        specificChanges: [prompt],
+        warnings: [],
+      };
+    }
+
+    logger.info('Claude orchestrator completed', {
+      changeType: plan.changeType,
+      responseMode: plan.responseMode,
+      filesToModify: plan.filesToModify.length,
+      durationMs: duration,
+    });
+
+    return plan;
+  } catch (err) {
+    logger.error('Claude orchestrator failed', { error: err instanceof Error ? err.message : 'Unknown' });
+    // Return a basic plan so we can still try Gemini
+    return {
+      understanding: prompt,
+      projectState: 'Failed to analyze',
+      changeType: 'modify',
+      responseMode: 'file',
+      filesToModify: ['/src/pages/Index.tsx'],
+      filesToCreate: [],
+      taskDescription: prompt,
+      preserveFeatures: [],
+      specificChanges: [prompt],
+      warnings: ['Claude analysis failed, proceeding with basic context'],
+    };
+  }
+}
+
+/**
+ * Call Gemini with a plan from Claude orchestrator
+ * This is a simplified code-generation-focused call
+ */
+async function callGeminiWithPlan(
+  planPrompt: string,
+  apiKey: string,
+  responseMode: 'edit' | 'file',
+  logger: Logger
+): Promise<GeneratedResponse> {
+  logger.startTimer('geminiWithPlan');
+
+  const systemPrompt = `You are an expert code generator. Your ONLY job is to write code following the exact instructions given.
+
+RULES:
+1. Follow the task description EXACTLY
+2. Do NOT add features not requested
+3. Do NOT remove features not mentioned
+4. Return ONLY valid JSON
+5. If using edit mode, the "find" string must be an EXACT match from the existing code
+
+${responseMode === 'edit' ? `
+OUTPUT FORMAT (EDIT MODE):
+{
+  "message": "Brief description",
+  "edits": [{ "file": "/path", "find": "exact existing code", "replace": "new code" }],
+  "explanation": "What was changed",
+  "needsThreeJs": false
+}` : `
+OUTPUT FORMAT (FILE MODE):
+{
+  "message": "Brief description",
+  "files": [{ "path": "/path", "content": "complete file content" }],
+  "explanation": "What was changed",
+  "needsThreeJs": false
+}`}`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            { role: 'user', parts: [{ text: planPrompt }] }
+          ],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: {
+            temperature: 0.3, // Lower temperature for more precise code
+            topP: 0.9,
+            maxOutputTokens: 65536,
+            responseMimeType: 'application/json',
+          },
+        }),
+      }
+    );
+
+    const apiDuration = logger.endTimer('geminiWithPlan');
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error('Gemini API error (with plan)', { status: response.status, error: errorText, durationMs: apiDuration });
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!responseText) {
+      logger.error('Empty Gemini response', { durationMs: apiDuration });
+      throw new Error('Empty response from Gemini');
+    }
+
+    // Parse JSON response
+    let parsed;
+    try {
+      parsed = JSON.parse(responseText);
+    } catch {
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsed = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('Failed to parse Gemini response as JSON');
+      }
+    }
+
+    // Handle response format
+    const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
+    const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
+
+    if (!parsed.message || (!hasFiles && !hasEdits)) {
+      throw new Error('Response missing required fields');
+    }
+
+    logger.info('Gemini (with plan) completed', {
+      filesGenerated: hasFiles ? parsed.files.length : 0,
+      editsGenerated: hasEdits ? parsed.edits.length : 0,
+      durationMs: apiDuration,
+    });
+
+    return {
+      message: parsed.message,
+      files: parsed.files || [],
+      edits: parsed.edits,
+      explanation: parsed.explanation || '',
+      needsThreeJs: parsed.needsThreeJs === true,
+      useEditMode: hasEdits && !hasFiles,
+    };
+  } catch (err) {
+    logger.error('Gemini (with plan) failed', { error: err instanceof Error ? err.message : 'Unknown' });
+    throw err;
+  }
+}
+
+/**
+ * Build Gemini prompt using Claude's plan
+ */
+function buildGeminiPromptFromPlan(
+  plan: ClaudePlan,
+  contextPackage: ContextAwareRequest['contextPackage'],
+  hasThreeJs: boolean
+): string {
+  const parts: string[] = [];
+
+  // 1. Task from Claude
+  parts.push(`=== TASK FROM ORCHESTRATOR ===`);
+  parts.push(`Understanding: ${plan.understanding}`);
+  parts.push(`Project State: ${plan.projectState}`);
+  parts.push(`Task: ${plan.taskDescription}`);
+  parts.push('');
+
+  // 2. Specific changes required
+  if (plan.specificChanges.length > 0) {
+    parts.push('SPECIFIC CHANGES TO MAKE:');
+    for (const change of plan.specificChanges) {
+      parts.push(`- ${change}`);
+    }
+    parts.push('');
+  }
+
+  // 3. Features to preserve (CRITICAL)
+  if (plan.preserveFeatures.length > 0) {
+    parts.push('⚠️ FEATURES YOU MUST NOT BREAK ⚠️');
+    for (const feature of plan.preserveFeatures) {
+      parts.push(`- ${feature}`);
+    }
+    parts.push('');
+  }
+
+  // 4. Warnings
+  if (plan.warnings.length > 0) {
+    parts.push('WARNINGS:');
+    for (const warning of plan.warnings) {
+      parts.push(`- ${warning}`);
+    }
+    parts.push('');
+  }
+
+  // 5. Current files to modify
+  if (contextPackage?.relevantFiles && plan.filesToModify.length > 0) {
+    parts.push('=== FILES TO MODIFY ===');
+    for (const filePath of plan.filesToModify) {
+      const file = contextPackage.relevantFiles.find(f => f.path === filePath);
+      if (file) {
+        parts.push(`--- ${file.path} ---`);
+        parts.push(file.content);
+        parts.push('');
+      }
+    }
+  }
+
+  // 6. Response mode instruction
+  if (plan.responseMode === 'edit') {
+    parts.push(`RESPONSE MODE: EDIT
+Use search/replace blocks for this change. Format:
+{
+  "message": "Brief description",
+  "edits": [{ "file": "/path/to/file", "find": "exact code to find", "replace": "new code" }],
+  "explanation": "What was changed",
+  "needsThreeJs": false
+}
+The "find" string must be EXACT match from the existing code.`);
+  } else {
+    parts.push(`RESPONSE MODE: FILE
+Provide complete file content. Format:
+{
+  "message": "Brief description",
+  "files": [{ "path": "/path/to/file", "content": "complete file content" }],
+  "explanation": "What was changed",
+  "needsThreeJs": false
+}`);
+  }
+
+  parts.push('');
+
+  // 7. Three.js status
+  const threeJsContext = hasThreeJs
+    ? 'Three.js is INSTALLED.'
+    : 'Three.js is NOT installed. Set needsThreeJs: true if 3D is needed.';
+  parts.push(`3D STATUS: ${threeJsContext}`);
+
+  // 8. Final instruction
+  parts.push(`
+CRITICAL INSTRUCTIONS:
+1. Implement ONLY what the orchestrator requested
+2. DO NOT change anything not mentioned in the task
+3. PRESERVE all features listed above
+4. Return valid JSON only`);
+
+  return parts.join('\n');
 }
 
 const SYSTEM_PROMPT = `You are an expert game developer working in PlayCraft, an AI-powered game builder.
@@ -505,8 +920,26 @@ CRITICAL RULES:
 6. DO NOT modify main.tsx or App.tsx unless absolutely necessary
 7. For Canvas games, use useRef and useEffect for the canvas element
 
-RESPONSE FORMAT:
-Return ONLY valid JSON with this structure:
+RESPONSE FORMAT - HYBRID EDIT/REPLACE:
+Choose the appropriate format based on change size:
+
+OPTION A: EDIT MODE (for small changes - <10 lines modified)
+Use this for color changes, text updates, value tweaks, simple fixes:
+{
+  "message": "Brief description of what was done",
+  "edits": [
+    {
+      "file": "/src/pages/Index.tsx",
+      "find": "backgroundColor: '#1a1a2e'",
+      "replace": "backgroundColor: '#ff0000'"
+    }
+  ],
+  "explanation": "Detailed explanation",
+  "needsThreeJs": false
+}
+
+OPTION B: FILE MODE (for large changes - new features, structural changes)
+Use this for new components, significant refactors, new files:
 {
   "message": "Brief description of what was done",
   "files": [
@@ -515,9 +948,21 @@ Return ONLY valid JSON with this structure:
       "content": "// Complete file content here"
     }
   ],
-  "explanation": "Detailed explanation of changes and next steps",
+  "explanation": "Detailed explanation",
   "needsThreeJs": false
 }
+
+EDIT MODE RULES:
+- "find" must be an EXACT match of existing code (including whitespace)
+- "find" should include enough context to be unique (2-5 lines usually)
+- Multiple edits can target the same file
+- Use for: color changes, value tweaks, text updates, small fixes
+- DO NOT use for: new components, major structural changes
+
+FILE MODE RULES:
+- Provide COMPLETE file content, not patches
+- Use for: new features, new files, major restructuring
+- Always include full file when changing >30% of the file
 
 Set "needsThreeJs": true ONLY if the game requires 3D graphics (Three.js/R3F).
 For 2D games using Canvas or DOM, set it to false.
@@ -534,7 +979,9 @@ ITERATION RULES (when existing files are provided):
 - When modifying an existing game, preserve ALL existing features unless explicitly asked to remove them
 - Only change the specific aspects requested by the user
 - Keep the same game structure, state management, and component architecture
-- If user asks to "change tiles to emojis", modify ONLY the tile rendering, not the game logic`;
+- If user asks to "change tiles to emojis", modify ONLY the tile rendering, not the game logic
+- PREFER EDIT MODE for small changes (colors, values, text, minor tweaks)
+- Only use FILE MODE when truly necessary (new features, structural changes)`;
 
 
 // Game Shell Template specific prompt
@@ -769,7 +1216,19 @@ MANDATORY RULES:
 6. NEVER rewrite the entire file from scratch
 7. PRESERVE: useEffect hooks, useState calls, game loop, collision detection, scoring, etc.
 
-Your response must be the user's existing code with minimal targeted changes.
+RESPONSE FORMAT CHOICE:
+- For SMALL changes (colors, values, text, simple tweaks): Use EDIT MODE with "edits" array
+- For LARGE changes (new features, structural changes): Use FILE MODE with "files" array
+
+Example EDIT MODE response:
+{
+  "message": "Changed background to red",
+  "edits": [{ "file": "/src/pages/Index.tsx", "find": "bg-gray-900", "replace": "bg-red-900" }],
+  "explanation": "Updated the background color class",
+  "needsThreeJs": false
+}
+
+PREFER EDIT MODE when possible - it's faster and preserves more code.
 Return valid JSON with needsThreeJs boolean.`);
   } else {
     parts.push('This is a NEW project. Generate the complete code. Return valid JSON with needsThreeJs boolean.');
@@ -916,26 +1375,38 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
     parsed = JSON.parse(jsonMatch[0]);
   }
 
-  if (!parsed.message || !Array.isArray(parsed.files)) {
+  // Response can have either files array OR edits array (or both)
+  const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
+  const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
+
+  if (!parsed.message || (!hasFiles && !hasEdits)) {
     logger.error('Gemini response missing required fields', {
       hasMessage: !!parsed.message,
-      hasFiles: Array.isArray(parsed.files),
+      hasFiles,
+      hasEdits,
       durationMs: apiDuration
     });
-    throw new Error('Response missing required fields');
+    throw new Error('Response missing required fields (need message and either files or edits)');
   }
 
+  // Determine response mode
+  const useEditMode = hasEdits && !hasFiles;
+
   logger.info('Gemini API call successful', {
-    filesGenerated: parsed.files.length,
+    filesGenerated: hasFiles ? parsed.files.length : 0,
+    editsGenerated: hasEdits ? parsed.edits.length : 0,
+    useEditMode,
     needsThreeJs: parsed.needsThreeJs === true,
     durationMs: apiDuration
   });
 
   return {
     message: parsed.message,
-    files: parsed.files,
+    files: parsed.files || [],
+    edits: parsed.edits,
     explanation: parsed.explanation || '',
     needsThreeJs: parsed.needsThreeJs === true,
+    useEditMode,
   };
 }
 
@@ -1064,6 +1535,10 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Claude API key for orchestration (optional - falls back to Gemini-only if not set)
+    const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    const useDualModel = !!claudeApiKey;
+
     // ==========================================================================
     // INPUT VALIDATION
     // ==========================================================================
@@ -1190,19 +1665,65 @@ Deno.serve(async (req: Request) => {
     });
 
     // ==========================================================================
-    // GENERATE CODE
+    // GENERATE CODE (Dual-model or Gemini-only)
     // ==========================================================================
-    const generated = await callGemini(
-      prompt,
-      currentFiles,
-      selectedFile,
-      conversationHistory,
-      geminiApiKey,
-      hasThreeJs,
-      templateId,
-      useSmartContext ? contextPackage : undefined,
-      logger
-    );
+    let generated: GeneratedResponse;
+
+    // Use dual-model flow if Claude API key is available AND we have context
+    if (useDualModel && useSmartContext && contextPackage && contextPackage.relevantFiles.length > 0) {
+      logger.info('Using dual-model flow: Claude (orchestrator) + Gemini (code generator)');
+
+      // Step 1: Claude analyzes and plans
+      const plan = await callClaudeOrchestrator(
+        prompt,
+        contextPackage,
+        conversationHistory,
+        claudeApiKey!,
+        logger
+      );
+
+      logger.info('Claude plan received', {
+        changeType: plan.changeType,
+        responseMode: plan.responseMode,
+        filesToModify: plan.filesToModify,
+        preserveFeatures: plan.preserveFeatures.length,
+      });
+
+      // Step 2: Build targeted prompt for Gemini using Claude's plan
+      const geminiPrompt = buildGeminiPromptFromPlan(plan, contextPackage, hasThreeJs);
+
+      // Step 3: Gemini generates code following the plan
+      generated = await callGeminiWithPlan(
+        geminiPrompt,
+        geminiApiKey,
+        plan.responseMode,
+        logger
+      );
+
+      // Include Claude's understanding in the response
+      if (plan.understanding) {
+        generated.explanation = `${plan.understanding}\n\n${generated.explanation || ''}`;
+      }
+    } else {
+      // Fallback: Gemini-only flow
+      if (useDualModel && (!contextPackage || contextPackage.relevantFiles.length === 0)) {
+        logger.info('Skipping Claude orchestrator: no existing files to analyze');
+      } else if (!useDualModel) {
+        logger.info('Using Gemini-only flow (no Claude API key)');
+      }
+
+      generated = await callGemini(
+        prompt,
+        currentFiles,
+        selectedFile,
+        conversationHistory,
+        geminiApiKey,
+        hasThreeJs,
+        templateId,
+        useSmartContext ? contextPackage : undefined,
+        logger
+      );
+    }
 
     // Estimate tokens used (rough estimate: 4 chars per token for output)
     const estimatedTokens = Math.ceil(

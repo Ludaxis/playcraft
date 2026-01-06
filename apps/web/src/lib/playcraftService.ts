@@ -2,6 +2,7 @@ import { getSupabase } from './supabase';
 import { withRetry } from './retry';
 import { logger } from './logger';
 import type { ProjectMemory, RelevantFile } from './contextBuilder';
+import { applyEdits, type FileEdit } from './editApplyService';
 
 interface FileContent {
   path: string;
@@ -11,8 +12,10 @@ interface FileContent {
 export interface GenerateResponse {
   message: string;
   files: FileContent[];
+  edits?: FileEdit[]; // For small changes - search/replace blocks
   explanation: string;
   needsThreeJs?: boolean;
+  useEditMode?: boolean; // Indicates response uses edit mode
 }
 
 // Legacy request format (for backwards compatibility)
@@ -136,7 +139,7 @@ export async function generateCodeWithContext(
 }
 
 /**
- * Apply generated files to the WebContainer
+ * Apply generated files to the WebContainer (full file replacement)
  */
 export async function applyGeneratedFiles(
   files: FileContent[],
@@ -147,4 +150,73 @@ export async function applyGeneratedFiles(
     const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
     await writeFile(normalizedPath, file.content);
   }
+}
+
+/**
+ * Apply generated edits to the WebContainer (search/replace mode)
+ */
+export async function applyGeneratedEdits(
+  edits: FileEdit[],
+  readFile: (path: string) => Promise<string | null>,
+  writeFile: (path: string, content: string) => Promise<void>
+): Promise<{ success: boolean; errors: string[] }> {
+  const result = await applyEdits(edits, readFile, writeFile);
+
+  if (!result.success) {
+    logger.warn('Some edits failed to apply', {
+      component: 'playcraftService',
+      action: 'applyGeneratedEdits',
+      errors: result.errors,
+    });
+  } else {
+    logger.info('Edits applied successfully', {
+      component: 'playcraftService',
+      action: 'applyGeneratedEdits',
+      editCount: edits.length,
+      filesModified: result.results.filter(r => r.success).length,
+    });
+  }
+
+  return {
+    success: result.success,
+    errors: result.errors,
+  };
+}
+
+/**
+ * Apply generated response - handles both files and edits
+ */
+export async function applyGeneratedResponse(
+  response: GenerateResponse,
+  readFile: (path: string) => Promise<string | null>,
+  writeFile: (path: string, content: string) => Promise<void>
+): Promise<{ success: boolean; errors: string[]; mode: 'files' | 'edits' | 'both' }> {
+  const errors: string[] = [];
+  let mode: 'files' | 'edits' | 'both' = 'files';
+
+  // Apply edits if present
+  if (response.edits && response.edits.length > 0) {
+    mode = 'edits';
+    const editResult = await applyGeneratedEdits(response.edits, readFile, writeFile);
+    if (!editResult.success) {
+      errors.push(...editResult.errors);
+    }
+  }
+
+  // Apply files if present
+  if (response.files && response.files.length > 0) {
+    mode = response.edits && response.edits.length > 0 ? 'both' : 'files';
+    try {
+      await applyGeneratedFiles(response.files, writeFile);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to apply files';
+      errors.push(errorMsg);
+    }
+  }
+
+  return {
+    success: errors.length === 0,
+    errors,
+    mode,
+  };
 }

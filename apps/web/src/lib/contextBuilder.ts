@@ -446,31 +446,45 @@ export async function buildContext(
                    intent.action === 'style' ? 3 :
                    intent.action === 'explain' ? 2 : 8;
 
+  // Track if we've included the main game file with full content
+  const mustIncludeFull = new Set([
+    '/src/pages/Index.tsx',
+    '/src/pages/GameplayPage.tsx',
+    selectedFile,
+  ].filter(Boolean));
+
   for (const scored of fileScores) {
     if (scored.score <= 0) continue;
 
     const content = files[scored.path];
+    if (!content) continue;
 
     // Use outline for large files when appropriate
+    // BUT: ALWAYS include full content for main game files (critical for iteration)
     let fileContent: string;
     let isOutline = false;
+    const isMainGameFile = mustIncludeFull.has(scored.path) || scored.score >= 0.9;
 
-    if (useOutlines || content.split('\n').length > 100) {
+    if (!isMainGameFile && (useOutlines || content.split('\n').length > 150)) {
       const result = getFileContentOrOutline(scored.path, content);
       fileContent = result.content;
       isOutline = result.isOutline;
     } else {
+      // Always use full content for main game files
       fileContent = content;
     }
 
     const fileTokens = Math.ceil(fileContent.length / CHARS_PER_TOKEN);
 
-    if (tokenEstimate + fileTokens <= fileTokenBudget) {
+    // For main game files, include even if over budget (critical for iteration)
+    const includeAnyway = isMainGameFile && relevantFiles.length < 3;
+
+    if (tokenEstimate + fileTokens <= fileTokenBudget || includeAnyway) {
       relevantFiles.push({
         path: scored.path,
         content: fileContent,
         relevanceScore: Math.min(scored.score, 1),
-        relevanceReason: scored.reasons.slice(0, 3).join(', ') + (isOutline ? ' [outline]' : ''),
+        relevanceReason: scored.reasons.slice(0, 3).join(', ') + (isOutline ? ' [outline]' : '') + (isMainGameFile ? ' [full]' : ''),
         isOutline,
       });
       tokenEstimate += fileTokens;
@@ -633,6 +647,152 @@ export function getRecommendedContextMode(prompt: string): 'full' | 'minimal' | 
   }
 
   return 'full';
+}
+
+// ============================================================================
+// EDIT MODE CLASSIFICATION
+// ============================================================================
+
+export type ResponseMode = 'edit' | 'file' | 'hybrid';
+
+export interface ResponseModeRecommendation {
+  mode: ResponseMode;
+  confidence: number;
+  reason: string;
+}
+
+/**
+ * Recommend whether AI should use edit mode or file mode for response
+ *
+ * Edit mode (search/replace): Better for small, targeted changes
+ * File mode (full replacement): Better for new features, structural changes
+ */
+export function getRecommendedResponseMode(prompt: string): ResponseModeRecommendation {
+  const intent = analyzeUserIntent(prompt);
+
+  // ============================================
+  // EDIT MODE - Small, targeted changes
+  // ============================================
+  const editModePatterns = [
+    // Color changes
+    /^(change|make|set|update)\s+(?:the\s+)?(?:\w+\s+)?(?:color|colour)/i,
+    /(?:to\s+)?(?:red|blue|green|yellow|purple|orange|pink|white|black|gray|grey|#[0-9a-f]{3,8})\b/i,
+    // Value changes
+    /^(change|set|update|make)\s+(?:the\s+)?(?:speed|size|width|height|delay|duration|timeout|interval)\s+(?:to\s+)?\d/i,
+    // Text/label changes
+    /^(change|update|fix)\s+(?:the\s+)?(?:text|title|label|button\s+text|heading|message)\s+(?:to|from)/i,
+    // Simple CSS tweaks
+    /^(make|change)\s+(?:it|this|the\s+\w+)\s+(bigger|smaller|larger|wider|taller|shorter|bolder|lighter)/i,
+    // Typo fixes
+    /^fix\s+(?:the\s+)?(?:typo|spelling)/i,
+    // Simple visibility
+    /^(show|hide|toggle)\s+(?:the\s+)?/i,
+    // Border/margin/padding tweaks
+    /^(add|remove|change|increase|decrease)\s+(?:the\s+)?(?:border|margin|padding|shadow|radius)/i,
+    // Simple replacements
+    /^replace\s+["']?[^"']+["']?\s+with\s+["']?[^"']+["']?/i,
+  ];
+
+  // Check for edit mode patterns
+  const matchesEditPattern = editModePatterns.some(p => p.test(prompt));
+
+  if (matchesEditPattern || intent.isTrivialChange) {
+    return {
+      mode: 'edit',
+      confidence: 0.9,
+      reason: 'Small, targeted change that can be done with search/replace',
+    };
+  }
+
+  // ============================================
+  // FILE MODE - Structural changes, new features
+  // ============================================
+  const fileModePatterns = [
+    // New features/components
+    /^(add|create|implement|build)\s+(a\s+)?(new\s+)?(?:feature|component|page|hook|function)/i,
+    // Major refactoring
+    /\b(refactor|restructure|reorganize|rewrite|redesign)\b/i,
+    // Adding new game mechanics
+    /\b(add|implement)\s+(?:a\s+)?(?:new\s+)?(?:level|enemy|power-?up|game\s+mode|multiplayer)/i,
+    // Complex state changes
+    /\b(add|implement)\s+(?:state\s+)?(?:management|context|store|reducer)/i,
+    // New screens/pages
+    /\b(add|create)\s+(?:a\s+)?(?:new\s+)?(?:screen|page|view|modal|dialog)/i,
+    // Integration work
+    /\b(integrate|connect|hook\s+up|wire\s+up)\b/i,
+    // Animations (complex)
+    /\b(add|create|implement)\s+(?:complex\s+)?(?:animation|transition|effect)s?\b/i,
+  ];
+
+  const matchesFilePattern = fileModePatterns.some(p => p.test(prompt));
+
+  if (matchesFilePattern || intent.isStructuralChange) {
+    return {
+      mode: 'file',
+      confidence: 0.85,
+      reason: 'Structural change or new feature that needs full file context',
+    };
+  }
+
+  // ============================================
+  // INTENT-BASED CLASSIFICATION
+  // ============================================
+
+  // Actions that prefer edit mode
+  if (intent.action === 'tweak' || intent.action === 'style' || intent.action === 'rename') {
+    return {
+      mode: 'edit',
+      confidence: 0.8,
+      reason: `${intent.action} action typically requires small, localized changes`,
+    };
+  }
+
+  // Actions that prefer file mode
+  if (intent.action === 'create' || intent.action === 'add') {
+    return {
+      mode: 'file',
+      confidence: 0.85,
+      reason: `${intent.action} action typically requires full file replacement`,
+    };
+  }
+
+  // Debug mode - depends on complexity
+  if (intent.action === 'debug') {
+    // Simple fixes can use edit mode, complex bugs need file mode
+    const isSimpleFix = /^fix\s+(?:the\s+)?(?:typo|color|text|label|value|number)/i.test(prompt);
+    return {
+      mode: isSimpleFix ? 'edit' : 'file',
+      confidence: 0.7,
+      reason: isSimpleFix ? 'Simple fix can use edit mode' : 'Complex bug fix needs full context',
+    };
+  }
+
+  // Remove action - can be either depending on scope
+  if (intent.action === 'remove') {
+    const isSmallRemoval = /^remove\s+(?:the\s+)?(?:button|text|label|icon|class|style)/i.test(prompt);
+    return {
+      mode: isSmallRemoval ? 'edit' : 'file',
+      confidence: 0.75,
+      reason: isSmallRemoval ? 'Small removal can use edit mode' : 'Larger removal needs file mode',
+    };
+  }
+
+  // ============================================
+  // DEFAULT - Let AI decide (hybrid)
+  // ============================================
+  return {
+    mode: 'hybrid',
+    confidence: 0.5,
+    reason: 'Ambiguous request - AI will choose appropriate format',
+  };
+}
+
+/**
+ * Check if prompt should trigger edit mode hint in context
+ */
+export function shouldSuggestEditMode(prompt: string): boolean {
+  const recommendation = getRecommendedResponseMode(prompt);
+  return recommendation.mode === 'edit' && recommendation.confidence >= 0.7;
 }
 
 /**

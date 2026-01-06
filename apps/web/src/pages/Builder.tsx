@@ -27,7 +27,8 @@ import type { BuilderViewMode } from '../components/builder/HeaderTabs';
 import type { DeviceMode } from '../components/builder/DeviceToggle';
 import { useWebContainer, usePlayCraftChat } from '../hooks';
 import { viteStarterTemplate } from '../templates';
-import { applyGeneratedFiles } from '../lib/playcraftService';
+import { applyGeneratedFiles, applyGeneratedEdits } from '../lib/playcraftService';
+import type { FileEdit } from '../lib/editApplyService';
 import {
   updateProject,
   updateProjectStatus,
@@ -276,7 +277,7 @@ export function BuilderPage({
   }, [hasThreeJs, runCommand, project.id]);
 
   // AI Chat hook with file generation callback
-  const { messages, isGenerating, sendMessage: sendAiMessage, addSystemMessage } =
+  const { messages, isGenerating, generationProgress, sendMessage: sendAiMessage, addSystemMessage } =
     usePlayCraftChat({
       projectId: project.id,
       readFile: readProjectFile,
@@ -305,6 +306,38 @@ export function BuilderPage({
         } catch (err) {
           console.error('[Builder] Failed to save AI-generated files:', err);
         }
+      },
+      // Handle edit mode (search/replace for small changes)
+      onEditsGenerated: async (edits: FileEdit[], readFile: (path: string) => Promise<string | null>) => {
+        console.log('[Builder] Applying', edits.length, 'edits in edit mode');
+
+        const result = await applyGeneratedEdits(edits, readFile, writeProjectFile);
+        await refreshFileTree();
+
+        if (result.success) {
+          // Update in-memory file state - need to re-read modified files
+          const updatedFiles = { ...projectFiles };
+          const modifiedPaths = new Set(edits.map(e => e.file.startsWith('/') ? e.file : `/${e.file}`));
+
+          for (const path of modifiedPaths) {
+            const content = await readProjectFile(path);
+            if (content) {
+              updatedFiles[path] = content;
+            }
+          }
+          setProjectFiles(updatedFiles);
+
+          // Save immediately
+          console.log('[Builder] Saving edited files to database');
+          try {
+            await saveProjectFiles(project.id, updatedFiles);
+            console.log('[Builder] Edited files saved successfully');
+          } catch (err) {
+            console.error('[Builder] Failed to save edited files:', err);
+          }
+        }
+
+        return result;
       },
     });
 
@@ -771,6 +804,7 @@ export function BuilderPage({
           <ChatMessages
             messages={messages}
             isGenerating={isGenerating}
+            generationProgress={generationProgress}
             projectReady={projectReady}
             isSettingUp={isSettingUp}
             onSuggestionClick={handleChatSuggestionClick}

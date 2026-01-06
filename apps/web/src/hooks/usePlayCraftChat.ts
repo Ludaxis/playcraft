@@ -4,16 +4,19 @@ import {
   generateCodeWithContext,
   type GenerateRequest,
   type ContextAwareRequest,
+  type GenerateResponse,
 } from '../lib/playcraftService';
-import { buildContext } from '../lib/contextBuilder';
+import { buildContext, shouldSuggestEditMode } from '../lib/contextBuilder';
+import type { FileEdit } from '../lib/editApplyService';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
 import { updateMemoryFromResponse } from '../lib/memoryUpdater';
 import { getConversationContext, summarizeInBackground } from '../lib/conversationSummarizer';
 import { detectChanges } from '../lib/fileHashService';
-import type { ChatMessage, NextStep } from '../types';
+import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage } from '../types';
+export type { GenerationStage, GenerationProgress } from '../types';
 
 // Helper to parse AI response and extract features/next steps
 function parseAIResponse(message: string): {
@@ -79,6 +82,7 @@ interface UsePlayCraftChatOptions {
   projectId?: string; // Project ID for context tracking
   templateId?: string; // Template being used
   onFilesGenerated?: (files: Array<{ path: string; content: string }>) => Promise<void>;
+  onEditsGenerated?: (edits: FileEdit[], readFile: (path: string) => Promise<string | null>) => Promise<{ success: boolean; errors: string[] }>;
   onNeedsThreeJs?: () => Promise<void>; // Called when AI requests Three.js
   readFile?: (path: string) => Promise<string>;
   readAllFiles?: () => Promise<Record<string, string>>; // Read all project files
@@ -90,6 +94,7 @@ interface UsePlayCraftChatOptions {
 export interface UsePlayCraftChatReturn {
   messages: ChatMessage[];
   isGenerating: boolean;
+  generationProgress: GenerationProgress | null;
   error: string | null;
   sendMessage: (prompt: string, selectedFile?: string) => Promise<void>;
   clearMessages: () => void;
@@ -131,6 +136,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     projectId,
     templateId,
     onFilesGenerated,
+    onEditsGenerated,
     onNeedsThreeJs,
     readFile,
     readAllFiles,
@@ -147,7 +153,33 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     convertToDisplayMessages(initialMessages || [])
   );
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Helper to update progress stage
+  const updateProgress = useCallback((stage: GenerationStage, detail?: string) => {
+    const messages: Record<GenerationStage, string> = {
+      idle: '',
+      preparing: 'Preparing context...',
+      analyzing: 'Claude is understanding your request...',
+      generating: 'Gemini is writing code...',
+      processing: 'Processing response...',
+      applying: 'Applying changes...',
+      complete: 'Done!',
+      error: 'Something went wrong',
+    };
+
+    if (stage === 'idle') {
+      setGenerationProgress(null);
+    } else {
+      setGenerationProgress({
+        stage,
+        message: messages[stage],
+        startedAt: Date.now(),
+        detail,
+      });
+    }
+  }, []);
 
   // Track if initial messages were provided to avoid re-initialization
   const initializedRef = useRef(false);
@@ -207,6 +239,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
       setError(null);
       setIsGenerating(true);
+      updateProgress('preparing', 'Building context...');
 
       // Add user message
       addMessage({ role: 'user', content: prompt });
@@ -223,6 +256,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           // Try to read all files from WebContainer
           if (readAllFiles) {
             try {
+              updateProgress('preparing', 'Reading project files...');
               const allFiles = await readAllFiles();
               currentFiles = { ...currentFiles, ...allFiles };
             } catch {
@@ -273,7 +307,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             `[usePlayCraftChat] Smart context: ${contextPackage.relevantFiles.length} files, ~${contextPackage.estimatedTokens} tokens`
           );
 
-          // Make context-aware request
+          // Update progress to analyzing (Claude)
+          updateProgress('analyzing', `Analyzing ${contextPackage.relevantFiles.length} files...`);
+
+          // Make context-aware request (Claude + Gemini on server)
           const request: ContextAwareRequest = {
             prompt,
             projectId,
@@ -283,6 +320,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           };
 
           response = await generateCodeWithContext(request);
+          updateProgress('processing', 'Parsing AI response...');
 
           // Update memory from response (background)
           updateMemoryFromResponse(projectId, prompt, response, selectedFile).catch(err => {
@@ -297,6 +335,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           );
         } else {
           // Legacy mode: Use old context system
+          updateProgress('generating');
           const currentFiles: Record<string, string> = { ...filesRef.current };
 
           if (selectedFile && readFile) {
@@ -325,6 +364,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           };
 
           response = await generateCode(request);
+          updateProgress('processing', 'Parsing AI response...');
         }
 
         // Check if AI requested Three.js
@@ -336,16 +376,57 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           await onNeedsThreeJs();
         }
 
-        // Update our file cache
-        for (const file of response.files) {
-          const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
-          filesRef.current[normalizedPath] = file.content;
+        // Track what was applied
+        let filesApplied = 0;
+        let editsApplied = 0;
+
+        // Handle edits (search/replace mode)
+        if (response.edits && response.edits.length > 0 && onEditsGenerated && readFile) {
+          updateProgress('applying', `Applying ${response.edits.length} edit(s)...`);
+          console.log('[Chat] Applying', response.edits.length, 'edits in edit mode');
+          const editResult = await onEditsGenerated(response.edits, async (path: string) => {
+            return await readFile(path);
+          });
+
+          if (editResult.success) {
+            editsApplied = response.edits.length;
+            // Update file cache with edited content - need to re-read from source
+            for (const edit of response.edits) {
+              const normalizedPath = edit.file.startsWith('/') ? edit.file : `/${edit.file}`;
+              try {
+                const updatedContent = await readFile(normalizedPath);
+                filesRef.current[normalizedPath] = updatedContent;
+              } catch {
+                // File might not exist, continue
+              }
+            }
+          } else {
+            console.warn('[Chat] Some edits failed:', editResult.errors);
+            addMessage({
+              role: 'system',
+              content: `Warning: Some edits could not be applied: ${editResult.errors.join(', ')}`,
+            });
+          }
         }
 
-        // Apply files if callback provided
-        if (onFilesGenerated && response.files.length > 0) {
-          await onFilesGenerated(response.files);
+        // Handle full file replacements
+        if (response.files && response.files.length > 0) {
+          updateProgress('applying', `Writing ${response.files.length} file(s)...`);
+          // Update our file cache
+          for (const file of response.files) {
+            const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
+            filesRef.current[normalizedPath] = file.content;
+          }
+
+          // Apply files if callback provided
+          if (onFilesGenerated) {
+            await onFilesGenerated(response.files);
+            filesApplied = response.files.length;
+          }
         }
+
+        // Mark complete briefly before resetting
+        updateProgress('complete');
 
         // Parse the AI response to extract features and next steps
         const fullContent = response.message + (response.explanation ? `\n\n${response.explanation}` : '');
@@ -361,30 +442,44 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         });
         messageCountRef.current++;
 
-        // Add system message about files modified
-        if (response.files.length > 0) {
+        // Add system message about changes made
+        if (filesApplied > 0 || editsApplied > 0) {
+          const parts: string[] = [];
+          if (editsApplied > 0) {
+            parts.push(`${editsApplied} edit${editsApplied > 1 ? 's' : ''}`);
+          }
+          if (filesApplied > 0) {
+            const fileNames = response.files.map((f) => f.path.split('/').pop()).join(', ');
+            parts.push(`${filesApplied} file${filesApplied > 1 ? 's' : ''}: ${fileNames}`);
+          }
           addMessage({
             role: 'system',
-            content: `Updated ${response.files.length} file${response.files.length > 1 ? 's' : ''}: ${response.files.map((f) => f.path.split('/').pop()).join(', ')}`,
+            content: `Applied ${parts.join(' and ')}`,
           });
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to generate code';
         setError(errorMessage);
+        updateProgress('error', errorMessage);
         addMessage({
           role: 'system',
           content: `Error: ${errorMessage}`,
         });
       } finally {
         setIsGenerating(false);
+        // Reset progress after a brief delay to show completion
+        setTimeout(() => {
+          updateProgress('idle');
+        }, 1000);
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs]
+    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress]
   );
 
   return {
     messages,
     isGenerating,
+    generationProgress,
     error,
     sendMessage,
     clearMessages,

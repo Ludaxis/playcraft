@@ -4,14 +4,15 @@
  * Features bullet points, card-style "Next steps" suggestions, and styled messages
  */
 
-import { useEffect, useRef } from 'react';
-import { Loader2, Sparkles, User, Check } from 'lucide-react';
-import type { ChatMessage } from '../../types';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen } from 'lucide-react';
+import type { ChatMessage, GenerationProgress } from '../../types';
 import { NextStepsCards } from './NextStepsCards';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
   isGenerating: boolean;
+  generationProgress: GenerationProgress | null;
   projectReady: boolean;
   isSettingUp: boolean;
   onSuggestionClick?: (prompt: string) => void;
@@ -102,21 +103,95 @@ function MessageBubble({
   );
 }
 
+// Progress indicator component with animated stages
+function GenerationProgressIndicator({ progress }: { progress: GenerationProgress }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  // Update elapsed time every 100ms
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed(Date.now() - progress.startedAt);
+    }, 100);
+    return () => clearInterval(interval);
+  }, [progress.startedAt]);
+
+  // Get icon based on stage
+  const getIcon = () => {
+    switch (progress.stage) {
+      case 'preparing':
+        return <FolderOpen className="h-4 w-4 text-accent animate-pulse" />;
+      case 'analyzing':
+        return <Brain className="h-4 w-4 text-purple-400 animate-pulse" />;
+      case 'generating':
+        return <Code className="h-4 w-4 text-blue-400 animate-pulse" />;
+      case 'processing':
+        return <Sparkles className="h-4 w-4 text-accent animate-pulse" />;
+      case 'applying':
+        return <Save className="h-4 w-4 text-accent animate-pulse" />;
+      case 'complete':
+        return <Check className="h-4 w-4 text-green-400" />;
+      case 'error':
+        return <AlertCircle className="h-4 w-4 text-red-400" />;
+      default:
+        return <Loader2 className="h-4 w-4 animate-spin text-accent" />;
+    }
+  };
+
+  // Format elapsed time
+  const formatElapsed = (ms: number) => {
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 1) return '';
+    if (seconds < 60) return `${seconds}s`;
+    return `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+  };
+
+  const elapsedText = formatElapsed(elapsed);
+
+  return (
+    <div className="flex gap-3">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-secondary">
+        <Sparkles className="h-4 w-4 text-content" />
+      </div>
+      <div className="flex flex-col gap-1 rounded-2xl bg-surface-overlay px-4 py-3">
+        <div className="flex items-center gap-2">
+          {getIcon()}
+          <span className="text-sm text-content-muted">{progress.message}</span>
+          {elapsedText && (
+            <span className="text-xs text-content-subtle">({elapsedText})</span>
+          )}
+        </div>
+        {progress.detail && (
+          <span className="text-xs text-content-subtle ml-6">{progress.detail}</span>
+        )}
+        {/* Progress dots animation */}
+        {progress.stage !== 'complete' && progress.stage !== 'error' && (
+          <div className="flex gap-1 ml-6 mt-1">
+            <div className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ChatMessages({
   messages,
   isGenerating,
+  generationProgress,
   projectReady,
   isSettingUp,
   onSuggestionClick,
 }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages or progress updates
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isGenerating]);
+  }, [messages, isGenerating, generationProgress]);
 
   return (
     <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
@@ -129,8 +204,13 @@ export function ChatMessages({
           />
         ))}
 
-        {/* Generating indicator */}
-        {isGenerating && (
+        {/* Generating indicator with progress stages */}
+        {isGenerating && generationProgress && (
+          <GenerationProgressIndicator progress={generationProgress} />
+        )}
+
+        {/* Fallback generating indicator (no progress available) */}
+        {isGenerating && !generationProgress && (
           <div className="flex gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-secondary">
               <Sparkles className="h-4 w-4 text-content" />
