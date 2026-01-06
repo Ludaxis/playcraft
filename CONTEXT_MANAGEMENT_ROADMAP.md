@@ -8,7 +8,7 @@
 
 ## Current State Assessment
 
-### What PlayCraft Already Has
+### What PlayCraft Has (Completed)
 | Component | Status | Location |
 |-----------|--------|----------|
 | Project Memory (summary, tasks, entities) | ✅ Done | `projectMemoryService.ts` |
@@ -23,345 +23,391 @@
 | Async Job Queue | ✅ Done | `playcraft_generation_jobs` table |
 | Read All Project Files | ✅ Done | `webcontainer.ts` (readAllProjectFiles) |
 | AI Iteration Rules | ✅ Done | Edge function system prompt |
-
-### What's Still Missing (Future Enhancements)
-| Component | Impact | Priority |
-|-----------|--------|----------|
-| Repository Map (AST outlines) | ✅ Done | `astOutlineService.ts` |
+| AST Outlines | ✅ Done | `astOutlineService.ts` |
 | Minimal Context for Simple Requests | ✅ Done | `contextBuilder.ts` |
-| Improved Intent Classification | ✅ Done | `contextBuilder.ts` |
-| Chunk Embeddings | No semantic search | P2 |
-| Hybrid Retrieval (BM25 + vectors) | Keyword-only matching | P2 |
-| Knowledge Graph | No structural code understanding | P3 |
-| Multi-Agent Architecture | Single agent handles all tasks | P3 |
+| Intent Classification (9 types) | ✅ Done | `contextBuilder.ts` |
+| Chunk Embeddings (Voyage AI) | ✅ Done | `embeddingService.ts` |
+| Hybrid Retrieval (semantic + keyword) | ✅ Done | `contextBuilder.ts` |
+| Code Chunking | ✅ Done | `codeChunker.ts` |
+| Embedding Cache | ✅ Done | `embeddingCache.ts` |
+| Query Enhancement | ✅ Done | `queryEnhancer.ts` |
+| Adaptive Weight Learning | ✅ Done | `adaptiveWeights.ts` |
+| Selection Quality Metrics | ✅ Done | `outcomeService.ts` |
+| Full Project Scan on Load | ✅ Done | `memoryUpdater.ts` |
+| Claude Orchestrator + Gemini Executor | ✅ Done | Edge function |
 
 ---
 
-## Implementation Phases
+## Phase Summary
 
-### Phase 2: Smart Context ✅ COMPLETED (Jan 6, 2026)
-**Goal:** Send structure instead of full code, understand dependencies
-
-#### 2.1 AST Outlines ✅
-**Status:** Implemented in `astOutlineService.ts`
-
-- Extracts condensed structural outlines from TypeScript/React files
-- Reduces tokens by ~80% for large files while preserving essential info
-- Example: 200 lines of code → 15 lines of outline
-
-#### 2.2 Aggressive Minimal Context ✅
-**Status:** Implemented in `contextBuilder.ts`
-
-- Trivial changes (color, size, text) use only 1-2 files
-- Style changes use file outlines instead of full code
-- Token budget reduced from 12000 to 3000 for simple requests
-
-#### 2.3 Intent Classification ✅
-**Status:** Implemented in `contextBuilder.ts`
-
-- 9 intent types: create, modify, debug, explain, add, remove, style, rename, tweak
-- Trivial change detection with confidence scoring
-- Context mode selection: full, minimal, outline
+| Phase | Status | Description |
+|-------|--------|-------------|
+| Phase 1 | ✅ Complete | Quick Wins (conversation compaction, file hash diffing) |
+| Phase 2 | ✅ Complete | Smart Context (AST outlines, intent classification, minimal context) |
+| Phase 3 | ✅ Complete | Semantic Search (embeddings, hybrid retrieval, adaptive weights) |
+| Phase 4 | 🚧 In Progress | Dependency-First Retrieval & Task Ledger |
+| Phase 5 | ⏳ Planned | Advanced Intelligence (knowledge graph, multi-agent) |
 
 ---
 
-### Phase 1: Quick Wins ✅ COMPLETED
-**Goal:** Stop context overflow and redundant file reads
+## Phase 4: Dependency-First Retrieval & Task Ledger (Current Focus)
 
-#### 1.1 Conversation Compaction ✅
-**Status:** Implemented in `conversationSummarizer.ts`
-**Effort:** 4 hours
+**Goal:** Improve context accuracy with dependency awareness and persistent task tracking
 
+### 4.1 Dependency-First Retrieval ⭐ HIGH PRIORITY
+**Status:** Not Started
+**Effort:** 8-12 hours
+**Impact:** Reduces "missed files" by 40%+
+
+Currently, `contextBuilder.ts` uses semantic + keyword + recency + importance scoring. Missing: import graph awareness.
+
+**Implementation:**
 ```typescript
-// New file: apps/web/src/lib/conversationCompactor.ts
+// Extend contextBuilder.ts
 
-interface ConversationShard {
-  summary: string;           // Compressed summary of older messages
-  recentTurns: Message[];    // Last 3-5 full messages
-  extractedTasks: string[];  // Tasks mentioned in conversation
-  mentionedFiles: string[];  // Files referenced
+interface DependencyAwareRetrieval {
+  // Before semantic scoring, get dependency context
+  directImports: string[];      // Files this file imports
+  reverseDependents: string[];  // Files that import this file
+  transitiveDepth: number;      // How many levels to traverse (default: 1)
 }
 
-// Triggers:
-// - When conversation > 10 messages
-// - When estimated tokens > 4000
-// - Before every AI request (check & compact if needed)
+async function getDependencyContext(
+  projectId: string,
+  targetFiles: string[]
+): Promise<Map<string, DependencyAwareRetrieval>> {
+  // 1. Query playcraft_file_dependencies for direct imports
+  // 2. Query reverse (files that import target)
+  // 3. Boost these files in scoring before semantic search
+}
+
+// In hybridRetrieve():
+// 1. Get dependency context for selected/modified files
+// 2. Auto-include direct dependencies with relevanceScore boost
+// 3. Then run semantic search on remaining budget
 ```
 
-**Database:**
+**Database:** Already exists (`playcraft_file_dependencies`), needs population from indexer
+
+**Files to Modify:**
+- `embeddingIndexer.ts` - Parse and store imports to `playcraft_file_dependencies`
+- `contextBuilder.ts` - Query dependencies before semantic scoring
+
+---
+
+### 4.2 Task Ledger + Delta Log ⭐ HIGH PRIORITY
+**Status:** Not Started
+**Effort:** 6-8 hours
+**Impact:** Maintains focus across multi-turn conversations
+
+**Concept:** Store current goal, substeps, blockers, and last-known state. After each turn, write a delta ("what we tried, what changed, what's next").
+
+**Schema Extension:**
 ```sql
--- Add to playcraft_chat_sessions or new table
-ALTER TABLE playcraft_chat_sessions ADD COLUMN IF NOT EXISTS
-  conversation_summary TEXT,
-  summary_updated_at TIMESTAMPTZ;
+-- Extend playcraft_project_memory
+ALTER TABLE playcraft_project_memory ADD COLUMN IF NOT EXISTS
+  current_goal TEXT,                    -- "Implement dark mode toggle"
+  goal_substeps JSONB DEFAULT '[]',     -- [{step: "Add state", done: true}, ...]
+  known_blockers JSONB DEFAULT '[]',    -- ["TypeScript error in Button.tsx"]
+  last_known_state TEXT;                -- "Dark mode state added, UI pending"
+
+-- New table for delta log
+CREATE TABLE IF NOT EXISTS playcraft_task_deltas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID REFERENCES playcraft_projects(id) ON DELETE CASCADE,
+  turn_number INTEGER NOT NULL,
+  what_tried TEXT,           -- "Added ThemeContext with dark/light modes"
+  what_changed TEXT[],       -- ["src/contexts/ThemeContext.tsx", "src/App.tsx"]
+  what_next TEXT,            -- "Wire toggle button to context"
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
 **Implementation:**
-1. Use AI to summarize older messages (keep last 5 full)
-2. Extract: decisions made, files modified, tasks completed
-3. Store summary in database
-4. Include summary + recent turns in prompt
-
-#### 1.2 File Hash Diffing ✅
-**Status:** Implemented in `fileHashService.ts`
-**Effort:** 4 hours
-
 ```typescript
-// Implemented in: apps/web/src/lib/fileHashService.ts
+// New file: apps/web/src/lib/taskLedgerService.ts
 
-interface FileHashCache {
-  projectId: string;
-  fileHashes: Record<string, string>;  // path -> MD5 hash
-  lastUpdated: string;
+interface TaskLedger {
+  currentGoal: string | null;
+  substeps: Array<{ step: string; done: boolean }>;
+  blockers: string[];
+  lastKnownState: string | null;
 }
 
-// On project load:
-// 1. Load cached hashes from IndexedDB
-// 2. Compare with current files in WebContainer
-// 3. Mark changed files as "dirty"
-// 4. Only re-process dirty files for context
+interface TaskDelta {
+  whatTried: string;
+  whatChanged: string[];
+  whatNext: string;
+}
+
+export async function updateTaskLedger(
+  projectId: string,
+  delta: TaskDelta
+): Promise<void>;
+
+export async function getTaskLedger(
+  projectId: string
+): Promise<TaskLedger>;
 ```
 
-**Benefits:**
-- Skip unchanged files entirely
-- Know exactly what changed since last session
-- Enable "what changed since you left" recap
+**Integration:** Inject as Layer 3 in prompt stack (see Prompt Architecture below)
 
 ---
 
-### Phase 2: Smart Context (12-20 hours)
-**Goal:** Send structure instead of full code, understand dependencies
+### 4.3 Live Memory Refresh
+**Status:** Not Started
+**Effort:** 4-6 hours
+**Impact:** Keeps model's view current with user edits
 
-#### 2.1 Repository Map with AST Outlines
-**Effort:** 8-12 hours
+Currently only AI-generated edits trigger memory updates. User edits are invisible.
 
+**Implementation:**
 ```typescript
-// New file: apps/web/src/lib/repoMapService.ts
+// In useWebContainer.ts or Builder.tsx
 
-interface RepoMap {
-  projectId: string;
-  files: FileOutline[];
-  dependencies: DependencyEdge[];
-  generatedAt: string;
-}
+// Hook file save events from Monaco editor
+onFileSave(async (path: string, content: string) => {
+  // Update memory
+  await updateMemoryFromFileChange(projectId, path, content);
 
-interface FileOutline {
-  path: string;
-  type: 'component' | 'hook' | 'util' | 'type' | 'style' | 'config';
-  exports: string[];           // Exported symbols
-  imports: ImportInfo[];       // What it imports
-  outline: string;             // Condensed structure (not full code)
-  lineCount: number;
-  importance: number;
-}
+  // Re-index for semantic search (debounced)
+  await indexSingleFile(projectId, path, content, voyageApiKey);
+});
 
-interface DependencyEdge {
-  from: string;  // file path
-  to: string;    // file path
-  type: 'import' | 'dynamic';
+// Background job for stale re-indexing
+async function reindexStaleFiles(projectId: string): Promise<void> {
+  // Find files where content_hash differs from last indexed
+  // Re-embed in background
 }
 ```
 
-**AST Extraction Strategy:**
+---
+
+### 4.4 Adaptive Token Budgets
+**Status:** Not Started
+**Effort:** 4-6 hours
+**Impact:** Cost efficiency + quality optimization
+
+**Intent-Based Budgets:**
 ```typescript
-// For React/TS files, extract:
-// - Function/component names
-// - Props interfaces
-// - Hook usage
-// - State shape
-// - Key logic comments
-
-// Example output for a 200-line component:
-`
-// src/components/GameBoard.tsx (203 lines)
-// Exports: GameBoard (component)
-// Imports: useState, useEffect, useCallback from 'react'
-//          Cell from './Cell'
-//          useGameLogic from '../hooks/useGameLogic'
-// Props: { width: number, height: number, onGameEnd: () => void }
-// State: board (Cell[][]), score (number), isPlaying (boolean)
-// Key functions: initBoard(), handleCellClick(), checkWin()
-`
-```
-
-**Tools:**
-- Use TypeScript Compiler API or `@babel/parser` for AST
-- Simpler: regex-based extraction for MVP
-
-#### 2.2 Dependency Graph
-**Effort:** 4-8 hours
-
-```typescript
-// Extend repoMapService.ts
-
-function buildDependencyGraph(files: FileOutline[]): DependencyGraph {
-  // Parse imports from each file
-  // Build adjacency list
-  // Calculate "importance" = number of dependents (fan-in)
-  // Files imported by many others = high importance
-}
-
-// When user selects a file:
-// 1. Get direct dependencies (imports)
-// 2. Get reverse dependencies (files that import this)
-// 3. Include both in context
-```
-
-#### 2.3 Intent Classification
-**Effort:** 4 hours
-
-```typescript
-// New file: apps/web/src/lib/intentClassifier.ts
-
-type Intent =
-  | 'bugfix'      // Minimal context: error + affected file + tests
-  | 'feature'     // Full context: related files + dependencies
-  | 'styling'     // UI only: components + styles
-  | 'refactor'    // Structure: AST outlines + dependency graph
-  | 'question'    // Minimal: conversation history + project summary
-  | 'debug'       // Error context: logs + stack trace + affected code
-
-function classifyIntent(prompt: string, recentContext: string): Intent {
-  // Simple keyword matching first:
-  // "fix", "error", "bug", "broken" → bugfix
-  // "add", "create", "implement", "new" → feature
-  // "style", "color", "layout", "CSS", "UI" → styling
-  // "refactor", "clean", "reorganize" → refactor
-  // "how", "what", "why", "explain" → question
-
-  // Can upgrade to AI classification later
-}
-
-// Use intent to select retrieval strategy:
-const retrievalStrategies: Record<Intent, RetrievalConfig> = {
-  bugfix: { maxFiles: 3, includeTests: true, includeDeps: false },
-  feature: { maxFiles: 10, includeTests: false, includeDeps: true },
-  styling: { maxFiles: 5, fileTypes: ['tsx', 'css'], includeDeps: false },
-  // ...
+const TOKEN_BUDGETS_BY_INTENT: Record<Intent, TokenBudget> = {
+  tweak:   { total: 3000,  contextMode: 'minimal', useOutlines: true },
+  style:   { total: 3000,  contextMode: 'minimal', useOutlines: true },
+  debug:   { total: 8000,  contextMode: 'outline', useOutlines: true },
+  modify:  { total: 8000,  contextMode: 'outline', useOutlines: false },
+  feature: { total: 12000, contextMode: 'full',    useOutlines: false },
+  create:  { total: 12000, contextMode: 'full',    useOutlines: false },
 };
+
+// Also factor in:
+// - Available credits (low balance → smaller budget)
+// - Project size (large project → prefer outlines)
+// - User preference (if set)
+```
+
+**Preflight Cost Estimator:**
+```typescript
+interface PreflightEstimate {
+  estimatedTokens: number;
+  estimatedCost: number;
+  contextMode: 'minimal' | 'outline' | 'full';
+  filesIncluded: number;
+  recommendation: string;
+}
+
+export function estimateContextCost(
+  projectId: string,
+  prompt: string,
+  availableCredits: number
+): PreflightEstimate;
 ```
 
 ---
 
-### Phase 3: Semantic Search (16-24 hours)
-**Goal:** Find relevant code by meaning, not just keywords
+### 4.5 Structured Planner Output
+**Status:** Partially Done (Claude orchestrator exists)
+**Effort:** 2-4 hours
+**Impact:** More focused changes, better recovery
 
-#### 3.1 Chunk Embeddings
-**Effort:** 12-16 hours
+Current Claude orchestrator returns a plan, but it's not structured as numbered steps.
 
+**Enhancement:**
 ```typescript
-// New file: apps/web/src/lib/embeddingService.ts
-
-interface CodeChunk {
-  id: string;
-  filePath: string;
-  startLine: number;
-  endLine: number;
-  content: string;
-  embedding: number[];  // Vector from embedding model
-  type: 'function' | 'component' | 'class' | 'type' | 'other';
+interface StructuredPlan {
+  understanding: string;
+  numberedSteps: Array<{
+    step: number;
+    action: string;
+    targetFile: string;
+    description: string;
+  }>;
+  filesToRead: string[];    // For context
+  filesToModify: string[];  // For generation
+  filesToCreate: string[];
+  preserveFeatures: string[];
 }
 
-// Chunking strategy:
-// - Split by function/component boundaries (not arbitrary lines)
-// - Keep chunks 50-200 lines
-// - Overlap chunks by 10% for context continuity
+// In Claude orchestrator prompt, request:
+// "Return a numbered plan with specific files for each step"
+```
 
-// Embedding options:
-// - OpenAI text-embedding-3-small (cheap, fast)
-// - Voyage Code (optimized for code)
-// - Local: all-MiniLM-L6-v2 via transformers.js
+---
+
+## Phase 5: Advanced Intelligence (Future)
+
+### 5.1 Knowledge Graph Light
+**Status:** Planned
+**Effort:** 16-24 hours
+**Impact:** Answer "where is X used?" without full file dumps
+
+**Symbol-Level Map:**
+```typescript
+interface SymbolNode {
+  name: string;           // "useGameLogic"
+  type: 'function' | 'component' | 'hook' | 'type' | 'class';
+  file: string;           // "/src/hooks/useGameLogic.ts"
+  line: number;
+  exportedAs?: string;
+}
+
+interface SymbolEdge {
+  from: string;  // symbol name
+  to: string;    // symbol name
+  type: 'calls' | 'imports' | 'extends' | 'implements';
+}
+
+// Query: "What calls handleGameOver?"
+// → Returns list of callers without reading full files
 ```
 
 **Storage:**
 ```sql
--- New table for embeddings
-CREATE TABLE playcraft_code_embeddings (
+CREATE TABLE IF NOT EXISTS playcraft_symbols (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES playcraft_projects(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  symbol_type TEXT NOT NULL,
   file_path TEXT NOT NULL,
-  chunk_index INTEGER NOT NULL,
-  start_line INTEGER NOT NULL,
-  end_line INTEGER NOT NULL,
-  content_hash TEXT NOT NULL,
-  embedding vector(384),  -- pgvector extension
+  line_number INTEGER,
+  exported_as TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(project_id, file_path, chunk_index)
+  UNIQUE(project_id, file_path, name)
 );
 
--- Index for similarity search
-CREATE INDEX ON playcraft_code_embeddings
-  USING ivfflat (embedding vector_cosine_ops);
+CREATE TABLE IF NOT EXISTS playcraft_symbol_edges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  project_id UUID REFERENCES playcraft_projects(id) ON DELETE CASCADE,
+  from_symbol TEXT NOT NULL,
+  to_symbol TEXT NOT NULL,
+  edge_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
-#### 3.2 Hybrid Retrieval
-**Effort:** 4-8 hours
+---
+
+### 5.2 Conversation Intelligence
+**Status:** Planned
+**Effort:** 8-12 hours
+**Impact:** Captures user preferences/decisions
+
+**Enhancement to Summarizer:**
+```typescript
+interface ConversationPreferences {
+  stylePreferences: string[];   // ["keep retro palette", "use Tailwind"]
+  doNotTouch: string[];         // ["don't modify physics", "keep current font"]
+  decisions: Array<{
+    decision: string;
+    reason: string;
+    timestamp: string;
+  }>;
+}
+
+// Extract from conversation and store in project memory
+// Feed into guardrail layer (Layer 8)
+```
+
+---
+
+### 5.3 Outcome-Driven Context Optimization
+**Status:** Partially Done (adaptiveWeights.ts)
+**Effort:** 6-8 hours
+**Impact:** Learn which context is actually useful
+
+**Enhancement:**
+```typescript
+// In outcomeService.ts, also track:
+interface ContextEffectiveness {
+  filesInContext: string[];
+  filesActuallyUsed: string[];  // Files referenced in AI response
+  unusedFiles: string[];        // Context noise
+  contextEfficiencyScore: number; // used / total
+}
+
+// Use to train:
+// 1. Better file selection
+// 2. Shorter contexts that still succeed
+// 3. Which files are consistently noise
+```
+
+---
+
+### 5.4 Credit-Aware Routing
+**Status:** Planned
+**Effort:** 4-6 hours
+**Impact:** User-friendly cost management
 
 ```typescript
-// Extend contextBuilder.ts
-
-interface RetrievalScore {
-  filePath: string;
-  semanticScore: number;    // From embedding similarity
-  keywordScore: number;     // From BM25/path matching
-  recencyScore: number;     // From last modified time
-  importanceScore: number;  // From dependency fan-in
-  finalScore: number;       // Weighted combination
+interface RoutingDecision {
+  contextMode: 'minimal' | 'outline' | 'full';
+  modelPreference: 'gemini' | 'claude+gemini';
+  estimatedCost: number;
+  reason: string;
 }
 
-function hybridRetrieve(
-  query: string,
-  projectId: string,
-  config: RetrievalConfig
-): Promise<RetrievalScore[]> {
-  // 1. Get embedding for query
-  // 2. Vector search in embeddings table
-  // 3. Keyword search on file paths
-  // 4. Boost by recency and importance
-  // 5. Combine scores:
-  //    final = semantic*0.4 + keyword*0.2 + recency*0.25 + importance*0.15
-  // 6. Return top-K
+function getRoutingDecision(
+  intent: Intent,
+  creditBalance: number,
+  projectSize: number
+): RoutingDecision {
+  // Low credits → minimal context, Gemini-only
+  // High credits → full context, Claude orchestration
+  // Show pre/post cost receipts
 }
 ```
 
 ---
 
-### Phase 4: Advanced (40+ hours each)
-**Goal:** Structural understanding and parallel execution
+### 5.5 UX Surfacing
+**Status:** Planned
+**Effort:** 8-12 hours
+**Impact:** Transparency and user trust
 
-#### 4.1 Knowledge Graph
-- Parse code into entities (functions, classes, types)
-- Build relationship graph (calls, extends, implements)
-- Query: "what functions call X?" without reading all files
-- Tools: Neo4j, or PostgreSQL with recursive CTEs
-
-#### 4.2 Multi-Agent Architecture
-- Planner agent: breaks task into subtasks
-- Coder agents: execute individual subtasks
-- Reviewer agent: validates changes
-- Orchestrator: manages handoffs with minimal context
+**Builder UI Additions:**
+- Project Brief panel (show what AI knows about project)
+- Current Plan panel (numbered steps, checkmarks)
+- Recent Changes panel (delta log)
+- Context Size indicator (tokens used, files included)
+- Cost receipt (before/after generation)
 
 ---
 
-## Prompt Architecture
+## Updated Prompt Architecture
 
-### Layer Structure
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │ LAYER 1: System Rules (500 tokens)                          │
-│ - Role definition                                           │
-│ - Output format rules                                       │
-│ - Tool usage guidelines                                     │
+│ - Role definition, output format, tool guidelines           │
 ├─────────────────────────────────────────────────────────────┤
 │ LAYER 2: Project Brief (200-500 tokens)                     │
-│ - Project summary from project_memory                       │
-│ - Tech stack                                                │
-│ - Key constraints                                           │
+│ - Project summary, tech stack, game type                    │
+│ - From: playcraft_project_memory                            │
 ├─────────────────────────────────────────────────────────────┤
-│ LAYER 3: Task Ledger (100-300 tokens)                       │
-│ - Recent completed tasks                                    │
-│ - Current task/goal                                         │
-│ - Known issues                                              │
+│ LAYER 3: Task Ledger (100-300 tokens) ⭐ NEW                │
+│ - Current goal + substeps                                   │
+│ - Recent delta ("tried/changed/next")                       │
+│ - Known blockers                                            │
+│ - From: playcraft_task_deltas                               │
 ├─────────────────────────────────────────────────────────────┤
 │ LAYER 4: Conversation Context (500-1500 tokens)             │
 │ - Summary of older messages                                 │
@@ -369,208 +415,94 @@ function hybridRetrieve(
 │ - Extracted decisions/preferences                           │
 ├─────────────────────────────────────────────────────────────┤
 │ LAYER 5: Selected File (variable, up to 2000 tokens)        │
-│ - Full content of currently selected file                   │
-│ - Or AST outline if file is large                          │
+│ - Full content or AST outline                               │
 ├─────────────────────────────────────────────────────────────┤
-│ LAYER 6: Retrieved Context (1000-3000 tokens)               │
-│ - Top-K relevant files (by hybrid score)                    │
-│ - Dependencies of selected file                             │
-│ - AST outlines for large files                             │
+│ LAYER 6: Dependency Context (500-1500 tokens) ⭐ ENHANCED   │
+│ - Direct imports of selected/modified files                 │
+│ - Reverse dependents (files that import these)              │
+│ - Auto-included before semantic search                      │
 ├─────────────────────────────────────────────────────────────┤
-│ LAYER 7: Change Log (200-500 tokens)                        │
-│ - Recent file modifications (diffs if small)                │
-│ - "What changed since last session" summary                 │
+│ LAYER 7: Retrieved Context (1000-3000 tokens)               │
+│ - Top-K by hybrid score (semantic + keyword + recency)      │
+│ - AST outlines for large files                              │
 ├─────────────────────────────────────────────────────────────┤
-│ LAYER 8: Guardrails (200 tokens)                            │
-│ - Files NOT to modify (package.json, config)                │
-│ - Style rules                                               │
-│ - Framework constraints                                     │
+│ LAYER 8: Change Log (200-500 tokens) ⭐ ENHANCED            │
+│ - Compact diff since last turn                              │
+│ - File hashes for delta detection                           │
+│ - From: fileHashService + task deltas                       │
+├─────────────────────────────────────────────────────────────┤
+│ LAYER 9: Guardrails (200 tokens)                            │
+│ - Files NOT to modify                                       │
+│ - User preferences/decisions                                │
+│ - Style constraints                                         │
 └─────────────────────────────────────────────────────────────┘
 
-Target total: 4000-8000 tokens (leaves room for response)
-```
-
-### Token Budget Management
-```typescript
-const TOKEN_BUDGETS = {
-  systemRules: 500,
-  projectBrief: 500,
-  taskLedger: 300,
-  conversationContext: 1500,
-  selectedFile: 2000,
-  retrievedContext: 3000,
-  changeLog: 500,
-  guardrails: 200,
-  // Total: ~8500 tokens for context
-  // Reserve: ~4000 tokens for response
-  // Model limit: 12500 tokens (safe margin for 16K context)
-};
-
-function enforceTokenBudget(layer: string, content: string): string {
-  const budget = TOKEN_BUDGETS[layer];
-  const tokens = estimateTokens(content);
-
-  if (tokens <= budget) return content;
-
-  // Truncation strategies by layer:
-  switch (layer) {
-    case 'selectedFile':
-      return truncateToOutline(content);  // AST outline
-    case 'retrievedContext':
-      return truncateFiles(content, budget);  // Fewer files
-    case 'conversationContext':
-      return summarizeOlderMessages(content, budget);
-    default:
-      return content.slice(0, budget * 4);  // Rough char estimate
-  }
-}
+Target: 4000-12000 tokens (intent-dependent)
 ```
 
 ---
 
-## Database Schema Additions
+## Implementation Priority
 
-```sql
--- Phase 1: Conversation compaction
-ALTER TABLE playcraft_chat_sessions ADD COLUMN IF NOT EXISTS
-  conversation_summary TEXT,
-  summary_message_count INTEGER DEFAULT 0,
-  summary_updated_at TIMESTAMPTZ;
+### Immediate (Phase 4) - Recommended Order
 
--- Phase 2: File tracking
-CREATE TABLE IF NOT EXISTS playcraft_file_index (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID REFERENCES playcraft_projects(id) ON DELETE CASCADE,
-  file_path TEXT NOT NULL,
-  content_hash TEXT NOT NULL,
-  line_count INTEGER,
-  ast_outline TEXT,
-  exports TEXT[],
-  imports JSONB,  -- [{from: "react", names: ["useState"]}]
-  file_type TEXT,  -- component, hook, util, type, style
-  importance_score FLOAT DEFAULT 0,
-  last_modified TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(project_id, file_path)
-);
+| # | Task | Effort | Impact | Dependencies |
+|---|------|--------|--------|--------------|
+| 1 | **Dependency-first retrieval** | 8-12h | High | Extend indexer + contextBuilder |
+| 2 | **Live memory refresh** | 4-6h | Medium | Hook user edits in Builder |
+| 3 | **Task ledger + delta log** | 6-8h | High | New service + DB migration |
+| 4 | **Adaptive token budgets** | 4-6h | Medium | Update contextBuilder |
+| 5 | **Structured planner output** | 2-4h | Medium | Update Claude prompt |
 
-CREATE INDEX idx_file_index_project ON playcraft_file_index(project_id);
-CREATE INDEX idx_file_index_importance ON playcraft_file_index(importance_score DESC);
+### Later (Phase 5)
 
--- Phase 2: Dependency graph
-CREATE TABLE IF NOT EXISTS playcraft_file_dependencies (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID REFERENCES playcraft_projects(id) ON DELETE CASCADE,
-  from_file TEXT NOT NULL,
-  to_file TEXT NOT NULL,
-  dependency_type TEXT DEFAULT 'import',  -- import, dynamic, type-only
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(project_id, from_file, to_file)
-);
-
-CREATE INDEX idx_deps_from ON playcraft_file_dependencies(project_id, from_file);
-CREATE INDEX idx_deps_to ON playcraft_file_dependencies(project_id, to_file);
-
--- Phase 3: Embeddings (requires pgvector extension)
--- CREATE EXTENSION IF NOT EXISTS vector;
-
-CREATE TABLE IF NOT EXISTS playcraft_code_chunks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  project_id UUID REFERENCES playcraft_projects(id) ON DELETE CASCADE,
-  file_path TEXT NOT NULL,
-  chunk_index INTEGER NOT NULL,
-  start_line INTEGER NOT NULL,
-  end_line INTEGER NOT NULL,
-  content TEXT NOT NULL,
-  content_hash TEXT NOT NULL,
-  chunk_type TEXT,  -- function, component, class, type
-  symbol_name TEXT,  -- Name of the function/component
-  embedding vector(384),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(project_id, file_path, chunk_index)
-);
-
-CREATE INDEX idx_chunks_project ON playcraft_code_chunks(project_id);
--- CREATE INDEX idx_chunks_embedding ON playcraft_code_chunks
---   USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
-```
-
----
-
-## Implementation Timeline
-
-| Phase | Components | Effort | Cumulative |
-|-------|------------|--------|------------|
-| **Phase 1** | Conversation Compaction + File Hash Diffing | 8-12 hrs | 8-12 hrs |
-| **Phase 2** | Repo Map + Dependency Graph + Intent Classification | 16-24 hrs | 24-36 hrs |
-| **Phase 3** | Embeddings + Hybrid Retrieval | 16-24 hrs | 40-60 hrs |
-| **Phase 4** | Knowledge Graph + Multi-Agent | 80+ hrs | 120+ hrs |
+| # | Task | Effort | Impact |
+|---|------|--------|--------|
+| 6 | Knowledge graph light | 16-24h | High |
+| 7 | Conversation intelligence | 8-12h | Medium |
+| 8 | Outcome-driven optimization | 6-8h | Medium |
+| 9 | Credit-aware routing | 4-6h | Medium |
+| 10 | UX surfacing | 8-12h | High (trust) |
 
 ---
 
 ## Success Metrics
 
-| Metric | Current | Target (Phase 1) | Target (Phase 3) |
-|--------|---------|------------------|------------------|
-| Avg tokens per request | ~8000 | ~5000 | ~4000 |
-| Context relevance (manual) | 60% | 80% | 90% |
-| Session continuation success | 70% | 90% | 95% |
-| "AI got lost" incidents | 30% | 10% | 5% |
-| File re-read rate | 100% | 30% | 10% |
-
----
-
-## Quick Start: Phase 1 Implementation
-
-### Step 1: Conversation Compaction (4 hours)
-
-```typescript
-// apps/web/src/lib/conversationCompactor.ts
-// Implementation details in Phase 1.1 above
-```
-
-### Step 2: File Hash Diffing (4 hours)
-
-```typescript
-// apps/web/src/lib/fileHashService.ts
-// Implementation details in Phase 1.2 above
-```
-
-### Step 3: Update Context Builder
-
-```typescript
-// apps/web/src/lib/contextBuilder.ts
-// Add compacted conversation + change detection
-```
-
-### Step 4: Database Migration
-
-```sql
--- supabase/migrations/20260106_add_context_management.sql
--- Add conversation_summary column + file_index table
-```
+| Metric | Current | Phase 4 Target | Phase 5 Target |
+|--------|---------|----------------|----------------|
+| Avg tokens per request | ~6000 | ~4500 | ~3500 |
+| Selection accuracy | ~70% | ~85% | ~92% |
+| Missed files rate | ~25% | ~10% | ~5% |
+| Multi-turn coherence | ~75% | ~90% | ~95% |
+| Context noise (unused files) | ~30% | ~15% | ~8% |
 
 ---
 
 ## Next Actions
 
-1. [x] Review and approve this roadmap
-2. [x] Implement Phase 1 (conversation compaction + hash diffing) - DONE
-3. [x] Implement Phase 2 (AST outlines + intent classification) - DONE
-4. [ ] Test with real sessions to measure improvement
-5. [ ] Evaluate embedding providers for Phase 3
-6. [ ] Consider knowledge graph for Phase 4
+1. [x] Phase 1-3 Complete
+2. [ ] **Implement dependency-first retrieval** ← START HERE
+   - Extend `embeddingIndexer.ts` to populate `playcraft_file_dependencies`
+   - Update `contextBuilder.ts` to query dependencies before semantic search
+3. [ ] Add live memory refresh (hook user edits)
+4. [ ] Create task ledger service + DB migration
+5. [ ] Implement adaptive token budgets
+6. [ ] Refine planner output structure
 
 ---
 
-## Related: Code Generation Improvements
+## Competitive Reference
 
-See `CODE_GENERATION_ROADMAP.md` for validation and learning improvements:
-- [x] Error Feedback Loop (TypeScript validation + auto-retry)
-- [x] Code Quality Checks (ESLint validation)
-- [x] Preview Validation (runtime error capture)
-- [x] Learning System (generation outcomes tracking)
+| Feature | Lovable | Replit | Bolt.new | Base44 | PlayCraft |
+|---------|---------|--------|----------|--------|-----------|
+| Task status cards | ✅ | ✅ | ❌ | ❌ | 🚧 (Phase 4) |
+| Delta-first context | ❌ | ✅ | ❌ | ✅ | 🚧 (Phase 4) |
+| Related files auto-include | ✅ | ✅ | ✅ | ❌ | 🚧 (Phase 4) |
+| Cost transparency | ✅ | ❌ | ❌ | ✅ | 🚧 (Phase 5) |
+| Planner/executor split | ✅ | ✅ | ✅ | ❌ | ✅ Done |
+| Semantic search | ✅ | ✅ | ❌ | ❌ | ✅ Done |
+| Adaptive weights | ❌ | ❌ | ❌ | ❌ | ✅ Done |
 
 ---
 
-*Last Updated: January 6, 2026*
+*Last Updated: January 6, 2026 - Added Phase 4 & 5 roadmap*
