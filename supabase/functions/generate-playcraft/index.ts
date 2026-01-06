@@ -720,12 +720,19 @@ function buildSmartContextPrompt(
     parts.push('RECENT CONVERSATION:\n' + recentContext);
   }
 
-  // 4. Relevant Files (smart-selected)
+  // 4. EXISTING CODE - with strong iteration warning
   if (contextPackage.relevantFiles.length > 0) {
+    // Add strong warning that this is existing code
+    parts.push(`⚠️ EXISTING PROJECT CODE - YOU MUST MODIFY THIS CODE, NOT RECREATE IT ⚠️
+The following files are the CURRENT state of the user's project.
+Your job is to MODIFY this existing code to fulfill the user's request.
+DO NOT start from scratch. DO NOT recreate the game logic.
+ONLY change the specific parts related to the user's request.`);
+
     const fileContext = contextPackage.relevantFiles
-      .map(f => `--- ${f.path} (${f.relevanceReason}) ---\n${f.content}`)
+      .map(f => `=== CURRENT FILE: ${f.path} ===\n${f.content}`)
       .join('\n\n');
-    parts.push('RELEVANT FILES:\n' + fileContext);
+    parts.push(fileContext);
   }
 
   // 5. Changed Files (for awareness)
@@ -749,17 +756,23 @@ function buildSmartContextPrompt(
 
   // 9. Instructions - emphasize iteration when files exist
   if (contextPackage.relevantFiles.length > 0) {
-    parts.push(`CRITICAL INSTRUCTION:
-You are ITERATING on an EXISTING project. The files above show the CURRENT state of the code.
-- DO NOT recreate the project from scratch
-- MODIFY the existing code to implement the user's request
-- Preserve ALL existing features, game logic, and structure
-- Only change what is specifically requested
-- Return the COMPLETE updated file(s), not patches
+    parts.push(`🚨 CRITICAL: ITERATION MODE - READ CAREFULLY 🚨
 
-Generate ONLY the necessary code changes. Return valid JSON with needsThreeJs boolean.`);
+You are modifying an EXISTING game/project. The code above is what the user ALREADY HAS.
+
+MANDATORY RULES:
+1. START from the existing code shown above - copy it and modify only what's needed
+2. KEEP all existing game logic, state management, event handlers, and features
+3. ONLY change the specific thing the user asked for
+4. If user says "change tiles to emojis" - change ONLY the tile rendering, keep everything else
+5. If user says "make it faster" - change ONLY the speed value, keep everything else
+6. NEVER rewrite the entire file from scratch
+7. PRESERVE: useEffect hooks, useState calls, game loop, collision detection, scoring, etc.
+
+Your response must be the user's existing code with minimal targeted changes.
+Return valid JSON with needsThreeJs boolean.`);
   } else {
-    parts.push('Generate ONLY the necessary code changes. Return valid JSON with needsThreeJs boolean.');
+    parts.push('This is a NEW project. Generate the complete code. Return valid JSON with needsThreeJs boolean.');
   }
 
   return parts.join('\n\n');
