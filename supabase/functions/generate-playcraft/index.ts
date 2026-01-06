@@ -1542,9 +1542,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Claude API key for orchestration (optional - falls back to Gemini-only if not set)
-    const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    const useDualModel = !!claudeApiKey;
+    // Claude API key for orchestration (disabled for Gemini hackathon)
+    // const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+    // const useDualModel = !!claudeApiKey;
+    const claudeApiKey = null;
+    const useDualModel = false; // Gemini-only mode for hackathon
 
     // ==========================================================================
     // INPUT VALIDATION
