@@ -20,6 +20,11 @@ import {
 } from '../lib/codeValidator';
 import { recordGenerationOutcome } from '../lib/outcomeService';
 import { indexProjectFiles } from '../lib/embeddingIndexer';
+import {
+  recordTurnComplete,
+  extractGoalFromPrompt,
+  setNewGoal,
+} from '../lib/taskLedgerService';
 import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
@@ -629,6 +634,37 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             missedFiles,
           }).catch(err => {
             console.warn('[Chat] Failed to record outcome:', err);
+          });
+
+          // Record task delta for task ledger (async, non-blocking)
+          const goalExtraction = extractGoalFromPrompt(prompt);
+
+          // If this looks like a new goal, set it
+          if (goalExtraction.isNewGoal && goalExtraction.goal) {
+            setNewGoal(projectId, goalExtraction.goal).catch(err => {
+              console.warn('[Chat] Failed to set new goal:', err);
+            });
+          }
+
+          // Record what happened in this turn
+          recordTurnComplete(projectId, {
+            userRequest: prompt.substring(0, 200), // Truncate for storage
+            whatTried: response.message?.substring(0, 200) || 'Generated code',
+            whatChanged: filesChanged,
+            whatSucceeded: autoFixSucceeded || validationErrors.length === 0
+              ? `Applied ${filesApplied} file(s), ${editsApplied} edit(s)`
+              : undefined,
+            whatFailed: validationErrors.length > 0 && !autoFixSucceeded
+              ? `${validationErrors.length} TypeScript error(s)`
+              : undefined,
+            whatNext: response.explanation?.substring(0, 200),
+            newState: filesChanged.length > 0
+              ? `Modified: ${filesChanged.slice(0, 3).map(f => f.split('/').pop()).join(', ')}`
+              : undefined,
+            tokensUsed: contextPackage?.estimatedTokens,
+            durationMs,
+          }).catch(err => {
+            console.warn('[Chat] Failed to record task delta:', err);
           });
         }
 

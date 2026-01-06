@@ -96,7 +96,7 @@ async function getDependencyContext(
 ---
 
 ### 4.2 Task Ledger + Delta Log ⭐ HIGH PRIORITY
-**Status:** Not Started
+**Status:** ✅ Complete (Jan 6, 2026)
 **Effort:** 6-8 hours
 **Impact:** Maintains focus across multi-turn conversations
 
@@ -442,8 +442,8 @@ Target: 4000-12000 tokens (intent-dependent)
 |---|------|--------|--------|--------|
 | 1 | **Dependency-first retrieval** | 8-12h | High | ✅ Complete |
 | 2 | **Live memory refresh** | 4-6h | Medium | ✅ Complete |
-| 3 | **Task ledger + delta log** | 6-8h | High | ⏳ Next |
-| 4 | **Adaptive token budgets** | 4-6h | Medium | Pending |
+| 3 | **Task ledger + delta log** | 6-8h | High | ✅ Complete |
+| 4 | **Adaptive token budgets** | 4-6h | Medium | ⏳ Next |
 | 5 | **Structured planner output** | 2-4h | Medium | Pending |
 
 ### Later (Phase 5)
@@ -480,8 +480,12 @@ Target: 4000-12000 tokens (intent-dependent)
 3. [x] Add live memory refresh (Jan 6, 2026)
    - Created `fileChangeTracker.ts` + `useFileChangeTracker.ts`
    - Integrated into `Builder.tsx` for user edits + AI generation
-4. [ ] **Create task ledger service + DB migration** ← START HERE
-5. [ ] Implement adaptive token budgets
+4. [x] Create task ledger service + DB migration (Jan 6, 2026)
+   - Created `taskLedgerService.ts` with goal/substep/blocker tracking
+   - Created `playcraft_task_deltas` table for turn-by-turn logging
+   - Integrated into `contextBuilder.ts` for prompt injection
+   - Integrated into `usePlayCraftChat.ts` for automatic delta recording
+5. [ ] **Implement adaptive token budgets** ← START HERE
 6. [ ] Refine planner output structure
 
 ---
@@ -500,4 +504,4 @@ Target: 4000-12000 tokens (intent-dependent)
 
 ---
 
-*Last Updated: January 6, 2026 - Completed Tasks 1-2 of Phase 4 (Dependency-first retrieval + Live memory refresh)*
+*Last Updated: January 6, 2026 - Completed Tasks 1-3 of Phase 4 (Dependency-first retrieval + Live memory refresh + Task ledger)*

@@ -12,6 +12,11 @@ import { semanticCodeSearch } from './embeddingService';
 import { enhanceQueryForSearch } from './queryEnhancer';
 import { getAdaptiveWeights } from './adaptiveWeights';
 import { getSupabase } from './supabase';
+import {
+  getTaskContext,
+  formatTaskContextForPrompt,
+  type TaskContext,
+} from './taskLedgerService';
 
 // ============================================================================
 // TYPES
@@ -44,6 +49,10 @@ export interface RelevantFile {
 export interface ContextPackage {
   // Project understanding
   projectMemory: ProjectMemory | null;
+
+  // Task ledger (current goal, substeps, blockers, recent deltas)
+  taskContext?: TaskContext;
+  taskContextFormatted?: string; // Pre-formatted for prompt injection
 
   // Conversation context
   conversationSummaries: string[];
@@ -825,6 +834,19 @@ export async function buildContext(
       .sort((a, b) => a.sequence_number - b.sequence_number)
       .map(s => s.summary_text);
 
+  // Get task context (current goal, substeps, blockers, recent deltas)
+  let taskContext: TaskContext | undefined;
+  let taskContextFormatted: string | undefined;
+  try {
+    taskContext = await getTaskContext(projectId, 3); // Last 3 deltas
+    taskContextFormatted = formatTaskContextForPrompt(taskContext);
+    if (taskContextFormatted) {
+      console.log(`[ContextBuilder] Task context: goal=${!!taskContext.ledger.currentGoal}, deltas=${taskContext.recentDeltas.length}`);
+    }
+  } catch (error) {
+    console.warn('[ContextBuilder] Failed to get task context:', error);
+  }
+
   // Build file tree (just paths)
   const fileTree = Object.keys(files).sort();
 
@@ -836,14 +858,19 @@ export async function buildContext(
   const messageTokens = Math.ceil(
     recentMessages.map(m => m.content).join('\n').length / CHARS_PER_TOKEN
   );
+  const taskContextTokens = taskContextFormatted
+    ? Math.ceil(taskContextFormatted.length / CHARS_PER_TOKEN)
+    : 0;
 
-  const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + 500;
+  const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + taskContextTokens + 500;
 
   const contextMode = useOutlines ? 'outline' : 'full';
   console.log(`[ContextBuilder] Built ${contextMode} context: ${relevantFiles.length} files, ~${totalTokens} tokens${usedSemanticSearch ? ' (with semantic search)' : ''}`);
 
   return {
     projectMemory,
+    taskContext,
+    taskContextFormatted,
     conversationSummaries: summaryTexts,
     recentMessages,
     relevantFiles,
