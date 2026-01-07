@@ -9,24 +9,28 @@ import {
   Grid3X3,
   List,
   Play,
-  Sparkles,
   Trash2,
   X,
   AlertTriangle,
+  Star,
 } from 'lucide-react';
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
-import { SettingsModal, SearchModal, Avatar, Sidebar } from '../components';
+import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon } from '../components';
 import { useSidebar } from '../hooks';
-import { useProjects, useCreateProject, useDeleteProject, selectRecentProjects } from '../hooks/useProjects';
+import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from '../hooks/useProjects';
+import { useWorkspaces, useCreateWorkspace } from '../hooks/useWorkspaces';
 import { useUserSettings, useUsageStats } from '../hooks/useUserSettings';
-import type { NavItem, PublishedGame } from '../types';
+import type { NavItem, PublishedGame, Workspace } from '../types';
+import { useAppStore } from '../stores/appStore';
 
 interface HomePageProps {
   user: User;
   onSignOut: () => void;
   onSelectProject: (project: PlayCraftProject) => void;
   onStartNewProject: (prompt: string) => void;
+  pendingPrompt?: string | null;
+  onPendingPromptUsed?: () => void;
 }
 
 // Featured games made with PlayCraft
@@ -61,19 +65,36 @@ const FEATURED_GAMES = [
   },
 ];
 
-export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }: HomePageProps) {
+export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, pendingPrompt, onPendingPromptUsed }: HomePageProps) {
   // UI state
   const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Pre-fill input with pending prompt from landing page
+  useEffect(() => {
+    if (pendingPrompt) {
+      setInputValue(pendingPrompt);
+      onPendingPromptUsed?.();
+      // Focus the input after a short delay to ensure it's visible
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+    }
+  }, [pendingPrompt, onPendingPromptUsed]);
   const [activeNav, setActiveNav] = useState<NavItem>('home');
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const workspaceId = useAppStore((state) => state.workspaceId);
+  const setWorkspaceId = useAppStore((state) => state.setWorkspaceId);
 
   // Delete confirmation state
   const [projectToDelete, setProjectToDelete] = useState<PlayCraftProject | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [starringProjectId, setStarringProjectId] = useState<string | null>(null);
+  const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Sidebar collapse state
@@ -88,11 +109,21 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   }, []);
 
   // Data fetching with TanStack Query
-  const { data: projects = [] } = useProjects();
+  const { data: projects = [] } = useProjects(workspaceId ?? undefined);
   const { data: settings } = useUserSettings();
   const { data: usageStats } = useUsageStats();
+  const { data: workspaces = [], isLoading: isLoadingWorkspaces } = useWorkspaces();
   const createProjectMutation = useCreateProject();
   const deleteProjectMutation = useDeleteProject();
+  const updateProjectMutation = useUpdateProject();
+  const createWorkspaceMutation = useCreateWorkspace();
+
+  // Set initial workspace once data is available
+  useEffect(() => {
+    if (!workspaceId && workspaces.length > 0) {
+      setWorkspaceId(workspaces[0].workspace.id);
+    }
+  }, [workspaceId, workspaces, setWorkspaceId]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -106,7 +137,8 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   }, []);
 
   // Derived state
-  const studioName = settings?.studio_name || 'My Studio';
+  const activeWorkspace = workspaces.find((w) => w.workspace.id === workspaceId)?.workspace ?? null;
+  const studioName = activeWorkspace?.name || settings?.studio_name || 'My Studio';
   const isCreatingProject = createProjectMutation.isPending;
   const isDeletingProject = deleteProjectMutation.isPending;
 
@@ -142,10 +174,35 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   const handleCreateNewProject = async () => {
     if (isCreatingProject) return;
     try {
-      const project = await createProjectMutation.mutateAsync({ name: 'Untitled Game' });
+      const project = await createProjectMutation.mutateAsync({
+        name: 'Untitled Game',
+        workspace_id: workspaceId ?? null,
+      });
       onSelectProject(project);
     } catch (err) {
       console.error('Failed to create project:', err);
+    }
+  };
+
+  const handleCreateWorkspace = () => {
+    setShowCreateWorkspace(true);
+  };
+
+  const handleWorkspaceCreated = (workspace: Workspace) => {
+    setWorkspaceId(workspace.id);
+  };
+
+  const handleToggleStar = async (project: PlayCraftProject) => {
+    setStarringProjectId(project.id);
+    try {
+      await updateProjectMutation.mutateAsync({
+        id: project.id,
+        updates: { is_starred: !project.is_starred },
+      });
+    } catch (err) {
+      console.error('Failed to update star status:', err);
+    } finally {
+      setStarringProjectId(null);
     }
   };
 
@@ -167,8 +224,9 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
   const filteredProjects = projects.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const recentProjects = selectRecentProjects(projects);
+  const starredProjects = filteredProjects.filter((p) => p.is_starred);
+  const visibleProjects =
+    activeNav === 'starred' ? starredProjects : filteredProjects;
   const firstName = user.user_metadata?.full_name?.split(' ')[0] || 'there';
 
   return (
@@ -180,8 +238,6 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
         onToggleCollapse={toggleSidebar}
         activeNav={activeNav}
         onNavChange={setActiveNav}
-        recentProjects={recentProjects}
-        onSelectProject={onSelectProject}
         onOpenSettings={() => setShowSettings(true)}
         onOpenSearch={() => setShowSearch(true)}
         onSignOut={onSignOut}
@@ -191,6 +247,11 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
         creditsRemaining={usageStats?.creditsRemaining ?? 50}
         totalCredits={usageStats?.totalCredits ?? 50}
         onUpgrade={() => setShowSettings(true)}
+        workspaces={workspaces}
+        activeWorkspaceId={workspaceId}
+        onSelectWorkspace={(id) => setWorkspaceId(id)}
+        onCreateWorkspace={handleCreateWorkspace}
+        isLoadingWorkspaces={isLoadingWorkspaces || createWorkspaceMutation.isPending}
       />
 
       {/* Main content */}
@@ -278,8 +339,30 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
               </button>
 
               {/* Project Cards */}
-              {filteredProjects.map((project) => (
+              {visibleProjects.map((project) => (
                 <div key={project.id} className="group relative">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleToggleStar(project);
+                    }}
+                    disabled={starringProjectId === project.id}
+                    aria-label={project.is_starred ? 'Unstar project' : 'Star project'}
+                    className={`absolute left-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-surface-elevated/80 text-content-muted backdrop-blur-sm transition-all hover:bg-surface-elevated hover:text-content ${
+                      starringProjectId === project.id ? 'opacity-70' : ''
+                    }`}
+                  >
+                    {starringProjectId === project.id ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-content-muted/40 border-t-content" />
+                    ) : (
+                      <Star
+                        className={`h-4 w-4 ${
+                          project.is_starred ? 'text-accent' : 'text-content-muted'
+                        }`}
+                        fill={project.is_starred ? 'currentColor' : 'none'}
+                      />
+                    )}
+                  </button>
                   <button
                     onClick={() => onSelectProject(project)}
                     className="w-full text-left"
@@ -352,9 +435,24 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
             </div>
 
             {/* Empty state */}
-            {filteredProjects.length === 0 && searchQuery && (
+            {visibleProjects.length === 0 && searchQuery && (
               <div className="mt-12 text-center">
                 <p className="text-content-muted">No projects found matching "{searchQuery}"</p>
+              </div>
+            )}
+
+            {visibleProjects.length === 0 && !searchQuery && (
+              <div className="mt-12 text-center">
+                <p className="text-content-muted">
+                  {activeNav === 'starred'
+                    ? 'No starred projects yet'
+                    : activeNav === 'shared'
+                      ? 'No shared projects yet'
+                      : 'Create your first game project and start building with AI'}
+                </p>
+                {activeNav === 'starred' && (
+                  <p className="mt-2 text-sm text-content-subtle">Tap the star on a project to keep it here.</p>
+                )}
               </div>
             )}
           </div>
@@ -362,12 +460,16 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
           /* Home View */
           <>
             {/* Gradient background area */}
-            <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden">
-              {/* Gradient background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent-muted/30 via-secondary-muted/20 to-surface" />
-              <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full bg-accent/20 blur-[120px]" />
-              <div className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-secondary/20 blur-[100px]" />
-
+            <div
+              className="relative flex flex-1 flex-col items-center justify-center overflow-hidden"
+              style={{
+                background: `
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(0, 212, 255, 0.35) 0%, transparent 60%),
+                  radial-gradient(ellipse 80% 50% at 50% 70%, rgba(236, 72, 153, 0.5) 0%, transparent 60%),
+                  linear-gradient(180deg, #0a1628 0%, #1a1040 35%, #3d1a5c 55%, #6b2a6b 75%, #1a1040 100%)
+                `,
+              }}
+            >
               {/* Content */}
               <div className="relative z-10 w-full max-w-2xl px-6">
                 <h1 className="mb-8 text-center text-4xl font-bold text-content">
@@ -375,8 +477,9 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
                 </h1>
 
                 {/* Input box */}
-                <div className="glass-elevated rounded-2xl border border-border p-4">
+                <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-4">
                   <input
+                    ref={inputRef}
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
@@ -401,11 +504,11 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
             </div>
 
             {/* Made with PlayCraft section */}
-            <div className="border-t border-border-muted bg-surface-elevated/50 px-6 py-6">
+            <div className="border-t border-white/10 bg-black/30 backdrop-blur-md px-6 py-6">
               <div className="mx-auto max-w-5xl">
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-accent" />
+                    <LogoIcon size={16} />
                     <h2 className="text-sm font-medium text-content">Made with PlayCraft</h2>
                   </div>
                   <button
@@ -473,6 +576,13 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject }
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         user={user}
+      />
+
+      {/* Create Workspace Modal */}
+      <CreateWorkspaceModal
+        isOpen={showCreateWorkspace}
+        onClose={() => setShowCreateWorkspace(false)}
+        onCreated={handleWorkspaceCreated}
       />
 
       {/* Search Modal */}

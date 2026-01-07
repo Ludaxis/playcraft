@@ -1,0 +1,284 @@
+/**
+ * PlayCraft Design System - Color Tokens
+ * 2026 Cyberpunk Gaming Palette
+ *
+ * Inspired by:
+ * - Cyberpunk neon aesthetics (cyan-magenta contrast)
+ * - OLED-optimized dark mode
+ * - Modern gaming UI trends
+ *
+ * Three-tier token architecture:
+ * - Tier 1: Primitive tokens (raw hex values)
+ * - Tier 2: Semantic tokens (purpose-based)
+ * - Tier 3: Component tokens (shadcn/ui compatibility)
+ */
+
+:root {
+  /* ========================================================================
+     TIER 1: PRIMITIVE PALETTE
+     Raw color values - never use these directly in components
+     ======================================================================== */
+
+  /* Neutral Scale (Deep blue-tinted blacks for OLED + gaming aesthetic) */
+  --primitive-neutral-0: #000000;
+  --primitive-neutral-50: #050508;   /* True OLED black */
+  --primitive-neutral-100: #0a0a10;  /* Deep space */
+  --primitive-neutral-150: #0d0d14;  /* Main background - Material-inspired */
+  --primitive-neutral-200: #111118;  /* Elevated surfaces */
+  --primitive-neutral-250: #16161f;  /* Overlay surfaces */
+  --primitive-neutral-300: #1c1c27;  /* Raised surfaces */
+  --primitive-neutral-350: #232330;  /* Active surfaces */
+  --primitive-neutral-400: #2d2d3a;  /* Default borders */
+  --primitive-neutral-500: #3d3d4d;  /* Emphasis borders */
+  --primitive-neutral-600: #5c5c6e;  /* Disabled content */
+  --primitive-neutral-700: #8888a0;  /* Tertiary content */
+  --primitive-neutral-800: #b0b0c0;  /* Secondary content */
+  --primitive-neutral-900: #e0e0ec;  /* Elevated content */
+  --primitive-neutral-950: #f0f0f8;  /* Primary content */
+  --primitive-neutral-1000: #ffffff; /* Pure white */
+
+  /* Teal/Mint Scale (Primary Accent - Fresh Gaming DNA) */
+  --primitive-teal-300: #5eead4;   /* Soft glow */
+  --primitive-teal-400: #2dd4bf;   /* Light state */
+  --primitive-teal-500: #14b8a6;   /* Default */
+  --primitive-teal-600: #0d9488;   /* Hover - 2026: lighter on hover */
+  --primitive-teal-700: #0f766e;   /* Active */
+  --primitive-teal-800: #115e59;   /* Muted */
+  --primitive-teal-glow: #2dd4bf;  /* Neon glow color */
+
+  /* Neon Cyan Scale (Secondary - Cyberpunk signature) */
+  --primitive-cyan-300: #67e8f9;   /* Soft */
+  --primitive-cyan-400: #22d3ee;   /* Light */
+  --primitive-cyan-500: #06b6d4;   /* Default */
+  --primitive-cyan-600: #0891b2;   /* Hover */
+  --primitive-cyan-neon: #00f0ff;  /* Electric neon - cyberpunk signature */
+  --primitive-cyan-glow: #00e5f0;  /* Glow effect */
+
+  /* Hot Magenta Scale (Tertiary - Cyberpunk contrast) */
+  --primitive-magenta-400: #f472b6;
+  --primitive-magenta-500: #ec4899;
+  --primitive-magenta-600: #db2777;
+  --primitive-magenta-neon: #ff00e5; /* Electric neon */
+  --primitive-magenta-glow: #ff44ee;
+
+  /* Fuchsia Scale (Gradient endpoint) */
+  --primitive-fuchsia-400: #e879f9;
+  --primitive-fuchsia-500: #d946ef;
+  --primitive-fuchsia-600: #c026d3;
+  --primitive-fuchsia-neon: #ea00ff;
+
+  /* Status: Neon Green (Success - vibrant gaming style) */
+  --primitive-green-300: #86efac;
+  --primitive-green-400: #4ade80;
+  --primitive-green-500: #22c55e;
+  --primitive-green-neon: #00ff88;  /* Radioactive green */
+  --primitive-green-glow: #39ff9f;
+
+  /* Status: Neon Red (Error - intense but not harsh) */
+  --primitive-red-300: #fca5a5;
+  --primitive-red-400: #f87171;
+  --primitive-red-500: #ef4444;
+  --primitive-red-neon: #ff3366;   /* Hot pink-red */
+  --primitive-red-glow: #ff5577;
+
+  /* Status: Neon Amber (Warning - electric yellow-orange) */
+  --primitive-amber-300: #fcd34d;
+  --primitive-amber-400: #fbbf24;
+  --primitive-amber-500: #f59e0b;
+  --primitive-amber-neon: #ffcc00; /* Electric gold */
+  --primitive-amber-glow: #ffd633;
+
+  /* Status: Electric Blue (Info) */
+  --primitive-blue-400: #60a5fa;
+  --primitive-blue-500: #3b82f6;
+  --primitive-blue-neon: #0088ff;
+  --primitive-blue-glow: #3399ff;
+
+  /* File Icon Colors (Vibrant) */
+  --primitive-orange-400: #fb923c;
+  --primitive-orange-neon: #ff6600;
+  --primitive-pink-400: #f472b6;
+  --primitive-pink-neon: #ff66b2;
+  --primitive-purple-400: #c084fc;
+  --primitive-yellow-300: #fde047;
+  --primitive-yellow-400: #facc15;
+  --primitive-yellow-neon: #ffee00;
+
+  /* ========================================================================
+     TIER 2: SEMANTIC TOKENS
+     Purpose-based tokens - use these in component styling
+     ======================================================================== */
+
+  /* Surface Hierarchy (Deep space gaming aesthetic) */
+  --surface-base: var(--primitive-neutral-150);      /* #0d0d14 - main bg */
+  --surface-muted: var(--primitive-neutral-100);     /* Subtle sections */
+  --surface-elevated: var(--primitive-neutral-200);  /* Cards, modals */
+  --surface-overlay: var(--primitive-neutral-250);   /* Dropdowns, popovers */
+  --surface-raised: var(--primitive-neutral-300);    /* Active states */
+  --surface-active: var(--primitive-neutral-350);    /* Pressed states */
+
+  /* Border Hierarchy (Subtle but defined) */
+  --border-muted: var(--primitive-neutral-300);
+  --border-default: var(--primitive-neutral-400);
+  --border-emphasis: var(--primitive-neutral-500);
+  --border-accent: rgba(20, 184, 166, 0.4);
+  --border-focus: var(--primitive-teal-500);
+  --border-glow: var(--primitive-cyan-neon);
+
+  /* Content/Text Hierarchy */
+  --content-primary: var(--primitive-neutral-950);   /* #f0f0f8 */
+  --content-secondary: var(--primitive-neutral-800); /* #b0b0c0 */
+  --content-tertiary: var(--primitive-neutral-700);  /* #8888a0 */
+  --content-disabled: var(--primitive-neutral-600);  /* #5c5c6e */
+  --content-inverse: var(--primitive-neutral-100);
+  --content-on-accent: var(--primitive-neutral-1000);
+
+  /* Primary Accent (Teal/Mint) */
+  --accent-default: var(--primitive-teal-500);
+  --accent-hover: var(--primitive-teal-400);   /* Lighter on hover - 2026 trend */
+  --accent-active: var(--primitive-teal-700);
+  --accent-muted: var(--primitive-teal-800);
+  --accent-subtle: rgba(20, 184, 166, 0.15);
+  --accent-glow: var(--primitive-teal-glow);
+
+  /* Secondary Accent (Neon Cyan - Cyberpunk signature) */
+  --secondary-default: var(--primitive-cyan-neon);
+  --secondary-hover: var(--primitive-cyan-400);
+  --secondary-active: var(--primitive-cyan-600);
+  --secondary-muted: var(--primitive-cyan-500);
+  --secondary-subtle: rgba(0, 240, 255, 0.12);
+  --secondary-glow: var(--primitive-cyan-glow);
+
+  /* Tertiary Accent (Hot Magenta - Gaming energy) */
+  --tertiary-default: var(--primitive-magenta-neon);
+  --tertiary-hover: var(--primitive-magenta-400);
+  --tertiary-muted: var(--primitive-magenta-500);
+  --tertiary-subtle: rgba(255, 0, 229, 0.12);
+  --tertiary-glow: var(--primitive-magenta-glow);
+
+  /* Status Colors (Neon variants for gaming feel) */
+  --status-success: var(--primitive-green-neon);
+  --status-success-hover: var(--primitive-green-glow);
+  --status-success-muted: var(--primitive-green-500);
+  --status-success-subtle: rgba(0, 255, 136, 0.12);
+
+  --status-error: var(--primitive-red-neon);
+  --status-error-hover: var(--primitive-red-glow);
+  --status-error-muted: var(--primitive-red-500);
+  --status-error-subtle: rgba(255, 51, 102, 0.12);
+
+  --status-warning: var(--primitive-amber-neon);
+  --status-warning-hover: var(--primitive-amber-glow);
+  --status-warning-muted: var(--primitive-amber-500);
+  --status-warning-subtle: rgba(255, 204, 0, 0.12);
+  --status-warning-light: var(--primitive-amber-300);
+
+  --status-info: var(--primitive-blue-neon);
+  --status-info-hover: var(--primitive-blue-glow);
+  --status-info-muted: var(--primitive-blue-500);
+  --status-info-subtle: rgba(0, 136, 255, 0.12);
+
+  /* File Icon Colors (Vibrant, recognizable) */
+  --icon-typescript: var(--primitive-blue-neon);
+  --icon-javascript: var(--primitive-yellow-neon);
+  --icon-json: var(--primitive-yellow-400);
+  --icon-css: var(--primitive-pink-neon);
+  --icon-html: var(--primitive-orange-neon);
+  --icon-markdown: var(--content-secondary);
+  --icon-image: var(--primitive-purple-400);
+  --icon-default: var(--content-tertiary);
+
+  /* Gaming-specific tokens */
+  --gaming-glow-primary: 0 0 20px var(--primitive-teal-glow);
+  --gaming-glow-secondary: 0 0 20px var(--primitive-cyan-glow);
+  --gaming-glow-tertiary: 0 0 20px var(--primitive-magenta-glow);
+
+  /* ========================================================================
+     TIER 3: COMPONENT TOKENS (shadcn/ui compatibility)
+     ======================================================================== */
+
+  /* Core */
+  --background: var(--surface-base);
+  --foreground: var(--content-primary);
+
+  /* Card */
+  --card: var(--surface-elevated);
+  --card-foreground: var(--content-primary);
+
+  /* Popover */
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--content-primary);
+
+  /* Primary (maps to violet accent) */
+  --primary: var(--accent-default);
+  --primary-foreground: var(--content-on-accent);
+
+  /* Secondary (UI secondary - surface based) */
+  --secondary: var(--surface-raised);
+  --secondary-foreground: var(--content-primary);
+
+  /* Muted */
+  --muted: var(--surface-overlay);
+  --muted-foreground: var(--content-secondary);
+
+  /* Accent (shadcn hover states) */
+  --accent: var(--surface-raised);
+  --accent-foreground: var(--content-primary);
+
+  /* Destructive */
+  --destructive: var(--status-error);
+  --destructive-foreground: var(--content-on-accent);
+
+  /* Border, Input, Ring */
+  --border: var(--border-default);
+  --input: var(--border-default);
+  --ring: var(--accent-default);
+
+  /* Sidebar */
+  --sidebar-background: var(--surface-muted);
+  --sidebar-foreground: var(--content-primary);
+  --sidebar-border: var(--border-default);
+  --sidebar-accent: var(--surface-overlay);
+  --sidebar-accent-foreground: var(--content-primary);
+  --sidebar-primary: var(--accent-default);
+  --sidebar-primary-foreground: var(--content-on-accent);
+  --sidebar-ring: var(--accent-default);
+
+  /* Chart Colors (Gaming palette) */
+  --chart-1: var(--primitive-teal-500);
+  --chart-2: var(--primitive-cyan-neon);
+  --chart-3: var(--primitive-magenta-neon);
+  --chart-4: var(--primitive-green-neon);
+  --chart-5: var(--primitive-amber-neon);
+}
+
+/* ========================================================================
+   GAMING GRADIENTS
+   Mesh and linear gradients for premium gaming feel
+   ======================================================================== */
+
+:root {
+  /* Primary gaming gradient (Teal to Cyan) */
+  --gradient-gaming: linear-gradient(135deg, var(--primitive-teal-500) 0%, var(--primitive-cyan-neon) 100%);
+  --gradient-gaming-reverse: linear-gradient(135deg, var(--primitive-cyan-neon) 0%, var(--primitive-teal-500) 100%);
+
+  /* Cyberpunk gradient (Magenta to Cyan) */
+  --gradient-cyberpunk: linear-gradient(135deg, var(--primitive-magenta-neon) 0%, var(--primitive-cyan-neon) 100%);
+
+  /* Neon sunset (Magenta to Violet to Blue) */
+  --gradient-neon-sunset: linear-gradient(135deg, var(--primitive-magenta-neon) 0%, var(--primitive-violet-500) 50%, var(--primitive-blue-neon) 100%);
+
+  /* Success gradient */
+  --gradient-success: linear-gradient(135deg, var(--primitive-green-500) 0%, var(--primitive-cyan-500) 100%);
+
+  /* Error gradient */
+  --gradient-error: linear-gradient(135deg, var(--primitive-red-500) 0%, var(--primitive-magenta-500) 100%);
+
+  /* Surface gradient (subtle depth) */
+  --gradient-surface: linear-gradient(180deg, var(--surface-elevated) 0%, var(--surface-base) 100%);
+
+  /* Glow orb gradients */
+  --gradient-orb-teal: radial-gradient(circle, var(--primitive-teal-glow) 0%, transparent 70%);
+  --gradient-orb-cyan: radial-gradient(circle, var(--primitive-cyan-glow) 0%, transparent 70%);
+  --gradient-orb-magenta: radial-gradient(circle, var(--primitive-magenta-glow) 0%, transparent 70%);
+}

@@ -1,0 +1,129 @@
+/**
+ * PlayCraft Design System - Editor Tokens
+ * Monaco Editor and XTerm Terminal Theme Colors
+ *
+ * Based on Dracula theme, refined for PlayCraft's aesthetic
+ * These tokens allow external libraries to use design system colors
+ */
+
+:root {
+  /* ========================================================================
+     EDITOR CORE COLORS
+     Monaco editor UI colors
+     ======================================================================== */
+
+  --editor-bg: #0d0d0d;
+  --editor-fg: #f8f8f2;
+  --editor-line-highlight: #1a1a2e;
+  --editor-selection: #44475a;
+  --editor-selection-inactive: rgba(68, 71, 90, 0.5);
+  --editor-cursor: var(--accent-hover);
+  --editor-line-number: #6272a4;
+  --editor-line-number-active: #f8f8f2;
+  --editor-indent-guide: rgba(40, 42, 54, 0.33);
+  --editor-indent-guide-active: #6272a4;
+  --editor-gutter: #0d0d0d;
+  --editor-bracket-match-bg: #44475a;
+  --editor-bracket-match-border: #f1fa8c;
+  --editor-word-highlight: rgba(68, 71, 90, 0.33);
+  --editor-word-highlight-strong: rgba(68, 71, 90, 0.5);
+  --editor-scrollbar: rgba(68, 71, 90, 0.33);
+  --editor-scrollbar-hover: rgba(68, 71, 90, 0.5);
+  --editor-scrollbar-active: #44475a;
+
+  /* ========================================================================
+     SYNTAX HIGHLIGHTING
+     Token colors for code highlighting
+     ======================================================================== */
+
+  --syntax-comment: #6272a4;
+  --syntax-keyword: #ff79c6;
+  --syntax-string: #f1fa8c;
+  --syntax-number: #bd93f9;
+  --syntax-type: #8be9fd;
+  --syntax-function: #50fa7b;
+  --syntax-variable: #f8f8f2;
+  --syntax-constant: #bd93f9;
+  --syntax-parameter: #ffb86c;
+  --syntax-tag: #ff79c6;
+  --syntax-attribute: #50fa7b;
+  --syntax-attribute-value: #f1fa8c;
+  --syntax-property: #f8f8f2;
+  --syntax-operator: #ff79c6;
+  --syntax-punctuation: #f8f8f2;
+  --syntax-class: #8be9fd;
+  --syntax-interface: #8be9fd;
+  --syntax-enum: #bd93f9;
+  --syntax-regexp: #f1fa8c;
+  --syntax-escape: #ff79c6;
+  --syntax-invalid: #ff5555;
+
+  /* ========================================================================
+     TERMINAL COLORS (XTerm)
+     ANSI color palette for terminal emulator
+     ======================================================================== */
+
+  --terminal-bg: #0d0d0d;
+  --terminal-fg: #e5e5e5;
+  --terminal-cursor: var(--accent-hover);
+  --terminal-cursor-accent: #0d0d0d;
+  --terminal-selection: rgba(68, 71, 90, 0.5);
+
+  /* Standard Colors */
+  --terminal-black: #0d0d0d;
+  --terminal-red: #ff5555;
+  --terminal-green: #50fa7b;
+  --terminal-yellow: #f1fa8c;
+  --terminal-blue: #6272a4;
+  --terminal-magenta: #ff79c6;
+  --terminal-cyan: #8be9fd;
+  --terminal-white: #f8f8f2;
+
+  /* Bright Colors */
+  --terminal-bright-black: #6272a4;
+  --terminal-bright-red: #ff6e6e;
+  --terminal-bright-green: #69ff94;
+  --terminal-bright-yellow: #ffffa5;
+  --terminal-bright-blue: #d6acff;
+  --terminal-bright-magenta: #ff92df;
+  --terminal-bright-cyan: #a4ffff;
+  --terminal-bright-white: #ffffff;
+
+  /* ========================================================================
+     DIFF COLORS
+     For git diff highlighting
+     ======================================================================== */
+
+  --diff-added-bg: rgba(80, 250, 123, 0.15);
+  --diff-added-border: rgba(80, 250, 123, 0.5);
+  --diff-added-text: #50fa7b;
+
+  --diff-removed-bg: rgba(255, 85, 85, 0.15);
+  --diff-removed-border: rgba(255, 85, 85, 0.5);
+  --diff-removed-text: #ff5555;
+
+  --diff-modified-bg: rgba(255, 184, 108, 0.15);
+  --diff-modified-border: rgba(255, 184, 108, 0.5);
+  --diff-modified-text: #ffb86c;
+
+  /* ========================================================================
+     ERROR/WARNING SQUIGGLES
+     For inline diagnostics
+     ======================================================================== */
+
+  --squiggle-error: #ff5555;
+  --squiggle-warning: #ffb86c;
+  --squiggle-info: #8be9fd;
+  --squiggle-hint: #6272a4;
+
+  /* ========================================================================
+     MINIMAP COLORS
+     For the minimap overview
+     ======================================================================== */
+
+  --minimap-bg: #0d0d0d;
+  --minimap-selection: rgba(139, 92, 246, 0.3);
+  --minimap-find-match: rgba(241, 250, 140, 0.5);
+  --minimap-error: rgba(255, 85, 85, 0.5);
+  --minimap-warning: rgba(255, 184, 108, 0.5);
+}

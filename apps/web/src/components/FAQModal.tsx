@@ -10,7 +10,7 @@ import {
   ChevronDown,
   HelpCircle,
   MessageSquare,
-  Sparkles,
+  Compass,
 } from 'lucide-react';
 import { FAQ_CATEGORIES, ALL_FAQ_ITEMS } from '../data/faqContent';
 
@@ -139,7 +139,7 @@ export function FAQModal({
                     className="flex items-center gap-3 rounded-lg border border-border bg-surface-overlay/50 p-4 text-left transition-colors hover:border-accent/50 hover:bg-surface-overlay"
                   >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/20">
-                      <Sparkles className="h-5 w-5 text-accent" />
+                      <Compass className="h-5 w-5 text-accent" />
                     </div>
                     <div>
                       <p className="font-medium text-content">Take a tour</p>
@@ -155,8 +155,8 @@ export function FAQModal({
                     }}
                     className="flex items-center gap-3 rounded-lg border border-border bg-surface-overlay/50 p-4 text-left transition-colors hover:border-accent/50 hover:bg-surface-overlay"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600/20">
-                      <MessageSquare className="h-5 w-5 text-blue-400" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-info/20">
+                      <MessageSquare className="h-5 w-5 text-info" />
                     </div>
                     <div>
                       <p className="font-medium text-content">Send feedback</p>

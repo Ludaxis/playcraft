@@ -113,8 +113,8 @@ export const PublishModal = memo(function PublishModal({
           {publishedUrl ? (
             /* Success State */
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-500/20">
-                <Check className="h-8 w-8 text-green-400" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
+                <Check className="h-8 w-8 text-success" />
               </div>
               <p className="mb-6 text-content-muted">
                 Your game is now live! Share it with the world.
@@ -134,8 +134,8 @@ export const PublishModal = memo(function PublishModal({
                 >
                   {copied ? (
                     <>
-                      <Check className="h-4 w-4 text-green-400" />
-                      <span className="text-green-400">Copied!</span>
+                      <Check className="h-4 w-4 text-success" />
+                      <span className="text-success">Copied!</span>
                     </>
                   ) : (
                     <>
@@ -191,7 +191,7 @@ export const PublishModal = memo(function PublishModal({
 
               {/* Build Output */}
               {buildOutput.length > 0 && (
-                <div className="max-h-40 overflow-auto rounded-xl bg-gray-900 p-4 font-mono text-xs text-gray-300">
+                <div className="max-h-40 overflow-auto rounded-xl bg-surface-elevated p-4 font-mono text-xs text-content-muted">
                   {buildOutput.slice(-15).map((line, i) => (
                     <div key={i} className="whitespace-pre-wrap break-all">
                       {line}
@@ -203,15 +203,15 @@ export const PublishModal = memo(function PublishModal({
           ) : error ? (
             /* Error State */
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20">
-                <AlertCircle className="h-8 w-8 text-red-400" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-error/20">
+                <AlertCircle className="h-8 w-8 text-error" />
               </div>
               <p className="mb-2 font-medium text-content">Publishing Failed</p>
               <p className="mb-6 text-sm text-content-muted">{error}</p>
 
               {/* Show build output on error */}
               {buildOutput.length > 0 && (
-                <div className="mb-6 max-h-32 overflow-auto rounded-xl bg-gray-900 p-4 text-left font-mono text-xs text-gray-300">
+                <div className="mb-6 max-h-32 overflow-auto rounded-xl bg-surface-elevated p-4 text-left font-mono text-xs text-content-muted">
                   {buildOutput.slice(-10).map((line, i) => (
                     <div key={i} className="whitespace-pre-wrap break-all">
                       {line}

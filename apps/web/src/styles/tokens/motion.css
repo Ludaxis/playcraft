@@ -1,0 +1,264 @@
+/**
+ * PlayCraft Design System - Motion Tokens
+ * Animation Timing, Easing, and Keyframes
+ *
+ * 2026 Trends:
+ * - Purpose-driven animations (guide, confirm, emphasize)
+ * - Subtle, natural movement
+ * - Reduced motion support
+ * - Spring-like organic easing
+ */
+
+:root {
+  /* ========================================================================
+     DURATION SCALE
+     Choose based on the type of animation
+     ======================================================================== */
+
+  --duration-instant: 0ms;
+  --duration-fastest: 50ms;       /* Micro-interactions (opacity changes) */
+  --duration-faster: 100ms;       /* Quick feedback */
+  --duration-fast: 150ms;         /* Hover states, button feedback */
+  --duration-normal: 200ms;       /* Standard transitions */
+  --duration-slow: 300ms;         /* Modal open, panel slide */
+  --duration-slower: 400ms;       /* Page transitions */
+  --duration-slowest: 500ms;      /* Complex animations */
+  --duration-deliberate: 700ms;   /* Emphasis animations */
+  --duration-gentle: 1000ms;      /* Very slow, gentle transitions */
+
+  /* Semantic Durations (use these in components) */
+  --duration-micro: var(--duration-fastest);     /* Opacity, color changes */
+  --duration-swift: var(--duration-fast);        /* Hover, active states */
+  --duration-smooth: var(--duration-normal);     /* Standard transitions */
+  --duration-relaxed: var(--duration-slow);      /* Modals, drawers */
+  --duration-expressive: var(--duration-slower); /* Page transitions, reveals */
+
+  /* ========================================================================
+     EASING FUNCTIONS
+     Natural, organic movement for 2026
+     ======================================================================== */
+
+  /* Standard Easings */
+  --ease-linear: linear;
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Expressive Easings (2026 Organic Motion) */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);      /* Bouncy, playful */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Overshoot bounce */
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);       /* Smooth, natural */
+  --ease-snappy: cubic-bezier(0.5, 0, 0.1, 1);           /* Quick, snappy */
+  --ease-anticipate: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Wind-up motion */
+
+  /* Enter/Exit Pairs (for coordinated animations) */
+  --ease-enter: var(--ease-out);
+  --ease-exit: var(--ease-in);
+  --ease-enter-expressive: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-exit-expressive: cubic-bezier(0.4, 0.0, 1, 1);
+
+  /* ========================================================================
+     ANIMATION PRESETS
+     Complete animation shorthand values
+     ======================================================================== */
+
+  /* Fade Animations */
+  --animation-fade-in: fade-in var(--duration-smooth) var(--ease-out);
+  --animation-fade-out: fade-out var(--duration-smooth) var(--ease-in);
+
+  /* Slide Animations */
+  --animation-slide-up: slide-up var(--duration-smooth) var(--ease-out);
+  --animation-slide-down: slide-down var(--duration-smooth) var(--ease-out);
+  --animation-slide-left: slide-left var(--duration-smooth) var(--ease-out);
+  --animation-slide-right: slide-right var(--duration-smooth) var(--ease-out);
+
+  /* Scale Animations */
+  --animation-scale-in: scale-in var(--duration-smooth) var(--ease-spring);
+  --animation-scale-out: scale-out var(--duration-fast) var(--ease-in);
+  --animation-pop: pop var(--duration-smooth) var(--ease-spring);
+
+  /* Continuous Animations */
+  --animation-spin: spin 1s var(--ease-linear) infinite;
+  --animation-pulse: pulse 2s var(--ease-in-out) infinite;
+  --animation-glow-pulse: glow-pulse 2s var(--ease-in-out) infinite;
+  --animation-shimmer: shimmer 2s var(--ease-in-out) infinite;
+
+  /* Special Animations */
+  --animation-bounce: bounce 0.5s var(--ease-bounce);
+  --animation-shake: shake 0.5s var(--ease-in-out);
+}
+
+/* ========================================================================
+   KEYFRAMES
+   Define the actual animation sequences
+   ======================================================================== */
+
+/* Fade */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Slide */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Continuous */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Special */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-5px);
+  }
+  40%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+/* ========================================================================
+   REDUCED MOTION SUPPORT
+   Respect user preferences for reduced motion
+   ======================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-fastest: 0ms;
+    --duration-faster: 0ms;
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+    --duration-slower: 0ms;
+    --duration-slowest: 0ms;
+    --duration-deliberate: 0ms;
+    --duration-gentle: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -54,8 +54,8 @@ export class ErrorBoundary extends Component<
       }
 
       return (
-        <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-red-800 bg-red-900/20 p-8">
-          <AlertTriangle className="h-12 w-12 text-red-400" />
+        <div className="flex min-h-[200px] flex-col items-center justify-center rounded-lg border border-error-muted bg-error-subtle p-8">
+          <AlertTriangle className="h-12 w-12 text-error" />
           <h2 className="mt-4 text-xl font-semibold text-content">
             Something went wrong
           </h2>
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<
           </p>
           <button
             onClick={this.handleRetry}
-            className="mt-6 flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-500"
+            className="mt-6 flex items-center gap-2 rounded-lg bg-error px-4 py-2 text-white transition-colors hover:bg-error/80"
           >
             <RefreshCw className="h-4 w-4" />
             Try again

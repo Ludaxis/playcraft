@@ -1,0 +1,221 @@
+/**
+ * PlayCraft Design System - Effects Tokens
+ * 2026 Cyberpunk Gaming Aesthetics
+ *
+ * Features:
+ * - Neon glow effects (cyberpunk signature)
+ * - OLED-optimized shadows
+ * - Glass morphism with color tints
+ * - Mesh gradients for premium feel
+ */
+
+:root {
+  /* ========================================================================
+     SHADOW SYSTEM
+     Deep blacks for OLED optimization
+     ======================================================================== */
+
+  /* Standard Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.55);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.6);
+  --shadow-2xl: 0 20px 40px rgba(0, 0, 0, 0.65);
+
+  /* Elevated Surface Shadows */
+  --shadow-elevated: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --shadow-elevated-lg: 0 8px 40px rgba(0, 0, 0, 0.6);
+
+  /* Inset Shadows */
+  --shadow-inset-sm: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-inset: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+
+  /* ========================================================================
+     NEON GLOW SYSTEM
+     Cyberpunk signature - electric, vibrant glows
+     ======================================================================== */
+
+  /* Primary Glows (Teal/Mint) */
+  --glow-accent-xs: 0 0 8px rgba(20, 184, 166, 0.3);
+  --glow-accent-sm: 0 0 15px rgba(20, 184, 166, 0.4);
+  --glow-accent: 0 0 25px rgba(20, 184, 166, 0.5);
+  --glow-accent-lg: 0 0 40px rgba(20, 184, 166, 0.5);
+  --glow-accent-xl: 0 0 60px rgba(20, 184, 166, 0.5);
+
+  /* Neon Teal (intense) */
+  --glow-neon-violet-sm: 0 0 10px #2dd4bf, 0 0 20px rgba(45, 212, 191, 0.5);
+  --glow-neon-violet: 0 0 15px #2dd4bf, 0 0 30px rgba(45, 212, 191, 0.6), 0 0 45px rgba(45, 212, 191, 0.3);
+  --glow-neon-violet-lg: 0 0 20px #2dd4bf, 0 0 40px rgba(45, 212, 191, 0.7), 0 0 60px rgba(45, 212, 191, 0.4);
+
+  /* Secondary Glows (Neon Cyan - Cyberpunk signature) */
+  --glow-secondary-xs: 0 0 8px rgba(0, 240, 255, 0.3);
+  --glow-secondary-sm: 0 0 15px rgba(0, 240, 255, 0.4);
+  --glow-secondary: 0 0 25px rgba(0, 240, 255, 0.5);
+  --glow-secondary-lg: 0 0 40px rgba(0, 240, 255, 0.5);
+
+  /* Neon Cyan (intense) */
+  --glow-neon-cyan-sm: 0 0 10px #00f0ff, 0 0 20px rgba(0, 240, 255, 0.5);
+  --glow-neon-cyan: 0 0 15px #00f0ff, 0 0 30px rgba(0, 240, 255, 0.6), 0 0 45px rgba(0, 240, 255, 0.3);
+  --glow-neon-cyan-lg: 0 0 20px #00f0ff, 0 0 40px rgba(0, 240, 255, 0.7), 0 0 60px rgba(0, 240, 255, 0.4);
+
+  /* Tertiary Glows (Hot Magenta) */
+  --glow-tertiary-xs: 0 0 8px rgba(255, 0, 229, 0.3);
+  --glow-tertiary-sm: 0 0 15px rgba(255, 0, 229, 0.4);
+  --glow-tertiary: 0 0 25px rgba(255, 0, 229, 0.5);
+  --glow-tertiary-lg: 0 0 40px rgba(255, 0, 229, 0.5);
+
+  /* Neon Magenta (intense) */
+  --glow-neon-magenta-sm: 0 0 10px #ff00e5, 0 0 20px rgba(255, 0, 229, 0.5);
+  --glow-neon-magenta: 0 0 15px #ff00e5, 0 0 30px rgba(255, 0, 229, 0.6), 0 0 45px rgba(255, 0, 229, 0.3);
+  --glow-neon-magenta-lg: 0 0 20px #ff00e5, 0 0 40px rgba(255, 0, 229, 0.7), 0 0 60px rgba(255, 0, 229, 0.4);
+
+  /* Status Glows (Neon variants) */
+  --glow-success: 0 0 20px rgba(0, 255, 136, 0.4);
+  --glow-success-intense: 0 0 15px #00ff88, 0 0 30px rgba(0, 255, 136, 0.5);
+  --glow-error: 0 0 20px rgba(255, 51, 102, 0.4);
+  --glow-error-intense: 0 0 15px #ff3366, 0 0 30px rgba(255, 51, 102, 0.5);
+  --glow-warning: 0 0 20px rgba(255, 204, 0, 0.4);
+  --glow-warning-intense: 0 0 15px #ffcc00, 0 0 30px rgba(255, 204, 0, 0.5);
+  --glow-info: 0 0 20px rgba(0, 136, 255, 0.4);
+  --glow-info-intense: 0 0 15px #0088ff, 0 0 30px rgba(0, 136, 255, 0.5);
+
+  /* ========================================================================
+     FOCUS RING SYSTEM
+     Accessible + Gaming aesthetic
+     ======================================================================== */
+
+  --ring-width: 2px;
+  --ring-offset: 2px;
+  --ring-color: var(--accent-default);
+  --ring-offset-color: var(--surface-base);
+
+  /* Standard Focus Ring */
+  --ring-focus: 0 0 0 var(--ring-offset) var(--ring-offset-color),
+                0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--ring-color);
+
+  /* Focus Ring with Glow (gaming style) */
+  --ring-focus-glow: 0 0 0 var(--ring-offset) var(--ring-offset-color),
+                     0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--ring-color),
+                     var(--glow-accent-sm);
+
+  /* Neon Focus Ring */
+  --ring-focus-neon: 0 0 0 var(--ring-offset) var(--ring-offset-color),
+                     0 0 0 calc(var(--ring-offset) + var(--ring-width)) var(--ring-color),
+                     var(--glow-accent-sm);
+
+  /* ========================================================================
+     BLUR SYSTEM
+     For glass morphism and depth
+     ======================================================================== */
+
+  --blur-none: 0;
+  --blur-xs: 2px;
+  --blur-sm: 4px;
+  --blur-md: 8px;
+  --blur-lg: 12px;
+  --blur-xl: 16px;
+  --blur-2xl: 24px;
+  --blur-3xl: 40px;
+
+  /* ========================================================================
+     GLASS MORPHISM
+     2026: Subtle color tints with blur
+     ======================================================================== */
+
+  /* Standard Glass */
+  --glass-bg: rgba(13, 13, 20, 0.8);
+  --glass-bg-elevated: rgba(17, 17, 24, 0.9);
+  --glass-bg-overlay: rgba(22, 22, 31, 0.95);
+
+  /* Tinted Glass (cyberpunk feel) */
+  --glass-bg-violet: rgba(20, 184, 166, 0.08);
+  --glass-bg-cyan: rgba(0, 240, 255, 0.06);
+  --glass-bg-magenta: rgba(255, 0, 229, 0.06);
+
+  --glass-blur: var(--blur-lg);
+  --glass-blur-heavy: var(--blur-xl);
+
+  /* Glass border glow */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-glow: rgba(20, 184, 166, 0.2);
+
+  /* ========================================================================
+     GRADIENT SYSTEM
+     Cyberpunk + Gaming gradients
+     ======================================================================== */
+
+  /* Brand Gradients (Cyan → Purple → Magenta - matches logo) */
+  --gradient-accent: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+  --gradient-accent-vertical: linear-gradient(180deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+  --gradient-accent-soft: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(139, 92, 246, 0.2) 50%, rgba(217, 70, 239, 0.2) 100%);
+  --gradient-accent-radial: radial-gradient(circle at center, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+
+  /* Gaming DNA (Cyan → Purple → Magenta) */
+  --gradient-gaming: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+  --gradient-gaming-vertical: linear-gradient(180deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+  --gradient-gaming-soft: linear-gradient(135deg, rgba(34, 211, 238, 0.25) 0%, rgba(139, 92, 246, 0.25) 50%, rgba(217, 70, 239, 0.25) 100%);
+  --gradient-gaming-radial: radial-gradient(circle at center, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+
+  /* Cyberpunk (Magenta to Cyan) */
+  --gradient-cyberpunk: linear-gradient(135deg, #ff00e5 0%, #00f0ff 100%);
+  --gradient-cyberpunk-vertical: linear-gradient(180deg, #ff00e5 0%, #00f0ff 100%);
+  --gradient-cyberpunk-soft: linear-gradient(135deg, rgba(255, 0, 229, 0.2) 0%, rgba(0, 240, 255, 0.2) 100%);
+
+  /* Neon Sunset (Cyan → Purple → Magenta) */
+  --gradient-neon-sunset: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+
+  /* Electric (for buttons, CTAs) */
+  --gradient-electric: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+
+  /* Surface Gradients */
+  --gradient-surface: linear-gradient(180deg, #0d0d14 0%, #111118 100%);
+  --gradient-surface-reverse: linear-gradient(180deg, #111118 0%, #0d0d14 100%);
+  --gradient-surface-overlay: linear-gradient(180deg, #16161f 0%, #0d0d14 100%);
+
+  /* Fade Gradients */
+  --gradient-fade-top: linear-gradient(180deg, #0d0d14 0%, transparent 100%);
+  --gradient-fade-bottom: linear-gradient(180deg, transparent 0%, #0d0d14 100%);
+  --gradient-fade-left: linear-gradient(90deg, #0d0d14 0%, transparent 100%);
+  --gradient-fade-right: linear-gradient(90deg, transparent 0%, #0d0d14 100%);
+
+  /* Shimmer (loading skeletons) */
+  --gradient-shimmer: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+
+  /* Mesh Gradient Background (premium gaming - matches logo) */
+  --gradient-mesh-gaming:
+    radial-gradient(ellipse at 20% 20%, rgba(34, 211, 238, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(217, 70, 239, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+
+  /* ========================================================================
+     OPACITY TOKENS
+     ======================================================================== */
+
+  --opacity-0: 0;
+  --opacity-5: 0.05;
+  --opacity-10: 0.1;
+  --opacity-15: 0.15;
+  --opacity-20: 0.2;
+  --opacity-25: 0.25;
+  --opacity-30: 0.3;
+  --opacity-40: 0.4;
+  --opacity-50: 0.5;
+  --opacity-60: 0.6;
+  --opacity-70: 0.7;
+  --opacity-75: 0.75;
+  --opacity-80: 0.8;
+  --opacity-90: 0.9;
+  --opacity-95: 0.95;
+  --opacity-100: 1;
+
+  /* Semantic Opacity */
+  --opacity-disabled: 0.5;
+  --opacity-hover-overlay: 0.08;
+  --opacity-backdrop: 0.7;
+}

@@ -31,6 +31,7 @@ export interface PlayCraftProject {
 export interface CreateProjectInput {
   name: string;
   description?: string;
+  workspace_id?: string | null;
 }
 
 export interface UpdateProjectInput {
@@ -41,12 +42,16 @@ export interface UpdateProjectInput {
   files?: Record<string, string>;
   conversation?: PlayCraftProject['conversation'];
   active_chat_session_id?: string | null;
+  published_url?: string | null;
+  published_at?: string | null;
+  is_public?: boolean;
+  is_starred?: boolean;
 }
 
 /**
  * Get all projects for the current user
  */
-export async function getProjects(): Promise<PlayCraftProject[]> {
+export async function getProjects(workspaceId?: string | null): Promise<PlayCraftProject[]> {
   const supabase = getSupabase();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -59,10 +64,18 @@ export async function getProjects(): Promise<PlayCraftProject[]> {
     return [];
   }
 
-  const { data, error } = await supabase
+  const query = supabase
     .from('playcraft_projects')
     .select('*')
     .order('updated_at', { ascending: false });
+
+  if (workspaceId === null) {
+    query.is('workspace_id', null);
+  } else if (workspaceId) {
+    query.eq('workspace_id', workspaceId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logger.error('Database error', new Error(error.message), { component: 'projectService', action: 'getProjects' });
@@ -155,6 +168,7 @@ export async function createProject(input: CreateProjectInput): Promise<PlayCraf
           user_id: user.id,
           name: input.name,
           description: input.description || null,
+          workspace_id: input.workspace_id ?? null,
           has_three_js: false,
           status: 'draft',
           files: {}, // Empty JSON for backward compatibility

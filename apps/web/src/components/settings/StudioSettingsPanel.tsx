@@ -1,110 +1,153 @@
 /**
  * Studio Settings Panel
- * Manages studio name, description, and avatar
+ * Manages studio name, description, and application preferences.
  */
-
 import { useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-import type { UserSettings, UpdateSettingsInput } from '../../types';
+import { Loader2, Volume1, Volume2, VolumeX } from 'lucide-react';
+import { useUserSettings, useUpdateSettings } from '../../hooks/useUserSettings';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Switch } from '../ui/switch';
+import { Label } from '../ui/label';
 
-interface StudioSettingsPanelProps {
-  settings: UserSettings;
-  onSave: (input: UpdateSettingsInput) => Promise<void>;
-  isSaving: boolean;
-}
+export function StudioSettingsPanel() {
+  const { data: settings, isLoading } = useUserSettings();
+  const { mutate: updateSettings, isPending: isSaving } = useUpdateSettings();
 
-export function StudioSettingsPanel({
-  settings,
-  onSave,
-  isSaving,
-}: StudioSettingsPanelProps) {
-  const [studioName, setStudioName] = useState(settings.studio_name || '');
-  const [studioDescription, setStudioDescription] = useState(
-    settings.studio_description || ''
-  );
+  const [formData, setFormData] = useState({
+    studio_name: '',
+    studio_description: '',
+    chat_suggestions: true,
+    generation_sound: 'first' as 'first' | 'always' | 'never',
+  });
 
-  // Sync with settings prop changes
   useEffect(() => {
-    setStudioName(settings.studio_name || '');
-    setStudioDescription(settings.studio_description || '');
-  }, [settings.studio_name, settings.studio_description]);
+    if (settings) {
+      setFormData({
+        studio_name: settings.studio_name || '',
+        studio_description: settings.studio_description || '',
+        chat_suggestions: settings.chat_suggestions ?? true,
+        generation_sound: settings.generation_sound || 'first',
+      });
+    }
+  }, [settings]);
 
-  const handleSave = () => {
-    onSave({
-      studio_name: studioName,
-      studio_description: studioDescription || null,
-    });
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleBlurSave = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    updateSettings({ [name]: value });
+  };
+
+  const handleSwitchChange = (name: 'chat_suggestions', checked: boolean) => {
+    setFormData(prev => ({ ...prev, [name]: checked }));
+    updateSettings({ [name]: checked });
+  };
+  
+  const handleRadioChange = (value: typeof formData.generation_sound) => {
+    setFormData(prev => ({ ...prev, generation_sound: value }));
+    updateSettings({ generation_sound: value });
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent-light" />
+      </div>
+    );
+  }
 
   return (
     <div>
       <h2 className="text-2xl font-bold text-content">Studio settings</h2>
       <p className="mt-1 text-content-muted">
-        Manage your game development studio settings.
+        Manage your studio identity and application preferences.
       </p>
 
       <div className="mt-8 space-y-8">
-        {/* Studio Avatar */}
-        <div>
-          <h3 className="font-medium text-content">Studio avatar</h3>
-          <p className="mt-1 text-sm text-content-muted">
-            Set an avatar for your studio.
-          </p>
-          <div className="mt-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-secondary text-2xl font-bold text-content">
-            {studioName.charAt(0).toUpperCase() || 'S'}
-          </div>
-        </div>
+        <SettingRow title="Studio Name" description="Your studio name, as visible to others.">
+          <Input name="studio_name" value={formData.studio_name} onChange={handleInputChange} onBlur={handleBlurSave} maxLength={100} />
+        </SettingRow>
 
-        {/* Studio Name */}
-        <div>
-          <h3 className="font-medium text-content">Studio name</h3>
-          <p className="mt-1 text-sm text-content-muted">
-            Your studio name, as visible to others.
-          </p>
-          <div className="mt-3">
-            <input
-              type="text"
-              value={studioName}
-              onChange={(e) => setStudioName(e.target.value)}
-              onBlur={handleSave}
-              maxLength={100}
-              className="w-full max-w-md rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content outline-none ring-accent focus:border-transparent focus:ring-2"
-            />
-            <p className="mt-1 text-right text-xs text-content-subtle">
-              {studioName.length} / 100 characters
-            </p>
-          </div>
-        </div>
+        <SettingRow title="Studio Description" description="A short description about your studio or team.">
+          <Textarea name="studio_description" value={formData.studio_description} onChange={handleInputChange} onBlur={handleBlurSave} maxLength={500} rows={3} />
+        </SettingRow>
 
-        {/* Studio Description */}
+        <div className="border-t border-border-muted pt-8" />
+
+        <ToggleSetting
+          title="Chat suggestions"
+          description="Show helpful suggestions in the chat interface."
+          checked={formData.chat_suggestions}
+          onCheckedChange={(checked) => handleSwitchChange('chat_suggestions', checked)}
+        />
+        
         <div>
-          <h3 className="font-medium text-content">Studio description</h3>
+          <h3 className="font-medium text-content">Generation complete sound</h3>
           <p className="mt-1 text-sm text-content-muted">
-            A short description about your studio or team.
+            Plays a notification sound when generation is finished.
           </p>
-          <div className="mt-3">
-            <textarea
-              value={studioDescription}
-              onChange={(e) => setStudioDescription(e.target.value)}
-              onBlur={handleSave}
-              maxLength={500}
-              rows={4}
-              placeholder="Description"
-              className="w-full max-w-md resize-none rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
-            />
-            <p className="mt-1 text-right text-xs text-content-subtle">
-              {studioDescription.length} / 500 characters
-            </p>
+          <div className="mt-3 space-y-2">
+            {[
+              { value: 'first', label: 'First generation', icon: Volume1 },
+              { value: 'always', label: 'Always', icon: Volume2 },
+              { value: 'never', label: 'Never', icon: VolumeX },
+            ].map((option) => (
+              <Label key={option.value} className="flex cursor-pointer items-center gap-3 font-normal">
+                <input
+                  type="radio"
+                  name="generationSound"
+                  value={option.value}
+                  checked={formData.generation_sound === option.value}
+                  onChange={() => handleRadioChange(option.value as typeof formData.generation_sound)}
+                  className="h-4 w-4 border-border bg-surface-overlay text-accent focus:ring-accent"
+                />
+                <option.icon className="h-4 w-4 text-content-muted" />
+                <span>{option.label}</span>
+              </Label>
+            ))}
           </div>
         </div>
       </div>
+    </div>
+  );
+}
 
-      {isSaving && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-content-muted">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Saving...
-        </div>
-      )}
+// Helper Components
+interface SettingRowProps {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}
+
+function SettingRow({ title, description, children }: SettingRowProps) {
+  return (
+    <div>
+      <h3 className="font-medium text-content">{title}</h3>
+      <p className="mt-1 text-sm text-content-muted">{description}</p>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+}
+
+interface ToggleSettingProps {
+  title: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}
+
+function ToggleSetting({ title, description, checked, onCheckedChange }: ToggleSettingProps) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <h3 className="font-medium text-content">{title}</h3>
+        <p className="mt-1 text-sm text-content-muted">{description}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }

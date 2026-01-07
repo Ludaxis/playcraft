@@ -4,184 +4,327 @@ export default {
   theme: {
     extend: {
       // =======================================================================
-      // 2026 HYPER-DIGITAL COLOR PALETTE
-      // OLED-optimized, warmer zinc-based grays, dual accent system
+      // COLORS
+      // Reference CSS custom properties from tokens/colors.css
+      // This allows runtime theming and keeps single source of truth
       // =======================================================================
       colors: {
-        // Surface colors (OLED-optimized darker tones)
+        // Surface colors (OLED-optimized)
         surface: {
-          DEFAULT: '#0a0a0f', // Deep dark with subtle blue undertone
-          elevated: '#12121a', // Cards, panels
-          overlay: '#1a1a24', // Modals, dropdowns
-          muted: '#0f0f14', // Subtle backgrounds
+          DEFAULT: 'var(--surface-base)',
+          muted: 'var(--surface-muted)',
+          elevated: 'var(--surface-elevated)',
+          overlay: 'var(--surface-overlay)',
+          raised: 'var(--surface-raised)',
         },
 
-        // Border colors (softer, warmer)
+        // Border colors
         border: {
-          DEFAULT: '#2a2a35', // Softer than before
-          muted: '#1e1e28', // Subtle borders
-          accent: 'rgba(139, 92, 246, 0.3)', // Accent-tinted border
+          DEFAULT: 'var(--border-default)',
+          muted: 'var(--border-muted)',
+          emphasis: 'var(--border-emphasis)',
+          accent: 'var(--border-accent)',
+          focus: 'var(--border-focus)',
         },
 
-        // Content/Text colors (off-white, zinc-based)
+        // Content/Text colors
         content: {
-          DEFAULT: '#fafafa', // Off-white (not pure white)
-          muted: '#a1a1aa', // zinc-400 - secondary
-          subtle: '#71717a', // zinc-500 - tertiary
-          inverse: '#0a0a0f', // For light backgrounds
+          DEFAULT: 'var(--content-primary)',
+          primary: 'var(--content-primary)',
+          secondary: 'var(--content-secondary)',
+          tertiary: 'var(--content-tertiary)',
+          muted: 'var(--content-secondary)', // Alias for backwards compat
+          subtle: 'var(--content-tertiary)', // Alias for backwards compat
+          disabled: 'var(--content-disabled)',
+          inverse: 'var(--content-inverse)',
         },
 
         // Primary accent (Violet)
         accent: {
-          DEFAULT: '#8b5cf6', // violet-500
-          light: '#a78bfa', // violet-400 - lighter hover (2026 trend)
-          glow: '#c4b5fd', // violet-300 - for glows
-          muted: '#6d28d9', // violet-700 - darker variant
-          subtle: 'rgba(139, 92, 246, 0.15)', // Subtle backgrounds
+          DEFAULT: 'var(--accent-default)',
+          light: 'var(--accent-hover)',
+          hover: 'var(--accent-hover)',
+          active: 'var(--accent-active)',
+          muted: 'var(--accent-muted)',
+          subtle: 'var(--accent-subtle)',
+          glow: 'var(--accent-glow)',
         },
 
-        // Secondary accent (Cyan - gaming DNA)
+        // Secondary accent (Cyan - Gaming DNA)
         secondary: {
-          DEFAULT: '#06b6d4', // cyan-500
-          light: '#22d3ee', // cyan-400
-          glow: '#67e8f9', // cyan-300
-          muted: '#0891b2', // cyan-600
-          subtle: 'rgba(6, 182, 212, 0.15)',
+          DEFAULT: 'var(--secondary-default)',
+          light: 'var(--secondary-hover)',
+          hover: 'var(--secondary-hover)',
+          active: 'var(--secondary-active)',
+          muted: 'var(--secondary-muted)',
+          subtle: 'var(--secondary-subtle)',
+          glow: 'var(--secondary-glow)',
         },
 
-        // Status colors (2026: softer, more accessible)
+        // Status colors
         success: {
-          DEFAULT: '#4ade80', // green-400 (softer)
-          light: '#86efac', // green-300
-          muted: '#22c55e', // green-500
-          subtle: 'rgba(74, 222, 128, 0.15)',
+          DEFAULT: 'var(--status-success)',
+          light: 'var(--status-success-hover)',
+          muted: 'var(--status-success-muted)',
+          subtle: 'var(--status-success-subtle)',
         },
         error: {
-          DEFAULT: '#f87171', // red-400 (softer)
-          light: '#fca5a5', // red-300
-          muted: '#ef4444', // red-500
-          subtle: 'rgba(248, 113, 113, 0.15)',
+          DEFAULT: 'var(--status-error)',
+          light: 'var(--status-error-hover)',
+          muted: 'var(--status-error-muted)',
+          subtle: 'var(--status-error-subtle)',
         },
         warning: {
-          DEFAULT: '#fbbf24', // amber-400
-          light: '#fcd34d', // amber-300
-          muted: '#f59e0b', // amber-500
-          subtle: 'rgba(251, 191, 36, 0.15)',
+          DEFAULT: 'var(--status-warning)',
+          light: 'var(--status-warning-hover)',
+          muted: 'var(--status-warning-muted)',
+          subtle: 'var(--status-warning-subtle)',
+        },
+        info: {
+          DEFAULT: 'var(--status-info)',
+          muted: 'var(--status-info-muted)',
+          subtle: 'var(--status-info-subtle)',
         },
 
-        // Sidebar tokens (updated for 2026 palette)
+        // File icon colors
+        icon: {
+          typescript: 'var(--icon-typescript)',
+          javascript: 'var(--icon-javascript)',
+          json: 'var(--icon-json)',
+          css: 'var(--icon-css)',
+          html: 'var(--icon-html)',
+          markdown: 'var(--icon-markdown)',
+          image: 'var(--icon-image)',
+          default: 'var(--icon-default)',
+        },
+
+        // Sidebar tokens
         sidebar: {
-          DEFAULT: '#0f0f14', // Darker sidebar
-          foreground: '#fafafa',
-          border: '#2a2a35',
-          accent: '#1a1a24',
-          'accent-foreground': '#fafafa',
-          ring: '#8b5cf6',
+          DEFAULT: 'var(--sidebar-background)',
+          foreground: 'var(--sidebar-foreground)',
+          border: 'var(--sidebar-border)',
+          accent: 'var(--sidebar-accent)',
+          'accent-foreground': 'var(--sidebar-accent-foreground)',
+          primary: 'var(--sidebar-primary)',
+          'primary-foreground': 'var(--sidebar-primary-foreground)',
+          ring: 'var(--sidebar-ring)',
         },
 
-        // Legacy shadcn compatibility
-        background: '#0a0a0f',
-        foreground: '#fafafa',
-        input: '#2a2a35',
-        ring: '#8b5cf6',
-        primary: {
-          DEFAULT: '#8b5cf6',
-          foreground: '#fafafa',
-        },
-        destructive: {
-          DEFAULT: '#f87171',
-          foreground: '#fafafa',
-        },
-        muted: {
-          DEFAULT: '#1a1a24',
-          foreground: '#a1a1aa',
+        // shadcn/ui compatibility (Tier 3 tokens)
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        card: {
+          DEFAULT: 'var(--card)',
+          foreground: 'var(--card-foreground)',
         },
         popover: {
-          DEFAULT: '#12121a',
-          foreground: '#fafafa',
+          DEFAULT: 'var(--popover)',
+          foreground: 'var(--popover-foreground)',
         },
-        card: {
-          DEFAULT: '#12121a',
-          foreground: '#fafafa',
+        primary: {
+          DEFAULT: 'var(--primary)',
+          foreground: 'var(--primary-foreground)',
+        },
+        muted: {
+          DEFAULT: 'var(--muted)',
+          foreground: 'var(--muted-foreground)',
+        },
+        destructive: {
+          DEFAULT: 'var(--destructive)',
+          foreground: 'var(--destructive-foreground)',
+        },
+        input: 'var(--input)',
+        ring: 'var(--ring)',
+
+        // Chart colors
+        chart: {
+          1: 'var(--chart-1)',
+          2: 'var(--chart-2)',
+          3: 'var(--chart-3)',
+          4: 'var(--chart-4)',
+          5: 'var(--chart-5)',
         },
       },
 
       // =======================================================================
-      // TYPOGRAPHY - Geist + Fluid Scale
+      // TYPOGRAPHY
+      // Reference CSS custom properties from tokens/typography.css
       // =======================================================================
       fontFamily: {
-        sans: [
-          'Geist',
-          'Inter',
-          '-apple-system',
-          'BlinkMacSystemFont',
-          'Segoe UI',
-          'Roboto',
-          'sans-serif',
-        ],
-        mono: [
-          'Geist Mono',
-          'JetBrains Mono',
-          'Fira Code',
-          'Consolas',
-          'monospace',
-        ],
+        sans: ['var(--font-sans)'],
+        mono: ['var(--font-mono)'],
+        display: ['var(--font-display)'],
       },
 
       fontSize: {
-        // Fluid typography scale (2026 trend)
-        'fluid-xs': ['clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem)', { lineHeight: '1.5' }],
-        'fluid-sm': ['clamp(0.875rem, 0.8rem + 0.35vw, 1rem)', { lineHeight: '1.5' }],
-        'fluid-base': ['clamp(1rem, 0.9rem + 0.5vw, 1.125rem)', { lineHeight: '1.6' }],
-        'fluid-lg': ['clamp(1.125rem, 1rem + 0.6vw, 1.25rem)', { lineHeight: '1.5' }],
-        'fluid-xl': ['clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem)', { lineHeight: '1.4' }],
-        'fluid-2xl': ['clamp(1.5rem, 1.3rem + 1vw, 2rem)', { lineHeight: '1.3' }],
-        'fluid-3xl': ['clamp(1.875rem, 1.5rem + 1.5vw, 2.5rem)', { lineHeight: '1.2' }],
-        'fluid-4xl': ['clamp(2.25rem, 1.8rem + 2vw, 3rem)', { lineHeight: '1.1' }],
+        '2xs': ['var(--text-2xs)', { lineHeight: 'var(--text-2xs-line-height)' }],
+        xs: ['var(--text-xs)', { lineHeight: 'var(--text-xs-line-height)' }],
+        sm: ['var(--text-sm)', { lineHeight: 'var(--text-sm-line-height)' }],
+        base: ['var(--text-base)', { lineHeight: 'var(--text-base-line-height)' }],
+        lg: ['var(--text-lg)', { lineHeight: 'var(--text-lg-line-height)' }],
+        xl: ['var(--text-xl)', { lineHeight: 'var(--text-xl-line-height)' }],
+        '2xl': ['var(--text-2xl)', { lineHeight: 'var(--text-2xl-line-height)' }],
+        '3xl': ['var(--text-3xl)', { lineHeight: 'var(--text-3xl-line-height)' }],
+        '4xl': ['var(--text-4xl)', { lineHeight: 'var(--text-4xl-line-height)' }],
+        '5xl': ['var(--text-5xl)', { lineHeight: 'var(--text-5xl-line-height)' }],
+        '6xl': ['var(--text-6xl)', { lineHeight: 'var(--text-6xl-line-height)' }],
+        '7xl': ['var(--text-7xl)', { lineHeight: 'var(--text-7xl-line-height)' }],
+        '8xl': ['var(--text-8xl)', { lineHeight: 'var(--text-8xl-line-height)' }],
+        // Fluid typography aliases (backwards compatibility)
+        'fluid-xs': ['var(--text-xs)', { lineHeight: 'var(--text-xs-line-height)' }],
+        'fluid-sm': ['var(--text-sm)', { lineHeight: 'var(--text-sm-line-height)' }],
+        'fluid-base': ['var(--text-base)', { lineHeight: 'var(--text-base-line-height)' }],
+        'fluid-lg': ['var(--text-lg)', { lineHeight: 'var(--text-lg-line-height)' }],
+        'fluid-xl': ['var(--text-xl)', { lineHeight: 'var(--text-xl-line-height)' }],
+        'fluid-2xl': ['var(--text-2xl)', { lineHeight: 'var(--text-2xl-line-height)' }],
+        'fluid-3xl': ['var(--text-3xl)', { lineHeight: 'var(--text-3xl-line-height)' }],
+        'fluid-4xl': ['var(--text-4xl)', { lineHeight: 'var(--text-4xl-line-height)' }],
+      },
+
+      letterSpacing: {
+        tighter: 'var(--tracking-tighter)',
+        tight: 'var(--tracking-tight)',
+        normal: 'var(--tracking-normal)',
+        wide: 'var(--tracking-wide)',
+        wider: 'var(--tracking-wider)',
+        widest: 'var(--tracking-widest)',
+      },
+
+      lineHeight: {
+        none: 'var(--leading-none)',
+        tight: 'var(--leading-tight)',
+        snug: 'var(--leading-snug)',
+        normal: 'var(--leading-normal)',
+        relaxed: 'var(--leading-relaxed)',
+        loose: 'var(--leading-loose)',
       },
 
       // =======================================================================
-      // EFFECTS - Glows, Shadows, Animations
+      // SPACING
+      // Uses Tailwind defaults but adds semantic spacing utilities
+      // =======================================================================
+      spacing: {
+        // Layout-specific
+        'sidebar': 'var(--sidebar-width)',
+        'sidebar-collapsed': 'var(--sidebar-width-collapsed)',
+        'header': 'var(--header-height)',
+      },
+
+      // =======================================================================
+      // EFFECTS
+      // Reference CSS custom properties from tokens/effects.css
       // =======================================================================
       boxShadow: {
-        // Glow effects (2026: luminous interactions)
-        'glow-sm': '0 0 10px rgba(139, 92, 246, 0.2)',
-        'glow': '0 0 20px rgba(139, 92, 246, 0.25)',
-        'glow-lg': '0 0 30px rgba(139, 92, 246, 0.3)',
-        'glow-cyan': '0 0 20px rgba(6, 182, 212, 0.25)',
-        'glow-success': '0 0 20px rgba(74, 222, 128, 0.25)',
-        'glow-error': '0 0 20px rgba(248, 113, 113, 0.25)',
+        // Standard shadows
+        xs: 'var(--shadow-xs)',
+        sm: 'var(--shadow-sm)',
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        xl: 'var(--shadow-xl)',
+        '2xl': 'var(--shadow-2xl)',
         // Elevated surfaces
-        'elevated': '0 4px 20px rgba(0, 0, 0, 0.4)',
-        'elevated-lg': '0 8px 40px rgba(0, 0, 0, 0.5)',
+        elevated: 'var(--shadow-elevated)',
+        'elevated-lg': 'var(--shadow-elevated-lg)',
+        // Glow effects
+        'glow-xs': 'var(--glow-accent-xs)',
+        'glow-sm': 'var(--glow-accent-sm)',
+        glow: 'var(--glow-accent)',
+        'glow-lg': 'var(--glow-accent-lg)',
+        'glow-xl': 'var(--glow-accent-xl)',
+        'glow-cyan': 'var(--glow-secondary)',
+        'glow-secondary': 'var(--glow-secondary)',
+        'glow-success': 'var(--glow-success)',
+        'glow-error': 'var(--glow-error)',
+        'glow-warning': 'var(--glow-warning)',
+        // Focus ring
+        'ring-focus': 'var(--ring-focus)',
+        'ring-focus-glow': 'var(--ring-focus-glow)',
       },
 
-      // Backdrop blur
       backdropBlur: {
-        xs: '2px',
+        xs: 'var(--blur-xs)',
+        sm: 'var(--blur-sm)',
+        md: 'var(--blur-md)',
+        lg: 'var(--blur-lg)',
+        xl: 'var(--blur-xl)',
+        '2xl': 'var(--blur-2xl)',
+        '3xl': 'var(--blur-3xl)',
       },
 
-      // Border radius (slightly larger for 2026)
+      // =======================================================================
+      // BORDERS
+      // Reference CSS custom properties from tokens/borders.css
+      // =======================================================================
       borderRadius: {
-        '4xl': '2rem',
-        '5xl': '2.5rem',
+        none: 'var(--radius-none)',
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        DEFAULT: 'var(--radius-DEFAULT)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+        '3xl': 'var(--radius-3xl)',
+        '4xl': 'var(--radius-4xl)',
+        '5xl': 'var(--radius-5xl)',
+        full: 'var(--radius-full)',
+        // Semantic
+        button: 'var(--radius-button)',
+        input: 'var(--radius-input)',
+        card: 'var(--radius-card)',
+        modal: 'var(--radius-modal)',
       },
 
-      // Animations
-      animation: {
-        'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
-        'fade-in': 'fade-in 0.3s ease-out',
-        'slide-up': 'slide-up 0.3s ease-out',
-        'slide-down': 'slide-down 0.3s ease-out',
+      // =======================================================================
+      // MOTION
+      // Reference CSS custom properties from tokens/motion.css
+      // =======================================================================
+      transitionDuration: {
+        instant: 'var(--duration-instant)',
+        fastest: 'var(--duration-fastest)',
+        faster: 'var(--duration-faster)',
+        fast: 'var(--duration-fast)',
+        normal: 'var(--duration-normal)',
+        slow: 'var(--duration-slow)',
+        slower: 'var(--duration-slower)',
+        slowest: 'var(--duration-slowest)',
+        '400': '400ms', // Backwards compat
       },
+
+      transitionTimingFunction: {
+        linear: 'var(--ease-linear)',
+        in: 'var(--ease-in)',
+        out: 'var(--ease-out)',
+        'in-out': 'var(--ease-in-out)',
+        spring: 'var(--ease-spring)',
+        bounce: 'var(--ease-bounce)',
+        smooth: 'var(--ease-smooth)',
+        snappy: 'var(--ease-snappy)',
+      },
+
+      animation: {
+        'fade-in': 'var(--animation-fade-in)',
+        'fade-out': 'var(--animation-fade-out)',
+        'slide-up': 'var(--animation-slide-up)',
+        'slide-down': 'var(--animation-slide-down)',
+        'slide-left': 'var(--animation-slide-left)',
+        'slide-right': 'var(--animation-slide-right)',
+        'scale-in': 'var(--animation-scale-in)',
+        'scale-out': 'var(--animation-scale-out)',
+        'glow-pulse': 'var(--animation-glow-pulse)',
+        spin: 'var(--animation-spin)',
+        pulse: 'var(--animation-pulse)',
+        shimmer: 'var(--animation-shimmer)',
+      },
+
+      // Keyframes are now defined in motion.css, but kept here for Tailwind
       keyframes: {
-        'glow-pulse': {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(139, 92, 246, 0.2)' },
-          '50%': { boxShadow: '0 0 30px rgba(139, 92, 246, 0.4)' },
-        },
         'fade-in': {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
+        },
+        'fade-out': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' },
         },
         'slide-up': {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
@@ -191,11 +334,23 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(-10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'glow-pulse': {
+          '0%, 100%': { boxShadow: 'var(--glow-accent-sm)' },
+          '50%': { boxShadow: 'var(--glow-accent-lg)' },
+        },
       },
 
-      // Transitions
-      transitionDuration: {
-        '400': '400ms',
+      // =======================================================================
+      // BREAKPOINTS
+      // =======================================================================
+      screens: {
+        xs: '475px',
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1536px',
+        '3xl': '1920px',
       },
     },
   },

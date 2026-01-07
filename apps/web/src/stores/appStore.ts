@@ -12,6 +12,9 @@ interface AppState {
   currentProject: PlayCraftProject | null;
   initialPrompt: string | null;
 
+  // Workspace
+  workspaceId: string | null;
+
   // UI State
   activeNav: NavItem;
   viewMode: ViewMode;
@@ -21,6 +24,7 @@ interface AppState {
   // Actions
   setCurrentProject: (project: PlayCraftProject | null) => void;
   setInitialPrompt: (prompt: string | null) => void;
+  setWorkspaceId: (workspaceId: string | null) => void;
   setActiveNav: (nav: NavItem) => void;
   setViewMode: (mode: ViewMode) => void;
   toggleLeftPanel: () => void;
@@ -33,6 +37,7 @@ interface AppState {
 const initialState = {
   currentProject: null,
   initialPrompt: null,
+  workspaceId: null,
   activeNav: 'home' as NavItem,
   viewMode: 'grid' as ViewMode,
   leftPanelOpen: true,
@@ -50,6 +55,9 @@ export const useAppStore = create<AppState>()(
 
         setInitialPrompt: (prompt) =>
           set({ initialPrompt: prompt }, false, 'setInitialPrompt'),
+
+        setWorkspaceId: (workspaceId) =>
+          set({ workspaceId }, false, 'setWorkspaceId'),
 
         setActiveNav: (nav) =>
           set({ activeNav: nav }, false, 'setActiveNav'),
@@ -78,6 +86,7 @@ export const useAppStore = create<AppState>()(
           viewMode: state.viewMode,
           leftPanelOpen: state.leftPanelOpen,
           bottomPanelOpen: state.bottomPanelOpen,
+          workspaceId: state.workspaceId,
         }),
       }
     ),
@@ -89,3 +98,4 @@ export const useAppStore = create<AppState>()(
 export const selectCurrentProject = (state: AppState) => state.currentProject;
 export const selectActiveNav = (state: AppState) => state.activeNav;
 export const selectViewMode = (state: AppState) => state.viewMode;
+export const selectWorkspaceId = (state: AppState) => state.workspaceId;

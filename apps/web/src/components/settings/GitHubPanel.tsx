@@ -3,26 +3,32 @@
  * Connect/disconnect GitHub account for project sync
  */
 
-import { Github } from 'lucide-react';
-import type { UserSettings } from '../../types';
+import { Github, Loader2 } from 'lucide-react';
+import { useConnectGitHub, useDisconnectGitHub, useUserSettings } from '../../hooks/useUserSettings';
 
-interface GitHubPanelProps {
-  settings: UserSettings;
-}
+export function GitHubPanel() {
+  const { data: settings, isLoading } = useUserSettings();
+  const { mutate: connectGitHub, isPending: isConnecting } = useConnectGitHub();
+  const { mutate: disconnectGitHub, isPending: isDisconnecting } = useDisconnectGitHub();
 
-export function GitHubPanel({ settings }: GitHubPanelProps) {
+  if (isLoading || !settings) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent-light" />
+      </div>
+    );
+  }
+
   const githubConnected = settings.connected_accounts?.github;
 
   const handleConnectGitHub = () => {
-    // TODO: Implement GitHub OAuth flow
-    alert(
-      'GitHub integration coming soon! This will allow you to sync your projects with GitHub repositories.'
-    );
+    if (isConnecting) return;
+    connectGitHub();
   };
 
   const handleDisconnectGitHub = () => {
-    // TODO: Implement disconnect
-    console.log('Disconnect GitHub');
+    if (isDisconnecting) return;
+    disconnectGitHub();
   };
 
   return (
@@ -54,18 +60,20 @@ export function GitHubPanel({ settings }: GitHubPanelProps) {
             </div>
             <button
               onClick={handleDisconnectGitHub}
-              className="rounded-lg border border-border px-3 py-1.5 text-sm text-content-muted hover:bg-surface-elevated"
+              disabled={isDisconnecting}
+              className="rounded-lg border border-border px-3 py-1.5 text-sm text-content-muted hover:bg-surface-elevated disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Disconnect
+              {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
             </button>
           </div>
         ) : (
           <button
             onClick={handleConnectGitHub}
-            className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content hover:bg-surface-elevated"
+            disabled={isConnecting}
+            className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content hover:bg-surface-elevated disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Github className="h-5 w-5" />
-            Connect GitHub
+            {isConnecting ? 'Connecting...' : 'Connect GitHub'}
           </button>
         )}
 

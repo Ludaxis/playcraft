@@ -1,6 +1,7 @@
 import { useEffect, useRef, memo } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
+import { getTerminalTheme } from '../lib/theme';
 import '@xterm/xterm/css/xterm.css';
 
 interface TerminalProps {
@@ -19,28 +20,7 @@ export const Terminal = memo(function Terminal({ output, className = '' }: Termi
     if (!containerRef.current) return;
 
     const terminal = new XTerm({
-      theme: {
-        background: '#0d0d0d',
-        foreground: '#e5e5e5',
-        cursor: '#a78bfa',
-        cursorAccent: '#0d0d0d',
-        black: '#0d0d0d',
-        red: '#ff5555',
-        green: '#50fa7b',
-        yellow: '#f1fa8c',
-        blue: '#6272a4',
-        magenta: '#ff79c6',
-        cyan: '#8be9fd',
-        white: '#f8f8f2',
-        brightBlack: '#6272a4',
-        brightRed: '#ff6e6e',
-        brightGreen: '#69ff94',
-        brightYellow: '#ffffa5',
-        brightBlue: '#d6acff',
-        brightMagenta: '#ff92df',
-        brightCyan: '#a4ffff',
-        brightWhite: '#ffffff',
-      },
+      theme: getTerminalTheme(),
       fontFamily: 'JetBrains Mono, Menlo, Monaco, "Courier New", monospace',
       fontSize: 13,
       lineHeight: 1.4,
@@ -108,7 +88,7 @@ export const Terminal = memo(function Terminal({ output, className = '' }: Termi
   return (
     <div
       ref={containerRef}
-      className={`h-full w-full overflow-hidden bg-[#0d0d0d] ${className}`}
+      className={`h-full w-full overflow-hidden bg-[var(--terminal-bg)] ${className}`}
     />
   );
 });

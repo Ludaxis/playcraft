@@ -16,6 +16,7 @@ import {
   Check,
   LogOut,
 } from 'lucide-react';
+import type { WorkspaceWithMembership } from '../types';
 
 interface WorkspaceDropdownProps {
   user: User;
@@ -29,6 +30,11 @@ interface WorkspaceDropdownProps {
   onUpgrade?: () => void;
   onSignOut?: () => void;
   collapsed?: boolean;
+  workspaces?: WorkspaceWithMembership[];
+  activeWorkspaceId?: string | null;
+  onSelectWorkspace?: (workspaceId: string | null) => void;
+  onCreateWorkspace?: () => void;
+  isLoadingWorkspaces?: boolean;
 }
 
 export function WorkspaceDropdown({
@@ -43,6 +49,11 @@ export function WorkspaceDropdown({
   onUpgrade,
   onSignOut,
   collapsed = false,
+  workspaces = [],
+  activeWorkspaceId = null,
+  onSelectWorkspace,
+  onCreateWorkspace,
+  isLoadingWorkspaces = false,
 }: WorkspaceDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showCreditsDetail, setShowCreditsDetail] = useState(false);
@@ -60,7 +71,9 @@ export function WorkspaceDropdown({
 
   const usagePercentage = totalCredits > 0 ? ((totalCredits - creditsRemaining) / totalCredits) * 100 : 0;
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-  const initials = displayName.charAt(0).toUpperCase();
+  const selectedWorkspace = workspaces.find((w) => w.workspace.id === activeWorkspaceId);
+  const workspaceLabel = selectedWorkspace?.workspace.name || studioName;
+  const initials = workspaceLabel.charAt(0).toUpperCase();
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -73,16 +86,16 @@ export function WorkspaceDropdown({
       >
         <div
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-content"
-          style={{ backgroundColor: getColorFromString(studioName) }}
+          style={{ backgroundColor: getColorFromString(workspaceLabel) }}
         >
           {initials}
         </div>
         {!collapsed && (
           <>
             <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-medium text-content">{studioName}</p>
+              <p className="truncate text-sm font-medium text-content">{workspaceLabel}</p>
               <p className="text-xs text-content-subtle">
-                {plan === 'pro' ? 'Pro Plan' : 'Free Plan'} • 1 member
+                {plan === 'pro' ? 'Pro Plan' : 'Free Plan'} • {workspaces.length || 1} member{(workspaces.length || 1) === 1 ? '' : 's'}
               </p>
             </div>
             <ChevronDown
@@ -106,14 +119,14 @@ export function WorkspaceDropdown({
             <div className="flex items-center gap-3">
               <div
                 className="flex h-12 w-12 items-center justify-center rounded-xl text-lg font-semibold text-content"
-                style={{ backgroundColor: getColorFromString(studioName) }}
+                style={{ backgroundColor: getColorFromString(workspaceLabel) }}
               >
                 {initials}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="truncate font-medium text-content">{studioName}</p>
+                <p className="truncate font-medium text-content">{workspaceLabel}</p>
                 <p className="text-sm text-content-subtle">
-                  {plan === 'pro' ? 'Pro Plan' : 'Free Plan'} • 1 member
+                  {plan === 'pro' ? 'Pro Plan' : 'Free Plan'} • {workspaces.length || 1} member{(workspaces.length || 1) === 1 ? '' : 's'}
                 </p>
               </div>
             </div>
@@ -134,7 +147,8 @@ export function WorkspaceDropdown({
                 className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-surface-elevated px-3 py-2 text-sm text-content transition-colors hover:bg-surface"
                 onClick={() => {
                   // TODO: Implement invite members
-                  console.log('Invite members clicked');
+                  onToggle();
+                  onOpenSettings();
                 }}
               >
                 <UserPlus className="h-4 w-4" />
@@ -148,7 +162,7 @@ export function WorkspaceDropdown({
             <div className="border-b border-border p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Zap className="h-5 w-5 text-yellow-500" />
+                  <Zap className="h-5 w-5 text-warning" />
                   <span className="font-medium text-content">Turn Pro</span>
                 </div>
                 <button
@@ -203,27 +217,45 @@ export function WorkspaceDropdown({
               All workspaces
             </p>
 
-            {/* Current Workspace */}
-            <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-elevated">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold text-content"
-                style={{ backgroundColor: getColorFromString(studioName) }}
+            {(workspaces.length === 0 || isLoadingWorkspaces) && (
+              <div className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-content-muted">
+                {isLoadingWorkspaces ? 'Loading workspaces…' : 'Personal workspace'}
+              </div>
+            )}
+
+            {workspaces.map(({ workspace, membership }) => (
+              <button
+                key={workspace.id}
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left hover:bg-surface-elevated"
+                onClick={() => onSelectWorkspace?.(workspace.id)}
               >
-                {initials}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="truncate text-sm text-content">{studioName}</p>
-              </div>
-              <span className="rounded bg-surface-elevated px-2 py-0.5 text-xs text-content-muted">
-                {plan === 'pro' ? 'PRO' : 'FREE'}
-              </span>
-              <Check className="h-4 w-4 text-accent" />
-            </button>
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-sm font-semibold text-content"
+                  style={{ backgroundColor: getColorFromString(workspace.name) }}
+                >
+                  {workspace.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm text-content">{workspace.name}</p>
+                  <p className="text-xs text-content-subtle">{membership.role}</p>
+                </div>
+                {activeWorkspaceId === workspace.id ? (
+                  <Check className="h-4 w-4 text-accent" />
+                ) : (
+                  <span className="rounded bg-surface-elevated px-2 py-0.5 text-xs text-content-muted">
+                    {membership.role.toUpperCase()}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
           {/* Actions */}
           <div className="border-t border-border p-2">
-            <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-content-muted hover:bg-surface-elevated hover:text-content">
+            <button
+              className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-content-muted hover:bg-surface-elevated hover:text-content"
+              onClick={() => onCreateWorkspace?.()}
+            >
               <Plus className="h-4 w-4" />
               <span className="text-sm">Create new workspace</span>
             </button>
@@ -241,7 +273,7 @@ export function WorkspaceDropdown({
                   onToggle();
                   onSignOut();
                 }}
-                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-content-muted hover:bg-surface-elevated hover:text-red-400"
+                className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left text-content-muted hover:bg-surface-elevated hover:text-error"
               >
                 <LogOut className="h-4 w-4" />
                 <span className="text-sm">Sign out</span>

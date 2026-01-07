@@ -11,5 +11,8 @@ export { ErrorBoundary, withErrorBoundary } from './ErrorBoundary';
 export { Sidebar } from './Sidebar';
 export { SidebarItem, SidebarSection } from './SidebarItem';
 export { WorkspaceDropdown } from './WorkspaceDropdown';
+export { CreateWorkspaceModal } from './CreateWorkspaceModal';
 export { OnboardingTour } from './OnboardingTour';
 export { FAQModal } from './FAQModal';
+export { AuthModal } from './AuthModal';
+export { Logo, LogoIcon, LogoMark } from './Logo';

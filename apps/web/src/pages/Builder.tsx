@@ -1152,7 +1152,7 @@ export function BuilderPage({
           {/* Preview errors indicator */}
           {previewErrors.length > 0 && (
             <div
-              className="flex items-center gap-1.5 rounded-lg bg-red-500/20 px-2 py-1 text-xs text-red-400 cursor-pointer hover:bg-red-500/30 transition-all"
+              className="flex items-center gap-1.5 rounded-lg bg-error/20 px-2 py-1 text-xs text-error cursor-pointer hover:bg-error/30 transition-all"
               onClick={() => {
                 // Show the most recent error in console for now
                 const latestError = previewErrors[previewErrors.length - 1];

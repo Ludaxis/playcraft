@@ -1,0 +1,102 @@
+/**
+ * PlayCraft Design System - Border Tokens
+ * Border Width, Radius, and Styles
+ *
+ * 2026 Trends:
+ * - Slightly larger border radii (softer, more organic)
+ * - Consistent border styles across components
+ */
+
+:root {
+  /* ========================================================================
+     BORDER WIDTH SCALE
+     ======================================================================== */
+
+  --border-width-0: 0;
+  --border-width-1: 1px;
+  --border-width-2: 2px;
+  --border-width-4: 4px;
+  --border-width-8: 8px;
+
+  /* ========================================================================
+     BORDER RADIUS SCALE
+     2026: Slightly larger for softer, more organic feel
+     ======================================================================== */
+
+  --radius-none: 0;
+  --radius-sm: 0.25rem;      /* 4px - Small elements, badges */
+  --radius-md: 0.375rem;     /* 6px - Buttons, inputs */
+  --radius-DEFAULT: 0.5rem;  /* 8px - Default radius */
+  --radius-lg: 0.75rem;      /* 12px - Cards, panels */
+  --radius-xl: 1rem;         /* 16px - Modals, larger cards */
+  --radius-2xl: 1.25rem;     /* 20px - Hero cards */
+  --radius-3xl: 1.5rem;      /* 24px - Large modals */
+  --radius-4xl: 2rem;        /* 32px - Feature cards */
+  --radius-5xl: 2.5rem;      /* 40px - Hero sections */
+  --radius-full: 9999px;     /* Circular/pill shapes */
+
+  /* ========================================================================
+     SEMANTIC BORDER RADIUS
+     Use these in components for consistency
+     ======================================================================== */
+
+  /* Interactive Elements */
+  --radius-button: var(--radius-lg);
+  --radius-button-sm: var(--radius-md);
+  --radius-button-lg: var(--radius-xl);
+  --radius-input: var(--radius-lg);
+  --radius-toggle: var(--radius-full);
+
+  /* Containers */
+  --radius-card: var(--radius-xl);
+  --radius-card-sm: var(--radius-lg);
+  --radius-card-lg: var(--radius-2xl);
+  --radius-panel: var(--radius-xl);
+  --radius-modal: var(--radius-2xl);
+  --radius-sheet: var(--radius-2xl);
+  --radius-popover: var(--radius-lg);
+  --radius-dropdown: var(--radius-lg);
+  --radius-tooltip: var(--radius-md);
+
+  /* Special Elements */
+  --radius-avatar: var(--radius-full);
+  --radius-badge: var(--radius-full);
+  --radius-chip: var(--radius-full);
+  --radius-progress: var(--radius-full);
+  --radius-skeleton: var(--radius-lg);
+
+  /* ========================================================================
+     BORDER STYLE PRESETS
+     Complete border shorthand values
+     ======================================================================== */
+
+  /* Standard Borders (use with border color tokens from colors.css) */
+  --border-default: var(--border-width-1) solid var(--border-default);
+  --border-muted: var(--border-width-1) solid var(--border-muted);
+  --border-emphasis: var(--border-width-1) solid var(--border-emphasis);
+  --border-accent: var(--border-width-1) solid var(--border-accent);
+  --border-focus: var(--border-width-2) solid var(--accent-default);
+
+  /* Thick Borders */
+  --border-thick: var(--border-width-2) solid var(--border-default);
+  --border-thick-accent: var(--border-width-2) solid var(--accent-default);
+
+  /* ========================================================================
+     OUTLINE TOKENS
+     For focus states (separate from border to avoid layout shift)
+     ======================================================================== */
+
+  --outline-width: 2px;
+  --outline-offset: 2px;
+  --outline-style: solid;
+  --outline-focus: var(--outline-width) var(--outline-style) var(--accent-default);
+
+  /* ========================================================================
+     DIVIDE TOKENS
+     For dividing sibling elements (tables, lists)
+     ======================================================================== */
+
+  --divide-width: 1px;
+  --divide-color: var(--border-muted);
+  --divide-style: solid;
+}

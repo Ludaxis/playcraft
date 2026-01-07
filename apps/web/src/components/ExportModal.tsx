@@ -150,13 +150,13 @@ export const ExportModal = memo(function ExportModal({
 
           {/* Status messages */}
           {exportStatus === 'success' && (
-            <div className="mt-4 rounded-lg bg-green-500/10 p-3 text-sm text-green-400">
+            <div className="mt-4 rounded-lg bg-success/10 p-3 text-sm text-success">
               Project exported successfully!
             </div>
           )}
 
           {errorMessage && (
-            <div className="mt-4 rounded-lg bg-yellow-500/10 p-3 text-sm text-yellow-400">
+            <div className="mt-4 rounded-lg bg-warning/10 p-3 text-sm text-warning">
               {errorMessage}
             </div>
           )}

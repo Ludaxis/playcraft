@@ -7,7 +7,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
-  Sparkles,
   Bug,
   Lightbulb,
   Wrench,
@@ -20,6 +19,7 @@ import {
   submitFeedback,
   type FeedbackType,
 } from '../lib/feedbackService';
+import { LogoIcon } from '../components/Logo';
 
 const FEEDBACK_TYPES: Array<{
   id: FeedbackType;
@@ -33,28 +33,28 @@ const FEEDBACK_TYPES: Array<{
     label: 'Bug Report',
     description: 'Something isn\'t working correctly',
     icon: Bug,
-    color: 'text-red-400 bg-red-600/20 border-red-600/30',
+    color: 'text-error bg-error/20 border-error/30',
   },
   {
     id: 'feature',
     label: 'Feature Request',
     description: 'I have an idea for a new feature',
     icon: Lightbulb,
-    color: 'text-yellow-400 bg-yellow-600/20 border-yellow-600/30',
+    color: 'text-warning bg-warning/20 border-warning/30',
   },
   {
     id: 'improvement',
     label: 'Improvement',
     description: 'Something could be better',
     icon: Wrench,
-    color: 'text-blue-400 bg-blue-600/20 border-blue-600/30',
+    color: 'text-info bg-info/20 border-info/30',
   },
   {
     id: 'other',
     label: 'Other',
     description: 'General feedback or question',
     icon: HelpCircle,
-    color: 'text-gray-400 bg-gray-600/20 border-gray-600/30',
+    color: 'text-content-muted bg-surface-overlay/20 border-border',
   },
 ];
 
@@ -101,20 +101,18 @@ export function FeedbackPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-900">
+      <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1 rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+              className="flex items-center gap-1 rounded-lg p-1.5 text-content-secondary transition-colors hover:bg-surface-overlay hover:text-content"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
+            <LogoIcon size={32} />
             <span className="font-semibold text-white">Feedback</span>
           </div>
         </div>
@@ -125,26 +123,26 @@ export function FeedbackPage() {
         {isSubmitted ? (
           /* Success state */
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-600/20">
-              <CheckCircle className="h-8 w-8 text-green-400" />
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
+              <CheckCircle className="h-8 w-8 text-success" />
             </div>
-            <h1 className="mb-3 text-2xl font-bold text-white">
+            <h1 className="mb-3 text-2xl font-bold text-content">
               Thank you for your feedback!
             </h1>
-            <p className="mb-8 text-gray-400">
+            <p className="mb-8 text-content-secondary">
               We appreciate you taking the time to help us improve PlayCraft.
               Your feedback helps us make the product better for everyone.
             </p>
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={handleReset}
-                className="rounded-lg border border-gray-700 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:border-gray-600 hover:bg-gray-800"
+                className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-content transition-colors hover:border-border-emphasis hover:bg-surface-overlay"
               >
                 Submit another
               </button>
               <button
                 onClick={() => navigate('/')}
-                className="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500"
+                className="btn-neon rounded-lg px-5 py-2.5 text-sm"
               >
                 Back to PlayCraft
               </button>
@@ -153,24 +151,24 @@ export function FeedbackPage() {
         ) : (
           /* Feedback form */
           <form onSubmit={handleSubmit}>
-            <h1 className="mb-2 text-2xl font-bold text-white">
+            <h1 className="mb-2 text-2xl font-bold text-content">
               Send us feedback
             </h1>
-            <p className="mb-8 text-gray-400">
+            <p className="mb-8 text-content-secondary">
               Help us improve PlayCraft by sharing your thoughts, reporting bugs,
               or suggesting new features.
             </p>
 
             {/* Error message */}
             {error && (
-              <div className="mb-6 rounded-lg border border-red-800 bg-red-900/20 p-4 text-sm text-red-300">
+              <div className="mb-6 rounded-lg border border-error-muted bg-error-subtle p-4 text-sm text-error">
                 {error}
               </div>
             )}
 
             {/* Feedback type selection */}
             <div className="mb-6">
-              <label className="mb-3 block text-sm font-medium text-white">
+              <label className="mb-3 block text-sm font-medium text-content">
                 What type of feedback is this?
               </label>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -182,7 +180,7 @@ export function FeedbackPage() {
                     className={`flex flex-col items-center rounded-lg border p-4 transition-all ${
                       selectedType === type.id
                         ? type.color
-                        : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:border-gray-600'
+                        : 'border-border bg-surface-elevated/50 text-content-muted hover:border-border-emphasis'
                     }`}
                   >
                     <type.icon className="mb-2 h-6 w-6" />
@@ -196,7 +194,7 @@ export function FeedbackPage() {
             <div className="mb-4">
               <label
                 htmlFor="title"
-                className="mb-2 block text-sm font-medium text-white"
+                className="mb-2 block text-sm font-medium text-content"
               >
                 Title
               </label>
@@ -206,7 +204,7 @@ export function FeedbackPage() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Brief summary of your feedback"
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-2.5 text-white placeholder-gray-500 outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+                className="w-full rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-tertiary outline-none ring-accent focus:border-transparent focus:ring-2"
               />
             </div>
 
@@ -214,7 +212,7 @@ export function FeedbackPage() {
             <div className="mb-6">
               <label
                 htmlFor="description"
-                className="mb-2 block text-sm font-medium text-white"
+                className="mb-2 block text-sm font-medium text-content"
               >
                 Description
               </label>
@@ -224,9 +222,9 @@ export function FeedbackPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Please provide as much detail as possible..."
                 rows={6}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-2.5 text-white placeholder-gray-500 outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+                className="w-full rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-tertiary outline-none ring-accent focus:border-transparent focus:ring-2"
               />
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-content-tertiary">
                 {selectedType === 'bug' &&
                   'Include steps to reproduce the issue if possible.'}
                 {selectedType === 'feature' &&
@@ -242,14 +240,14 @@ export function FeedbackPage() {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                className="rounded-lg border border-gray-700 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:border-gray-600 hover:bg-gray-800 hover:text-white"
+                className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-content-muted transition-colors hover:border-border-emphasis hover:bg-surface-overlay hover:text-content"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || !selectedType || !title.trim() || !description.trim()}
-                className="flex items-center gap-2 rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
+                className="btn-neon flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>

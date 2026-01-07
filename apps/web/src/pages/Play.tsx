@@ -4,9 +4,10 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { Sparkles, Play as PlayIcon, Maximize2, Share2, ArrowLeft, Loader2 } from 'lucide-react';
+import { Play as PlayIcon, Maximize2, Share2, ArrowLeft, Loader2, Gamepad2 } from 'lucide-react';
 import { getPublishedGame, incrementPlayCount } from '../lib/publishService';
 import { getSupabase } from '../lib/supabase';
+import { LogoIcon, Logo } from '../components/Logo';
 import type { PublishedGame } from '../types';
 
 interface PlayPageProps {
@@ -130,7 +131,7 @@ export function PlayPage({ gameId }: PlayPageProps) {
       <div className="flex min-h-screen flex-col items-center justify-center bg-surface px-4">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-surface-elevated">
-            <Sparkles className="h-10 w-10 text-content-muted" />
+            <Gamepad2 className="h-10 w-10 text-content-muted" />
           </div>
           <h1 className="mb-2 text-2xl font-bold text-content">Game Not Found</h1>
           <p className="mb-8 text-content-muted">
@@ -156,10 +157,7 @@ export function PlayPage({ gameId }: PlayPageProps) {
       <header className="sticky top-0 z-10 border-b border-border-muted bg-surface-elevated/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
           <a href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-secondary shadow-glow-sm">
-              <Sparkles className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-gradient-dual text-lg font-bold">PlayCraft</span>
+            <Logo size={32} showText textClassName="text-content" />
           </a>
 
           <div className="flex items-center gap-2">
@@ -218,8 +216,8 @@ export function PlayPage({ gameId }: PlayPageProps) {
 
         {/* CTA Section */}
         <div className="mt-12 rounded-2xl border border-border-muted bg-surface-elevated p-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-accent to-secondary shadow-glow-sm">
-            <Sparkles className="h-8 w-8 text-white" />
+          <div className="mx-auto mb-4">
+            <LogoIcon size={64} />
           </div>
           <h2 className="mb-2 text-xl font-bold text-content">Build Your Own Game</h2>
           <p className="mb-6 text-content-muted">
@@ -229,7 +227,7 @@ export function PlayPage({ gameId }: PlayPageProps) {
             href="/"
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-secondary px-8 py-3 font-semibold text-white shadow-glow-sm transition-all hover:shadow-glow-md"
           >
-            <Sparkles className="h-5 w-5" />
+            <Gamepad2 className="h-5 w-5" />
             Start Building Free
           </a>
         </div>

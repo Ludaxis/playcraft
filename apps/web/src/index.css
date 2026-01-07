@@ -1,215 +1,454 @@
+/**
+ * PlayCraft Design System - Main Stylesheet
+ * 2026 Cyberpunk Gaming Aesthetic
+ *
+ * This file:
+ * 1. Imports design tokens
+ * 2. Applies Tailwind layers
+ * 3. Defines global styles
+ * 4. Provides gaming-specific utilities
+ */
+
+/* ========================================================================
+   DESIGN TOKENS
+   Import all tokens from the centralized token system
+   ======================================================================== */
+
+@import './styles/tokens/index.css';
+
+/* ========================================================================
+   TAILWIND LAYERS
+   ======================================================================== */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*
- * 2026 HYPER-DIGITAL DESIGN TOKENS (see tailwind.config.js)
- *
- * Surface (OLED-optimized):
- *   - surface:          #0a0a0f (bg-surface)
- *   - surface-elevated: #12121a (bg-surface-elevated)
- *   - surface-overlay:  #1a1a24 (bg-surface-overlay)
- *   - surface-muted:    #0f0f14 (bg-surface-muted)
- *
- * Borders (softer, warmer):
- *   - border:           #2a2a35 (border)
- *   - border-muted:     #1e1e28 (border-muted)
- *   - border-accent:    rgba(139, 92, 246, 0.3)
- *
- * Content (off-white, zinc-based):
- *   - content:          #fafafa (text-content)
- *   - content-muted:    #a1a1aa (text-content-muted)
- *   - content-subtle:   #71717a (text-content-subtle)
- *
- * Accents:
- *   - accent:           #8b5cf6 (violet-500)
- *   - accent-light:     #a78bfa (violet-400, hover states)
- *   - secondary:        #06b6d4 (cyan-500, gaming DNA)
- */
+/* ========================================================================
+   BASE STYLES
+   Global element styles
+   ======================================================================== */
 
-:root {
-  /* Safe area insets for mobile/notch support */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-left: env(safe-area-inset-left, 0px);
-  --safe-right: env(safe-area-inset-right, 0px);
+@layer base {
+  html {
+    height: 100%;
+    overflow: hidden;
+  }
 
-  /* 2026 Design tokens as CSS custom properties */
-  /* Surface colors (OLED-optimized) */
-  --color-surface: #0a0a0f;
-  --color-surface-elevated: #12121a;
-  --color-surface-overlay: #1a1a24;
-  --color-surface-muted: #0f0f14;
+  body {
+    margin: 0;
+    min-height: 100%;
+    background-color: var(--surface-base);
+    color: var(--content-primary);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base-line-height);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
 
-  /* Border colors (softer, warmer) */
-  --color-border: #2a2a35;
-  --color-border-muted: #1e1e28;
-  --color-border-accent: rgba(139, 92, 246, 0.3);
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
-  /* Content colors (off-white, zinc-based) */
-  --color-content: #fafafa;
-  --color-content-muted: #a1a1aa;
-  --color-content-subtle: #71717a;
+  /* Custom Scrollbar (2026: thinner, subtler) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
 
-  /* Primary accent (Violet) */
-  --color-accent: #8b5cf6;
-  --color-accent-light: #a78bfa;
-  --color-accent-glow: #c4b5fd;
-  --color-accent-muted: #6d28d9;
-  --color-accent-subtle: rgba(139, 92, 246, 0.15);
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
-  /* Secondary accent (Cyan - gaming DNA) */
-  --color-secondary: #06b6d4;
-  --color-secondary-light: #22d3ee;
-  --color-secondary-glow: #67e8f9;
-  --color-secondary-subtle: rgba(6, 182, 212, 0.15);
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-default);
+    border-radius: 3px;
+  }
 
-  /* Status colors (softer, more accessible) */
-  --color-success: #4ade80;
-  --color-error: #f87171;
-  --color-warning: #fbbf24;
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--content-tertiary);
+  }
 
-  /* Glow effects */
-  --glow-accent: 0 0 20px rgba(139, 92, 246, 0.25);
-  --glow-accent-lg: 0 0 30px rgba(139, 92, 246, 0.3);
-  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.25);
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-default) transparent;
+  }
+
+  /* Text Selection - Neon accent */
+  ::selection {
+    background-color: rgba(139, 92, 246, 0.3);
+    color: var(--content-primary);
+  }
+
+  /* Focus Visible (accessibility) */
+  :focus-visible {
+    outline: 2px solid var(--accent-default);
+    outline-offset: 2px;
+  }
+
+  /* Remove default focus outline, we use focus-visible */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
 }
 
-html {
-  height: 100%;
-  overflow: hidden;
+/* ========================================================================
+   COMPONENT LAYER
+   Reusable component styles
+   ======================================================================== */
+
+@layer components {
+  /* Glass Morphism */
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-elevated {
+    background: var(--glass-bg-elevated);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  }
+
+  /* Tinted Glass (Cyberpunk) */
+  .glass-violet {
+    background: var(--glass-bg-violet);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-cyan {
+    background: var(--glass-bg-cyan);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  /* Gradient Backgrounds */
+  .bg-gradient-accent {
+    background: var(--gradient-accent);
+  }
+
+  .bg-gradient-gaming {
+    background: var(--gradient-gaming);
+  }
+
+  .bg-gradient-gaming-soft {
+    background: var(--gradient-gaming-soft);
+  }
+
+  .bg-gradient-cyberpunk {
+    background: var(--gradient-cyberpunk);
+  }
+
+  .bg-gradient-neon-sunset {
+    background: var(--gradient-neon-sunset);
+  }
+
+  .bg-gradient-electric {
+    background: var(--gradient-electric);
+  }
+
+  /* Mesh Gradient Background */
+  .bg-mesh-gaming {
+    background: var(--gradient-mesh-gaming);
+  }
+
+  /* Gradient Text */
+  .text-gradient-accent {
+    background: linear-gradient(135deg, var(--accent-default) 0%, var(--accent-hover) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Cyan → Purple → Magenta gradient for gaming branding (matches logo) */
+  .text-gradient-gaming {
+    background: linear-gradient(120deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-cyberpunk {
+    background: var(--text-gradient-cyberpunk);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-neon {
+    background: var(--text-gradient-neon);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Teal/Mint gradient for sidebar branding */
+  .text-gradient-dual {
+    background: linear-gradient(120deg, #14b8a6 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Primary Button - Teal */
+  .btn-neon {
+    background: #14b8a6;
+    color: white;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 9999px;
+    transition: all 0.2s ease-out;
+  }
+
+  .btn-neon:hover {
+    background: #0d9488;
+    transform: translateY(-1px);
+  }
+
+  /* Neon Card */
+  .card-neon {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: 1rem;
+    transition: all 0.2s ease-out;
+  }
+
+  .card-neon:hover {
+    border-color: var(--accent-default);
+    box-shadow: var(--glow-accent-sm);
+  }
 }
 
-body {
-  margin: 0;
-  min-height: 100%;
-  background-color: var(--color-surface);
-  color: var(--color-content);
-  font-family:
-    'Geist',
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#root {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Custom scrollbar (2026: thinner, subtler) */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-content-subtle);
-}
-
-/* Selection */
-::selection {
-  background-color: var(--color-accent-subtle);
-}
-
-/* =======================================================================
-   GLOW UTILITIES (2026 Luminous Interactions)
-   ======================================================================= */
+/* ========================================================================
+   UTILITY LAYER
+   Custom utility classes
+   ======================================================================== */
 
 @layer utilities {
-  /* Glow on hover */
-  .hover-glow {
-    transition: box-shadow 0.3s ease;
+  /* Standard Glow Effects */
+  .glow-sm {
+    box-shadow: var(--glow-accent-sm);
   }
+
+  .glow {
+    box-shadow: var(--glow-accent);
+  }
+
+  .glow-lg {
+    box-shadow: var(--glow-accent-lg);
+  }
+
+  .glow-secondary {
+    box-shadow: var(--glow-secondary);
+  }
+
+  /* Neon Glow Effects (intense) */
+  .glow-neon-violet {
+    box-shadow: var(--glow-neon-violet);
+  }
+
+  .glow-neon-violet-lg {
+    box-shadow: var(--glow-neon-violet-lg);
+  }
+
+  .glow-neon-cyan {
+    box-shadow: var(--glow-neon-cyan);
+  }
+
+  .glow-neon-cyan-lg {
+    box-shadow: var(--glow-neon-cyan-lg);
+  }
+
+  .glow-neon-magenta {
+    box-shadow: var(--glow-neon-magenta);
+  }
+
+  /* Status Glows */
+  .glow-success {
+    box-shadow: var(--glow-success);
+  }
+
+  .glow-error {
+    box-shadow: var(--glow-error);
+  }
+
+  .glow-warning {
+    box-shadow: var(--glow-warning);
+  }
+
+  /* Hover Glow */
+  .hover-glow {
+    transition: box-shadow 0.2s ease-out;
+  }
+
   .hover-glow:hover {
     box-shadow: var(--glow-accent);
   }
 
-  /* Glow on focus */
+  .hover-glow-neon {
+    transition: box-shadow 0.2s ease-out;
+  }
+
+  .hover-glow-neon:hover {
+    box-shadow: var(--glow-neon-violet);
+  }
+
+  /* Focus Glow */
   .focus-glow:focus {
     box-shadow: var(--glow-accent);
     outline: none;
   }
 
-  /* Animated glow pulse */
+  /* Animated Glow Pulse */
   .glow-pulse {
     animation: glow-pulse 2s ease-in-out infinite;
   }
 
   @keyframes glow-pulse {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+      box-shadow: var(--glow-accent-sm);
     }
     50% {
-      box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+      box-shadow: var(--glow-accent-lg);
     }
   }
 
-  /* Gradient text utility */
-  .text-gradient-accent {
-    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  /* Neon Pulse */
+  .neon-pulse {
+    animation: neon-pulse 2s ease-in-out infinite;
   }
 
-  /* Dual accent gradient */
-  .text-gradient-dual {
-    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  @keyframes neon-pulse {
+    0%, 100% {
+      box-shadow: var(--glow-neon-violet-sm);
+    }
+    50% {
+      box-shadow: var(--glow-neon-violet-lg);
+    }
   }
 
-  /* Border glow effect */
+  /* Border Glow Effect */
   .border-glow {
     position: relative;
   }
+
   .border-glow::before {
     content: '';
     position: absolute;
     inset: -1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-secondary));
+    background: var(--gradient-gaming);
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.2s ease-out;
     z-index: -1;
     filter: blur(8px);
   }
+
   .border-glow:hover::before {
     opacity: 0.5;
   }
-}
 
-/* =======================================================================
-   GLASS MORPHISM (2026 Trend)
-   ======================================================================= */
-
-@layer utilities {
-  .glass {
-    background: rgba(10, 10, 15, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+  /* Shimmer Effect (for loading) */
+  .shimmer {
+    background: var(--gradient-shimmer);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
   }
 
-  .glass-elevated {
-    background: rgba(18, 18, 26, 0.9);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Hide Scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Custom Scrollbar (thin) */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  /* Animation Utilities */
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slide-down 0.3s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.2s ease-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  /* Transition Utilities */
+  .transition-smooth {
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out;
+  }
+
+  .transition-swift {
+    transition-duration: 0.15s;
+    transition-timing-function: ease-out;
+  }
+
+  .transition-relaxed {
+    transition-duration: 0.5s;
+    transition-timing-function: ease-out;
+  }
+
+  /* Neon Text Shadow */
+  .text-neon-violet {
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5), 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+
+  .text-neon-cyan {
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5), 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+
+  .text-neon-magenta {
+    text-shadow: 0 0 10px rgba(255, 0, 229, 0.5), 0 0 20px rgba(255, 0, 229, 0.3);
   }
 }

@@ -1,5 +1,6 @@
 import { useCallback, memo } from 'react';
 import Editor, { OnMount, loader } from '@monaco-editor/react';
+import { getEditorTheme } from '../lib/theme';
 
 // Configure Monaco to use CDN
 loader.config({
@@ -65,46 +66,8 @@ export const CodeEditor = memo(function CodeEditor({
   className = '',
 }: CodeEditorProps) {
   const handleEditorMount: OnMount = useCallback((editor, monaco) => {
-    // Define custom theme
-    monaco.editor.defineTheme('playcraft-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '6272a4', fontStyle: 'italic' },
-        { token: 'keyword', foreground: 'ff79c6' },
-        { token: 'string', foreground: 'f1fa8c' },
-        { token: 'number', foreground: 'bd93f9' },
-        { token: 'type', foreground: '8be9fd', fontStyle: 'italic' },
-        { token: 'function', foreground: '50fa7b' },
-        { token: 'variable', foreground: 'f8f8f2' },
-        { token: 'constant', foreground: 'bd93f9' },
-        { token: 'parameter', foreground: 'ffb86c' },
-        { token: 'tag', foreground: 'ff79c6' },
-        { token: 'attribute.name', foreground: '50fa7b' },
-        { token: 'attribute.value', foreground: 'f1fa8c' },
-      ],
-      colors: {
-        'editor.background': '#0d0d0d',
-        'editor.foreground': '#f8f8f2',
-        'editor.lineHighlightBackground': '#1a1a2e',
-        'editor.selectionBackground': '#44475a',
-        'editor.inactiveSelectionBackground': '#44475a88',
-        'editorCursor.foreground': '#a78bfa',
-        'editorLineNumber.foreground': '#6272a4',
-        'editorLineNumber.activeForeground': '#f8f8f2',
-        'editorIndentGuide.background': '#282a3655',
-        'editorIndentGuide.activeBackground': '#6272a4',
-        'editorGutter.background': '#0d0d0d',
-        'editor.wordHighlightBackground': '#44475a55',
-        'editor.wordHighlightStrongBackground': '#44475a88',
-        'editorBracketMatch.background': '#44475a',
-        'editorBracketMatch.border': '#f1fa8c',
-        'scrollbar.shadow': '#0000001a',
-        'scrollbarSlider.background': '#44475a55',
-        'scrollbarSlider.hoverBackground': '#44475a88',
-        'scrollbarSlider.activeBackground': '#44475a',
-      },
-    });
+    // Define custom theme using design tokens
+    monaco.editor.defineTheme('playcraft-dark', getEditorTheme());
 
     // Set theme
     monaco.editor.setTheme('playcraft-dark');
@@ -159,7 +122,7 @@ export const CodeEditor = memo(function CodeEditor({
 
   if (!filePath) {
     return (
-      <div className={`flex h-full items-center justify-center bg-[#0d0d0d] text-content-subtle ${className}`}>
+      <div className={`flex h-full items-center justify-center bg-[var(--editor-bg)] text-content-subtle ${className}`}>
         Select a file to edit
       </div>
     );
@@ -214,7 +177,7 @@ export const CodeEditor = memo(function CodeEditor({
           },
         }}
         loading={
-          <div className="flex h-full items-center justify-center bg-[#0d0d0d] text-content-subtle">
+          <div className="flex h-full items-center justify-center bg-[var(--editor-bg)] text-content-subtle">
             Loading editor...
           </div>
         }

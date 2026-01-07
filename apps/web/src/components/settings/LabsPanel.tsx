@@ -3,27 +3,37 @@
  * Experimental features toggles and API keys
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, Eye, EyeOff, ExternalLink } from 'lucide-react';
-import type { UserSettings, UpdateSettingsInput } from '../../types';
+import { useUpdateSettings, useUserSettings } from '../../hooks/useUserSettings';
 
-interface LabsPanelProps {
-  settings: UserSettings;
-  onSave: (input: UpdateSettingsInput) => Promise<void>;
-  isSaving: boolean;
-}
-
-export function LabsPanel({ settings, onSave, isSaving }: LabsPanelProps) {
-  const [voyageKey, setVoyageKey] = useState(settings.voyage_api_key || '');
+export function LabsPanel() {
+  const { data: settings, isLoading } = useUserSettings();
+  const { mutate: updateSettings, isPending: isSaving } = useUpdateSettings();
+  const [voyageKey, setVoyageKey] = useState('');
   const [showVoyageKey, setShowVoyageKey] = useState(false);
 
-  const handleToggle = (key: keyof UpdateSettingsInput, value: boolean) => {
-    onSave({ [key]: value });
+  useEffect(() => {
+    if (settings) {
+      setVoyageKey(settings.voyage_api_key || '');
+    }
+  }, [settings]);
+
+  const handleToggle = (key: 'labs_github_branch_switching', value: boolean) => {
+    updateSettings({ [key]: value });
   };
 
   const handleSaveVoyageKey = () => {
-    onSave({ voyage_api_key: voyageKey || null });
+    updateSettings({ voyage_api_key: voyageKey || null });
   };
+
+  if (isLoading || !settings) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent-light" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -80,7 +90,7 @@ export function LabsPanel({ settings, onSave, isSaving }: LabsPanelProps) {
                 </button>
               </div>
               {settings.voyage_api_key && (
-                <p className="mt-2 text-xs text-green-400">✓ Semantic search enabled</p>
+                <p className="mt-2 text-xs text-success">✓ Semantic search enabled</p>
               )}
             </div>
           </div>

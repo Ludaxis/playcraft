@@ -22,3 +22,5 @@ export type {
   UseFileChangeTrackerOptions,
   UseFileChangeTrackerReturn,
 } from './useFileChangeTracker';
+
+export { useWorkspaces, useCreateWorkspace, useInviteToWorkspace, useInvalidateWorkspaces } from './useWorkspaces';

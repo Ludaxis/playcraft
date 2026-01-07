@@ -25,7 +25,7 @@ function FeatureList({ features }: { features: string[] }) {
     <div className="mt-3 space-y-1.5">
       {features.map((feature, index) => (
         <div key={index} className="flex items-start gap-2 text-sm">
-          <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+          <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
           <span className="text-content-muted">{feature}</span>
         </div>
       ))}
@@ -77,7 +77,7 @@ function MessageBubble({
           className={`inline-block rounded-2xl px-4 py-3 ${
             isUser
               ? 'bg-accent text-content'
-              : 'bg-surface-overlay text-gray-200'
+              : 'bg-surface-overlay text-content'
           }`}
           style={{ maxWidth: isUser ? '85%' : '100%' }}
         >
@@ -121,21 +121,21 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
       case 'preparing':
         return <FolderOpen className="h-4 w-4 text-accent animate-pulse" />;
       case 'analyzing':
-        return <Brain className="h-4 w-4 text-purple-400 animate-pulse" />;
+        return <Brain className="h-4 w-4 text-accent animate-pulse" />;
       case 'generating':
-        return <Code className="h-4 w-4 text-blue-400 animate-pulse" />;
+        return <Code className="h-4 w-4 text-info animate-pulse" />;
       case 'processing':
         return <Sparkles className="h-4 w-4 text-accent animate-pulse" />;
       case 'applying':
         return <Save className="h-4 w-4 text-accent animate-pulse" />;
       case 'validating':
-        return <Search className="h-4 w-4 text-yellow-400 animate-pulse" />;
+        return <Search className="h-4 w-4 text-warning animate-pulse" />;
       case 'retrying':
-        return <RefreshCw className="h-4 w-4 text-orange-400 animate-spin" />;
+        return <RefreshCw className="h-4 w-4 text-warning animate-spin" />;
       case 'complete':
-        return <Check className="h-4 w-4 text-green-400" />;
+        return <Check className="h-4 w-4 text-success" />;
       case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-400" />;
+        return <AlertCircle className="h-4 w-4 text-error" />;
       default:
         return <Loader2 className="h-4 w-4 animate-spin text-accent" />;
     }

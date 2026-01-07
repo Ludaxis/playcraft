@@ -1,357 +1,141 @@
 /**
- * Account Settings Panel
- * Manages user profile, preferences, and account settings
+ * Account Panel (Dumb Component)
+ * Renders the profile form based on props.
  */
-
 import { useState, useEffect } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { ExternalLink, Volume2, VolumeX, Volume1, Loader2 } from 'lucide-react';
-import type { UserSettings, UpdateSettingsInput } from '../../types';
+import { Loader2 } from 'lucide-react';
+import type { UserProfile } from '../../types';
 import { Avatar } from '../Avatar';
+import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
 
 interface AccountPanelProps {
   user: User;
-  settings: UserSettings;
-  onSave: (input: UpdateSettingsInput) => Promise<void>;
-  onDelete: () => Promise<void>;
+  profile: UserProfile | null | undefined;
+  isLoading: boolean;
   isSaving: boolean;
+  onSave: (updates: Partial<UserProfile>) => void;
+  onDelete: () => Promise<void>;
 }
 
-export function AccountPanel({
-  user,
-  settings,
-  onSave,
-  onDelete,
-  isSaving,
-}: AccountPanelProps) {
-  const [displayName, setDisplayName] = useState(settings.display_name || '');
-  const [username, setUsername] = useState(settings.username || '');
-  const [bio, setBio] = useState(settings.bio || '');
-  const [location, setLocation] = useState(settings.location || '');
-  const [websiteUrl, setWebsiteUrl] = useState(settings.website_url || '');
-  const [hideProfilePicture, setHideProfilePicture] = useState(
-    settings.hide_profile_picture
-  );
-  const [chatSuggestions, setChatSuggestions] = useState(
-    settings.chat_suggestions
-  );
-  const [generationSound, setGenerationSound] = useState(
-    settings.generation_sound
-  );
+export function AccountPanel({ user, profile, isLoading, isSaving, onSave, onDelete }: AccountPanelProps) {
+  const [formData, setFormData] = useState({
+    full_name: '',
+    bio: '',
+    company: '',
+    website: '',
+    github_username: '',
+    linkedin_profile: '',
+    twitter_handle: '',
+  });
 
-  // Sync with settings prop changes
   useEffect(() => {
-    setDisplayName(settings.display_name || '');
-    setUsername(settings.username || '');
-    setBio(settings.bio || '');
-    setLocation(settings.location || '');
-    setWebsiteUrl(settings.website_url || '');
-    setHideProfilePicture(settings.hide_profile_picture);
-    setChatSuggestions(settings.chat_suggestions);
-    setGenerationSound(settings.generation_sound);
-  }, [settings]);
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || '',
+        bio: profile.bio || '',
+        company: profile.company || '',
+        website: profile.website || '',
+        github_username: profile.github_username || '',
+        linkedin_profile: profile.linkedin_profile || '',
+        twitter_handle: profile.twitter_handle || '',
+      });
+    }
+  }, [profile]);
 
-  const handleFieldSave = (field: UpdateSettingsInput) => {
-    onSave(field);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleSave = () => {
+    onSave(formData);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-accent-light" />
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-content">Account settings</h2>
-      <p className="mt-1 text-content-muted">
-        Personalize how others see and interact with you on PlayCraft.
-      </p>
-
-      <div className="mt-8 space-y-8">
-        {/* Avatar */}
-        <SettingRow
-          title="Your avatar"
-          description="Your avatar is fetched from your linked identity provider."
-        >
-          <Avatar
-            src={user.user_metadata?.avatar_url}
-            name={user.user_metadata?.full_name || user.email}
-            size="lg"
-          />
-        </SettingRow>
-
-        {/* Username */}
-        <SettingRow
-          title="Username"
-          description="Your public identifier and profile URL."
-        >
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onBlur={() => handleFieldSave({ username: username || null })}
-            placeholder="username"
-            className="w-full max-w-md rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
-          />
-          {username && (
-            <a
-              href={`/u/${username}`}
-              className="mt-1 flex items-center gap-1 text-sm text-accent hover:text-accent-light"
-            >
-              playcraft.app/@{username}
-              <ExternalLink className="h-3 w-3" />
-            </a>
-          )}
-        </SettingRow>
-
-        {/* Email (read-only) */}
-        <SettingRow
-          title="Email"
-          description="Your email address associated with your account."
-        >
-          <input
-            type="email"
-            value={user.email || ''}
-            disabled
-            className="w-full max-w-md cursor-not-allowed rounded-lg border border-border bg-surface-overlay/50 px-4 py-2.5 text-content-muted"
-          />
-        </SettingRow>
-
-        {/* Display Name */}
-        <SettingRow
-          title="Name"
-          description="Your full name, as visible to others."
-        >
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            onBlur={() =>
-              handleFieldSave({ display_name: displayName || null })
-            }
-            placeholder="Your name"
-            className="w-full max-w-md rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
-          />
-        </SettingRow>
-
-        {/* Bio */}
-        <SettingRow
-          title="Description"
-          description="A short description of yourself or your work."
-        >
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            onBlur={() => handleFieldSave({ bio: bio || null })}
-            rows={3}
-            placeholder="Tell us about yourself..."
-            className="w-full max-w-md resize-none rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
-          />
-        </SettingRow>
-
-        {/* Location */}
-        <SettingRow title="Location" description="Where you're based.">
-          <input
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            onBlur={() => handleFieldSave({ location: location || null })}
-            placeholder="City, Country"
-            className="w-full max-w-md rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
-          />
-        </SettingRow>
-
-        {/* Website Link */}
-        <SettingRow
-          title="Link"
-          description="Add a link to your personal website or portfolio."
-        >
-          <input
-            type="url"
-            value={websiteUrl}
-            onChange={(e) => setWebsiteUrl(e.target.value)}
-            onBlur={() =>
-              handleFieldSave({ website_url: websiteUrl || null })
-            }
-            placeholder="https://yoursite.com"
-            className="w-full max-w-md rounded-lg border border-border bg-surface-overlay px-4 py-2.5 text-content placeholder-content-subtle outline-none ring-accent focus:border-transparent focus:ring-2"
-          />
-        </SettingRow>
-
-        {/* Toggle Settings */}
-        <ToggleSetting
-          title="Hide profile picture"
-          description="Hide your profile picture from other users."
-          checked={hideProfilePicture}
-          onChange={(checked) => {
-            setHideProfilePicture(checked);
-            handleFieldSave({ hide_profile_picture: checked });
-          }}
-        />
-
-        <ToggleSetting
-          title="Chat suggestions"
-          description="Show helpful suggestions in the chat interface."
-          checked={chatSuggestions}
-          onChange={(checked) => {
-            setChatSuggestions(checked);
-            handleFieldSave({ chat_suggestions: checked });
-          }}
-        />
-
-        {/* Generation Complete Sound */}
+      <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-medium text-content">Generation complete sound</h3>
-          <p className="mt-1 text-sm text-content-muted">
-            Plays a notification sound when generation is finished.
-          </p>
-          <div className="mt-3 space-y-2">
-            {[
-              { value: 'first', label: 'First generation', icon: Volume1 },
-              { value: 'always', label: 'Always', icon: Volume2 },
-              { value: 'never', label: 'Never', icon: VolumeX },
-            ].map((option) => (
-              <label
-                key={option.value}
-                className="flex cursor-pointer items-center gap-3"
-              >
-                <input
-                  type="radio"
-                  name="generationSound"
-                  value={option.value}
-                  checked={generationSound === option.value}
-                  onChange={() => {
-                    setGenerationSound(
-                      option.value as typeof generationSound
-                    );
-                    handleFieldSave({
-                      generation_sound:
-                        option.value as typeof generationSound,
-                    });
-                  }}
-                  className="h-4 w-4 border-border bg-surface-overlay text-accent focus:ring-accent"
-                />
-                <option.icon className="h-4 w-4 text-content-muted" />
-                <span className="text-sm text-content">{option.label}</span>
-              </label>
-            ))}
-          </div>
+          <h2 className="text-2xl font-bold text-content">Profile</h2>
+          <p className="mt-1 text-content-muted">This information will be displayed publicly.</p>
         </div>
-
-        {/* Linked Accounts */}
-        <div>
-          <h3 className="font-medium text-content">Linked accounts</h3>
-          <p className="mt-1 text-sm text-content-muted">
-            Manage accounts linked for sign-in.
-          </p>
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-border bg-surface-overlay p-4">
-              <div className="flex items-center gap-3">
-                <GoogleIcon />
-                <div>
-                  <p className="text-sm font-medium text-content">Google</p>
-                  <p className="text-xs text-content-muted">{user.email}</p>
-                </div>
-              </div>
-              <span className="rounded bg-surface-elevated px-2 py-0.5 text-xs text-content-muted">
-                Primary
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Delete Account */}
-        <div className="border-t border-border-muted pt-8">
-          <h3 className="font-medium text-content">Delete account</h3>
-          <p className="mt-1 text-sm text-content-muted">
-            Permanently delete your PlayCraft account. This cannot be undone.
-          </p>
-          <button
-            onClick={onDelete}
-            className="mt-3 rounded-lg bg-red-900 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-800"
-          >
-            Delete account
-          </button>
-        </div>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Changes
+        </Button>
       </div>
 
-      {isSaving && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-content-muted">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Saving...
+      <div className="mt-8 space-y-8">
+        <SettingRow title="Your avatar" description="Your avatar is managed by your login provider.">
+          <Avatar src={profile?.avatar_url} name={formData.full_name || user.email} size="lg" />
+        </SettingRow>
+
+        <SettingRow title="Full Name" description="Your full name.">
+          <Input name="full_name" value={formData.full_name} onChange={handleInputChange} />
+        </SettingRow>
+        
+        <SettingRow title="Email" description="Your email address is not shared publicly.">
+          <Input value={user.email || ''} disabled />
+        </SettingRow>
+
+        <SettingRow title="Bio" description="A short description about yourself.">
+          <Textarea name="bio" value={formData.bio} onChange={handleInputChange} rows={3} />
+        </SettingRow>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+          <SettingRow title="Company" description="The company you work for.">
+            <Input name="company" value={formData.company} onChange={handleInputChange} />
+          </SettingRow>
+          <SettingRow title="Website" description="Your personal website or portfolio.">
+            <Input name="website" type="url" value={formData.website} onChange={handleInputChange} />
+          </SettingRow>
         </div>
-      )}
+
+        <div className="border-t border-border-muted pt-8">
+            <h3 className="text-xl font-bold text-content">Social Profiles</h3>
+        </div>
+
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+            <SettingRow title="GitHub" description="Your GitHub username.">
+                <Input name="github_username" value={formData.github_username} onChange={handleInputChange} />
+            </SettingRow>
+            <SettingRow title="LinkedIn" description="URL of your LinkedIn profile.">
+                <Input name="linkedin_profile" value={formData.linkedin_profile} onChange={handleInputChange} />
+            </SettingRow>
+            <SettingRow title="Twitter / X" description="Your Twitter or X handle.">
+                <Input name="twitter_handle" value={formData.twitter_handle} onChange={handleInputChange} />
+            </SettingRow>
+        </div>
+
+        <div className="border-t border-border-muted pt-8">
+          <h3 className="font-medium text-content">Delete account</h3>
+          <p className="mt-1 text-sm text-content-muted">Permanently delete your account.</p>
+          <Button variant="destructive" className="mt-3" onClick={onDelete}>
+            Delete account
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Helper Components
-
-interface SettingRowProps {
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}
-
-function SettingRow({ title, description, children }: SettingRowProps) {
+function SettingRow({ title, description, children }: { title: string; description: string; children: React.ReactNode; }) {
   return (
     <div>
-      <h3 className="font-medium text-content">{title}</h3>
+      <Label className="text-base font-medium text-content">{title}</Label>
       <p className="mt-1 text-sm text-content-muted">{description}</p>
       <div className="mt-3">{children}</div>
     </div>
-  );
-}
-
-interface ToggleSettingProps {
-  title: string;
-  description: string;
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-}
-
-function ToggleSetting({
-  title,
-  description,
-  checked,
-  onChange,
-}: ToggleSettingProps) {
-  return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h3 className="font-medium text-content">{title}</h3>
-        <p className="mt-1 text-sm text-content-muted">{description}</p>
-      </div>
-      <button
-        onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 rounded-full transition-colors ${
-          checked ? 'bg-accent' : 'bg-surface-overlay'
-        }`}
-      >
-        <span
-          className={`absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-5' : ''
-          }`}
-        />
-      </button>
-    </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      />
-    </svg>
   );
 }

@@ -199,7 +199,7 @@ export function ProjectDropdown({
               }}
               className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-content-muted transition-colors hover:bg-surface-elevated hover:text-content"
             >
-              <Star className={`h-4 w-4 ${isStarred ? 'fill-yellow-500 text-yellow-500' : ''}`} />
+              <Star className={`h-4 w-4 ${isStarred ? 'fill-warning text-warning' : ''}`} />
               <span className="text-sm">{isStarred ? 'Unstar project' : 'Star project'}</span>
             </button>
 

@@ -24,7 +24,7 @@ export function NextStepsCards({ steps, onStepClick }: NextStepsCardsProps) {
           <button
             key={index}
             onClick={() => onStepClick(step.prompt)}
-            className="flex w-full items-center justify-between rounded-lg border border-border bg-surface-overlay/50 px-4 py-3 text-left text-sm text-gray-200 transition-colors hover:border-accent/50 hover:bg-surface-overlay"
+            className="flex w-full items-center justify-between rounded-lg border border-border bg-surface-overlay/50 px-4 py-3 text-left text-sm text-content transition-colors hover:border-accent/50 hover:bg-surface-overlay"
           >
             <div className="flex items-center gap-2">
               <Wand2 className="h-4 w-4 text-accent" />

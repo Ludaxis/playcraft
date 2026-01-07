@@ -1,220 +1,229 @@
-import { Sparkles, Zap, Layout, Database, Globe, Smartphone, Github, Palette } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowUp } from 'lucide-react';
+import { AuthModal, Logo, LogoIcon } from '../components';
+
+const TYPING_SUGGESTIONS = [
+  'puzzle game with numbers',
+  'classic snake game',
+  'block blast style game',
+  'match 3 game with emojis',
+  'space invaders clone',
+  'flappy bird style game',
+  'word guessing game',
+  'memory card matching game',
+];
+
+const STATIC_PREFIX = 'Hey PlayCraft create a ';
 
 interface LandingPageProps {
   onSignIn: () => void;
 }
 
+function useTypewriter(phrases: string[], typingSpeed = 80, deletingSpeed = 40, pauseTime = 2000) {
+  const [displayText, setDisplayText] = useState('');
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+
+  useEffect(() => {
+    const currentPhrase = phrases[phraseIndex];
+
+    if (isPaused) {
+      const pauseTimer = setTimeout(() => {
+        setIsPaused(false);
+        setIsDeleting(true);
+      }, pauseTime);
+      return () => clearTimeout(pauseTimer);
+    }
+
+    if (isDeleting) {
+      if (displayText === '') {
+        setIsDeleting(false);
+        setPhraseIndex((prev) => (prev + 1) % phrases.length);
+      } else {
+        const deleteTimer = setTimeout(() => {
+          setDisplayText((prev) => prev.slice(0, -1));
+        }, deletingSpeed);
+        return () => clearTimeout(deleteTimer);
+      }
+    } else {
+      if (displayText === currentPhrase) {
+        setIsPaused(true);
+      } else {
+        const typeTimer = setTimeout(() => {
+          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
+        }, typingSpeed);
+        return () => clearTimeout(typeTimer);
+      }
+    }
+  }, [displayText, phraseIndex, isDeleting, isPaused, phrases, typingSpeed, deletingSpeed, pauseTime]);
+
+  return displayText;
+}
+
 export function LandingPage({ onSignIn }: LandingPageProps) {
+  const [inputValue, setInputValue] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const animatedText = useTypewriter(TYPING_SUGGESTIONS);
+
+  const handleInputFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleInputBlur = () => {
+    if (!inputValue) {
+      setIsFocused(false);
+    }
+  };
+
+  const handleShowSignIn = () => {
+    setAuthMode('signin');
+    setShowAuthModal(true);
+  };
+
+  const handleShowSignUp = () => {
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
+
+  const handleSubmit = () => {
+    if (!inputValue.trim()) return;
+
+    // Store the prompt in localStorage before showing auth modal
+    localStorage.setItem('playcraft_pending_prompt', inputValue.trim());
+    setAuthMode('signup');
+    setShowAuthModal(true);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background: `
+          radial-gradient(ellipse 80% 60% at 50% 100%, rgba(6, 182, 212, 0.4) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 50% at 30% 80%, rgba(236, 72, 153, 0.5) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 50% at 70% 80%, rgba(236, 72, 153, 0.4) 0%, transparent 50%),
+          radial-gradient(ellipse 80% 40% at 50% 60%, rgba(168, 85, 247, 0.3) 0%, transparent 50%),
+          linear-gradient(180deg, #1e3a5f 0%, #2d1f4f 30%, #4a1e5c 50%, #6b2a6b 70%, #1a3a5a 100%)
+        `,
+      }}
+    >
       {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-gray-800 bg-gray-950/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-fuchsia-600">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-xl font-extrabold text-transparent">
-              PlayCraft
-            </span>
+      <header className="fixed left-0 right-0 top-0 z-50">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+          {/* Logo */}
+          <Logo size={32} showText textClassName="text-white" />
+
+          {/* Nav Links - disabled for now */}
+          {/* <nav className="hidden md:flex items-center gap-8">
+            <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">Solutions</a>
+            <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">Enterprise</a>
+            <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">Pricing</a>
+            <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">Community</a>
+            <a href="#" className="text-sm text-white/70 hover:text-white transition-colors">Discover</a>
+          </nav> */}
+
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleShowSignIn}
+              className="px-4 py-2 text-sm text-white/90 hover:text-white transition-colors"
+            >
+              Log in
+            </button>
+            <button
+              onClick={handleShowSignUp}
+              className="px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all"
+            >
+              Get started
+            </button>
           </div>
-          <button
-            onClick={onSignIn}
-            className="rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-5 py-2 text-sm font-semibold text-white shadow-lg transition-opacity hover:opacity-90"
-          >
-            Sign In
-          </button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden px-4 pb-20 pt-32">
-        <div className="absolute inset-0 bg-gradient-to-b from-violet-900/20 to-transparent" />
-        <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet-600/10 blur-3xl" />
-
-        <div className="relative mx-auto max-w-4xl text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/30 bg-violet-500/10 px-4 py-2">
-            <Zap className="h-4 w-4 text-violet-400" />
-            <span className="text-sm text-violet-300">The Magic Potion for Building Apps</span>
-          </div>
-
-          <h1 className="mb-6 text-5xl font-extrabold leading-tight md:text-6xl">
-            <span className="bg-gradient-to-r from-white via-violet-200 to-fuchsia-200 bg-clip-text text-transparent">
-              Idea to App
-            </span>
+      <main className="flex-1 flex flex-col items-center justify-center px-4 pt-20">
+        <div className="w-full max-w-3xl text-center">
+          {/* Headline */}
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 tracking-tight">
+            Build something
             <br />
-            <span className="text-white">In Minutes</span>
+            <span className="text-gradient-gaming">PlayCraft</span>
           </h1>
 
-          <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-400">
-            Describe your app in plain English. Watch AI write the code, install packages,
-            and run it live. Edit any file, iterate through chat, deploy anywhere.
+          {/* Subtitle */}
+          <p className="text-lg md:text-xl text-white/70 mb-12">
+            Create games and apps by chatting with AI
           </p>
 
-          <button
-            onClick={onSignIn}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 text-lg font-semibold text-white shadow-xl shadow-violet-500/25 transition-all hover:scale-105 hover:shadow-violet-500/40"
-          >
-            <Sparkles className="h-5 w-5" />
-            Start Building Free
-          </button>
-        </div>
-      </section>
+          {/* Chat Input Box */}
+          <div className="relative mx-auto max-w-2xl">
+            <div className="rounded-2xl bg-white/95 shadow-2xl overflow-hidden">
+              {/* Input Area */}
+              <div className="p-4 relative">
+                {/* Animated placeholder overlay */}
+                {!isFocused && !inputValue && (
+                  <div className="absolute inset-0 p-4 pointer-events-none text-base text-gray-400">
+                    <span>{STATIC_PREFIX}</span>
+                    <span className="text-gray-600">{animatedText}</span>
+                    <span className="inline-block w-0.5 h-5 bg-gray-400 ml-0.5 animate-pulse align-middle" />
+                  </div>
+                )}
+                <textarea
+                  ref={textareaRef}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                  onKeyDown={handleKeyDown}
+                  placeholder={isFocused ? "Describe what you want to build..." : ""}
+                  className="w-full resize-none bg-transparent text-gray-800 placeholder-gray-400 outline-none text-base min-h-[60px] relative z-10"
+                  rows={2}
+                />
+              </div>
 
-      {/* Features Grid */}
-      <section className="px-4 py-20">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="mb-12 text-center text-3xl font-bold text-white">
-            Everything You Need
-          </h2>
-
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                icon: Layout,
-                title: 'React + Vite',
-                description: 'Modern stack with hot reload and TypeScript',
-                color: 'from-cyan-500 to-blue-500',
-              },
-              {
-                icon: Palette,
-                title: 'shadcn/ui',
-                description: 'Beautiful components out of the box',
-                color: 'from-violet-500 to-purple-500',
-              },
-              {
-                icon: Database,
-                title: 'Supabase',
-                description: 'Database, auth & storage in one click',
-                color: 'from-emerald-500 to-green-500',
-              },
-              {
-                icon: Globe,
-                title: 'Three.js',
-                description: '3D experiences and WebGL support',
-                color: 'from-orange-500 to-red-500',
-              },
-            ].map(({ icon: Icon, title, description, color }) => (
-              <div
-                key={title}
-                className="group rounded-2xl border border-gray-800 bg-gray-900/50 p-6 transition-all hover:border-gray-700 hover:bg-gray-900"
-              >
-                <div
-                  className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${color}`}
+              {/* Toolbar */}
+              <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100">
+                <button
+                  onClick={handleSubmit}
+                  disabled={!inputValue.trim()}
+                  className="p-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
                 >
-                  <Icon className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-white">{title}</h3>
-                <p className="text-sm text-gray-400">{description}</p>
+                  <ArrowUp className="h-5 w-5" />
+                </button>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="border-t border-gray-800 px-4 py-20">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="mb-12 text-center text-3xl font-bold text-white">How It Works</h2>
-
-          <div className="space-y-8">
-            {[
-              {
-                step: '1',
-                title: 'Describe Your App',
-                description:
-                  'Tell PlayCraft what you want to build. "Create a todo app with dark mode and Supabase backend."',
-              },
-              {
-                step: '2',
-                title: 'Watch It Build',
-                description:
-                  'AI generates real project files, installs npm packages, and starts the dev server - all in your browser.',
-              },
-              {
-                step: '3',
-                title: 'Edit & Iterate',
-                description:
-                  'Browse the file tree, edit code directly, or chat to make changes. "Add user authentication."',
-              },
-              {
-                step: '4',
-                title: 'Export & Deploy',
-                description:
-                  'Push to GitHub with one click or download the project. Deploy to Vercel, Netlify, or anywhere.',
-              },
-            ].map(({ step, title, description }) => (
-              <div key={step} className="flex gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-600 text-lg font-bold text-white">
-                  {step}
-                </div>
-                <div>
-                  <h3 className="mb-1 text-lg font-semibold text-white">{title}</h3>
-                  <p className="text-gray-400">{description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Export Options */}
-      <section className="border-t border-gray-800 px-4 py-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <h2 className="mb-4 text-3xl font-bold text-white">Your Code, Your Way</h2>
-          <p className="mb-8 text-gray-400">
-            Full ownership of your code. Export anytime, deploy anywhere.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <div className="flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3">
-              <Github className="h-5 w-5 text-gray-300" />
-              <span className="text-gray-300">Push to GitHub</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3">
-              <Smartphone className="h-5 w-5 text-gray-300" />
-              <span className="text-gray-300">Download ZIP</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3">
-              <Globe className="h-5 w-5 text-gray-300" />
-              <span className="text-gray-300">Deploy to Vercel</span>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="border-t border-gray-800 px-4 py-20">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="mb-4 text-3xl font-bold text-white">Ready to Build?</h2>
-          <p className="mb-8 text-gray-400">
-            Join developers shipping faster with AI.
-          </p>
-          <button
-            onClick={onSignIn}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-8 py-4 text-lg font-semibold text-white shadow-xl transition-all hover:scale-105"
-          >
-            Get Started Free
-          </button>
-        </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-800 px-4 py-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-2 text-gray-500">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-sm">PlayCraft</span>
-          </div>
-          <div className="flex gap-6 text-sm text-gray-500">
-            <a href="/privacy" className="hover:text-white">
-              Privacy
-            </a>
-            <a href="/terms" className="hover:text-white">
-              Terms
-            </a>
+      <footer className="px-6 py-6">
+        <div className="mx-auto max-w-7xl flex items-center justify-center">
+          <div className="flex items-center gap-2 text-white/50">
+            <LogoIcon size={16} className="opacity-50" />
+            <span className="text-sm">Made with PlayCraft</span>
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authMode}
+      />
     </div>
   );
 }

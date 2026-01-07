@@ -25,17 +25,17 @@ export function DependencyBanner({
   if (outdated.length === 0) return null;
 
   return (
-    <div className="border-b border-yellow-800/50 bg-yellow-900/20">
+    <div className="border-b border-warning/50 bg-warning/10">
       {/* Main banner */}
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center gap-3">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          <span className="text-sm text-yellow-200">
+          <AlertTriangle className="h-4 w-4 text-warning" />
+          <span className="text-sm text-warning-light">
             {outdated.length} package{outdated.length !== 1 ? 's' : ''} can be updated
           </span>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-1 text-xs text-yellow-400 hover:text-yellow-300"
+            className="flex items-center gap-1 text-xs text-warning hover:text-warning-light"
           >
             {isExpanded ? (
               <>
@@ -53,14 +53,14 @@ export function DependencyBanner({
           <button
             onClick={onUpdate}
             disabled={isUpdating}
-            className="flex items-center gap-1.5 rounded-lg bg-yellow-600/20 px-3 py-1 text-xs font-medium text-yellow-300 transition-colors hover:bg-yellow-600/30 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg bg-warning/20 px-3 py-1 text-xs font-medium text-warning-light transition-colors hover:bg-warning/30 disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 ${isUpdating ? 'animate-spin' : ''}`} />
             {isUpdating ? 'Updating...' : 'Update All'}
           </button>
           <button
             onClick={onDismiss}
-            className="rounded-lg p-1 text-yellow-500 transition-colors hover:bg-yellow-600/20 hover:text-yellow-300"
+            className="rounded-lg p-1 text-warning transition-colors hover:bg-warning/20 hover:text-warning-light"
             title="Dismiss"
           >
             <X className="h-4 w-4" />
@@ -70,22 +70,22 @@ export function DependencyBanner({
 
       {/* Expanded details */}
       {isExpanded && (
-        <div className="border-t border-yellow-800/30 px-4 py-3">
+        <div className="border-t border-warning/30 px-4 py-3">
           <div className="grid grid-cols-4 gap-2 text-xs">
-            <div className="font-medium text-yellow-400">Package</div>
-            <div className="font-medium text-yellow-400">Current</div>
-            <div className="font-medium text-yellow-400">Wanted</div>
-            <div className="font-medium text-yellow-400">Latest</div>
+            <div className="font-medium text-warning">Package</div>
+            <div className="font-medium text-warning">Current</div>
+            <div className="font-medium text-warning">Wanted</div>
+            <div className="font-medium text-warning">Latest</div>
           </div>
           <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
             {outdated.map((dep) => (
               <div key={dep.name} className="grid grid-cols-4 gap-2 text-xs">
-                <div className="truncate text-yellow-200" title={dep.name}>
+                <div className="truncate text-warning-light" title={dep.name}>
                   {dep.name}
                 </div>
                 <div className="text-content-muted">{dep.current}</div>
-                <div className="text-yellow-300">{dep.wanted}</div>
-                <div className="text-green-400">{dep.latest}</div>
+                <div className="text-warning-light">{dep.wanted}</div>
+                <div className="text-success">{dep.latest}</div>
               </div>
             ))}
           </div>

@@ -54,13 +54,24 @@ export const queryClient = new QueryClient({
 export const queryKeys = {
   projects: {
     all: ['projects'] as const,
-    lists: () => [...queryKeys.projects.all, 'list'] as const,
+    list: (workspaceId: string | null | undefined = 'all') =>
+      [...queryKeys.projects.all, 'list', workspaceId ?? 'all'] as const,
     detail: (id: string) => [...queryKeys.projects.all, 'detail', id] as const,
   },
   settings: {
     all: ['settings'] as const,
     user: () => [...queryKeys.settings.all, 'user'] as const,
     usage: () => [...queryKeys.settings.all, 'usage'] as const,
+  },
+  workspaces: {
+    all: ['workspaces'] as const,
+    list: () => [...queryKeys.workspaces.all, 'list'] as const,
+    detail: (id: string) => [...queryKeys.workspaces.all, 'detail', id] as const,
+    invites: () => [...queryKeys.workspaces.all, 'invites'] as const,
+  },
+  profile: {
+    all: ['profile'] as const,
+    details: () => [...queryKeys.profile.all, 'details'] as const,
   },
   chatSessions: {
     all: ['chatSessions'] as const,

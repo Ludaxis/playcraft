@@ -23,7 +23,7 @@ export function CreditsPanel({
   return (
     <div className="flex items-center justify-between border-t border-border-muted bg-surface-elevated/80 px-3 py-2">
       <div className="flex items-center gap-2 text-sm">
-        <Zap className="h-4 w-4 text-yellow-500" />
+        <Zap className="h-4 w-4 text-warning" />
         <span className="text-content-muted">
           <span className="font-medium text-content-muted">{creditsRemaining}</span>{' '}
           credits remaining

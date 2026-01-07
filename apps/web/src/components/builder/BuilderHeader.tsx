@@ -126,7 +126,7 @@ export function BuilderHeader({
           {/* Upgrade button */}
           <button
             onClick={onUpgrade}
-            className="flex items-center gap-2 rounded-lg border border-yellow-600/30 bg-yellow-600/10 px-3 py-1.5 text-sm text-yellow-400 transition-colors hover:border-yellow-500/50 hover:bg-yellow-600/20"
+            className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-1.5 text-sm text-warning transition-colors hover:border-warning/50 hover:bg-warning/20"
           >
             Upgrade
           </button>
@@ -145,7 +145,7 @@ export function BuilderHeader({
 
   // Preview mode header (full)
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between border-b border-gray-800 bg-gray-900 px-4">
+    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface-elevated px-4">
       {/* Left section - Project dropdown, View tabs and device toggles */}
       <div className="flex items-center gap-4">
         {/* Project Dropdown */}
@@ -191,7 +191,7 @@ export function BuilderHeader({
         {/* Share button */}
         <button
           onClick={onShare}
-          className="flex items-center gap-2 rounded-lg border border-border bg-surface-overlay/50 px-3 py-1.5 text-sm text-content-muted transition-colors hover:border-gray-600 hover:bg-surface-overlay hover:text-content"
+          className="flex items-center gap-2 rounded-lg border border-border bg-surface-overlay/50 px-3 py-1.5 text-sm text-content-muted transition-colors hover:border-border-emphasis hover:bg-surface-overlay hover:text-content"
         >
           <Share2 className="h-4 w-4" />
           Share
@@ -200,7 +200,7 @@ export function BuilderHeader({
         {/* Upgrade button */}
         <button
           onClick={onUpgrade}
-          className="flex items-center gap-2 rounded-lg border border-yellow-600/30 bg-yellow-600/10 px-3 py-1.5 text-sm text-yellow-400 transition-colors hover:border-yellow-500/50 hover:bg-yellow-600/20"
+          className="flex items-center gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-1.5 text-sm text-warning transition-colors hover:border-warning/50 hover:bg-warning/20"
         >
           <Crown className="h-4 w-4" />
           Upgrade
@@ -212,7 +212,7 @@ export function BuilderHeader({
             href={publishedUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-green-500"
+            className="flex items-center gap-2 rounded-lg bg-success-muted px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-success"
           >
             <ExternalLink className="h-4 w-4" />
             View Live
@@ -229,7 +229,7 @@ export function BuilderHeader({
         )}
 
         {/* Separator */}
-        <div className="ml-2 h-6 w-px bg-gray-700" />
+        <div className="ml-2 h-6 w-px bg-border" />
 
         {/* Help button */}
         <button
@@ -245,7 +245,7 @@ export function BuilderHeader({
         <button
           onClick={onExport}
           disabled={status !== 'running'}
-          className="flex items-center gap-2 rounded-lg border border-border bg-surface-overlay/50 px-3 py-1.5 text-sm text-content-muted transition-colors hover:border-gray-600 hover:bg-surface-overlay hover:text-content disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg border border-border bg-surface-overlay/50 px-3 py-1.5 text-sm text-content-muted transition-colors hover:border-border-emphasis hover:bg-surface-overlay hover:text-content disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Download className="h-4 w-4" />
           Export

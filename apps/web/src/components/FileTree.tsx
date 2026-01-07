@@ -37,30 +37,30 @@ function getFileIcon(filename: string) {
   switch (ext) {
     case 'ts':
     case 'tsx':
-      return <FileCode className="h-4 w-4 text-blue-400" />;
+      return <FileCode className="h-4 w-4 text-icon-typescript" />;
     case 'js':
     case 'jsx':
-      return <FileCode className="h-4 w-4 text-yellow-400" />;
+      return <FileCode className="h-4 w-4 text-icon-javascript" />;
     case 'json':
-      return <FileJson className="h-4 w-4 text-yellow-300" />;
+      return <FileJson className="h-4 w-4 text-icon-json" />;
     case 'css':
     case 'scss':
     case 'sass':
-      return <FileType className="h-4 w-4 text-pink-400" />;
+      return <FileType className="h-4 w-4 text-icon-css" />;
     case 'html':
-      return <FileCode className="h-4 w-4 text-orange-400" />;
+      return <FileCode className="h-4 w-4 text-icon-html" />;
     case 'md':
     case 'mdx':
-      return <FileText className="h-4 w-4 text-content-muted" />;
+      return <FileText className="h-4 w-4 text-icon-markdown" />;
     case 'png':
     case 'jpg':
     case 'jpeg':
     case 'gif':
     case 'svg':
     case 'webp':
-      return <Image className="h-4 w-4 text-purple-400" />;
+      return <Image className="h-4 w-4 text-icon-image" />;
     default:
-      return <File className="h-4 w-4 text-content-muted" />;
+      return <File className="h-4 w-4 text-icon-default" />;
   }
 }
 

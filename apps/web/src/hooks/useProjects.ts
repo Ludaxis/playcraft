@@ -31,10 +31,10 @@ import type {
  * @example
  * const { data: projects, isLoading, error } = useProjects();
  */
-export function useProjects() {
+export function useProjects(workspaceId?: string | null) {
   return useQuery({
-    queryKey: queryKeys.projects.all,
-    queryFn: getProjects,
+    queryKey: queryKeys.projects.list(workspaceId ?? 'all'),
+    queryFn: () => getProjects(workspaceId),
   });
 }
 
@@ -73,19 +73,8 @@ export function useCreateProject() {
   return useMutation({
     mutationFn: (input: CreateProjectInput) => createProject(input),
     onSuccess: (newProject) => {
-      // Add to the projects list cache
-      queryClient.setQueryData<PlayCraftProject[]>(
-        queryKeys.projects.all,
-        (oldProjects) => {
-          if (!oldProjects) return [newProject];
-          return [newProject, ...oldProjects];
-        }
-      );
-      // Also cache the individual project
-      queryClient.setQueryData(
-        queryKeys.projects.detail(newProject.id),
-        newProject
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.setQueryData(queryKeys.projects.detail(newProject.id), newProject);
     },
   });
 }
@@ -114,21 +103,8 @@ export function useUpdateProject() {
       updates: UpdateProjectInput;
     }) => updateProject(id, updates),
     onSuccess: (updatedProject) => {
-      // Update in the projects list
-      queryClient.setQueryData<PlayCraftProject[]>(
-        queryKeys.projects.all,
-        (oldProjects) => {
-          if (!oldProjects) return [updatedProject];
-          return oldProjects.map((p) =>
-            p.id === updatedProject.id ? updatedProject : p
-          );
-        }
-      );
-      // Update individual project cache
-      queryClient.setQueryData(
-        queryKeys.projects.detail(updatedProject.id),
-        updatedProject
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.setQueryData(queryKeys.projects.detail(updatedProject.id), updatedProject);
     },
   });
 }
@@ -148,18 +124,8 @@ export function useDeleteProject() {
   return useMutation({
     mutationFn: (projectId: string) => deleteProject(projectId),
     onSuccess: (_, deletedId) => {
-      // Remove from projects list
-      queryClient.setQueryData<PlayCraftProject[]>(
-        queryKeys.projects.all,
-        (oldProjects) => {
-          if (!oldProjects) return [];
-          return oldProjects.filter((p) => p.id !== deletedId);
-        }
-      );
-      // Remove individual project cache
-      queryClient.removeQueries({
-        queryKey: queryKeys.projects.detail(deletedId),
-      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
+      queryClient.removeQueries({ queryKey: queryKeys.projects.detail(deletedId) });
     },
   });
 }

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import {
   Plus,
-  Sparkles,
   Folder,
   Trash2,
   Clock,
@@ -12,6 +11,8 @@ import {
 } from 'lucide-react';
 import type { PlayCraftProject } from '../lib/projectService';
 import { useProjects, useCreateProject, useDeleteProject } from '../hooks/useProjects';
+import { useAppStore } from '../stores/appStore';
+import { Logo } from '../components/Logo';
 
 interface ProjectsPageProps {
   user: User;
@@ -24,9 +25,10 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
   const [showNewModal, setShowNewModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const workspaceId = useAppStore((state) => state.workspaceId);
 
   // Data fetching with TanStack Query
-  const { data: projects = [], isLoading } = useProjects();
+  const { data: projects = [], isLoading } = useProjects(workspaceId ?? undefined);
   const createProjectMutation = useCreateProject();
   const deleteProjectMutation = useDeleteProject();
 
@@ -37,7 +39,10 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
     if (!newProjectName.trim() || isCreating) return;
 
     try {
-      const project = await createProjectMutation.mutateAsync({ name: newProjectName.trim() });
+      const project = await createProjectMutation.mutateAsync({
+        name: newProjectName.trim(),
+        workspace_id: workspaceId ?? null,
+      });
       setShowNewModal(false);
       setNewProjectName('');
       onSelectProject(project);
@@ -67,10 +72,10 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
 
   const getStatusBadge = (status: PlayCraftProject['status']) => {
     const styles = {
-      draft: 'bg-gray-700 text-gray-300',
-      building: 'bg-yellow-900 text-yellow-300',
-      ready: 'bg-green-900 text-green-300',
-      published: 'bg-violet-900 text-violet-300',
+      draft: 'bg-surface-overlay text-content-secondary',
+      building: 'bg-warning-subtle text-warning',
+      ready: 'bg-success-subtle text-success',
+      published: 'bg-accent-subtle text-accent',
     };
     return (
       <span className={`rounded-full px-2 py-0.5 text-xs ${styles[status]}`}>
@@ -80,20 +85,13 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
   };
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-surface">
       {/* Header */}
-      <header className="border-b border-gray-800 bg-gray-900">
+      <header className="border-b border-border bg-surface-elevated">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-fuchsia-600">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-xl font-bold text-transparent">
-                PlayCraft
-              </h1>
-              <p className="text-xs text-gray-500">Game Builder</p>
-            </div>
+            <Logo size={36} showText />
+            <p className="text-xs text-content-tertiary">Game Builder</p>
           </div>
 
           <div className="flex items-center gap-4">
@@ -104,7 +102,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
             />
             <button
               onClick={onSignOut}
-              className="rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+              className="rounded-lg p-2 text-content-secondary transition-colors hover:bg-surface-overlay hover:text-content"
               title="Sign out"
             >
               <LogOut className="h-5 w-5" />
@@ -119,13 +117,13 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
         <div className="mb-8 flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-bold text-white">Your Games</h2>
-            <p className="mt-1 text-gray-400">
+            <p className="mt-1 text-content-secondary">
               Create and manage your game projects
             </p>
           </div>
           <button
             onClick={() => setShowNewModal(true)}
-            className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 font-medium text-white transition-colors hover:bg-violet-500"
+            className="btn-neon flex items-center gap-2 rounded-lg px-4 py-2"
           >
             <Plus className="h-5 w-5" />
             New Game
@@ -134,7 +132,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
 
         {/* Error */}
         {error && (
-          <div className="mb-6 rounded-lg border border-red-800 bg-red-900/20 p-4 text-red-300">
+          <div className="mb-6 rounded-lg border border-error-muted bg-error-subtle p-4 text-error">
             {error}
             <button
               onClick={() => setError(null)}
@@ -148,23 +146,23 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
         {/* Loading state */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-accent" />
           </div>
         ) : projects.length === 0 ? (
           /* Empty state */
-          <div className="rounded-2xl border border-gray-800 bg-gray-900 p-12 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800">
-              <Gamepad2 className="h-8 w-8 text-gray-500" />
+          <div className="rounded-2xl border border-border bg-surface-elevated p-12 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-overlay">
+              <Gamepad2 className="h-8 w-8 text-content-tertiary" />
             </div>
             <h3 className="mb-2 text-lg font-semibold text-white">
               No games yet
             </h3>
-            <p className="mb-6 text-gray-400">
+            <p className="mb-6 text-content-secondary">
               Create your first game project and start building with AI
             </p>
             <button
               onClick={() => setShowNewModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-violet-600 px-6 py-3 font-medium text-white transition-colors hover:bg-violet-500"
+              className="btn-neon inline-flex items-center gap-2 rounded-lg px-6 py-3"
             >
               <Plus className="h-5 w-5" />
               Create Your First Game
@@ -177,10 +175,10 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
               <button
                 key={project.id}
                 onClick={() => onSelectProject(project)}
-                className="group relative rounded-xl border border-gray-800 bg-gray-900 p-5 text-left transition-all hover:border-violet-500/50 hover:bg-gray-800"
+                className="group relative rounded-xl border border-border bg-surface-elevated p-5 text-left transition-all hover:border-accent/50 hover:bg-surface-overlay"
               >
                 {/* Thumbnail or placeholder */}
-                <div className="mb-4 flex h-32 items-center justify-center rounded-lg bg-gray-800">
+                <div className="mb-4 flex h-32 items-center justify-center rounded-lg bg-surface-overlay">
                   {project.thumbnail_url ? (
                     <img
                       src={project.thumbnail_url}
@@ -188,25 +186,25 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
                       className="h-full w-full rounded-lg object-cover"
                     />
                   ) : (
-                    <Folder className="h-12 w-12 text-gray-600" />
+                    <Folder className="h-12 w-12 text-content-tertiary" />
                   )}
                 </div>
 
                 {/* Info */}
                 <div className="mb-2 flex items-start justify-between">
-                  <h3 className="font-semibold text-white group-hover:text-violet-400">
+                  <h3 className="font-semibold text-white group-hover:text-secondary">
                     {project.name}
                   </h3>
                   {getStatusBadge(project.status)}
                 </div>
 
                 {project.description && (
-                  <p className="mb-3 line-clamp-2 text-sm text-gray-400">
+                  <p className="mb-3 line-clamp-2 text-sm text-content-secondary">
                     {project.description}
                   </p>
                 )}
 
-                <div className="flex items-center gap-1 text-xs text-gray-500">
+                <div className="flex items-center gap-1 text-xs text-content-tertiary">
                   <Clock className="h-3 w-3" />
                   <span>Updated {formatDate(project.updated_at)}</span>
                 </div>
@@ -214,7 +212,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
                 {/* Delete button */}
                 <button
                   onClick={(e) => handleDeleteProject(e, project.id)}
-                  className="absolute right-3 top-3 rounded-lg p-2 text-gray-500 opacity-0 transition-all hover:bg-gray-700 hover:text-red-400 group-hover:opacity-100"
+                  className="absolute right-3 top-3 rounded-lg p-2 text-content-tertiary opacity-0 transition-all hover:bg-surface-overlay hover:text-error group-hover:opacity-100"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -227,7 +225,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
       {/* New project modal */}
       {showNewModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-800 bg-gray-900 p-6">
+          <div className="mx-4 w-full max-w-md rounded-2xl border border-border bg-surface-elevated p-6">
             <h3 className="mb-4 text-lg font-semibold text-white">
               Create New Game
             </h3>
@@ -238,7 +236,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
               onChange={(e) => setNewProjectName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
               placeholder="Game name..."
-              className="mb-4 w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 text-white placeholder-gray-500 outline-none ring-violet-500 focus:border-transparent focus:ring-2"
+              className="mb-4 w-full rounded-lg border border-border bg-surface-overlay px-4 py-3 text-white placeholder-content-tertiary outline-none ring-accent focus:border-transparent focus:ring-2"
               autoFocus
             />
 
@@ -248,14 +246,14 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
                   setShowNewModal(false);
                   setNewProjectName('');
                 }}
-                className="rounded-lg px-4 py-2 text-gray-400 hover:text-white"
+                className="rounded-lg px-4 py-2 text-content-secondary hover:text-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectName.trim() || isCreating}
-                className="flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 font-medium text-white hover:bg-violet-500 disabled:opacity-50"
+                className="btn-neon flex items-center gap-2 rounded-lg px-4 py-2 disabled:opacity-50"
               >
                 {isCreating && <Loader2 className="h-4 w-4 animate-spin" />}
                 Create

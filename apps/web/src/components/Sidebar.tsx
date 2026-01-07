@@ -5,7 +5,6 @@
 
 import type { User } from '@supabase/supabase-js';
 import {
-  Sparkles,
   Home,
   Search,
   LayoutGrid,
@@ -22,7 +21,8 @@ import {
 } from 'lucide-react';
 import { SidebarItem, SidebarSection } from './SidebarItem';
 import { WorkspaceDropdown } from './WorkspaceDropdown';
-import type { PlayCraftProject, NavItem } from '../types';
+import { LogoIcon } from './Logo';
+import type { NavItem, WorkspaceWithMembership } from '../types';
 
 interface SidebarProps {
   user: User;
@@ -30,8 +30,6 @@ interface SidebarProps {
   onToggleCollapse: () => void;
   activeNav: NavItem;
   onNavChange: (nav: NavItem) => void;
-  recentProjects?: PlayCraftProject[];
-  onSelectProject?: (project: PlayCraftProject) => void;
   onOpenSettings: () => void;
   onOpenSearch: () => void;
   onOpenFeedback?: () => void;
@@ -44,6 +42,11 @@ interface SidebarProps {
   creditsRemaining?: number;
   totalCredits?: number;
   onUpgrade?: () => void;
+  workspaces?: WorkspaceWithMembership[];
+  activeWorkspaceId?: string | null;
+  onSelectWorkspace?: (workspaceId: string | null) => void;
+  onCreateWorkspace?: () => void;
+  isLoadingWorkspaces?: boolean;
 }
 
 export function Sidebar({
@@ -52,8 +55,6 @@ export function Sidebar({
   onToggleCollapse,
   activeNav,
   onNavChange,
-  recentProjects = [],
-  onSelectProject,
   onOpenSettings,
   onOpenSearch,
   onOpenFeedback,
@@ -65,6 +66,11 @@ export function Sidebar({
   creditsRemaining = 50,
   totalCredits = 50,
   onUpgrade,
+  workspaces = [],
+  activeWorkspaceId = null,
+  onSelectWorkspace,
+  onCreateWorkspace,
+  isLoadingWorkspaces = false,
 }: SidebarProps) {
   return (
     <aside
@@ -75,9 +81,7 @@ export function Sidebar({
       {/* Logo + Collapse toggle */}
       <div className="flex h-14 items-center justify-between border-b border-border-muted px-3">
         <div className={`flex items-center gap-2 ${isCollapsed ? 'justify-center w-full' : ''}`}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-secondary shadow-glow-sm">
-            <Sparkles className="h-4 w-4 text-content" />
-          </div>
+          <LogoIcon size={32} className="shrink-0" />
           {!isCollapsed && (
             <span className="text-gradient-dual text-lg font-bold">
               PlayCraft
@@ -120,6 +124,11 @@ export function Sidebar({
           onUpgrade={onUpgrade}
           onSignOut={onSignOut}
           collapsed={isCollapsed}
+          workspaces={workspaces}
+          activeWorkspaceId={activeWorkspaceId}
+          onSelectWorkspace={onSelectWorkspace}
+          onCreateWorkspace={onCreateWorkspace}
+          isLoadingWorkspaces={isLoadingWorkspaces}
         />
       </div>
 
@@ -188,22 +197,6 @@ export function Sidebar({
             external
           />
         </SidebarSection>
-
-        {/* Recent projects */}
-        {recentProjects.length > 0 && !isCollapsed && (
-          <SidebarSection title="Recent" collapsed={isCollapsed}>
-            {recentProjects.map((project) => (
-              <button
-                key={project.id}
-                onClick={() => onSelectProject?.(project)}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-content-muted transition-colors hover:bg-surface-overlay hover:text-content"
-              >
-                <Gamepad2 className="h-4 w-4 shrink-0" />
-                <span className="truncate">{project.name}</span>
-              </button>
-            ))}
-          </SidebarSection>
-        )}
       </nav>
 
       {/* Bottom section */}

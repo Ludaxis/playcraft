@@ -27,13 +27,13 @@ export function JobProgress({ job, canCancel = true, onCancel, onDismiss }: JobP
   const getStatusIcon = () => {
     switch (job.status) {
       case 'queued':
-        return <Clock className="h-4 w-4 text-yellow-400 animate-pulse" />;
+        return <Clock className="h-4 w-4 text-warning animate-pulse" />;
       case 'processing':
         return <Loader2 className="h-4 w-4 text-accent animate-spin" />;
       case 'completed':
-        return <CheckCircle className="h-4 w-4 text-green-400" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'failed':
-        return <AlertCircle className="h-4 w-4 text-red-400" />;
+        return <AlertCircle className="h-4 w-4 text-error" />;
       case 'cancelled':
         return <X className="h-4 w-4 text-content-subtle" />;
       default:
@@ -110,7 +110,7 @@ export function JobProgress({ job, canCancel = true, onCancel, onDismiss }: JobP
 
       {/* Retry info - show for failed jobs that will retry */}
       {job.status === 'failed' && job.attempts < job.max_attempts && (
-        <div className="mt-2 text-xs text-yellow-400">
+        <div className="mt-2 text-xs text-warning">
           Retrying... (attempt {job.attempts}/{job.max_attempts})
         </div>
       )}

@@ -77,6 +77,7 @@ export interface PlayCraftProject {
   name: string;
   description: string | null;
   thumbnail_url?: string | null; // Optional - column doesn't exist in DB yet
+  workspace_id?: string | null;
   has_three_js: boolean;
   status: ProjectStatus;
   files: Record<string, string>;
@@ -96,6 +97,7 @@ export interface PlayCraftProject {
 export interface CreateProjectInput {
   name: string;
   description?: string;
+  workspace_id?: string | null;
 }
 
 export interface UpdateProjectInput {
@@ -111,6 +113,7 @@ export interface UpdateProjectInput {
   published_at?: string | null;
   is_public?: boolean;
   is_starred?: boolean;
+  workspace_id?: string | null;
 }
 
 // Published game for showcase/discover
@@ -173,6 +176,49 @@ export interface UpdateSettingsInput {
   labs_github_branch_switching?: boolean;
   voyage_api_key?: string | null;
   connected_accounts?: ConnectedAccounts;
+}
+
+// ============================================================================
+// Workspace Types
+// ============================================================================
+
+export type WorkspaceRole = 'owner' | 'admin' | 'editor' | 'viewer';
+export type WorkspaceMemberStatus = 'invited' | 'active';
+
+export interface Workspace {
+  id: string;
+  name: string;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WorkspaceMember {
+  workspace_id: string;
+  user_id: string;
+  role: WorkspaceRole;
+  status: WorkspaceMemberStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export type WorkspaceInviteStatus = 'pending' | 'accepted' | 'revoked';
+
+export interface WorkspaceInvite {
+  id: string;
+  workspace_id: string;
+  email: string;
+  role: WorkspaceRole;
+  invited_by: string;
+  token: string;
+  expires_at: string | null;
+  status: WorkspaceInviteStatus;
+  created_at: string;
+}
+
+export interface WorkspaceWithMembership {
+  workspace: Workspace;
+  membership: Pick<WorkspaceMember, 'role' | 'status' | 'user_id'>;
 }
 
 // ============================================================================
@@ -303,3 +349,24 @@ export type NavItem =
   | 'discover'
   | 'templates'
   | 'learn';
+
+// ============================================================================
+// User Profile Types
+// ============================================================================
+
+export interface UserProfile {
+  id: string;
+  updated_at?: string;
+  full_name?: string;
+  avatar_url?: string;
+  company?: string;
+  website?: string;
+  github_username?: string;
+  linkedin_profile?: string;
+  twitter_handle?: string;
+  bio?: string;
+  address?: string;
+  passport_nationality?: string;
+  allergies?: string[];
+  diet_preference?: string[];
+}

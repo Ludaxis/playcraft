@@ -4,11 +4,13 @@ import { getSupabase } from './lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import { BuilderPage } from './pages/Builder';
 import { LandingPage } from './pages/Landing';
+import { AuthPage } from './pages/Auth';
 import { HomePage } from './pages/Home';
 import { FeedbackPage } from './pages/Feedback';
 import { PlayPage } from './pages/Play';
 import { ErrorBoundary } from './components';
 import { createProject, getProject, type PlayCraftProject } from './lib/projectService';
+import { useAppStore } from './stores/appStore';
 
 function AppRoutes() {
   const navigate = useNavigate();
@@ -18,6 +20,8 @@ function AppRoutes() {
   const [currentProject, setCurrentProject] = useState<PlayCraftProject | null>(null);
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
   const [loadingProject, setLoadingProject] = useState(false);
+  const workspaceId = useAppStore((state) => state.workspaceId);
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
 
   // Track if we're on the builder page (derived from URL, single source of truth)
   const isOnBuilder = location.pathname.startsWith('/builder/');
@@ -32,6 +36,15 @@ function AppRoutes() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Check for pending prompt after sign-in
+      if (session?.user) {
+        const storedPrompt = localStorage.getItem('playcraft_pending_prompt');
+        if (storedPrompt) {
+          setPendingPrompt(storedPrompt);
+          localStorage.removeItem('playcraft_pending_prompt');
+        }
+      }
     });
 
     // Listen for auth changes
@@ -39,6 +52,15 @@ function AppRoutes() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+
+      // Check for pending prompt after sign-in
+      if (session?.user) {
+        const storedPrompt = localStorage.getItem('playcraft_pending_prompt');
+        if (storedPrompt) {
+          setPendingPrompt(storedPrompt);
+          localStorage.removeItem('playcraft_pending_prompt');
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -132,7 +154,10 @@ function AppRoutes() {
 
     try {
       // Auto-create project
-      const project = await createProject({ name: projectName });
+      const project = await createProject({
+        name: projectName,
+        workspace_id: workspaceId ?? null,
+      });
 
       // Save initial prompt to localStorage so it survives page refresh
       localStorage.setItem(`playcraft_initial_prompt_${project.id}`, prompt);
@@ -155,11 +180,11 @@ function AppRoutes() {
 
   if (loading || loadingProject) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-violet-500 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent border-t-transparent" />
           {loadingProject && (
-            <p className="text-sm text-gray-400">Loading project...</p>
+            <p className="text-sm text-content-secondary">Loading project...</p>
           )}
         </div>
       </div>
@@ -182,6 +207,18 @@ function AppRoutes() {
     return <FeedbackPage />;
   }
 
+  // Handle /auth route - full page sign in/sign up
+  if (location.pathname === '/auth' || location.pathname.startsWith('/auth')) {
+    if (user) {
+      // Already logged in, redirect to home
+      navigate('/');
+      return null;
+    }
+    const params = new URLSearchParams(location.search);
+    const mode = params.get('mode') === 'signin' ? 'signin' : 'signup';
+    return <AuthPage mode={mode} />;
+  }
+
   // Show landing page for unauthenticated users
   if (!user) {
     return <LandingPage onSignIn={handleSignIn} />;
@@ -198,6 +235,8 @@ function AppRoutes() {
           onSignOut={handleSignOut}
           onSelectProject={handleSelectProject}
           onStartNewProject={handleStartNewProject}
+          pendingPrompt={pendingPrompt}
+          onPendingPromptUsed={() => setPendingPrompt(null)}
         />
       </div>
 
