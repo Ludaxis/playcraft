@@ -83,7 +83,7 @@ export function Sidebar({
         <div className={`flex items-center gap-2 ${isCollapsed ? 'justify-center w-full' : ''}`}>
           <LogoIcon size={32} className="shrink-0" />
           {!isCollapsed && (
-            <span className="text-gradient-dual text-lg font-bold">
+            <span className="text-gradient-gaming text-lg font-bold">
               PlayCraft
             </span>
           )}
