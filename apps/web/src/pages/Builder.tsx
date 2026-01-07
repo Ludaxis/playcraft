@@ -1003,13 +1003,13 @@ export function BuilderPage({
           {/* Progress hints */}
           {isSettingUp && (
             <div className="mt-6 space-y-2 text-sm text-content-subtle">
-              <p className={status === 'booting' ? 'text-accent' : ''}>
+              <p className={status === 'booting' ? 'text-gradient-gaming-glow' : ''}>
                 {status === 'booting' ? '▶' : '✓'} Starting container...
               </p>
-              <p className={status === 'installing' ? 'text-accent' : status === 'running' ? '' : 'opacity-50'}>
+              <p className={status === 'installing' ? 'text-gradient-gaming-glow' : status === 'running' ? '' : 'opacity-50'}>
                 {status === 'installing' ? '▶' : status === 'running' || status === 'ready' ? '✓' : '○'} Installing dependencies...
               </p>
-              <p className={status === 'running' ? 'text-accent' : 'opacity-50'}>
+              <p className={status === 'running' ? 'text-gradient-gaming-glow' : 'opacity-50'}>
                 {status === 'running' ? '▶' : '○'} Starting dev server...
               </p>
             </div>

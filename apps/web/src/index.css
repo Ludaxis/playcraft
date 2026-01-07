@@ -451,4 +451,22 @@
   .text-neon-magenta {
     text-shadow: 0 0 10px rgba(255, 0, 229, 0.5), 0 0 20px rgba(255, 0, 229, 0.3);
   }
+
+  /* Gradient text with animated glow */
+  .text-gradient-gaming-glow {
+    background: linear-gradient(120deg, #22d3ee 0%, #8b5cf6 50%, #d946ef 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes gradient-glow {
+    0%, 100% {
+      filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6)) drop-shadow(0 0 16px rgba(34, 211, 238, 0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 16px rgba(217, 70, 239, 0.8)) drop-shadow(0 0 32px rgba(139, 92, 246, 0.6));
+    }
+  }
 }
