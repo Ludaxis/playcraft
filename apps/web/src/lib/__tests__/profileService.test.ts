@@ -20,7 +20,7 @@ describe('profileService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Ensure getSupabase always returns our mock client
-    vi.mocked(getSupabase).mockReturnValue(mockSupabaseClient as any);
+    vi.mocked(getSupabase).mockReturnValue(mockSupabaseClient as unknown as ReturnType<typeof getSupabase>);
   });
 
   const mockUserId = 'user-123';

@@ -60,7 +60,7 @@ export function AuthModal({ isOpen, onClose, mode: initialMode = 'signup' }: Aut
           redirectTo: window.location.origin,
         },
       });
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with Google');
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ export function AuthModal({ isOpen, onClose, mode: initialMode = 'signup' }: Aut
           redirectTo: window.location.origin,
         },
       });
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with GitHub');
       setIsLoading(false);
     }

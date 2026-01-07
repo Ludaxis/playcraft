@@ -43,7 +43,7 @@ function GitHubIcon({ className }: { className?: string }) {
   );
 }
 
-export function AuthPage({ mode: initialMode = 'signup', onSuccess }: AuthPageProps) {
+export function AuthPage({ mode: initialMode = 'signup', onSuccess: _onSuccess }: AuthPageProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -60,7 +60,7 @@ export function AuthPage({ mode: initialMode = 'signup', onSuccess }: AuthPagePr
           redirectTo: window.location.origin,
         },
       });
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with Google');
       setIsLoading(false);
     }
@@ -77,7 +77,7 @@ export function AuthPage({ mode: initialMode = 'signup', onSuccess }: AuthPagePr
           redirectTo: window.location.origin,
         },
       });
-    } catch (err) {
+    } catch {
       setError('Failed to sign in with GitHub');
       setIsLoading(false);
     }
@@ -97,7 +97,7 @@ export function AuthPage({ mode: initialMode = 'signup', onSuccess }: AuthPagePr
       });
       if (error) throw error;
       alert('Check your email for the login link!');
-    } catch (err) {
+    } catch {
       setError('Failed to send login link');
     } finally {
       setIsLoading(false);

@@ -70,7 +70,6 @@ export function WorkspaceDropdown({
   }, [isOpen, onToggle]);
 
   const usagePercentage = totalCredits > 0 ? ((totalCredits - creditsRemaining) / totalCredits) * 100 : 0;
-  const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
   const selectedWorkspace = workspaces.find((w) => w.workspace.id === activeWorkspaceId);
   const workspaceLabel = selectedWorkspace?.workspace.name || studioName;
   const initials = workspaceLabel.charAt(0).toUpperCase();

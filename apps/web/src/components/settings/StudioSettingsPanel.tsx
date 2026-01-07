@@ -12,7 +12,7 @@ import { Label } from '../ui/label';
 
 export function StudioSettingsPanel() {
   const { data: settings, isLoading } = useUserSettings();
-  const { mutate: updateSettings, isPending: isSaving } = useUpdateSettings();
+  const { mutate: updateSettings } = useUpdateSettings();
 
   const [formData, setFormData] = useState({
     studio_name: '',

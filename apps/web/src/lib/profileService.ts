@@ -41,7 +41,7 @@ export async function updateProfile(updates: Partial<UserProfile>): Promise<User
   }
 
   // Ensure the id is not part of the updates object
-  const { id, ...updateData } = updates;
+  const { id: _omitId, ...updateData } = updates;
 
   const { data, error } = await supabase
     .from('user_profiles')
