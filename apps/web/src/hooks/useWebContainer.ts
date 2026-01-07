@@ -21,6 +21,10 @@ import {
   killAllProcesses,
   restoreFromCache,
   saveToCache,
+  getProjectState,
+  setProjectState,
+  isProjectReady,
+  clearProjectState,
   type OutdatedDependency,
 } from '../lib/webcontainer';
 
@@ -66,6 +70,7 @@ export interface UseWebContainerReturn {
   clearTerminal: () => void;
   checkNodeModules: () => Promise<boolean>;
   resetForNewProject: () => void;
+  tryRestoreProject: (projectId: string) => boolean;
   checkOutdated: () => Promise<void>;
   updateOutdated: () => Promise<void>;
   dismissOutdated: () => void;
@@ -84,16 +89,11 @@ export function useWebContainer(): UseWebContainerReturn {
   const containerRef = useRef<WebContainer | null>(null);
   const devServerProcessIdRef = useRef<string | null>(null);
   const isBootingRef = useRef(false); // Synchronous lock to prevent race conditions
+  const currentProjectIdRef = useRef<string | null>(null);
 
-  // Cleanup on unmount - kill any running processes
-  useEffect(() => {
-    return () => {
-      const killed = killAllProcesses();
-      if (killed > 0) {
-        console.log(`[useWebContainer] Cleanup: killed ${killed} process(es)`);
-      }
-    };
-  }, []);
+  // NOTE: We intentionally do NOT kill processes on unmount.
+  // This allows the dev server to keep running when navigating away,
+  // so users can return to the same project instantly.
 
   // Append to terminal output
   const appendOutput = useCallback((data: string) => {
@@ -118,6 +118,10 @@ export function useWebContainer(): UseWebContainerReturn {
       console.log(`[useWebContainer] Reset: killed ${killed} process(es)`);
     }
     devServerProcessIdRef.current = null;
+    currentProjectIdRef.current = null;
+
+    // Clear persisted project state
+    clearProjectState();
 
     resetNodeModulesState();
     setPreviewUrl(null);
@@ -126,6 +130,35 @@ export function useWebContainer(): UseWebContainerReturn {
     setError(null);
     setStatus('ready'); // Reset to ready state since we killed the dev server
   }, []);
+
+  // Try to restore state for a project (returns true if already ready)
+  const tryRestoreProject = useCallback((projectId: string): boolean => {
+    const existingState = getProjectState();
+
+    if (existingState && existingState.projectId === projectId && existingState.isReady) {
+      console.log('[useWebContainer] Restoring existing project state for:', projectId);
+
+      // Restore the state
+      currentProjectIdRef.current = projectId;
+      devServerProcessIdRef.current = existingState.devServerProcessId;
+
+      if (existingState.previewUrl) {
+        setPreviewUrl(existingState.previewUrl);
+      }
+
+      setStatus('running');
+      return true;
+    }
+
+    // Check if switching to a different project
+    if (currentProjectIdRef.current && currentProjectIdRef.current !== projectId) {
+      console.log('[useWebContainer] Switching from project', currentProjectIdRef.current, 'to', projectId);
+      resetForNewProject();
+    }
+
+    currentProjectIdRef.current = projectId;
+    return false;
+  }, [resetForNewProject]);
 
   // Boot the WebContainer
   const boot = useCallback(async () => {
@@ -318,6 +351,17 @@ export function useWebContainer(): UseWebContainerReturn {
   const startDev = useCallback(async () => {
     console.log('[useWebContainer] startDev called');
 
+    // Check if project is already running with dev server
+    const existingState = getProjectState();
+    if (existingState?.projectId === currentProjectIdRef.current &&
+        existingState.isReady &&
+        existingState.previewUrl) {
+      console.log('[useWebContainer] Dev server already running, skipping start');
+      setPreviewUrl(existingState.previewUrl);
+      setStatus('running');
+      return;
+    }
+
     // Kill ALL running processes first to ensure clean slate
     // This handles zombie processes from page refreshes
     const killed = killAllProcesses();
@@ -337,6 +381,17 @@ export function useWebContainer(): UseWebContainerReturn {
           console.log('[useWebContainer] Server ready callback received:', { port, url });
           setPreviewUrl(url);
           appendOutput(`\nServer running at ${url}\n`);
+
+          // Save project state for persistence across navigation
+          if (currentProjectIdRef.current) {
+            setProjectState({
+              projectId: currentProjectIdRef.current,
+              isReady: true,
+              previewUrl: url,
+              devServerProcessId: processId,
+            });
+            console.log('[useWebContainer] Saved project state for:', currentProjectIdRef.current);
+          }
         }
       );
       devServerProcessIdRef.current = processId;
@@ -481,6 +536,7 @@ export function useWebContainer(): UseWebContainerReturn {
     clearTerminal,
     checkNodeModules,
     resetForNewProject,
+    tryRestoreProject,
     checkOutdated,
     updateOutdated,
     dismissOutdated,

@@ -12,6 +12,48 @@ let bootPromise: Promise<WebContainer> | null = null;
 let nodeModulesInstalled = false;
 
 // =============================================================================
+// PROJECT STATE PERSISTENCE
+// =============================================================================
+// Track state per project to avoid re-setup when navigating back
+
+interface ProjectState {
+  projectId: string;
+  isReady: boolean;
+  previewUrl: string | null;
+  devServerProcessId: string | null;
+}
+
+let currentProjectState: ProjectState | null = null;
+
+/**
+ * Get the current project state (for reconnecting after navigation)
+ */
+export function getProjectState(): ProjectState | null {
+  return currentProjectState;
+}
+
+/**
+ * Set the current project state
+ */
+export function setProjectState(state: ProjectState): void {
+  currentProjectState = state;
+}
+
+/**
+ * Check if a project is already set up and running
+ */
+export function isProjectReady(projectId: string): boolean {
+  return currentProjectState?.projectId === projectId && currentProjectState.isReady;
+}
+
+/**
+ * Clear project state (when switching projects)
+ */
+export function clearProjectState(): void {
+  currentProjectState = null;
+}
+
+// =============================================================================
 // PROCESS MANAGEMENT
 // =============================================================================
 // Track running processes to enable cleanup on unmount/project switch

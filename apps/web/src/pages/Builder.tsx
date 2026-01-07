@@ -222,6 +222,7 @@ export function BuilderPage({
     runCommand,
     runTypeCheck,
     runESLint,
+    tryRestoreProject,
   } = useWebContainer();
 
   // UI state - modern split view
@@ -552,6 +553,17 @@ export function BuilderPage({
       console.log('[Builder] startProject early return - already setting up or ready');
       return;
     }
+
+    // Try to restore existing project state (skip full setup if already running)
+    if (tryRestoreProject(project.id)) {
+      console.log('[Builder] Project restored from existing state - skipping full setup');
+      setProjectReady(true);
+      projectReadyRef.current = true;
+      await refreshFileTree();
+      addSystemMessage('Welcome back! Your project is ready.');
+      return;
+    }
+
     console.log('[Builder] startProject called', { isSettingUp, projectReady });
 
     isSettingUpRef.current = true;
@@ -659,6 +671,8 @@ export function BuilderPage({
     project.id,
     project.files,
     addSystemMessage,
+    tryRestoreProject,
+    refreshFileTree,
   ]);
 
   // Auto-start project if it has saved files (restore on page load)
