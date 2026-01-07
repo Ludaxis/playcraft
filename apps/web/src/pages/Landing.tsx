@@ -120,7 +120,7 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
       }}
     >
       {/* Header */}
-      <header className="fixed left-0 right-0 top-0 z-50">
+      <header className="fixed left-0 right-0 top-0 z-50 bg-[#0f172a]/90 backdrop-blur-md border-b border-white/10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           {/* Logo */}
           <Logo size={32} showText textClassName="text-white" />

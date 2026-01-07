@@ -33,7 +33,7 @@ export function Logo({
       {(showText || variant === 'full') && (
         <span className={`font-bold text-xl ${textClassName}`}>
           <span className="text-gradient-gaming">Play</span>
-          <span className="text-content">Craft</span>
+          <span className="text-white">Craft</span>
         </span>
       )}
     </div>
