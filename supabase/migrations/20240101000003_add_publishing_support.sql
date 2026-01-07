@@ -22,11 +22,11 @@ USING (status = 'published' AND is_public = true);
 CREATE OR REPLACE FUNCTION increment_play_count(game_id UUID)
 RETURNS void AS $$
 BEGIN
-  UPDATE playcraft_projects
+  UPDATE public.playcraft_projects
   SET play_count = play_count + 1
   WHERE id = game_id AND status = 'published';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Grant execute permission to anon role (for unauthenticated users)
 GRANT EXECUTE ON FUNCTION increment_play_count(UUID) TO anon;

@@ -116,17 +116,17 @@ BEGIN
     COUNT(*) FILTER (WHERE auto_fix_succeeded = TRUE)::BIGINT as auto_fixed_count,
     COUNT(*) FILTER (WHERE was_accepted = TRUE)::BIGINT as user_accepted_count,
     COUNT(*) FILTER (WHERE was_reverted = TRUE)::BIGINT as user_reverted_count,
-    ROUND(AVG(duration_ms)::NUMERIC, 2) as avg_duration_ms,
-    CASE
-      WHEN COUNT(*) > 0 THEN
-        ROUND((COUNT(*) FILTER (WHERE had_ts_errors OR had_eslint_errors OR had_runtime_errors)::NUMERIC / COUNT(*)::NUMERIC) * 100, 2)
-      ELSE 0
-    END as error_rate
-  FROM playcraft_generation_outcomes
+  ROUND(AVG(duration_ms)::NUMERIC, 2) as avg_duration_ms,
+  CASE
+    WHEN COUNT(*) > 0 THEN
+      ROUND((COUNT(*) FILTER (WHERE had_ts_errors OR had_eslint_errors OR had_runtime_errors)::NUMERIC / COUNT(*)::NUMERIC) * 100, 2)
+    ELSE 0
+  END as error_rate
+  FROM public.playcraft_generation_outcomes
   WHERE user_id = p_user_id
     AND created_at > NOW() - INTERVAL '30 days';
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Get recent error patterns for analysis
 CREATE OR REPLACE FUNCTION get_error_patterns(p_user_id UUID, p_limit INTEGER DEFAULT 20)
@@ -148,7 +148,7 @@ BEGIN
                COUNT(*) FILTER (WHERE o.auto_fix_attempts > 0)::NUMERIC) * 100, 2)
       ELSE 0
     END as auto_fix_rate
-  FROM playcraft_generation_outcomes o
+  FROM public.playcraft_generation_outcomes o
   WHERE o.user_id = p_user_id
     AND o.created_at > NOW() - INTERVAL '30 days'
     AND o.intent_type IS NOT NULL
@@ -156,7 +156,7 @@ BEGIN
   ORDER BY COUNT(*) DESC
   LIMIT p_limit;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION get_outcome_stats(UUID) TO authenticated;

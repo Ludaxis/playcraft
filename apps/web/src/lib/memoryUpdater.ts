@@ -284,7 +284,7 @@ export async function updateMemoryFromResponse(
 
   let changeResult: FileChangeResult | null = null;
   if (Object.keys(filesMap).length > 0) {
-    changeResult = await updateFileHashes(projectId, filesMap);
+    changeResult = await updateFileHashes(projectId, filesMap, { deleteMissing: false });
   }
 
   // 3. Extract and add completed task
@@ -356,7 +356,7 @@ export async function updateMemoryFromFileChange(
   selectedFile?: string
 ): Promise<FileChangeResult> {
   // Update file hashes
-  const changeResult = await updateFileHashes(projectId, files);
+  const changeResult = await updateFileHashes(projectId, files, { deleteMissing: false });
 
   // Update file importance
   const modifiedFiles = [...changeResult.created, ...changeResult.modified];

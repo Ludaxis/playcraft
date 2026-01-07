@@ -150,13 +150,19 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
   };
 
   const elapsedText = formatElapsed(elapsed);
+  const percentComplete =
+    typeof progress.completed === 'number' &&
+    typeof progress.total === 'number' &&
+    progress.total > 0
+      ? Math.min(100, Math.round((progress.completed / progress.total) * 100))
+      : null;
 
   return (
     <div className="flex gap-3">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-secondary">
         <Sparkles className="h-4 w-4 text-content" />
       </div>
-      <div className="flex flex-col gap-1 rounded-2xl bg-surface-overlay px-4 py-3">
+      <div className="flex flex-col gap-2 rounded-2xl bg-surface-overlay px-4 py-3">
         <div className="flex items-center gap-2">
           {getIcon()}
           <span className="text-sm text-content-muted">{progress.message}</span>
@@ -164,17 +170,40 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
             <span className="text-xs text-content-subtle">({elapsedText})</span>
           )}
         </div>
-        {progress.detail && (
-          <span className="text-xs text-content-subtle ml-6">{progress.detail}</span>
+        {progress.activeItem && (
+          <span className="text-xs text-content-subtle ml-6 truncate">
+            {progress.activeItem}
+          </span>
         )}
-        {/* Progress dots animation */}
-        {progress.stage !== 'complete' && progress.stage !== 'error' && (
-          <div className="flex gap-1 ml-6 mt-1">
-            <div className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '0ms' }} />
-            <div className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '150ms' }} />
-            <div className="h-1.5 w-1.5 rounded-full bg-accent animate-bounce" style={{ animationDelay: '300ms' }} />
+        {percentComplete !== null ? (
+          <div className="ml-6 mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated/60">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-accent to-secondary transition-all duration-300"
+              style={{ width: `${percentComplete}%` }}
+            />
           </div>
+        ) : (
+          progress.stage !== 'complete' &&
+          progress.stage !== 'error' && (
+            <div className="ml-6 mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated/60">
+              <div className="h-full w-1/3 animate-pulse rounded-full bg-gradient-to-r from-accent to-secondary" />
+            </div>
+          )
         )}
+        <div className="ml-6 flex flex-col gap-1">
+          {progress.detail && (!progress.log || progress.log.length === 0) && (
+            <span className="text-xs text-content-subtle">{progress.detail}</span>
+          )}
+          {progress.log && progress.log.length > 0 && (
+            <ul className="text-xs text-content-subtle space-y-0.5">
+              {progress.log.slice(-4).map((item, idx) => (
+                <li key={`${item}-${idx}`} className="leading-relaxed before:mr-1 before:content-['•'] before:text-accent">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

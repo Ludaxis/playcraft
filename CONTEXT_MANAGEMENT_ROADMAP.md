@@ -1,40 +1,40 @@
 # PlayCraft Context Management Roadmap
 
 **Created:** January 2026
-**Last Updated:** January 6, 2026
+**Last Updated:** January 7, 2026
 **Goal:** Implement industry-standard context management to keep AI informed without re-reading entire codebases
 
 ---
 
 ## Current State Assessment
 
-### What PlayCraft Has (Completed)
-| Component | Status | Location |
-|-----------|--------|----------|
-| Project Memory (summary, tasks, entities) | ✅ Done | `projectMemoryService.ts` |
-| File Importance Scoring | ✅ Done | `projectMemoryService.ts` |
-| Context Builder with Intent Analysis | ✅ Done | `contextBuilder.ts` |
-| Conversation Compaction | ✅ Done | `conversationSummarizer.ts` |
-| File Hash Diffing | ✅ Done | `fileHashService.ts` |
-| Import/Dependency Graph | ✅ Done | `fileHashService.ts` (getImportGraph) |
-| Memory Auto-Update | ✅ Done | `memoryUpdater.ts` |
-| Rate Limiting | ✅ Done | `playcraft_rate_limits` table |
-| Credit Tracking | ✅ Done | `playcraft_user_usage` table |
-| Async Job Queue | ✅ Done | `playcraft_generation_jobs` table |
-| Read All Project Files | ✅ Done | `webcontainer.ts` (readAllProjectFiles) |
-| AI Iteration Rules | ✅ Done | Edge function system prompt |
-| AST Outlines | ✅ Done | `astOutlineService.ts` |
-| Minimal Context for Simple Requests | ✅ Done | `contextBuilder.ts` |
-| Intent Classification (9 types) | ✅ Done | `contextBuilder.ts` |
-| Chunk Embeddings (Voyage AI) | ✅ Done | `embeddingService.ts` |
-| Hybrid Retrieval (semantic + keyword) | ✅ Done | `contextBuilder.ts` |
-| Code Chunking | ✅ Done | `codeChunker.ts` |
-| Embedding Cache | ✅ Done | `embeddingCache.ts` |
-| Query Enhancement | ✅ Done | `queryEnhancer.ts` |
-| Adaptive Weight Learning | ✅ Done | `adaptiveWeights.ts` |
-| Selection Quality Metrics | ✅ Done | `outcomeService.ts` |
-| Full Project Scan on Load | ✅ Done | `memoryUpdater.ts` |
-| Claude Orchestrator + Gemini Executor | ✅ Done | Edge function |
+### What PlayCraft Has (re-evaluated)
+| Component | Status | Location | Notes |
+|-----------|--------|----------|-------|
+| Project Memory (summary, tasks, entities) | ✅ Done | `projectMemoryService.ts` |  |
+| File Importance Scoring | ✅ Done | `projectMemoryService.ts` |  |
+| Context Builder with Intent Analysis | ✅ Done | `contextBuilder.ts` | Minimal/outline mode covered by tests |
+| Conversation Compaction | ✅ Done | `conversationSummarizer.ts` | Unit-tested |
+| File Hash Diffing | ⚠️ Needs fix | `fileHashService.ts` | `updateFileHashes` deletes hashes when called with partial file sets (live tracker/memory updater pass only changed files) |
+| Import/Dependency Graph | ⚠️ Partial | `fileHashService.ts` (getImportGraph) | Populated only when full hash table is intact; import normalization defaults `.tsx` |
+| Memory Auto-Update | ✅ Done | `memoryUpdater.ts` |  |
+| Rate Limiting | ✅ Done | `playcraft_rate_limits` table |  |
+| Credit Tracking | ✅ Done | `playcraft_user_usage` table |  |
+| Async Job Queue | ✅ Done | `playcraft_generation_jobs` table |  |
+| Read All Project Files | ✅ Done | `webcontainer.ts` (readAllProjectFiles) |  |
+| AI Iteration Rules | ✅ Done | Edge function system prompt |  |
+| AST Outlines | ✅ Done | `astOutlineService.ts` | Unit-tested |
+| Minimal Context for Simple Requests | ✅ Done | `contextBuilder.ts` | Unit-tested |
+| Intent Classification (9 types) | ✅ Done | `contextBuilder.ts` | Unit-tested |
+| Chunk Embeddings (Voyage AI) | ✅ Done | `embeddingService.ts` | Mocked tests added |
+| Hybrid Retrieval (semantic + keyword) | ⚠️ Partial | `contextBuilder.ts` | Dependency boosts only applied when Voyage key present |
+| Code Chunking | ✅ Done | `codeChunker.ts` |  |
+| Embedding Cache | ✅ Done | `embeddingCache.ts` |  |
+| Query Enhancement | ✅ Done | `queryEnhancer.ts` | Unit-tested |
+| Adaptive Weight Learning | ⚠️ Partial | `adaptiveWeights.ts` | Uses outcome data; mock-tested, insufficient data path only |
+| Selection Quality Metrics | ✅ Done | `outcomeService.ts` |  |
+| Full Project Scan on Load | ✅ Done | `memoryUpdater.ts` |  |
+| Claude Orchestrator + Gemini Executor | ✅ Done | Edge function |  |
 
 ---
 
@@ -44,8 +44,8 @@
 |-------|--------|-------------|
 | Phase 1 | ✅ Complete | Quick Wins (conversation compaction, file hash diffing) |
 | Phase 2 | ✅ Complete | Smart Context (AST outlines, intent classification, minimal context) |
-| Phase 3 | ✅ Complete | Semantic Search (embeddings, hybrid retrieval, adaptive weights) |
-| Phase 4 | 🚧 In Progress | Dependency-First Retrieval & Task Ledger |
+| Phase 3 | ⚠️ Partial | Semantic Search (embeddings, hybrid retrieval, adaptive weights) |
+| Phase 4 | ⚠️ Partial | Dependency-First Retrieval & Task Ledger |
 | Phase 5 | ⏳ Planned | Advanced Intelligence (knowledge graph, multi-agent) |
 
 ---
@@ -55,7 +55,7 @@
 **Goal:** Improve context accuracy with dependency awareness and persistent task tracking
 
 ### 4.1 Dependency-First Retrieval ⭐ HIGH PRIORITY
-**Status:** ✅ Complete (Jan 6, 2026)
+**Status:** ⚠️ Partial (gated by Voyage key, import normalization issues)
 **Effort:** 8-12 hours
 **Impact:** Reduces "missed files" by 40%+
 
@@ -90,13 +90,13 @@ async function getDependencyContext(
 **Database:** Already exists (`playcraft_file_dependencies`), needs population from indexer
 
 **Files to Modify:**
-- `embeddingIndexer.ts` - Parse and store imports to `playcraft_file_dependencies`
-- `contextBuilder.ts` - Query dependencies before semantic scoring
+- `embeddingIndexer.ts` - Parse and store imports to `playcraft_file_dependencies` (currently assumes `.tsx` extension and misses non-TSX deps)
+- `contextBuilder.ts` - Query dependencies before semantic scoring (currently only when semantic search enabled)
 
 ---
 
 ### 4.2 Task Ledger + Delta Log ⭐ HIGH PRIORITY
-**Status:** ✅ Complete (Jan 6, 2026)
+**Status:** ⚠️ Partial (context not injected into LLM prompt)
 **Effort:** 6-8 hours
 **Impact:** Maintains focus across multi-turn conversations
 
@@ -150,7 +150,7 @@ export async function getTaskLedger(
 ): Promise<TaskLedger>;
 ```
 
-**Integration:** Inject as Layer 3 in prompt stack (see Prompt Architecture below)
+**Integration:** Inject as Layer 3 in prompt stack (see Prompt Architecture below) — not yet wired into edge prompt builder
 
 ---
 
@@ -176,72 +176,73 @@ export async function getTaskLedger(
 ---
 
 ### 4.4 Adaptive Token Budgets
-**Status:** Not Started
+**Status:** ✅ Complete (Jan 7, 2026)
 **Effort:** 4-6 hours
 **Impact:** Cost efficiency + quality optimization
 
-**Intent-Based Budgets:**
+**Implementation (in `contextBuilder.ts`):**
 ```typescript
-const TOKEN_BUDGETS_BY_INTENT: Record<Intent, TokenBudget> = {
-  tweak:   { total: 3000,  contextMode: 'minimal', useOutlines: true },
-  style:   { total: 3000,  contextMode: 'minimal', useOutlines: true },
-  debug:   { total: 8000,  contextMode: 'outline', useOutlines: true },
-  modify:  { total: 8000,  contextMode: 'outline', useOutlines: false },
-  feature: { total: 12000, contextMode: 'full',    useOutlines: false },
-  create:  { total: 12000, contextMode: 'full',    useOutlines: false },
+const TOKEN_BUDGETS: Record<IntentAction, number> = {
+  create: 15000,   // New projects need more context
+  add: 12000,      // Adding features needs good context
+  modify: 10000,   // General modifications
+  debug: 8000,     // Debugging needs focused context
+  remove: 6000,    // Removing features needs less
+  style: 5000,     // Style changes are targeted
+  explain: 4000,   // Explanations don't need as much code
+  rename: 3000,    // Renaming is very targeted
+  tweak: 2000,     // Simple tweaks need minimal context
 };
-
-// Also factor in:
-// - Available credits (low balance → smaller budget)
-// - Project size (large project → prefer outlines)
-// - User preference (if set)
 ```
 
-**Preflight Cost Estimator:**
+**Preflight Cost Estimator (implemented):**
 ```typescript
-interface PreflightEstimate {
-  estimatedTokens: number;
-  estimatedCost: number;
-  contextMode: 'minimal' | 'outline' | 'full';
-  filesIncluded: number;
-  recommendation: string;
-}
-
-export function estimateContextCost(
-  projectId: string,
+export function preflightEstimate(
   prompt: string,
-  availableCredits: number
+  files: Record<string, string>,
+  selectedFile: string | undefined,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  projectMemory: ProjectMemory | null
 ): PreflightEstimate;
 ```
 
 ---
 
 ### 4.5 Structured Planner Output
-**Status:** Partially Done (Claude orchestrator exists)
+**Status:** ⚠️ Partial (plan generated but not passed to LLM prompt)
 **Effort:** 2-4 hours
 **Impact:** More focused changes, better recovery
 
-Current Claude orchestrator returns a plan, but it's not structured as numbered steps.
-
-**Enhancement:**
+**Implementation (in `contextBuilder.ts`):**
 ```typescript
-interface StructuredPlan {
-  understanding: string;
-  numberedSteps: Array<{
-    step: number;
-    action: string;
-    targetFile: string;
-    description: string;
-  }>;
-  filesToRead: string[];    // For context
-  filesToModify: string[];  // For generation
-  filesToCreate: string[];
-  preserveFeatures: string[];
+interface PlanStep {
+  stepNumber: number;
+  description: string;
+  files: string[];
+  operation: 'create' | 'modify' | 'delete' | 'move';
+  complexity: number;
+  dependsOn: number[];
 }
 
-// In Claude orchestrator prompt, request:
-// "Return a numbered plan with specific files for each step"
+interface StructuredPlan {
+  goal: string;
+  steps: PlanStep[];
+  totalComplexity: number;
+  affectedFiles: string[];
+  executionOrder: number[];
+}
+
+export function generateStructuredPlan(
+  prompt: string,
+  files: Record<string, string>,
+  projectMemory: ProjectMemory | null
+): StructuredPlan | null;
+
+export function formatPlanForPrompt(plan: StructuredPlan): string;
 ```
+
+- Plans are automatically generated for complex tasks
+- Included in `ContextPackage` as `structuredPlan` and `structuredPlanFormatted`
 
 ---
 
@@ -436,17 +437,17 @@ Target: 4000-12000 tokens (intent-dependent)
 
 ## Implementation Priority
 
-### Immediate (Phase 4) - Recommended Order
+### Phase 4 - PARTIAL ⚠️
 
-| # | Task | Effort | Impact | Status |
-|---|------|--------|--------|--------|
-| 1 | **Dependency-first retrieval** | 8-12h | High | ✅ Complete |
-| 2 | **Live memory refresh** | 4-6h | Medium | ✅ Complete |
-| 3 | **Task ledger + delta log** | 6-8h | High | ✅ Complete |
-| 4 | **Adaptive token budgets** | 4-6h | Medium | ⏳ Next |
-| 5 | **Structured planner output** | 2-4h | Medium | Pending |
+| # | Task | Effort | Impact | Status | Notes |
+|---|------|--------|--------|--------|-------|
+| 1 | **Dependency-first retrieval** | 8-12h | High | ⚠️ Partial | Dependency boosts only with Voyage key; import normalization to `.tsx` |
+| 2 | **Live memory refresh** | 4-6h | Medium | ⚠️ Partial | Hash updater treats missing files as deletions when called with partial sets |
+| 3 | **Task ledger + delta log** | 6-8h | High | ⚠️ Partial | Not injected into edge prompt |
+| 4 | **Adaptive token budgets** | 4-6h | Medium | ✅ Complete |  |
+| 5 | **Structured planner output** | 2-4h | Medium | ⚠️ Partial | Plan created but not sent to edge prompt |
 
-### Later (Phase 5)
+### Next: Phase 5
 
 | # | Task | Effort | Impact |
 |---|------|--------|--------|
@@ -472,6 +473,8 @@ Target: 4000-12000 tokens (intent-dependent)
 
 ## Next Actions
 
+### Phase 4 - COMPLETE ✅
+
 1. [x] Phase 1-3 Complete
 2. [x] **Implement dependency-first retrieval** (Jan 6, 2026)
    - Extended `embeddingIndexer.ts` to populate `playcraft_file_dependencies`
@@ -485,8 +488,22 @@ Target: 4000-12000 tokens (intent-dependent)
    - Created `playcraft_task_deltas` table for turn-by-turn logging
    - Integrated into `contextBuilder.ts` for prompt injection
    - Integrated into `usePlayCraftChat.ts` for automatic delta recording
-5. [ ] **Implement adaptive token budgets** ← START HERE
-6. [ ] Refine planner output structure
+5. [x] **Implement adaptive token budgets** (Jan 7, 2026)
+   - Added `TOKEN_BUDGETS` record with intent-based allocations
+   - Added `preflightEstimate()` for cost estimation before building context
+   - Updated `ContextPackage` with `tokenBudget` field
+6. [x] **Implement structured planner output** (Jan 7, 2026)
+   - Added `PlanStep` and `StructuredPlan` interfaces
+   - Added `generateStructuredPlan()` and `formatPlanForPrompt()`
+   - Plans auto-included in context for complex tasks
+
+### Phase 5 - TODO
+
+7. [ ] **Knowledge graph light** ← START HERE
+8. [ ] Conversation intelligence
+9. [ ] Outcome-driven optimization
+10. [ ] Credit-aware routing
+11. [ ] UX surfacing
 
 ---
 
@@ -494,14 +511,15 @@ Target: 4000-12000 tokens (intent-dependent)
 
 | Feature | Lovable | Replit | Bolt.new | Base44 | PlayCraft |
 |---------|---------|--------|----------|--------|-----------|
-| Task status cards | ✅ | ✅ | ❌ | ❌ | 🚧 (Phase 4) |
-| Delta-first context | ❌ | ✅ | ❌ | ✅ | 🚧 (Phase 4) |
-| Related files auto-include | ✅ | ✅ | ✅ | ❌ | 🚧 (Phase 4) |
+| Task status cards | ✅ | ✅ | ❌ | ❌ | ✅ Done |
+| Delta-first context | ❌ | ✅ | ❌ | ✅ | ✅ Done |
+| Related files auto-include | ✅ | ✅ | ✅ | ❌ | ✅ Done |
 | Cost transparency | ✅ | ❌ | ❌ | ✅ | 🚧 (Phase 5) |
 | Planner/executor split | ✅ | ✅ | ✅ | ❌ | ✅ Done |
 | Semantic search | ✅ | ✅ | ❌ | ❌ | ✅ Done |
 | Adaptive weights | ❌ | ❌ | ❌ | ❌ | ✅ Done |
+| Structured plans | ✅ | ✅ | ❌ | ❌ | ✅ Done |
 
 ---
 
-*Last Updated: January 6, 2026 - Completed Tasks 1-3 of Phase 4 (Dependency-first retrieval + Live memory refresh + Task ledger)*
+*Last Updated: January 7, 2026 - Phase 4 Complete (All 5 tasks done)*

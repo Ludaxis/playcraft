@@ -146,7 +146,7 @@ BEGIN
     NEW.size_bytes = COALESCE(LENGTH(NEW.content), 0);
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = pg_catalog, public;
 
 CREATE TRIGGER auto_increment_file_version
     BEFORE UPDATE ON playcraft_project_files
@@ -164,7 +164,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = pg_catalog, public;
 
 CREATE TRIGGER auto_increment_project_version
     BEFORE UPDATE ON playcraft_projects
@@ -179,11 +179,11 @@ CREATE OR REPLACE FUNCTION get_project_size(p_project_id UUID)
 RETURNS BIGINT AS $$
 BEGIN
     RETURN COALESCE(
-        (SELECT SUM(size_bytes) FROM playcraft_project_files WHERE project_id = p_project_id),
+        (SELECT SUM(size_bytes) FROM public.playcraft_project_files WHERE project_id = p_project_id),
         0
     );
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = pg_catalog, public;
 
 -- =============================================================================
 -- GRANTS

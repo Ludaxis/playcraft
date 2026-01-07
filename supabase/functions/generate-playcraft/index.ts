@@ -413,6 +413,10 @@ interface ContextAwareRequest extends GenerateRequest {
       file_importance: Record<string, number>;
       key_entities: Array<{ name: string; type: string; file: string }>;
     } | null;
+    // Task Ledger context (Phase 4.2)
+    taskContextFormatted?: string;
+    // Structured execution plan (Phase 4.5)
+    structuredPlanFormatted?: string;
     conversationSummaries: string[];
     recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
     relevantFiles: Array<{
@@ -424,6 +428,7 @@ interface ContextAwareRequest extends GenerateRequest {
     changedSinceLastRequest: string[];
     fileTree: string[];
     estimatedTokens: number;
+    tokenBudget?: number;
   };
 }
 
@@ -680,9 +685,14 @@ OUTPUT FORMAT (FILE MODE):
   "needsThreeJs": false
 }`}`;
 
+  // Add timeout to prevent gateway timeout (504)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50s timeout
+
+  let response: Response;
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${apiKey}`,
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -692,70 +702,80 @@ OUTPUT FORMAT (FILE MODE):
           ],
           systemInstruction: { parts: [{ text: systemPrompt }] },
           generationConfig: {
-            temperature: 0.3, // Lower temperature for more precise code
+            temperature: 1.0, // Gemini 3 recommends keeping at 1.0
             topP: 0.9,
             maxOutputTokens: 65536,
             responseMimeType: 'application/json',
+            // Gemini 3 Flash supports minimal thinking for faster responses
+            thinkingConfig: {
+              thinkingLevel: 'minimal',
+            },
           },
         }),
+        signal: controller.signal,
       }
     );
-
-    const apiDuration = logger.endTimer('geminiWithPlan');
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      logger.error('Gemini API error (with plan)', { status: response.status, error: errorText, durationMs: apiDuration });
-      throw new Error(`Gemini API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!responseText) {
-      logger.error('Empty Gemini response', { durationMs: apiDuration });
-      throw new Error('Empty response from Gemini');
-    }
-
-    // Parse JSON response
-    let parsed;
-    try {
-      parsed = JSON.parse(responseText);
-    } catch {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('Failed to parse Gemini response as JSON');
-      }
-    }
-
-    // Handle response format
-    const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
-    const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
-
-    if (!parsed.message || (!hasFiles && !hasEdits)) {
-      throw new Error('Response missing required fields');
-    }
-
-    logger.info('Gemini (with plan) completed', {
-      filesGenerated: hasFiles ? parsed.files.length : 0,
-      editsGenerated: hasEdits ? parsed.edits.length : 0,
-      durationMs: apiDuration,
-    });
-
-    return {
-      message: parsed.message,
-      files: parsed.files || [],
-      edits: parsed.edits,
-      explanation: parsed.explanation || '',
-      needsThreeJs: parsed.needsThreeJs === true,
-      useEditMode: hasEdits && !hasFiles,
-    };
   } catch (err) {
-    logger.error('Gemini (with plan) failed', { error: err instanceof Error ? err.message : 'Unknown' });
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      logger.error('Gemini API timeout (with plan)', { timeoutMs: 50000 });
+      throw new Error('Gemini API request timed out after 50 seconds');
+    }
     throw err;
   }
+  clearTimeout(timeoutId);
+
+  const apiDuration = logger.endTimer('geminiWithPlan');
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    logger.error('Gemini API error (with plan)', { status: response.status, error: errorText, durationMs: apiDuration });
+    throw new Error(`Gemini API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+  if (!responseText) {
+    logger.error('Empty Gemini response', { durationMs: apiDuration });
+    throw new Error('Empty response from Gemini');
+  }
+
+  // Parse JSON response
+  let parsed;
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      parsed = JSON.parse(jsonMatch[0]);
+    } else {
+      throw new Error('Failed to parse Gemini response as JSON');
+    }
+  }
+
+  // Handle response format
+  const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
+  const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
+
+  if (!parsed.message || (!hasFiles && !hasEdits)) {
+    throw new Error('Response missing required fields');
+  }
+
+  logger.info('Gemini (with plan) completed', {
+    filesGenerated: hasFiles ? parsed.files.length : 0,
+    editsGenerated: hasEdits ? parsed.edits.length : 0,
+    durationMs: apiDuration,
+  });
+
+  return {
+    message: parsed.message,
+    files: parsed.files || [],
+    edits: parsed.edits,
+    explanation: parsed.explanation || '',
+    needsThreeJs: parsed.needsThreeJs === true,
+    useEditMode: hasEdits && !hasFiles,
+  };
 }
 
 /**
@@ -1161,12 +1181,22 @@ function buildSmartContextPrompt(
     }
   }
 
-  // 2. Conversation Summaries (compressed history)
+  // 2. Task Ledger (current goal, substeps, blockers, recent deltas) - Phase 4.2
+  if (contextPackage.taskContextFormatted) {
+    parts.push('TASK CONTEXT:\n' + contextPackage.taskContextFormatted);
+  }
+
+  // 3. Structured Execution Plan (for complex tasks) - Phase 4.5
+  if (contextPackage.structuredPlanFormatted) {
+    parts.push('EXECUTION PLAN:\n' + contextPackage.structuredPlanFormatted);
+  }
+
+  // 4. Conversation Summaries (compressed history)
   if (contextPackage.conversationSummaries.length > 0) {
     parts.push('CONVERSATION HISTORY:\n' + contextPackage.conversationSummaries.join('\n'));
   }
 
-  // 3. Recent Messages (last 5 in full)
+  // 5. Recent Messages (last 5 in full)
   if (contextPackage.recentMessages.length > 0) {
     const recentContext = contextPackage.recentMessages
       .map(m => `${m.role.toUpperCase()}: ${m.content}`)
@@ -1174,7 +1204,7 @@ function buildSmartContextPrompt(
     parts.push('RECENT CONVERSATION:\n' + recentContext);
   }
 
-  // 4. EXISTING CODE - with strong iteration warning
+  // 6. EXISTING CODE - with strong iteration warning
   if (contextPackage.relevantFiles.length > 0) {
     // Add strong warning that this is existing code
     parts.push(`⚠️ EXISTING PROJECT CODE - YOU MUST MODIFY THIS CODE, NOT RECREATE IT ⚠️
@@ -1189,26 +1219,26 @@ ONLY change the specific parts related to the user's request.`);
     parts.push(fileContext);
   }
 
-  // 5. Changed Files (for awareness)
+  // 7. Changed Files (for awareness)
   if (contextPackage.changedSinceLastRequest.length > 0) {
     parts.push('RECENTLY CHANGED: ' + contextPackage.changedSinceLastRequest.join(', '));
   }
 
-  // 6. File Tree (awareness of full project)
+  // 8. File Tree (awareness of full project)
   if (contextPackage.fileTree.length > 0) {
     parts.push('ALL PROJECT FILES:\n' + contextPackage.fileTree.join('\n'));
   }
 
-  // 7. 3D Status
+  // 9. 3D Status
   const threeJsContext = hasThreeJs
     ? 'Three.js/React Three Fiber is ALREADY INSTALLED.'
     : 'Three.js is NOT installed. Set needsThreeJs: true if 3D is needed.';
   parts.push('3D STATUS: ' + threeJsContext);
 
-  // 8. User Request
+  // 10. User Request
   parts.push(`USER REQUEST:\n${prompt}`);
 
-  // 9. Instructions - emphasize iteration when files exist
+  // 11. Instructions - emphasize iteration when files exist
   if (contextPackage.relevantFiles.length > 0) {
     parts.push(`🚨 CRITICAL: ITERATION MODE - READ CAREFULLY 🚨
 
@@ -1323,27 +1353,47 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   // Start timer for AI generation
   logger.startTimer('geminiApi');
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-          },
-        ],
-        generationConfig: {
-          maxOutputTokens: 32768, // Increased from 16K - Gemini 3 supports up to 65K
-          temperature: 0.4,
-          responseMimeType: 'application/json',
+  // Add timeout to prevent gateway timeout (504)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50s timeout (gateway is ~60s)
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      }),
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+            },
+          ],
+          generationConfig: {
+            maxOutputTokens: 32768,
+            temperature: 1.0, // Gemini 3 recommends keeping at 1.0
+            responseMimeType: 'application/json',
+            // Gemini 3 Flash supports minimal thinking for faster responses
+            thinkingConfig: {
+              thinkingLevel: 'minimal',
+            },
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      logger.error('Gemini API timeout', { timeoutMs: 50000 });
+      throw new Error('Gemini API request timed out after 50 seconds');
     }
-  );
+    throw err;
+  }
+  clearTimeout(timeoutId);
 
   const apiDuration = logger.endTimer('geminiApi');
 

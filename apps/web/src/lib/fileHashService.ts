@@ -158,9 +158,11 @@ export async function getProjectFileHashes(projectId: string): Promise<Map<strin
  */
 export async function updateFileHashes(
   projectId: string,
-  files: Record<string, string>
+  files: Record<string, string>,
+  options: { deleteMissing?: boolean } = {}
 ): Promise<FileChangeResult> {
   const supabase = getSupabase();
+  const deleteMissing = options.deleteMissing ?? false;
 
   // Get existing hashes
   const existingHashes = await getProjectFileHashes(projectId);
@@ -228,7 +230,7 @@ export async function updateFileHashes(
   }
 
   // Remaining files in existingHashes are deleted
-  result.deleted = Array.from(existingHashes.keys());
+  result.deleted = deleteMissing ? Array.from(existingHashes.keys()) : [];
 
   // Batch upsert updates
   if (updates.length > 0) {
@@ -242,7 +244,7 @@ export async function updateFileHashes(
   }
 
   // Delete removed files
-  if (result.deleted.length > 0) {
+  if (deleteMissing && result.deleted.length > 0) {
     const { error } = await supabase
       .from('playcraft_file_hashes')
       .delete()
@@ -306,23 +308,14 @@ export async function getImportGraph(projectId: string): Promise<Map<string, str
 
   for (const [filePath, fileHash] of hashes) {
     for (const importPath of fileHash.imports) {
+      // Skip external packages
+      if (!importPath.startsWith('.') && !importPath.startsWith('@/')) {
+        continue;
+      }
+
       // Normalize import paths to file paths
-      let normalizedPath = importPath;
-
-      // Handle relative imports
-      if (importPath.startsWith('.')) {
-        const dir = filePath.substring(0, filePath.lastIndexOf('/'));
-        normalizedPath = resolveRelativePath(dir, importPath);
-      }
-      // Handle alias imports (e.g., @/components)
-      else if (importPath.startsWith('@/')) {
-        normalizedPath = '/src' + importPath.substring(1);
-      }
-
-      // Add extensions if missing
-      if (!normalizedPath.includes('.')) {
-        normalizedPath += '.tsx';
-      }
+      const normalizedPath = resolveImportPath(filePath, importPath, hashes);
+      if (!normalizedPath) continue;
 
       const importers = importedBy.get(normalizedPath) || [];
       if (!importers.includes(filePath)) {
@@ -336,21 +329,64 @@ export async function getImportGraph(projectId: string): Promise<Map<string, str
 }
 
 /**
- * Resolve relative path from a directory
+ * Resolve a local/aliased import to a concrete file path
  */
-function resolveRelativePath(fromDir: string, relativePath: string): string {
-  const parts = fromDir.split('/').filter(Boolean);
-  const relParts = relativePath.split('/');
-
-  for (const part of relParts) {
-    if (part === '..') {
-      parts.pop();
-    } else if (part !== '.') {
-      parts.push(part);
-    }
+function resolveImportPath(fromFile: string, importPath: string, hashes: Map<string, FileHash>): string | null {
+  // Only handle relative/aliased imports
+  if (!importPath.startsWith('.') && !importPath.startsWith('@/')) {
+    return null;
   }
 
-  return '/' + parts.join('/');
+  let basePath: string;
+
+  if (importPath.startsWith('@/')) {
+    basePath = '/src' + importPath.substring(1);
+  } else {
+    // Relative path
+    const fromDir = fromFile.substring(0, fromFile.lastIndexOf('/'));
+    const parts = fromDir.split('/').filter(Boolean);
+    const relParts = importPath.split('/');
+
+    for (const part of relParts) {
+      if (part === '..') parts.pop();
+      else if (part !== '.') parts.push(part);
+    }
+
+    basePath = '/' + parts.join('/');
+  }
+
+  // If import already has an extension, use it
+  if (/\.[a-zA-Z]+$/.test(basePath)) {
+    return basePath;
+  }
+
+  const candidates = [
+    `${basePath}.ts`,
+    `${basePath}.tsx`,
+    `${basePath}.js`,
+    `${basePath}.jsx`,
+    `${basePath}/index.ts`,
+    `${basePath}/index.tsx`,
+    `${basePath}/index.js`,
+    `${basePath}/index.jsx`,
+  ];
+
+  const match = candidates.find(path => hashes.has(path));
+  if (match) return match;
+
+  // Fuzzy match on filename when directory guesses don't line up
+  const baseName = basePath.split('/').pop();
+  if (baseName) {
+    const fuzzy = Array.from(hashes.keys()).find(path =>
+      path.endsWith(`/${baseName}.ts`) ||
+      path.endsWith(`/${baseName}.tsx`) ||
+      path.endsWith(`/${baseName}.js`) ||
+      path.endsWith(`/${baseName}.jsx`)
+    );
+    if (fuzzy) return fuzzy;
+  }
+
+  return candidates[0] || null;
 }
 
 /**

@@ -91,21 +91,23 @@ const MAX_BATCH_SIZE = 20;
  * Normalize import path to actual file path
  * Returns null for external packages (react, lodash, etc.)
  */
-function normalizeImportPath(fromFile: string, importPath: string): string | null {
+function normalizeImportPath(
+  fromFile: string,
+  importPath: string,
+  knownFiles?: Record<string, string>
+): string | null {
   // Skip external packages (no leading . or @/)
   if (!importPath.startsWith('.') && !importPath.startsWith('@/')) {
     return null;
   }
 
+  let basePath: string;
+
   // Handle @/ alias
   if (importPath.startsWith('@/')) {
-    const basePath = '/src' + importPath.substring(1);
-    // Try common extensions
-    return basePath + '.tsx'; // Default to .tsx, will be filtered if doesn't exist
-  }
-
-  // Handle relative imports
-  if (importPath.startsWith('.')) {
+    basePath = '/src' + importPath.substring(1);
+  } else {
+    // Handle relative imports
     const dir = fromFile.substring(0, fromFile.lastIndexOf('/'));
     const parts = dir.split('/').filter(Boolean);
     const importParts = importPath.split('/');
@@ -119,12 +121,43 @@ function normalizeImportPath(fromFile: string, importPath: string): string | nul
       }
     }
 
-    const resolvedPath = '/' + parts.join('/');
-    // Try common extensions
-    return resolvedPath + '.tsx'; // Default to .tsx
+    basePath = '/' + parts.join('/');
   }
 
-  return null;
+  // If an extension is already present, use it
+  if (/\.[a-zA-Z]+$/.test(basePath)) {
+    return basePath;
+  }
+
+  const candidates = [
+    `${basePath}.ts`,
+    `${basePath}.tsx`,
+    `${basePath}.js`,
+    `${basePath}.jsx`,
+    `${basePath}/index.ts`,
+    `${basePath}/index.tsx`,
+    `${basePath}/index.js`,
+    `${basePath}/index.jsx`,
+  ];
+
+  if (knownFiles) {
+    const match = candidates.find(path => Object.prototype.hasOwnProperty.call(knownFiles, path));
+    if (match) return match;
+
+    const baseName = basePath.split('/').pop();
+    if (baseName) {
+      const fuzzy = Object.keys(knownFiles).find(path =>
+        path.endsWith(`/${baseName}.ts`) ||
+        path.endsWith(`/${baseName}.tsx`) ||
+        path.endsWith(`/${baseName}.js`) ||
+        path.endsWith(`/${baseName}.jsx`)
+      );
+      if (fuzzy) return fuzzy;
+    }
+  }
+
+  // Fall back to first candidate
+  return candidates[0];
 }
 
 // ============================================
@@ -372,7 +405,7 @@ export async function indexProjectFiles(
 
           // Collect dependencies from imports
           for (const importPath of analysis.imports) {
-            const normalizedPath = normalizeImportPath(filePath, importPath);
+            const normalizedPath = normalizeImportPath(filePath, importPath, files);
             if (normalizedPath) {
               allDependencies.push({
                 projectId,

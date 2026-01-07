@@ -110,39 +110,39 @@ DECLARE
     v_minute_limit INTEGER := 10;
     v_hourly_limit INTEGER := 100;
     v_daily_limit INTEGER := 500;
-    v_record playcraft_rate_limits%ROWTYPE;
+    v_record public.playcraft_rate_limits%ROWTYPE;
     v_now TIMESTAMPTZ := NOW();
 BEGIN
     -- Upsert rate limit record
-    INSERT INTO playcraft_rate_limits (user_id, endpoint, request_count, window_start, hourly_count, hourly_reset_at, daily_count, daily_reset_at)
+    INSERT INTO public.playcraft_rate_limits (user_id, endpoint, request_count, window_start, hourly_count, hourly_reset_at, daily_count, daily_reset_at)
     VALUES (p_user_id, p_endpoint, 0, v_now, 0, v_now + INTERVAL '1 hour', 0, CURRENT_DATE + INTERVAL '1 day')
     ON CONFLICT (user_id, endpoint) DO UPDATE SET
         -- Reset minute counter if window expired
         request_count = CASE
-            WHEN playcraft_rate_limits.window_start + INTERVAL '1 minute' < v_now THEN 0
-            ELSE playcraft_rate_limits.request_count
+            WHEN public.playcraft_rate_limits.window_start + INTERVAL '1 minute' < v_now THEN 0
+            ELSE public.playcraft_rate_limits.request_count
         END,
         window_start = CASE
-            WHEN playcraft_rate_limits.window_start + INTERVAL '1 minute' < v_now THEN v_now
-            ELSE playcraft_rate_limits.window_start
+            WHEN public.playcraft_rate_limits.window_start + INTERVAL '1 minute' < v_now THEN v_now
+            ELSE public.playcraft_rate_limits.window_start
         END,
         -- Reset hourly counter if window expired
         hourly_count = CASE
-            WHEN playcraft_rate_limits.hourly_reset_at < v_now THEN 0
-            ELSE playcraft_rate_limits.hourly_count
+            WHEN public.playcraft_rate_limits.hourly_reset_at < v_now THEN 0
+            ELSE public.playcraft_rate_limits.hourly_count
         END,
         hourly_reset_at = CASE
-            WHEN playcraft_rate_limits.hourly_reset_at < v_now THEN v_now + INTERVAL '1 hour'
-            ELSE playcraft_rate_limits.hourly_reset_at
+            WHEN public.playcraft_rate_limits.hourly_reset_at < v_now THEN v_now + INTERVAL '1 hour'
+            ELSE public.playcraft_rate_limits.hourly_reset_at
         END,
         -- Reset daily counter if window expired
         daily_count = CASE
-            WHEN playcraft_rate_limits.daily_reset_at < v_now THEN 0
-            ELSE playcraft_rate_limits.daily_count
+            WHEN public.playcraft_rate_limits.daily_reset_at < v_now THEN 0
+            ELSE public.playcraft_rate_limits.daily_count
         END,
         daily_reset_at = CASE
-            WHEN playcraft_rate_limits.daily_reset_at < v_now THEN CURRENT_DATE + INTERVAL '1 day'
-            ELSE playcraft_rate_limits.daily_reset_at
+            WHEN public.playcraft_rate_limits.daily_reset_at < v_now THEN CURRENT_DATE + INTERVAL '1 day'
+            ELSE public.playcraft_rate_limits.daily_reset_at
         END
     RETURNING * INTO v_record;
 
@@ -191,7 +191,7 @@ BEGIN
         v_daily_limit - v_record.daily_count - 1,
         0;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Function to check user credits/usage
 CREATE OR REPLACE FUNCTION check_user_credits(p_user_id UUID)
@@ -203,38 +203,38 @@ RETURNS TABLE (
     monthly_tokens_remaining INTEGER
 ) AS $$
 DECLARE
-    v_usage playcraft_user_usage%ROWTYPE;
+    v_usage public.playcraft_user_usage%ROWTYPE;
     v_now TIMESTAMPTZ := NOW();
 BEGIN
     -- Get or create usage record
-    INSERT INTO playcraft_user_usage (user_id)
+    INSERT INTO public.playcraft_user_usage (user_id)
     VALUES (p_user_id)
     ON CONFLICT (user_id) DO UPDATE SET
         -- Reset daily if expired
         daily_requests = CASE
-            WHEN playcraft_user_usage.daily_reset_at < v_now THEN 0
-            ELSE playcraft_user_usage.daily_requests
+            WHEN public.playcraft_user_usage.daily_reset_at < v_now THEN 0
+            ELSE public.playcraft_user_usage.daily_requests
         END,
         daily_tokens_used = CASE
-            WHEN playcraft_user_usage.daily_reset_at < v_now THEN 0
-            ELSE playcraft_user_usage.daily_tokens_used
+            WHEN public.playcraft_user_usage.daily_reset_at < v_now THEN 0
+            ELSE public.playcraft_user_usage.daily_tokens_used
         END,
         daily_reset_at = CASE
-            WHEN playcraft_user_usage.daily_reset_at < v_now THEN CURRENT_DATE + INTERVAL '1 day'
-            ELSE playcraft_user_usage.daily_reset_at
+            WHEN public.playcraft_user_usage.daily_reset_at < v_now THEN CURRENT_DATE + INTERVAL '1 day'
+            ELSE public.playcraft_user_usage.daily_reset_at
         END,
         -- Reset monthly if expired
         monthly_requests = CASE
-            WHEN playcraft_user_usage.monthly_reset_at < v_now THEN 0
-            ELSE playcraft_user_usage.monthly_requests
+            WHEN public.playcraft_user_usage.monthly_reset_at < v_now THEN 0
+            ELSE public.playcraft_user_usage.monthly_requests
         END,
         monthly_tokens_used = CASE
-            WHEN playcraft_user_usage.monthly_reset_at < v_now THEN 0
-            ELSE playcraft_user_usage.monthly_tokens_used
+            WHEN public.playcraft_user_usage.monthly_reset_at < v_now THEN 0
+            ELSE public.playcraft_user_usage.monthly_tokens_used
         END,
         monthly_reset_at = CASE
-            WHEN playcraft_user_usage.monthly_reset_at < v_now THEN DATE_TRUNC('month', v_now) + INTERVAL '1 month'
-            ELSE playcraft_user_usage.monthly_reset_at
+            WHEN public.playcraft_user_usage.monthly_reset_at < v_now THEN DATE_TRUNC('month', v_now) + INTERVAL '1 month'
+            ELSE public.playcraft_user_usage.monthly_reset_at
         END
     RETURNING * INTO v_usage;
 
@@ -245,7 +245,7 @@ BEGIN
         GREATEST(0, v_usage.monthly_request_limit - v_usage.monthly_requests),
         GREATEST(0, v_usage.monthly_token_limit - v_usage.monthly_tokens_used);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 -- Function to record usage after successful generation
 CREATE OR REPLACE FUNCTION record_usage(
@@ -254,7 +254,7 @@ CREATE OR REPLACE FUNCTION record_usage(
 )
 RETURNS VOID AS $$
 BEGIN
-    UPDATE playcraft_user_usage SET
+    UPDATE public.playcraft_user_usage SET
         daily_requests = daily_requests + 1,
         daily_tokens_used = daily_tokens_used + p_tokens_used,
         monthly_requests = monthly_requests + 1,
@@ -264,7 +264,7 @@ BEGIN
         updated_at = NOW()
     WHERE user_id = p_user_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Grant execute to authenticated users (functions are SECURITY DEFINER)
 GRANT EXECUTE ON FUNCTION check_and_increment_rate_limit(UUID, TEXT) TO authenticated;

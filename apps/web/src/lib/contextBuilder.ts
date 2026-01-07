@@ -54,6 +54,10 @@ export interface ContextPackage {
   taskContext?: TaskContext;
   taskContextFormatted?: string; // Pre-formatted for prompt injection
 
+  // Structured plan for complex tasks (Phase 4.5)
+  structuredPlan?: StructuredPlan;
+  structuredPlanFormatted?: string; // Pre-formatted for prompt injection
+
   // Conversation context
   conversationSummaries: string[];
   recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
@@ -69,6 +73,9 @@ export interface ContextPackage {
 
   // Token usage estimate
   estimatedTokens: number;
+
+  // Token budget used (Phase 4.4)
+  tokenBudget: number;
 
   // Context mode used
   contextMode: 'full' | 'minimal' | 'outline';
@@ -99,6 +106,319 @@ export interface HybridRetrievalOptions {
   similarityThreshold?: number;
 }
 
+// ============================================================================
+// PREFLIGHT COST ESTIMATION (Phase 4.4)
+// ============================================================================
+
+export interface PreflightEstimate {
+  /** Total estimated tokens for this request */
+  estimatedTokens: number;
+  /** Token budget based on intent */
+  tokenBudget: number;
+  /** Whether request fits within budget */
+  withinBudget: boolean;
+  /** Recommended context mode */
+  recommendedMode: 'full' | 'minimal' | 'outline';
+  /** Breakdown by category */
+  breakdown: {
+    filesTokens: number;
+    memoryTokens: number;
+    conversationTokens: number;
+    taskContextTokens: number;
+    reservedTokens: number;
+  };
+  /** Number of files that would be included */
+  filesToInclude: number;
+  /** Intent classification */
+  intent: IntentAction;
+}
+
+/**
+ * Estimate token cost before building full context (Phase 4.4)
+ *
+ * This allows the caller to:
+ * 1. Warn user if request will exceed budget
+ * 2. Adjust context selection strategy
+ * 3. Choose between full/outline/minimal modes
+ */
+export function preflightEstimate(
+  prompt: string,
+  files: Record<string, string>,
+  selectedFile: string | undefined,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  projectMemory: ProjectMemory | null
+): PreflightEstimate {
+  // Analyze intent
+  const intent = analyzeUserIntent(prompt);
+  const tokenBudget = TOKEN_BUDGETS[intent.action];
+
+  // Estimate file tokens (top files by rough scoring)
+  const filePaths = Object.keys(files);
+  const estimatedFilesCount = Math.min(
+    filePaths.length,
+    intent.isTrivialChange ? 2 : intent.action === 'create' ? 10 : 6
+  );
+
+  // Sample top files for size estimation
+  const sortedFiles = filePaths
+    .map(path => ({ path, size: files[path].length }))
+    .sort((a, b) => {
+      // Prioritize selected file
+      if (a.path === selectedFile) return -1;
+      if (b.path === selectedFile) return 1;
+      // Then entry points
+      if (ENTRY_POINT_FILES.includes(a.path)) return -1;
+      if (ENTRY_POINT_FILES.includes(b.path)) return 1;
+      return 0;
+    });
+
+  const topFiles = sortedFiles.slice(0, estimatedFilesCount);
+  const filesTokens = Math.ceil(
+    topFiles.reduce((sum, f) => sum + f.size, 0) / CHARS_PER_TOKEN
+  );
+
+  // Estimate memory tokens
+  const memoryTokens = projectMemory
+    ? Math.ceil(JSON.stringify(projectMemory).length / CHARS_PER_TOKEN)
+    : 0;
+
+  // Estimate conversation tokens (last N messages based on intent)
+  const messageCount = intent.isTrivialChange ? 2 : intent.action === 'explain' ? 3 : 5;
+  const recentMessages = conversationHistory.slice(-messageCount);
+  const conversationTokens = Math.ceil(
+    recentMessages.reduce((sum, m) => sum + m.content.length, 0) / CHARS_PER_TOKEN
+  );
+
+  // Task context is typically 200-500 tokens
+  const taskContextTokens = 300;
+
+  const totalEstimate = filesTokens + memoryTokens + conversationTokens +
+                        taskContextTokens + RESERVED_TOKENS;
+
+  // Determine recommended mode
+  let recommendedMode: 'full' | 'minimal' | 'outline';
+  if (intent.isTrivialChange || intent.action === 'tweak') {
+    recommendedMode = 'minimal';
+  } else if (totalEstimate > tokenBudget * 1.5) {
+    recommendedMode = 'outline';
+  } else {
+    recommendedMode = 'full';
+  }
+
+  return {
+    estimatedTokens: totalEstimate,
+    tokenBudget,
+    withinBudget: totalEstimate <= tokenBudget,
+    recommendedMode,
+    breakdown: {
+      filesTokens,
+      memoryTokens,
+      conversationTokens,
+      taskContextTokens,
+      reservedTokens: RESERVED_TOKENS,
+    },
+    filesToInclude: estimatedFilesCount,
+    intent: intent.action,
+  };
+}
+
+// ============================================================================
+// STRUCTURED PLANNER OUTPUT (Phase 4.5)
+// ============================================================================
+
+export interface PlanStep {
+  /** Step number (1-indexed) */
+  stepNumber: number;
+  /** Description of what to do */
+  description: string;
+  /** Files involved in this step */
+  files: string[];
+  /** Type of operation */
+  operation: 'create' | 'modify' | 'delete' | 'move';
+  /** Estimated complexity (1-5) */
+  complexity: number;
+  /** Dependencies on other steps */
+  dependsOn: number[];
+}
+
+export interface StructuredPlan {
+  /** Overall goal */
+  goal: string;
+  /** Numbered steps with file assignments */
+  steps: PlanStep[];
+  /** Total estimated complexity */
+  totalComplexity: number;
+  /** Files that will be modified */
+  affectedFiles: string[];
+  /** Recommended execution order */
+  executionOrder: number[];
+}
+
+/**
+ * Generate a structured plan for complex tasks (Phase 4.5)
+ *
+ * This helps the AI:
+ * 1. Break down complex tasks into numbered steps
+ * 2. Identify specific files for each step
+ * 3. Track progress through multi-turn conversations
+ */
+export function generateStructuredPlan(
+  prompt: string,
+  files: Record<string, string>,
+  projectMemory: ProjectMemory | null
+): StructuredPlan | null {
+  const intent = analyzeUserIntent(prompt);
+
+  // Only generate plans for complex tasks
+  if (intent.isTrivialChange || intent.action === 'tweak' || intent.action === 'explain') {
+    return null;
+  }
+
+  // Extract file paths
+  const filePaths = Object.keys(files);
+
+  // Use project memory to enhance plan (e.g., prioritize known important files)
+  const importantFiles = projectMemory?.file_importance || {};
+
+  // Determine affected files based on intent and keywords
+  const affectedFiles = filePaths
+    .filter(path => {
+      // Entry points are often affected
+      if (ENTRY_POINT_FILES.includes(path)) return true;
+
+      // Check if file matches keywords
+      const fileName = path.toLowerCase();
+      return intent.keywords.some(kw => fileName.includes(kw));
+    })
+    // Sort by importance from project memory (most important first)
+    .sort((a, b) => (importantFiles[b] || 0) - (importantFiles[a] || 0));
+
+  // Build initial plan structure (to be refined by AI)
+  const steps: PlanStep[] = [];
+
+  // Create step based on action type
+  switch (intent.action) {
+    case 'create':
+      steps.push({
+        stepNumber: 1,
+        description: 'Set up base structure and types',
+        files: ['/src/pages/Index.tsx'],
+        operation: 'modify',
+        complexity: 3,
+        dependsOn: [],
+      });
+      steps.push({
+        stepNumber: 2,
+        description: 'Implement core game logic',
+        files: affectedFiles.length > 0 ? affectedFiles : ['/src/pages/Index.tsx'],
+        operation: 'modify',
+        complexity: 4,
+        dependsOn: [1],
+      });
+      steps.push({
+        stepNumber: 3,
+        description: 'Add styling and polish',
+        files: ['/src/index.css'],
+        operation: 'modify',
+        complexity: 2,
+        dependsOn: [2],
+      });
+      break;
+
+    case 'add':
+      steps.push({
+        stepNumber: 1,
+        description: 'Add feature implementation',
+        files: affectedFiles.length > 0 ? affectedFiles : ['/src/pages/Index.tsx'],
+        operation: 'modify',
+        complexity: 3,
+        dependsOn: [],
+      });
+      if (intent.isVisualChange) {
+        steps.push({
+          stepNumber: 2,
+          description: 'Update styles for new feature',
+          files: ['/src/index.css'],
+          operation: 'modify',
+          complexity: 2,
+          dependsOn: [1],
+        });
+      }
+      break;
+
+    case 'debug':
+      steps.push({
+        stepNumber: 1,
+        description: 'Identify and fix the issue',
+        files: affectedFiles.length > 0 ? affectedFiles : ['/src/pages/Index.tsx'],
+        operation: 'modify',
+        complexity: 3,
+        dependsOn: [],
+      });
+      steps.push({
+        stepNumber: 2,
+        description: 'Verify fix and add error handling',
+        files: affectedFiles,
+        operation: 'modify',
+        complexity: 2,
+        dependsOn: [1],
+      });
+      break;
+
+    case 'modify':
+    case 'remove':
+    case 'style':
+    case 'rename':
+      steps.push({
+        stepNumber: 1,
+        description: `${intent.action} requested changes`,
+        files: affectedFiles.length > 0 ? affectedFiles : ['/src/pages/Index.tsx'],
+        operation: intent.action === 'remove' ? 'delete' : 'modify',
+        complexity: intent.action === 'style' ? 2 : 3,
+        dependsOn: [],
+      });
+      break;
+  }
+
+  // Calculate execution order (topological sort based on dependencies)
+  const executionOrder = steps.map(s => s.stepNumber);
+
+  // Calculate total complexity
+  const totalComplexity = steps.reduce((sum, s) => sum + s.complexity, 0);
+
+  return {
+    goal: prompt.substring(0, 200),
+    steps,
+    totalComplexity,
+    affectedFiles: [...new Set(steps.flatMap(s => s.files))],
+    executionOrder,
+  };
+}
+
+/**
+ * Format structured plan for AI prompt injection
+ */
+export function formatPlanForPrompt(plan: StructuredPlan): string {
+  const lines: string[] = [
+    '## Execution Plan',
+    `Goal: ${plan.goal}`,
+    '',
+    '### Steps:',
+  ];
+
+  for (const step of plan.steps) {
+    lines.push(`${step.stepNumber}. ${step.description}`);
+    lines.push(`   Files: ${step.files.join(', ')}`);
+    lines.push(`   Operation: ${step.operation}`);
+    if (step.dependsOn.length > 0) {
+      lines.push(`   After: step ${step.dependsOn.join(', ')}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
 interface FileScore {
   path: string;
   score: number;
@@ -122,9 +442,23 @@ const DEFAULT_HYBRID_WEIGHTS = {
 // CONSTANTS
 // ============================================================================
 
-const TOKEN_BUDGET = 12000; // Target token limit for context
-const TOKEN_BUDGET_MINIMAL = 3000; // Budget for simple requests
 const CHARS_PER_TOKEN = 4; // Approximate characters per token
+
+// Intent-based token budgets (Phase 4.4)
+const TOKEN_BUDGETS: Record<IntentAction, number> = {
+  create: 15000,   // New projects need more context
+  add: 12000,      // Adding features needs good context
+  modify: 10000,   // General modifications
+  debug: 8000,     // Debugging needs focused context
+  remove: 6000,    // Removing features needs less
+  style: 5000,     // Style changes are targeted
+  explain: 4000,   // Explanations don't need as much code
+  rename: 3000,    // Renaming is very targeted
+  tweak: 2000,     // Simple tweaks need minimal context
+};
+
+// Reserved tokens for system prompt, response buffer, etc.
+const RESERVED_TOKENS = 2000;
 
 // Relevance score weights
 const SCORE_MENTIONED_IN_PROMPT = 1.0;
@@ -209,6 +543,38 @@ async function getDependencyContext(
   return result;
 }
 
+/**
+ * Apply dependency boosts to file scores (used even without semantic search)
+ */
+function applyDependencyBoosts(
+  fileScores: FileScore[],
+  dependencyContext: Map<string, DependencyContext>
+): void {
+  if (dependencyContext.size === 0) return;
+
+  for (const [targetFile, ctx] of dependencyContext) {
+    const targetName = targetFile.split('/').pop() || targetFile;
+
+    // Direct dependencies (imports)
+    for (const dep of ctx.imports) {
+      const entry = fileScores.find(s => s.path === dep);
+      if (entry) {
+        entry.score += SCORE_DIRECT_DEPENDENCY;
+        entry.reasons.push(`dependency of ${targetName}`);
+      }
+    }
+
+    // Reverse dependencies (importers)
+    for (const importer of ctx.importers) {
+      const entry = fileScores.find(s => s.path === importer);
+      if (entry) {
+        entry.score += SCORE_REVERSE_DEPENDENCY;
+        entry.reasons.push(`imports ${targetName}`);
+      }
+    }
+  }
+}
+
 // ============================================================================
 // INTENT ANALYSIS
 // ============================================================================
@@ -224,7 +590,7 @@ export type IntentAction =
   | 'rename'    // Rename things
   | 'tweak';    // Small value changes (colors, sizes, text)
 
-interface UserIntent {
+export interface UserIntent {
   action: IntentAction;
   targetFiles: string[];
   keywords: string[];
@@ -237,7 +603,7 @@ interface UserIntent {
 /**
  * Analyze user prompt to understand intent
  */
-function analyzeUserIntent(prompt: string): UserIntent {
+export function analyzeUserIntent(prompt: string): UserIntent {
   let action: IntentAction = 'modify';
   let confidence = 0.5;
 
@@ -377,7 +743,7 @@ async function scoreFiles(
   projectMemory: ProjectMemory | null
 ): Promise<FileScore[]> {
   const scores: FileScore[] = [];
-  await getImportGraph(projectId); // Populate cache for later use
+  const importGraph = await getImportGraph(projectId); // Map of file -> importers
   const fileHashes = await getProjectFileHashes(projectId);
 
   // Files that are directly relevant (for import chain scoring)
@@ -462,6 +828,18 @@ async function scoreFiles(
             importedScore.reasons.push(`imported by ${score.path.split('/').pop()}`);
           }
         }
+      }
+    }
+  }
+
+  // Third pass: Score files that depend on relevant files (reverse deps)
+  for (const relevant of directlyRelevant) {
+    const importers = importGraph.get(relevant) || [];
+    for (const importer of importers) {
+      const importerScore = scores.find(s => s.path === importer);
+      if (importerScore) {
+        importerScore.score += SCORE_REVERSE_DEPENDENCY;
+        importerScore.reasons.push(`imports ${relevant.split('/').pop()}`);
       }
     }
   }
@@ -746,6 +1124,13 @@ export async function buildContext(
     projectMemory
   );
 
+  // Apply dependency boosts even without semantic search (selected/changed files)
+  const targetFilesForDeps = [selectedFile, ...changedFiles].filter(Boolean) as string[];
+  if (targetFilesForDeps.length > 0) {
+    const dependencyContext = await getDependencyContext(projectId, targetFilesForDeps);
+    applyDependencyBoosts(fileScores, dependencyContext);
+  }
+
   // ============================================
   // HYBRID RETRIEVAL (when enabled)
   // ============================================
@@ -767,10 +1152,11 @@ export async function buildContext(
   const relevantFiles: RelevantFile[] = [];
   let tokenEstimate = 0;
 
-  // Adjust budget based on action type
-  const tokenBudget = useOutlines ? TOKEN_BUDGET_MINIMAL * 2 : TOKEN_BUDGET;
-  const reservedTokens = 2000;
-  const fileTokenBudget = tokenBudget - reservedTokens;
+  // Use intent-based token budget (Phase 4.4)
+  const tokenBudget = TOKEN_BUDGETS[intent.action];
+  const fileTokenBudget = tokenBudget - RESERVED_TOKENS;
+
+  console.log(`[ContextBuilder] Token budget for "${intent.action}": ${tokenBudget} (${fileTokenBudget} for files)`);
 
   // Determine max files based on action
   const maxFiles = intent.action === 'debug' ? 5 :
@@ -847,6 +1233,17 @@ export async function buildContext(
     console.warn('[ContextBuilder] Failed to get task context:', error);
   }
 
+  // Generate structured plan for complex tasks (Phase 4.5)
+  let structuredPlan: StructuredPlan | undefined;
+  let structuredPlanFormatted: string | undefined;
+  if (!intent.isTrivialChange && intent.action !== 'tweak' && intent.action !== 'explain') {
+    structuredPlan = generateStructuredPlan(prompt, files, projectMemory) || undefined;
+    if (structuredPlan) {
+      structuredPlanFormatted = formatPlanForPrompt(structuredPlan);
+      console.log(`[ContextBuilder] Generated plan: ${structuredPlan.steps.length} steps, complexity ${structuredPlan.totalComplexity}`);
+    }
+  }
+
   // Build file tree (just paths)
   const fileTree = Object.keys(files).sort();
 
@@ -861,16 +1258,21 @@ export async function buildContext(
   const taskContextTokens = taskContextFormatted
     ? Math.ceil(taskContextFormatted.length / CHARS_PER_TOKEN)
     : 0;
+  const planTokens = structuredPlanFormatted
+    ? Math.ceil(structuredPlanFormatted.length / CHARS_PER_TOKEN)
+    : 0;
 
-  const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + taskContextTokens + 500;
+  const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + taskContextTokens + planTokens + 500;
 
   const contextMode = useOutlines ? 'outline' : 'full';
-  console.log(`[ContextBuilder] Built ${contextMode} context: ${relevantFiles.length} files, ~${totalTokens} tokens${usedSemanticSearch ? ' (with semantic search)' : ''}`);
+  console.log(`[ContextBuilder] Built ${contextMode} context: ${relevantFiles.length} files, ~${totalTokens}/${tokenBudget} tokens${usedSemanticSearch ? ' (with semantic search)' : ''}`);
 
   return {
     projectMemory,
     taskContext,
     taskContextFormatted,
+    structuredPlan,
+    structuredPlanFormatted,
     conversationSummaries: summaryTexts,
     recentMessages,
     relevantFiles,
@@ -878,6 +1280,7 @@ export async function buildContext(
     changedSinceLastRequest: changedFiles,
     fileTree,
     estimatedTokens: totalTokens,
+    tokenBudget,
     classification: {
       intentType: intent.action,
       contextMode,
@@ -925,7 +1328,10 @@ function buildMinimalContextInternal(
     relevantFiles.reduce((sum, f) => sum + f.content.length, 0) / CHARS_PER_TOKEN
   );
 
-  console.log(`[ContextBuilder] MINIMAL context: ${relevantFiles.length} file(s), ~${tokenEstimate} tokens`);
+  // Use minimal token budget for tweak actions
+  const tokenBudget = TOKEN_BUDGETS['tweak'];
+
+  console.log(`[ContextBuilder] MINIMAL context: ${relevantFiles.length} file(s), ~${tokenEstimate}/${tokenBudget} tokens`);
 
   return {
     projectMemory: projectMemory ? {
@@ -948,6 +1354,7 @@ function buildMinimalContextInternal(
     changedSinceLastRequest: [],
     fileTree: [], // Skip file tree for minimal
     estimatedTokens: tokenEstimate,
+    tokenBudget,
     contextMode: 'minimal',
   };
 }

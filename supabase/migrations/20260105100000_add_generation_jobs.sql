@@ -108,17 +108,17 @@ ALTER PUBLICATION supabase_realtime ADD TABLE playcraft_generation_jobs;
 CREATE OR REPLACE FUNCTION claim_generation_job()
 RETURNS playcraft_generation_jobs AS $$
 DECLARE
-  claimed_job playcraft_generation_jobs;
+  claimed_job public.playcraft_generation_jobs;
 BEGIN
   SELECT * INTO claimed_job
-  FROM playcraft_generation_jobs
+  FROM public.playcraft_generation_jobs
   WHERE status = 'queued'
   ORDER BY created_at ASC
   LIMIT 1
   FOR UPDATE SKIP LOCKED;
 
   IF claimed_job.id IS NOT NULL THEN
-    UPDATE playcraft_generation_jobs
+    UPDATE public.playcraft_generation_jobs
     SET
       status = 'processing',
       started_at = NOW(),
@@ -128,13 +128,13 @@ BEGIN
 
     -- Return the updated job
     SELECT * INTO claimed_job
-    FROM playcraft_generation_jobs
+    FROM public.playcraft_generation_jobs
     WHERE id = claimed_job.id;
   END IF;
 
   RETURN claimed_job;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Mark stale processing jobs as failed (for cleanup cron)
 -- Jobs processing for > 5 minutes are considered stuck
@@ -144,7 +144,7 @@ DECLARE
   affected_count INTEGER;
 BEGIN
   WITH stale AS (
-    UPDATE playcraft_generation_jobs
+    UPDATE public.playcraft_generation_jobs
     SET
       status = CASE
         WHEN attempts < max_attempts THEN 'queued'  -- Retry
@@ -166,7 +166,7 @@ BEGIN
 
   RETURN affected_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Get user's active jobs count (for rate limiting)
 CREATE OR REPLACE FUNCTION get_user_active_jobs_count(p_user_id UUID)
@@ -174,12 +174,12 @@ RETURNS INTEGER AS $$
 BEGIN
   RETURN (
     SELECT COUNT(*)::INTEGER
-    FROM playcraft_generation_jobs
+    FROM public.playcraft_generation_jobs
     WHERE user_id = p_user_id
       AND status IN ('queued', 'processing')
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Grant execute permissions
 GRANT EXECUTE ON FUNCTION claim_generation_job() TO service_role;

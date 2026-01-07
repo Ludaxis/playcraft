@@ -117,16 +117,16 @@ AS $$
     turn_number,
     user_request,
     what_tried,
-    what_changed,
-    what_succeeded,
-    what_failed,
-    what_next,
-    created_at
-  FROM playcraft_task_deltas
+  what_changed,
+  what_succeeded,
+  what_failed,
+  what_next,
+  created_at
+  FROM public.playcraft_task_deltas
   WHERE project_id = p_project_id
   ORDER BY created_at DESC
   LIMIT 1;
-$$;
+$$ LANGUAGE SQL STABLE SET search_path = pg_catalog, public;
 
 -- Get recent deltas for context (last N turns)
 CREATE OR REPLACE FUNCTION get_recent_deltas(
@@ -146,6 +146,7 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 STABLE
+SET search_path = pg_catalog, public
 AS $$
   SELECT
     id,
@@ -157,7 +158,7 @@ AS $$
     what_failed,
     what_next,
     created_at
-  FROM playcraft_task_deltas
+  FROM public.playcraft_task_deltas
   WHERE project_id = p_project_id
   ORDER BY created_at DESC
   LIMIT p_limit;
@@ -176,6 +177,7 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 STABLE
+SET search_path = pg_catalog, public
 AS $$
   SELECT
     m.current_goal,
@@ -185,10 +187,10 @@ AS $$
     d.what_tried,
     d.what_changed,
     d.what_next
-  FROM playcraft_project_memory m
+  FROM public.playcraft_project_memory m
   LEFT JOIN LATERAL (
     SELECT what_tried, what_changed, what_next
-    FROM playcraft_task_deltas
+    FROM public.playcraft_task_deltas
     WHERE project_id = p_project_id
     ORDER BY created_at DESC
     LIMIT 1
@@ -201,8 +203,9 @@ CREATE OR REPLACE FUNCTION get_next_turn_number(p_project_id UUID)
 RETURNS INTEGER
 LANGUAGE SQL
 STABLE
+SET search_path = pg_catalog, public
 AS $$
   SELECT COALESCE(MAX(turn_number), 0) + 1
-  FROM playcraft_task_deltas
+  FROM public.playcraft_task_deltas
   WHERE project_id = p_project_id;
 $$;

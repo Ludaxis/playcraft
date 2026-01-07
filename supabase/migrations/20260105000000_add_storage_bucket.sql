@@ -115,7 +115,7 @@ BEGIN
     RETURN p_user_id::text || '/' || p_project_id::text || '/' ||
            CASE WHEN LEFT(p_file_path, 1) = '/' THEN SUBSTRING(p_file_path FROM 2) ELSE p_file_path END;
 END;
-$$ LANGUAGE plpgsql IMMUTABLE;
+$$ LANGUAGE plpgsql IMMUTABLE SET search_path = pg_catalog, public;
 
 -- =============================================================================
 -- HELPER FUNCTION: List all storage paths for a project
@@ -134,12 +134,12 @@ BEGIN
         pf.storage_path,
         pf.size_bytes,
         pf.content_hash
-    FROM playcraft_project_files pf
+    FROM public.playcraft_project_files pf
     WHERE pf.project_id = p_project_id
     AND pf.storage_path IS NOT NULL
     ORDER BY pf.path;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 -- Grant execute to authenticated users
 GRANT EXECUTE ON FUNCTION get_file_storage_path(UUID, UUID, TEXT) TO authenticated;

@@ -243,6 +243,12 @@ export interface GenerationProgress {
   message: string;
   startedAt: number;
   detail?: string;
+   // Rich progress metadata for UI
+  log?: string[];               // Recent progress lines
+  activeItem?: string;          // Current file/task being processed
+  completed?: number;           // Work units completed
+  total?: number;               // Total work units (for progress bar)
+  etaMs?: number;               // Optional ETA hint
 }
 
 // Stage configuration for UI display

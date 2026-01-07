@@ -37,12 +37,17 @@ export interface ContextAwareRequest {
   // Smart context (from contextBuilder)
   contextPackage: {
     projectMemory: ProjectMemory | null;
+    // Task Ledger context (Phase 4.2)
+    taskContextFormatted?: string;
+    // Structured execution plan (Phase 4.5)
+    structuredPlanFormatted?: string;
     conversationSummaries: string[];
     recentMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
     relevantFiles: RelevantFile[];
     changedSinceLastRequest: string[];
     fileTree: string[];
     estimatedTokens: number;
+    tokenBudget?: number;
   };
 }
 
@@ -76,7 +81,8 @@ export async function generateCode(
       return data as GenerateResponse;
     },
     {
-      maxAttempts: 3,
+      // Fail fast so UI can surface errors instead of hanging for minutes
+      maxAttempts: 1,
       onRetry: (attempt, error) => {
         logger.warn('Generation retry', {
           component: 'playcraftService',
@@ -119,13 +125,23 @@ export async function generateCodeWithContext(
       });
 
       if (error) {
+        // Log full error details for debugging
+        console.error('[playcraftService] Edge function error:', {
+          message: error.message,
+          context: error.context,
+          details: error.details,
+          name: error.name,
+          fullError: error,
+          data, // Sometimes error details are in data
+        });
         throw new Error(error.message || 'Generation failed');
       }
 
       return data as GenerateResponse;
     },
     {
-      maxAttempts: 3,
+      // Fail fast so UI can show the real error (e.g., CORS/504) instead of retrying for minutes
+      maxAttempts: 1,
       onRetry: (attempt, error) => {
         logger.warn('Context-aware generation retry', {
           component: 'playcraftService',

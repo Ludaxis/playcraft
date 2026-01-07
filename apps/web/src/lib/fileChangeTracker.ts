@@ -261,7 +261,7 @@ export class FileChangeTracker {
       }
 
       // Update hashes in database
-      const result = await updateFileHashes(this.projectId, files);
+      const result = await updateFileHashes(this.projectId, files, { deleteMissing: false });
 
       console.log(
         `[FileChangeTracker] Updated hashes: ${result.modified.length} modified, ${result.created.length} created`

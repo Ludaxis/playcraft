@@ -40,5 +40,6 @@ client_id = "env(GITHUB_CLIENT_ID)"
 secret = "env(GITHUB_CLIENT_SECRET)"
 
 [functions.generate-playcraft]
-# JWT verification enabled for security - requires valid auth token
-verify_jwt = true
+# Gateway JWT verification disabled due to Supabase sync issue
+# Auth is still enforced internally via supabase.auth.getUser()
+verify_jwt = false

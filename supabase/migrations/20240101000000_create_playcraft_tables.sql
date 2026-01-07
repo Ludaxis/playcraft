@@ -270,7 +270,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = pg_catalog, public;
 
 -- Apply trigger to all tables with updated_at
 CREATE TRIGGER update_user_settings_updated_at

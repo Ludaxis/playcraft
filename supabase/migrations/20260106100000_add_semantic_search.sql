@@ -215,6 +215,7 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog, public
 AS $$
 BEGIN
   RETURN QUERY
@@ -228,7 +229,7 @@ BEGIN
     cc.chunk_type,
     cc.symbol_name,
     1 - (cc.embedding <=> p_query_embedding) AS similarity
-  FROM playcraft_code_chunks cc
+  FROM public.playcraft_code_chunks cc
   WHERE cc.project_id = p_project_id
     AND cc.embedding IS NOT NULL
     AND 1 - (cc.embedding <=> p_query_embedding) >= p_similarity_threshold
@@ -248,13 +249,14 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog, public
 AS $$
 BEGIN
   RETURN QUERY
   SELECT
     fd.from_file AS dependent_file,
     fd.imported_symbols
-  FROM playcraft_file_dependencies fd
+  FROM public.playcraft_file_dependencies fd
   WHERE fd.project_id = p_project_id
     AND fd.to_file = p_file_path;
 END;
@@ -271,13 +273,14 @@ RETURNS TABLE (
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = pg_catalog, public
 AS $$
 BEGIN
   RETURN QUERY
   SELECT
     fd.to_file AS dependency_file,
     fd.imported_symbols
-  FROM playcraft_file_dependencies fd
+  FROM public.playcraft_file_dependencies fd
   WHERE fd.project_id = p_project_id
     AND fd.from_file = p_file_path;
 END;

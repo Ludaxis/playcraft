@@ -5,7 +5,7 @@ import {
   type GenerateRequest,
   type ContextAwareRequest,
 } from '../lib/playcraftService';
-import { buildContext, type ContextPackage } from '../lib/contextBuilder';
+import { buildContext, preflightEstimate, type ContextPackage } from '../lib/contextBuilder';
 import type { FileEdit } from '../lib/editApplyService';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
 import { updateMemoryFromResponse } from '../lib/memoryUpdater';
@@ -179,32 +179,53 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   const [generationProgress, setGenerationProgress] = useState<GenerationProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper to update progress stage
-  const updateProgress = useCallback((stage: GenerationStage, detail?: string) => {
-    const messages: Record<GenerationStage, string> = {
-      idle: '',
-      preparing: 'Preparing context...',
-      analyzing: 'Gemini is analyzing your request...',
-      generating: 'Gemini is writing code...',
-      processing: 'Processing response...',
-      applying: 'Applying changes...',
-      validating: 'Checking for errors...',
-      retrying: 'Auto-fixing errors...',
-      complete: 'Done!',
-      error: 'Something went wrong',
-    };
+  // Helper to update progress stage with rich detail/logging
+  const updateProgress = useCallback(
+    (
+      stage: GenerationStage,
+      detail?: string,
+      meta?: { activeItem?: string; completed?: number; total?: number; etaMs?: number }
+    ) => {
+      const messages: Record<GenerationStage, string> = {
+        idle: '',
+        preparing: 'Preparing context...',
+        analyzing: 'Analyzing your request...',
+        generating: 'Writing code...',
+        processing: 'Processing response...',
+        applying: 'Applying changes...',
+        validating: 'Checking for errors...',
+        retrying: 'Auto-fixing errors...',
+        complete: 'Done!',
+        error: 'Something went wrong',
+      };
 
-    if (stage === 'idle') {
-      setGenerationProgress(null);
-    } else {
-      setGenerationProgress({
-        stage,
-        message: messages[stage],
-        startedAt: Date.now(),
-        detail,
+      if (stage === 'idle') {
+        setGenerationProgress(null);
+        return;
+      }
+
+      setGenerationProgress(prev => {
+        const isSameStage = prev?.stage === stage;
+        const log = [...(prev?.log || [])];
+        if (detail && (!log.length || log[log.length - 1] !== detail)) {
+          log.push(detail);
+        }
+
+        return {
+          stage,
+          message: messages[stage],
+          startedAt: isSameStage && prev ? prev.startedAt : Date.now(),
+          detail,
+          log: log.slice(-6), // keep recent ticks
+          activeItem: meta?.activeItem ?? prev?.activeItem,
+          completed: meta?.completed ?? prev?.completed,
+          total: meta?.total ?? prev?.total,
+          etaMs: meta?.etaMs ?? prev?.etaMs,
+        };
       });
-    }
-  }, []);
+    },
+    []
+  );
 
   // Track if initial messages were provided to avoid re-initialization
   const initializedRef = useRef(false);
@@ -288,6 +309,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
               updateProgress('preparing', 'Reading project files...');
               const allFiles = await readAllFiles();
               currentFiles = { ...currentFiles, ...allFiles };
+              updateProgress('preparing', `Loaded ${Object.keys(currentFiles).length} files`, {
+                total: Object.keys(currentFiles).length,
+                completed: 0,
+              });
             } catch {
               // Fall back to cached files
             }
@@ -304,6 +329,11 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           // Detect what changed since last request
           const changes = await detectChanges(projectId, currentFiles);
           const changedFiles = [...changes.created, ...changes.modified];
+          updateProgress(
+            'preparing',
+            `Detected ${changedFiles.length} change${changedFiles.length === 1 ? '' : 's'} since last turn`,
+            { total: Object.keys(currentFiles).length, completed: changedFiles.length }
+          );
 
           // Get project memory
           const projectMemory = await getProjectMemory(projectId);
@@ -312,6 +342,24 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           const { summaries, recentMessages } = await getConversationContext(
             projectId,
             messages.map(m => ({ role: m.role, content: m.content }))
+          );
+
+          // Preflight estimate (Phase 4.4) - estimate tokens before building full context
+          const estimate = preflightEstimate(
+            prompt,
+            currentFiles,
+            selectedFile,
+            recentMessages,
+            projectMemory
+          );
+          console.log(
+            `[usePlayCraftChat] Preflight: intent=${estimate.intent}, budget=${estimate.tokenBudget}, ` +
+            `est=${estimate.estimatedTokens}, mode=${estimate.recommendedMode}`
+          );
+          updateProgress(
+            'preparing',
+            `Plan: ${estimate.recommendedMode} mode, ~${estimate.estimatedTokens}/${estimate.tokenBudget} tokens`,
+            { activeItem: selectedFile }
           );
 
           // Build smart context package with optional semantic search
@@ -342,7 +390,15 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           );
 
           // Update progress to analyzing (Gemini)
-          updateProgress('analyzing', `Analyzing ${contextPackage.relevantFiles.length} files...`);
+          updateProgress(
+            'analyzing',
+            `Context: ${contextPackage.relevantFiles.length} file${contextPackage.relevantFiles.length === 1 ? '' : 's'} (${contextPackage.contextMode})`,
+            {
+              completed: contextPackage.relevantFiles.length,
+              total: Object.keys(currentFiles).length,
+              activeItem: contextPackage.relevantFiles[0]?.path,
+            }
+          );
 
           // Make context-aware request (Gemini on server)
           const request: ContextAwareRequest = {
@@ -353,6 +409,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             contextPackage,
           };
 
+          updateProgress('generating', 'AI is drafting code...');
           response = await generateCodeWithContext(request);
           updateProgress('processing', 'Parsing AI response...');
 
@@ -387,7 +444,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           );
         } else {
           // Legacy mode: Use old context system
-          updateProgress('generating');
+          updateProgress('generating', 'Using basic context mode...');
           const currentFiles: Record<string, string> = { ...filesRef.current };
 
           if (selectedFile && readFile) {
@@ -463,7 +520,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
         // Handle full file replacements
         if (response.files && response.files.length > 0) {
-          updateProgress('applying', `Writing ${response.files.length} file(s)...`);
+          updateProgress('applying', `Writing ${response.files.length} file(s)...`, {
+            completed: response.files.length,
+            total: response.files.length,
+          });
           // Update our file cache
           for (const file of response.files) {
             const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
@@ -505,6 +565,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
             if (!validationResult.success && validationResult.errors.length > 0) {
               validationErrors = validationResult.errors;
+              updateProgress('validating', `Found ${validationErrors.length} TypeScript error${validationErrors.length === 1 ? '' : 's'}`, {
+                completed: 0,
+                total: validationErrors.length,
+              });
               console.log('[Chat] Found', validationErrors.length, 'errors, attempting auto-fix...');
 
               // Check if errors are auto-fixable
@@ -706,7 +770,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         updateProgress('error', errorMessage);
         addMessage({
           role: 'system',
-          content: `Error: ${errorMessage}`,
+          content: `Error: ${errorMessage}. If this keeps happening, check CORS/network and Supabase function logs.`,
         });
       } finally {
         setIsGenerating(false);
