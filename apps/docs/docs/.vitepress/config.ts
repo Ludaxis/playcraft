@@ -5,11 +5,21 @@ export default defineConfig({
   description: 'AI-Powered Game Builder - Create games with natural language',
 
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
+    ['link', { rel: 'icon', type: 'image/png', href: '/PlayCraft.png' }],
+    ['link', { rel: 'apple-touch-icon', href: '/PlayCraft.png' }],
+    ['meta', { name: 'theme-color', content: '#8b5cf6' }],
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:title', content: 'PlayCraft Docs' }],
+    ['meta', { property: 'og:description', content: 'AI-Powered Game Builder - Create games with natural language' }],
+    ['meta', { property: 'og:image', content: '/PlayCraft.png' }],
   ],
 
+  // Force dark mode only
+  appearance: 'dark',
+
   themeConfig: {
-    logo: '/logo.svg',
+    logo: '/PlayCraft.png',
+    siteTitle: 'PlayCraft',
 
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
@@ -58,11 +68,26 @@ export default defineConfig({
 
     footer: {
       message: 'Build games with AI',
-      copyright: 'Copyright © 2024 PlayCraft'
+      copyright: 'Copyright © 2024-2026 PlayCraft'
     },
 
     search: {
       provider: 'local'
+    },
+
+    // Edit link
+    editLink: {
+      pattern: 'https://github.com/playcraft/playcraft/edit/main/apps/docs/docs/:path',
+      text: 'Edit this page on GitHub'
+    },
+
+    // Last updated
+    lastUpdated: {
+      text: 'Updated at',
+      formatOptions: {
+        dateStyle: 'short',
+        timeStyle: 'short'
+      }
     }
   }
 })
