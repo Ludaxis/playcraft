@@ -23,7 +23,6 @@ import {
   saveToCache,
   getProjectState,
   setProjectState,
-  isProjectReady,
   clearProjectState,
   type OutdatedDependency,
 } from '../lib/webcontainer';

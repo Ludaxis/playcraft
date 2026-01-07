@@ -217,12 +217,13 @@ describe('projectService', () => {
       });
 
       // Mock delete to fail on the final project delete
+      // Note: We have 5 delete calls (chat_sessions, chat_messages, project_memory, project_files, projects)
       let deleteCallCount = 0;
       const deleteMock = vi.fn().mockReturnValue({
         eq: vi.fn().mockImplementation(() => {
           deleteCallCount++;
-          // Fail on the last delete (the project itself)
-          if (deleteCallCount >= 6) {
+          // Fail on the last delete (the project itself - 5th call)
+          if (deleteCallCount >= 5) {
             return Promise.resolve({ error: { message: 'Delete failed' } });
           }
           return Promise.resolve({ error: null });
