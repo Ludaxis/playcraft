@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BrowserRouter, useNavigate, useLocation } from 'react-router-dom';
 import { getSupabase } from './lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -10,17 +10,20 @@ import { PlayPage } from './pages/Play';
 import { ErrorBoundary } from './components';
 import { createProject, getProject, type PlayCraftProject } from './lib/projectService';
 
-type View = 'landing' | 'home' | 'builder';
-
 function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState<View>('landing');
   const [currentProject, setCurrentProject] = useState<PlayCraftProject | null>(null);
   const [initialPrompt, setInitialPrompt] = useState<string | null>(null);
   const [loadingProject, setLoadingProject] = useState(false);
+
+  // Track if we're on the builder page (derived from URL, single source of truth)
+  const isOnBuilder = location.pathname.startsWith('/builder/');
+
+  // Ref to track if we've already loaded project for current URL
+  const loadedProjectIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const supabase = getSupabase();
@@ -41,13 +44,26 @@ function AppRoutes() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Handle /builder/:projectId route - load project from URL on page refresh
+  // Handle /builder/:projectId route - load project from URL
   useEffect(() => {
     if (!user || loading) return;
 
     const builderMatch = location.pathname.match(/^\/builder\/([a-f0-9-]+)$/i);
-    if (builderMatch && !currentProject) {
+    if (builderMatch) {
       const projectId = builderMatch[1];
+
+      // Skip if already loaded this project or currently loading
+      if (loadedProjectIdRef.current === projectId || loadingProject) {
+        return;
+      }
+
+      // Skip if we already have this project in state
+      if (currentProject?.id === projectId) {
+        loadedProjectIdRef.current = projectId;
+        return;
+      }
+
+      loadedProjectIdRef.current = projectId;
       setLoadingProject(true);
 
       console.log('[App] Loading project from URL:', projectId);
@@ -56,21 +72,22 @@ function AppRoutes() {
           if (project) {
             console.log('[App] Loaded project:', project.name, 'with', Object.keys(project.files || {}).length, 'files');
             setCurrentProject(project);
-            setCurrentView('builder');
           } else {
             console.warn('[App] Project not found:', projectId);
+            loadedProjectIdRef.current = null;
             navigate('/');
           }
         })
         .catch(err => {
           console.error('[App] Failed to load project:', err);
+          loadedProjectIdRef.current = null;
           navigate('/');
         })
         .finally(() => {
           setLoadingProject(false);
         });
     }
-  }, [user, loading, location.pathname, currentProject, navigate]);
+  }, [user, loading, location.pathname, currentProject?.id, loadingProject, navigate]);
 
   const handleSignIn = async () => {
     const supabase = getSupabase();
@@ -87,14 +104,22 @@ function AppRoutes() {
     await supabase.auth.signOut();
     setCurrentProject(null);
     setInitialPrompt(null);
-    setCurrentView('landing');
+    loadedProjectIdRef.current = null;
     navigate('/');
   };
 
   const handleSelectProject = (project: PlayCraftProject) => {
+    // Check if selecting the same project - just navigate, don't reset state
+    if (currentProject?.id === project.id) {
+      console.log('[App] Returning to same project:', project.id);
+      navigate(`/builder/${project.id}`);
+      return;
+    }
+
+    console.log('[App] Switching to project:', project.id);
     setCurrentProject(project);
-    setInitialPrompt(null); // Existing project, no initial prompt
-    setCurrentView('builder');
+    setInitialPrompt(null);
+    loadedProjectIdRef.current = project.id;
     navigate(`/builder/${project.id}`);
   };
 
@@ -113,8 +138,8 @@ function AppRoutes() {
       localStorage.setItem(`playcraft_initial_prompt_${project.id}`, prompt);
 
       setCurrentProject(project);
-      setInitialPrompt(prompt); // Pass the initial prompt to builder
-      setCurrentView('builder');
+      setInitialPrompt(prompt);
+      loadedProjectIdRef.current = project.id;
       navigate(`/builder/${project.id}`);
     } catch (err) {
       console.error('Failed to create project:', err);
@@ -122,9 +147,9 @@ function AppRoutes() {
   };
 
   const handleBackToHome = () => {
-    setCurrentProject(null);
+    // DON'T clear currentProject - keep it so we can return quickly
+    // Just navigate to home, Builder will be hidden but kept mounted
     setInitialPrompt(null);
-    setCurrentView('home');
     navigate('/');
   };
 
@@ -162,27 +187,33 @@ function AppRoutes() {
     return <LandingPage onSignIn={handleSignIn} />;
   }
 
-  // Show builder for selected project or /builder/:projectId route
-  if ((currentView === 'builder' && currentProject) ||
-      (location.pathname.startsWith('/builder/') && currentProject)) {
-    return (
-      <BuilderPage
-        user={user}
-        project={currentProject}
-        initialPrompt={initialPrompt}
-        onBackToHome={handleBackToHome}
-      />
-    );
-  }
-
-  // Show home page (default for authenticated users)
+  // IMPORTANT: Render both HomePage and BuilderPage, control visibility with CSS
+  // This prevents Builder from unmounting when navigating to home
   return (
-    <HomePage
-      user={user}
-      onSignOut={handleSignOut}
-      onSelectProject={handleSelectProject}
-      onStartNewProject={handleStartNewProject}
-    />
+    <>
+      {/* Home page - shown when not on builder route */}
+      <div style={{ display: isOnBuilder ? 'none' : 'block' }}>
+        <HomePage
+          user={user}
+          onSignOut={handleSignOut}
+          onSelectProject={handleSelectProject}
+          onStartNewProject={handleStartNewProject}
+        />
+      </div>
+
+      {/* Builder page - kept mounted, hidden when on home */}
+      {currentProject && (
+        <div style={{ display: isOnBuilder ? 'block' : 'none' }}>
+          <BuilderPage
+            key={currentProject.id} // Only remount when project ID changes
+            user={user}
+            project={currentProject}
+            initialPrompt={initialPrompt}
+            onBackToHome={handleBackToHome}
+          />
+        </div>
+      )}
+    </>
   );
 }
 
