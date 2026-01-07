@@ -61,7 +61,8 @@ function useTypewriter(phrases: string[], typingSpeed = 80, deletingSpeed = 40, 
   return displayText;
 }
 
-export function LandingPage({ onSignIn: _onSignIn }: LandingPageProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function LandingPage({ onSignIn }: LandingPageProps) {
   const [inputValue, setInputValue] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);

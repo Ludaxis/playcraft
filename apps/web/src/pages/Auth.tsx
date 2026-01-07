@@ -43,7 +43,8 @@ function GitHubIcon({ className }: { className?: string }) {
   );
 }
 
-export function AuthPage({ mode: initialMode = 'signup', onSuccess: _onSuccess }: AuthPageProps) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function AuthPage({ mode: initialMode = 'signup', onSuccess }: AuthPageProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);

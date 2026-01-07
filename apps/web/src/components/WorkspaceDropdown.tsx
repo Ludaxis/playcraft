@@ -38,6 +38,7 @@ interface WorkspaceDropdownProps {
 }
 
 export function WorkspaceDropdown({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   user,
   studioName = 'My Studio',
   plan = 'free',

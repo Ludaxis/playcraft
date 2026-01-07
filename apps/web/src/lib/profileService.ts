@@ -41,7 +41,8 @@ export async function updateProfile(updates: Partial<UserProfile>): Promise<User
   }
 
   // Ensure the id is not part of the updates object
-  const { id: _omitId, ...updateData } = updates;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id, ...updateData } = updates;
 
   const { data, error } = await supabase
     .from('user_profiles')
