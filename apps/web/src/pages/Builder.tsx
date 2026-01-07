@@ -241,6 +241,7 @@ export function BuilderPage({
   const [isSettingUp, setIsSettingUp] = useState(false);
   const isSettingUpRef = useRef(false); // Synchronous lock to prevent race conditions
   const projectReadyRef = useRef(false); // Track projectReady for async callbacks
+  const setupCompletedForProjectRef = useRef<string | null>(null); // Track which project we've set up
   const [initialPromptProcessed, setInitialPromptProcessed] = useState(false);
   const [creditsDismissed, setCreditsDismissed] = useState(false);
   const [chatPanelTab, setChatPanelTab] = useState<'chat' | 'history'>('chat');
@@ -548,9 +549,25 @@ export function BuilderPage({
 
   // Start project - restore saved files or use fresh template
   const startProject = useCallback(async () => {
-    // Use ref for synchronous check (React state is async)
-    if (isSettingUpRef.current || projectReady) {
-      console.log('[Builder] startProject early return - already setting up or ready');
+    // GUARD 1: Check if already setting up (synchronous ref check)
+    if (isSettingUpRef.current) {
+      console.log('[Builder] startProject early return - already setting up');
+      return;
+    }
+
+    // GUARD 2: Check if setup already completed for this project
+    if (setupCompletedForProjectRef.current === project.id) {
+      console.log('[Builder] startProject early return - setup already completed for this project');
+      if (!projectReady) {
+        setProjectReady(true);
+        projectReadyRef.current = true;
+      }
+      return;
+    }
+
+    // GUARD 3: Check React state (might be stale, but still useful)
+    if (projectReady) {
+      console.log('[Builder] startProject early return - project already ready');
       return;
     }
 
@@ -559,6 +576,7 @@ export function BuilderPage({
       console.log('[Builder] Project restored from existing state - skipping full setup');
       setProjectReady(true);
       projectReadyRef.current = true;
+      setupCompletedForProjectRef.current = project.id;
       await refreshFileTree();
       addSystemMessage('Welcome back! Your project is ready.');
       return;
@@ -641,10 +659,12 @@ export function BuilderPage({
       console.log('[Builder] startDev complete');
 
       setProjectReady(true);
+      projectReadyRef.current = true;
+      setupCompletedForProjectRef.current = project.id; // Mark this project as set up
       isSettingUpRef.current = false;
       setIsSettingUp(false);
       await updateProjectStatus(project.id, 'ready');
-      console.log('[Builder] Project setup complete');
+      console.log('[Builder] Project setup complete for:', project.id);
 
       if (hasSavedFiles) {
         addSystemMessage('Project restored! Continue building your game.');
