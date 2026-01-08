@@ -94,7 +94,8 @@ describe('ChatInput', () => {
       const sendButton = screen.getByTitle('Send message');
       await user.click(sendButton);
 
-      expect(onSend).toHaveBeenCalledWith('build');
+      // Second param is images (undefined when no images attached)
+      expect(onSend).toHaveBeenCalledWith('build', undefined);
     });
 
     it('calls onSend with chat mode when in chat mode', async () => {
@@ -109,7 +110,8 @@ describe('ChatInput', () => {
       const sendButton = screen.getByTitle('Send message');
       await user.click(sendButton);
 
-      expect(onSend).toHaveBeenCalledWith('chat');
+      // Second param is images (undefined when no images attached)
+      expect(onSend).toHaveBeenCalledWith('chat', undefined);
     });
 
     it('sends on Enter key with current mode', async () => {
@@ -121,7 +123,8 @@ describe('ChatInput', () => {
       await user.click(textarea);
       await user.keyboard('{Enter}');
 
-      expect(onSend).toHaveBeenCalledWith('build');
+      // Second param is images (undefined when no images attached)
+      expect(onSend).toHaveBeenCalledWith('build', undefined);
     });
 
     it('does not send on Shift+Enter', async () => {
