@@ -688,8 +688,9 @@ async function callClaudeOrchestrator(
  * Call Gemini with a plan from Claude orchestrator
  * This is a simplified code-generation-focused call
  */
-// Gemini 3 Flash - our primary model for code generation
-const GEMINI_CODE_MODEL = 'gemini-3-flash-preview';
+// Gemini model for code generation - configurable via environment variable
+// Supported models: gemini-3-flash-preview, gemini-2.0-flash, gemini-1.5-pro, etc.
+const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3-flash-preview';
 
 async function callGeminiWithPlan(
   planPrompt: string,
@@ -1959,15 +1960,19 @@ Examples of good names:
 Name:`;
 
         const nameResponse = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + geminiApiKey,
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${geminiApiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: namePrompt }] }],
               generationConfig: {
-                temperature: 0.7,
+                temperature: 1.0, // Gemini 3 recommends keeping at 1.0
                 maxOutputTokens: 50,
+                // Minimal thinking for simple name generation
+                thinkingConfig: {
+                  thinkingLevel: 'low',
+                },
               },
             }),
           }

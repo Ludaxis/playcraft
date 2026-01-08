@@ -7,6 +7,7 @@
 
 import { getSupabase } from './supabase';
 import { uploadAsset } from './assetService';
+import { getProjectIconContext } from './iconContextService';
 import type { Asset, AssetCategory, CreateAssetInput } from '../types/assets';
 import { updateProject } from './projectService';
 
@@ -267,6 +268,20 @@ export async function generateProjectIcon(
     return { success: true, url: url || undefined, asset };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Upload failed';
+    return { success: false, error: message };
+  }
+}
+
+export async function generateProjectIconFromContext(
+  projectId: string,
+  userId: string
+): Promise<GenerateIconResult> {
+  try {
+    const { prompt } = await getProjectIconContext(projectId);
+    const resolvedPrompt = prompt || 'Isometric game app icon';
+    return generateProjectIcon(projectId, userId, resolvedPrompt);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Icon generation failed';
     return { success: false, error: message };
   }
 }
