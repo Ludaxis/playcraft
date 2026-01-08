@@ -140,7 +140,7 @@ export function ImageGenerator({
   const isGenerating = progress.status === 'generating' || progress.status === 'uploading';
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4 p-4 pb-8">
       <div className="flex items-center gap-2">
         <Sparkles className="h-5 w-5 text-accent" />
         <h3 className="text-sm font-semibold text-content">AI Image Generator</h3>
