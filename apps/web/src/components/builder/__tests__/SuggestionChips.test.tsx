@@ -49,9 +49,8 @@ describe('SuggestionChips', () => {
       expect(onSelect).toHaveBeenCalledWith('Test prompt');
     });
 
-    it('does not call onSelect when disabled', async () => {
+    it('does not call onSelect when disabled', () => {
       const onSelect = vi.fn();
-      const user = userEvent.setup();
 
       render(
         <SuggestionChips
