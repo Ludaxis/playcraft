@@ -82,36 +82,26 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    // Authentication
+    // Authentication (optional for now - will add rate limiting later)
     const authHeader = req.headers.get('Authorization');
     console.log('[generate-image] Auth header present:', !!authHeader);
 
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No authorization header', code: 'NO_AUTH_HEADER' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    let userId = 'anonymous';
+    if (authHeader) {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
+
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('[generate-image] User check:', user?.id || 'no user', userError?.message || 'no error');
+
+      if (user) {
+        userId = user.id;
+      }
     }
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('[generate-image] User check:', user?.id || 'no user', userError?.message || 'no error');
-
-    if (userError || !user) {
-      return new Response(JSON.stringify({
-        error: 'Unauthorized',
-        code: 'USER_AUTH_FAILED',
-        details: userError?.message
-      }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    console.log('[generate-image] Processing request for user:', userId);
 
     // Parse request
     const {

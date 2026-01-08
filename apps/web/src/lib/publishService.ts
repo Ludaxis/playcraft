@@ -471,7 +471,8 @@ interface CollectedFile {
 }
 
 function stripBlockedIconUrls(content: string): { sanitized: string; changed: boolean } {
-  const blockedPattern = /https?:\/\/lucide\.dev\/api\/icons\/[^\s"'`>)]+/g;
+  // Matches http/https or protocol-relative //lucide.dev/api/icons/* in HTML, JS, CSS
+  const blockedPattern = /(https?:)?\/\/lucide\.dev\/api\/icons\/[^\s"'`>)\)]+/g;
   const sanitized = content.replace(blockedPattern, '');
   return { sanitized, changed: sanitized !== content };
 }
