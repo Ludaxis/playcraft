@@ -234,12 +234,62 @@ export function predictNextSteps(context: PredictionContext): NextStep[] {
     if (steps.length >= 3) break;
   }
 
+  // Add contextual suggestions to fill remaining slots
+  if (steps.length < 3) {
+    const contextual = buildContextualSuggestions(context);
+    for (const step of contextual) {
+      if (!seenLabels.has(step.label)) {
+        steps.push(step);
+        seenLabels.add(step.label);
+        if (steps.length >= 3) break;
+      }
+    }
+  }
+
   // If no matches, provide generic suggestions based on project state
   if (steps.length === 0) {
     return getGenericSuggestions(projectState, filesModified, hasThreeJs);
   }
 
   return steps.slice(0, 3);
+}
+
+function buildContextualSuggestions(context: PredictionContext): NextStep[] {
+  const suggestions: NextStep[] = [];
+  const recentFile = context.filesModified[context.filesModified.length - 1];
+  if (recentFile) {
+    const base = recentFile.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'the current file';
+    suggestions.push({
+      label: `Polish ${base}`,
+      prompt: `Improve ${base} with small UX polish, better spacing, and clear status messaging without changing core logic.`,
+    });
+  }
+
+  if (context.projectState === 'empty' || context.projectState === 'initial') {
+    suggestions.push({
+      label: 'Add core loop',
+      prompt: 'Add the main game loop with a clear win/lose condition and basic UI.',
+    });
+  } else if (context.projectState === 'iterating') {
+    suggestions.push({
+      label: 'Add feedback & sounds',
+      prompt: 'Add subtle animations and sound effects for user actions and key game events.',
+    });
+  } else if (context.projectState === 'polishing') {
+    suggestions.push({
+      label: 'Optimize & refactor',
+      prompt: 'Refactor duplicated logic, extract reusable components, and improve performance where possible.',
+    });
+  }
+
+  if (context.hasThreeJs) {
+    suggestions.push({
+      label: 'Improve 3D scene',
+      prompt: 'Enhance the Three.js scene with lights, shadows, and a simple orbit controls camera.',
+    });
+  }
+
+  return suggestions.slice(0, 3);
 }
 
 /**

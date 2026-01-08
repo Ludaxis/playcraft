@@ -301,8 +301,10 @@ describe('projectService', () => {
       const selectMock = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'draft' }, error: null }),
+            eq: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'draft' }, error: null }),
+              }),
             }),
           }),
         }),
@@ -326,8 +328,10 @@ describe('projectService', () => {
       const selectMock = vi.fn().mockReturnValue({
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
-            limit: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+            eq: vi.fn().mockReturnValue({
+              limit: vi.fn().mockReturnValue({
+                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+              }),
             }),
           }),
         }),
