@@ -54,15 +54,45 @@ export function PlayPage({ gameId }: PlayPageProps) {
   }, [gameId]);
 
   // Get the storage URL for the game's index.html
-  const getGameUrl = useCallback(() => {
+  const getGameUrl = useCallback(async () => {
     if (!game) return null;
 
     const supabase = getSupabase();
-    const { data } = supabase.storage
-      .from('published-games')
-      .getPublicUrl(`${game.user_id}/${game.id}/index.html`);
+    const basePath = `${game.user_id}/${game.id}`;
 
-    return data?.publicUrl || null;
+    // Try latest.json for versioned publish
+    try {
+      const latest = await supabase.storage.from('published-games').download(`${basePath}/latest.json`);
+      if (latest.data) {
+        const text = await latest.data.text();
+        const parsed = JSON.parse(text);
+        if (parsed?.path) {
+          return supabase.storage.from('published-games').getPublicUrl(parsed.path).data.publicUrl;
+        }
+      }
+    } catch {
+      // ignore and fallback
+    }
+
+    // Fallback to versions.json (latest entry)
+    try {
+      const manifest = await supabase.storage.from('published-games').download(`${basePath}/versions.json`);
+      if (manifest.data) {
+        const text = await manifest.data.text();
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const latestVersion = parsed[parsed.length - 1];
+          if (latestVersion?.path) {
+            return supabase.storage.from('published-games').getPublicUrl(latestVersion.path).data.publicUrl;
+          }
+        }
+      }
+    } catch {
+      // ignore and fallback
+    }
+
+    // Legacy fallback
+    return supabase.storage.from('published-games').getPublicUrl(`${basePath}/index.html`).data.publicUrl;
   }, [game]);
 
   const handleShare = async () => {
@@ -149,7 +179,15 @@ export function PlayPage({ gameId }: PlayPageProps) {
     );
   }
 
-  const gameUrl = getGameUrl();
+  const [gameUrl, setGameUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadUrl = async () => {
+      const url = await getGameUrl();
+      setGameUrl(url);
+    };
+    loadUrl();
+  }, [getGameUrl]);
 
   return (
     <div className="min-h-screen bg-surface">
