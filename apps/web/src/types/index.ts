@@ -101,6 +101,7 @@ export interface CreateProjectInput {
   workspace_id?: string | null;
   template_id?: string | null;
   reuseDraft?: boolean;
+  thumbnail_url?: string | null;
 }
 
 export interface UpdateProjectInput {
@@ -111,6 +112,7 @@ export interface UpdateProjectInput {
   files?: Record<string, string>;
   conversation?: ConversationMessage[];
   active_chat_session_id?: string | null;
+  thumbnail_url?: string | null;
   // Publishing fields
   published_url?: string | null;
   published_at?: string | null;

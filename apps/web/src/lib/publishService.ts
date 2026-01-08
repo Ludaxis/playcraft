@@ -257,6 +257,35 @@ function getContentType(filename: string): string {
 }
 
 /**
+ * Quick HEAD probe to ensure Storage allows our origin before uploading
+ */
+async function verifyStorageAccess(
+  bucket: string,
+  testPath: string,
+  onProgress: (progress: PublishProgress) => void
+): Promise<void> {
+  const supabase = getSupabase();
+  const testUrl = supabase.storage.from(bucket).getPublicUrl(testPath).data.publicUrl;
+
+  onProgress({ stage: 'uploading', progress: 46, message: 'Checking storage CORS...' });
+
+  try {
+    const res = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
+
+    // no-cors returns opaque; if it throws, CORS is likely blocking
+    if (res.type === 'opaque') return;
+    if (!res.ok) {
+      throw new Error(`Storage HEAD failed: ${res.status}`);
+    }
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : 'Unknown error';
+    throw new Error(
+      `Storage CORS check failed for ${bucket}. Allow origins https://www.playcraft.games and https://playcraft.games with methods GET,HEAD,OPTIONS. Detail: ${detail}`
+    );
+  }
+}
+
+/**
  * Upload built files to Supabase Storage
  */
 async function uploadToStorage(
@@ -279,6 +308,9 @@ async function uploadToStorage(
     console.log(`[publishService] Uploading ${distFiles.length} files`);
 
     const basePath = `${userId}/${projectId}`;
+
+    // Preflight: ensure Storage accepts our origin
+    await verifyStorageAccess('published-games', `${basePath}/cors-probe.txt`, onProgress);
 
     // Clean up existing files
     try {

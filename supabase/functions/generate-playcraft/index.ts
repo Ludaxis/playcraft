@@ -680,6 +680,9 @@ async function callClaudeOrchestrator(
  * Call Gemini with a plan from Claude orchestrator
  * This is a simplified code-generation-focused call
  */
+// Gemini 3 Flash - our primary model for code generation
+const GEMINI_CODE_MODEL = 'gemini-3-flash-preview';
+
 async function callGeminiWithPlan(
   planPrompt: string,
   apiKey: string,
@@ -719,8 +722,10 @@ OUTPUT FORMAT (FILE MODE):
 
   let response: Response;
   try {
+    logger.debug('Calling Gemini 3 Flash (with plan)', { model: GEMINI_CODE_MODEL });
+
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -731,12 +736,11 @@ OUTPUT FORMAT (FILE MODE):
           systemInstruction: { parts: [{ text: systemPrompt }] },
           generationConfig: {
             temperature: 1.0, // Gemini 3 recommends keeping at 1.0
-            topP: 0.9,
             maxOutputTokens: 65536,
             responseMimeType: 'application/json',
-            // Gemini 3 Flash supports minimal thinking for faster responses
+            // Gemini 3 Flash thinking config - use 'low' for faster responses
             thinkingConfig: {
-              thinkingLevel: 'minimal',
+              thinkingLevel: 'low',
             },
           },
         }),
@@ -746,7 +750,7 @@ OUTPUT FORMAT (FILE MODE):
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === 'AbortError') {
-      logger.error('Gemini API timeout (with plan)', { timeoutMs: 50000 });
+      logger.error('Gemini 3 API timeout (with plan)', { timeoutMs: 50000 });
       throw new Error('Gemini API request timed out after 50 seconds');
     }
     throw err;
@@ -757,16 +761,20 @@ OUTPUT FORMAT (FILE MODE):
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error('Gemini API error (with plan)', { status: response.status, error: errorText, durationMs: apiDuration });
-    throw new Error(`Gemini API error: ${response.status}`);
+    logger.error('Gemini 3 API error (with plan)', {
+      status: response.status,
+      error: errorText.slice(0, 500),
+      durationMs: apiDuration
+    });
+    throw new Error(`Gemini 3 API error: ${response.status} - ${errorText.slice(0, 200)}`);
   }
 
   const data = await response.json();
   const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
   if (!responseText) {
-    logger.error('Empty Gemini response', { durationMs: apiDuration });
-    throw new Error('Empty response from Gemini');
+    logger.error('Empty Gemini 3 response', { durationMs: apiDuration });
+    throw new Error('Empty response from Gemini 3');
   }
 
   // Parse JSON response
@@ -803,7 +811,7 @@ OUTPUT FORMAT (FILE MODE):
     throw new Error('Response missing required fields');
   }
 
-  logger.info('Gemini (with plan) completed', {
+  logger.info('Gemini 3 (with plan) completed', {
     mode,
     filesGenerated: hasFiles ? parsed.files.length : 0,
     editsGenerated: hasEdits ? parsed.edits.length : 0,
@@ -1591,8 +1599,10 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
 
   let response: Response;
   try {
+    logger.debug('Calling Gemini 3 Flash', { model: GEMINI_CODE_MODEL });
+
     response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -1608,9 +1618,9 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
             maxOutputTokens: 32768,
             temperature: 1.0, // Gemini 3 recommends keeping at 1.0
             responseMimeType: 'application/json',
-            // Gemini 3 Flash supports minimal thinking for faster responses
+            // Gemini 3 Flash thinking config - use 'low' for faster responses
             thinkingConfig: {
-              thinkingLevel: 'minimal',
+              thinkingLevel: 'low',
             },
           },
         }),
@@ -1620,7 +1630,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === 'AbortError') {
-      logger.error('Gemini API timeout', { timeoutMs: 50000 });
+      logger.error('Gemini 3 API timeout', { timeoutMs: 50000 });
       throw new Error('Gemini API request timed out after 50 seconds');
     }
     throw err;
@@ -1631,12 +1641,13 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error('Gemini API error', {
+    logger.error('Gemini 3 API error', {
       status: response.status,
       statusText: response.statusText,
+      error: errorText.slice(0, 500),
       durationMs: apiDuration
     });
-    throw new Error(`Gemini API request failed: ${response.status}`);
+    throw new Error(`Gemini 3 API request failed: ${response.status} - ${errorText.slice(0, 200)}`);
   }
 
   const data = await response.json();

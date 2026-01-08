@@ -8,6 +8,7 @@
 import { getSupabase } from './supabase';
 import { uploadAsset } from './assetService';
 import type { Asset, AssetCategory, CreateAssetInput } from '../types/assets';
+import { updateProject } from './projectService';
 
 export type ImageStyle = 'pixel-art' | 'cartoon' | 'realistic' | 'anime' | 'fantasy';
 export type ImageAspectRatio = '1:1' | '16:9' | '9:16';
@@ -27,6 +28,13 @@ export interface GenerateImageResult {
   imageBase64?: string;
   imageBlob?: Blob;
   mimeType?: string;
+  asset?: Asset;
+  error?: string;
+}
+
+export interface GenerateIconResult {
+  success: boolean;
+  url?: string;
   asset?: Asset;
   error?: string;
 }
@@ -95,6 +103,17 @@ function generateAssetName(prompt: string, style: ImageStyle): string {
 
   const timestamp = Date.now().toString(36);
   return `${cleanPrompt}-${style}-${timestamp}.png`;
+}
+
+function buildIconPrompt(userPrompt: string) {
+  return [
+    'Isometric game app icon, premium mobile game quality',
+    'clean silhouette, bold focal object, no text, no borders',
+    'soft rim light, simple gradient backdrop, crisp edges, high contrast',
+    userPrompt,
+  ]
+    .filter(Boolean)
+    .join(', ');
 }
 
 export async function generateImage(
@@ -202,6 +221,53 @@ export async function generateImage(
       progress: 0,
     });
     return { success: false, error: errorMessage };
+  }
+}
+
+export async function generateProjectIcon(
+  projectId: string,
+  userId: string,
+  prompt: string
+): Promise<GenerateIconResult> {
+  const iconPrompt = buildIconPrompt(prompt);
+
+  const result = await generateImage({
+    prompt: iconPrompt,
+    style: 'realistic',
+    category: 'ui',
+    aspectRatio: '1:1',
+    projectId,
+    userId,
+  });
+
+  if (!result.success || !result.imageBlob || !result.mimeType) {
+    return { success: false, error: result.error || 'Icon generation failed' };
+  }
+
+  const fileName = `app-icon-${Date.now()}.png`;
+  const file = new File([result.imageBlob], fileName, { type: result.mimeType });
+
+  try {
+    const assetInput: CreateAssetInput = {
+      name: fileName,
+      displayName: 'App Icon',
+      assetType: '2d',
+      category: 'ui',
+      description: `App icon generated from prompt: ${prompt}`,
+      tags: ['app-icon', 'generated'],
+    };
+
+    const asset = await uploadAsset(userId, projectId, file, assetInput);
+    const url = asset.previewUrl || asset.publicPath;
+
+    if (url) {
+      await updateProject(projectId, { thumbnail_url: url });
+    }
+
+    return { success: true, url: url || undefined, asset };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Upload failed';
+    return { success: false, error: message };
   }
 }
 
