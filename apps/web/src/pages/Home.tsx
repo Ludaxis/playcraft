@@ -7,7 +7,6 @@ import {
   MoreHorizontal,
   Grid3X3,
   List,
-  Play,
   Trash2,
   X,
   AlertTriangle,
@@ -503,10 +502,10 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
               </div>
             </div>
 
-            {/* Made with PlayCraft section */}
-            <div className="border-t border-white/10 bg-black/30 backdrop-blur-md px-6 py-6">
-              <div className="mx-auto max-w-5xl">
-                <div className="mb-4 flex items-center justify-between">
+            {/* Made with PlayCraft section - iOS App Icons Style */}
+            <div className="border-t border-white/10 bg-black/30 backdrop-blur-md px-6 py-8">
+              <div className="mx-auto max-w-4xl">
+                <div className="mb-6 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <LogoIcon size={16} />
                     <h2 className="text-sm font-medium text-content">Made with PlayCraft</h2>
@@ -518,49 +517,34 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     Explore all →
                   </button>
                 </div>
-                <div className="grid grid-cols-4 gap-4">
+                {/* iOS-style icon grid */}
+                <div className="flex justify-center gap-8">
                   {(featuredGames.length > 0 ? featuredGames : FEATURED_GAMES).map((game) => {
-                    // Handle both PublishedGame and mock game types
                     const isRealGame = 'published_url' in game;
                     const thumbnail = isRealGame
-                      ? (game.thumbnail_url || 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=300&fit=crop')
+                      ? (game.thumbnail_url || 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop')
                       : (game as typeof FEATURED_GAMES[0]).thumbnail;
-                    const author = isRealGame ? (game.author_name || 'PlayCraft Creator') : (game as typeof FEATURED_GAMES[0]).author;
-                    const plays = isRealGame ? game.play_count.toLocaleString() : (game as typeof FEATURED_GAMES[0]).plays;
 
                     return (
                       <a
                         key={game.id}
                         href={isRealGame ? `/play/${game.id}` : '#'}
-                        className="group cursor-pointer overflow-hidden rounded-xl border border-border-muted bg-surface-elevated transition-all hover:border-accent/50 hover:shadow-glow-sm"
+                        className="group flex flex-col items-center gap-2"
                       >
-                        {/* Thumbnail */}
-                        <div className="relative aspect-video overflow-hidden">
+                        {/* iOS-style app icon */}
+                        <div className="relative h-[72px] w-[72px] overflow-hidden rounded-[16px] bg-surface-elevated shadow-lg transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
                           <img
                             src={thumbnail}
                             alt={game.name}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            className="h-full w-full object-cover"
                           />
-                          {/* Play overlay */}
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/40">
-                            <div className="flex h-10 w-10 scale-0 items-center justify-center rounded-full bg-accent/90 text-content transition-transform group-hover:scale-100">
-                              <Play className="h-5 w-5 fill-current" />
-                            </div>
-                          </div>
+                          {/* Subtle shine overlay like iOS */}
+                          <div className="pointer-events-none absolute inset-0 rounded-[16px] ring-1 ring-inset ring-white/10" />
                         </div>
-                        {/* Info */}
-                        <div className="p-3">
-                          <h3 className="text-sm font-medium text-content transition-colors group-hover:text-accent">
-                            {game.name}
-                          </h3>
-                          <div className="mt-1 flex items-center justify-between">
-                            <span className="text-xs text-content-subtle">by {author}</span>
-                            <span className="flex items-center gap-1 text-xs text-content-subtle">
-                              <Play className="h-3 w-3" />
-                              {plays}
-                            </span>
-                          </div>
-                        </div>
+                        {/* App name */}
+                        <span className="max-w-[80px] truncate text-center text-xs text-content-muted group-hover:text-content">
+                          {game.name}
+                        </span>
                       </a>
                     );
                   })}
