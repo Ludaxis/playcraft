@@ -433,6 +433,18 @@ export function BuilderPage({
         clearPreviewErrors();
         setPreviewErrors([]);
       },
+      // Generate AI name immediately when first prompt is sent
+      onFirstPrompt: (prompt) => {
+        if (project.name === 'Untitled Game') {
+          generateProjectName(prompt).then(async (aiName) => {
+            console.log('[Builder] AI generated project name:', aiName);
+            await updateProject(project.id, { name: aiName });
+            setProject(prev => ({ ...prev, name: aiName }));
+          }).catch(err => {
+            console.warn('[Builder] Failed to generate AI name:', err);
+          });
+        }
+      },
       onFilesGenerated: async (files) => {
         // Update in-memory file state
         const updatedFiles = { ...projectFiles };
@@ -560,22 +572,7 @@ export function BuilderPage({
 
           // Update project's active session
           await updateProject(project.id, { active_chat_session_id: newSession.id });
-
-          // Auto-rename project if it's still "Untitled Game"
-          if (project.name === 'Untitled Game') {
-            // Generate a catchy AI-powered name (don't await - let it happen in background)
-            generateProjectName(userMessages[0].content).then(async (aiName) => {
-              await updateProject(project.id, { name: aiName });
-              setProject(prev => ({ ...prev, name: aiName }));
-              console.log('[Builder] Auto-renamed project with AI name:', aiName);
-            }).catch(err => {
-              console.warn('[Builder] AI name generation failed, using fallback:', err);
-              // Fallback to truncated title
-              updateProject(project.id, { name: title })
-                .then(() => setProject(prev => ({ ...prev, name: title })))
-                .catch(e => console.error('[Builder] Fallback rename failed:', e));
-            });
-          }
+          // Note: Project renaming happens in onFirstPrompt callback (immediate, not here)
         }
       } catch (err) {
         console.error('[Builder] Failed to save conversation to session:', err);

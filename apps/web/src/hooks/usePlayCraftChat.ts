@@ -70,6 +70,7 @@ interface UsePlayCraftChatOptions {
   onFilesGenerated?: (files: Array<{ path: string; content: string }>) => Promise<void>;
   onEditsGenerated?: (edits: FileEdit[], readFile: (path: string) => Promise<string | null>) => Promise<{ success: boolean; errors: string[] }>;
   onNeedsThreeJs?: () => Promise<void>; // Called when AI requests Three.js
+  onFirstPrompt?: (prompt: string) => void; // Called immediately when first prompt is sent (for naming)
   readFile?: (path: string) => Promise<string>;
   readAllFiles?: () => Promise<Record<string, string>>; // Read all project files
   hasThreeJs?: boolean; // Whether Three.js template is already loaded
@@ -134,6 +135,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     onFilesGenerated,
     onEditsGenerated,
     onNeedsThreeJs,
+    onFirstPrompt,
     readFile,
     readAllFiles,
     hasThreeJs = false,
@@ -283,6 +285,12 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   const sendMessage = useCallback(
     async (prompt: string, selectedFile?: string, chatOnly?: boolean) => {
       if (!prompt.trim() || isGenerating) return;
+
+      // Call onFirstPrompt immediately when first message is sent (for AI naming)
+      const isFirstMessage = messageCountRef.current === 0;
+      if (isFirstMessage && onFirstPrompt) {
+        onFirstPrompt(prompt);
+      }
 
       setError(null);
       setIsGenerating(true);
@@ -900,7 +908,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         }, 1000);
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
+    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, onFirstPrompt, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
   );
 
   // Compute current suggestions for the chatbox
