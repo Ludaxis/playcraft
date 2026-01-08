@@ -20,13 +20,17 @@ export interface PublishProgress {
   message: string;
 }
 
-export interface TypeScriptError {
+export interface CodeError {
   file: string;
   line: number;
   column: number;
   code: string;
   message: string;
+  type: 'typescript' | 'eslint' | 'build';
 }
+
+// Keep for backwards compatibility
+export type TypeScriptError = CodeError;
 
 export interface PublishResult {
   success: boolean;
@@ -35,13 +39,19 @@ export interface PublishResult {
 }
 
 // ============================================================================
-// TypeScript Check & Auto-Fix Functions
+// Error Check & Auto-Fix Functions
 // ============================================================================
+
+interface CheckResult {
+  success: boolean;
+  errors: CodeError[];
+  rawOutput: string;
+}
 
 /**
  * Run TypeScript check and return any errors
  */
-export async function runTypeScriptCheck(): Promise<{ success: boolean; errors: TypeScriptError[]; rawOutput: string }> {
+export async function runTypeScriptCheck(): Promise<CheckResult> {
   try {
     const process = await spawn('npx', ['tsc', '--noEmit']);
 
@@ -61,7 +71,7 @@ export async function runTypeScriptCheck(): Promise<{ success: boolean; errors: 
     }
 
     // Parse TypeScript errors
-    const errors: TypeScriptError[] = [];
+    const errors: CodeError[] = [];
     const errorRegex = /^(.+)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/gm;
     let match;
 
@@ -72,6 +82,7 @@ export async function runTypeScriptCheck(): Promise<{ success: boolean; errors: 
         column: parseInt(match[3], 10),
         code: match[4],
         message: match[5],
+        type: 'typescript',
       });
     }
 
@@ -87,29 +98,179 @@ export async function runTypeScriptCheck(): Promise<{ success: boolean; errors: 
 }
 
 /**
- * Generate a prompt for the AI to fix TypeScript errors
+ * Run ESLint check and return any errors
  */
-export function generateFixPrompt(errors: TypeScriptError[]): string {
-  const errorList = errors.map(e =>
-    `- ${e.file}:${e.line}:${e.column} - ${e.code}: ${e.message}`
-  ).join('\n');
+export async function runESLintCheck(): Promise<CheckResult> {
+  try {
+    const process = await spawn('npx', ['eslint', 'src', '--format', 'compact', '--quiet']);
 
-  return `Fix these TypeScript errors in my code. Make minimal changes to fix only the errors listed:
+    let output = '';
+    await process.output.pipeTo(
+      new WritableStream({
+        write(data) {
+          output += data;
+        },
+      })
+    );
 
-${errorList}
+    const exitCode = await process.exit;
 
-Common fixes:
-- Remove unused imports
+    if (exitCode === 0 || output.trim() === '') {
+      return { success: true, errors: [], rawOutput: output };
+    }
+
+    // Parse ESLint compact format: /path/file.tsx: line 10, col 5, Error - message (rule-name)
+    const errors: CodeError[] = [];
+    const errorRegex = /^(.+):\s*line\s+(\d+),\s*col\s+(\d+),\s*(?:Error|Warning)\s*-\s*(.+?)\s*\((.+?)\)$/gm;
+    let match;
+
+    while ((match = errorRegex.exec(output)) !== null) {
+      errors.push({
+        file: match[1],
+        line: parseInt(match[2], 10),
+        column: parseInt(match[3], 10),
+        message: match[4],
+        code: match[5],
+        type: 'eslint',
+      });
+    }
+
+    return { success: false, errors, rawOutput: output };
+  } catch (err) {
+    console.error('[publishService] ESLint check failed:', err);
+    // ESLint failure shouldn't block - it might not be configured
+    return { success: true, errors: [], rawOutput: '' };
+  }
+}
+
+/**
+ * Parse build errors from Vite output
+ */
+export function parseBuildErrors(output: string): CodeError[] {
+  const errors: CodeError[] = [];
+
+  // Vite/Rollup error format: error in /path/file.tsx:line:col
+  const viteErrorRegex = /(?:error|ERROR)[:\s]+(?:in\s+)?(.+?):(\d+):(\d+)[\s\S]*?(?:error|Error)[:\s]+(.+?)(?=\n\n|\n[A-Z]|$)/gi;
+  let match;
+
+  while ((match = viteErrorRegex.exec(output)) !== null) {
+    errors.push({
+      file: match[1],
+      line: parseInt(match[2], 10),
+      column: parseInt(match[3], 10),
+      code: 'BUILD',
+      message: match[4].trim(),
+      type: 'build',
+    });
+  }
+
+  // TypeScript errors in build output (different format)
+  const tsBuildRegex = /^(.+?)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/gm;
+  while ((match = tsBuildRegex.exec(output)) !== null) {
+    errors.push({
+      file: match[1],
+      line: parseInt(match[2], 10),
+      column: parseInt(match[3], 10),
+      code: match[4],
+      message: match[5],
+      type: 'typescript',
+    });
+  }
+
+  // Generic error messages with file paths
+  const genericErrorRegex = /(?:Error|ERROR):\s*(.+?\.tsx?):?\s*(.+)/gi;
+  while ((match = genericErrorRegex.exec(output)) !== null) {
+    // Avoid duplicates
+    const file = match[1];
+    if (!errors.some(e => e.file.includes(file))) {
+      errors.push({
+        file: file,
+        line: 1,
+        column: 1,
+        code: 'BUILD',
+        message: match[2].trim(),
+        type: 'build',
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Generate a prompt for the AI to fix errors
+ */
+export function generateFixPrompt(errors: CodeError[]): string {
+  const tsErrors = errors.filter(e => e.type === 'typescript');
+  const eslintErrors = errors.filter(e => e.type === 'eslint');
+  const buildErrors = errors.filter(e => e.type === 'build');
+
+  let prompt = 'Fix these errors in my code. Make minimal changes to fix only the errors listed:\n\n';
+
+  if (tsErrors.length > 0) {
+    prompt += '## TypeScript Errors:\n';
+    prompt += tsErrors.map(e =>
+      `- ${e.file}:${e.line}:${e.column} - ${e.code}: ${e.message}`
+    ).join('\n');
+    prompt += '\n\n';
+  }
+
+  if (eslintErrors.length > 0) {
+    prompt += '## ESLint Errors:\n';
+    prompt += eslintErrors.map(e =>
+      `- ${e.file}:${e.line}:${e.column} - ${e.code}: ${e.message}`
+    ).join('\n');
+    prompt += '\n\n';
+  }
+
+  if (buildErrors.length > 0) {
+    prompt += '## Build Errors:\n';
+    prompt += buildErrors.map(e =>
+      `- ${e.file}:${e.line}:${e.column} - ${e.message}`
+    ).join('\n');
+    prompt += '\n\n';
+  }
+
+  prompt += `Common fixes:
+- Remove unused imports and variables
 - Use \`ReturnType<typeof setTimeout>\` instead of \`NodeJS.Timeout\`
 - Add missing type annotations
 - Fix type mismatches
+- Fix syntax errors
 
 Apply the fixes now.`;
+
+  return prompt;
+}
+
+/**
+ * Run all pre-build checks (TypeScript + ESLint)
+ */
+export async function runPreBuildChecks(): Promise<CheckResult> {
+  const [tsResult, eslintResult] = await Promise.all([
+    runTypeScriptCheck(),
+    runESLintCheck(),
+  ]);
+
+  const allErrors = [...tsResult.errors, ...eslintResult.errors];
+  const success = tsResult.success && eslintResult.success;
+
+  return {
+    success,
+    errors: allErrors,
+    rawOutput: [tsResult.rawOutput, eslintResult.rawOutput].filter(Boolean).join('\n'),
+  };
 }
 
 // ============================================================================
 // Build Functions
 // ============================================================================
+
+interface BuildResult {
+  success: boolean;
+  output: string;
+  errors: CodeError[];
+}
 
 /**
  * Build the project using npm run build in WebContainer
@@ -117,40 +278,45 @@ Apply the fixes now.`;
 export async function buildProject(
   onProgress: (progress: PublishProgress) => void,
   onOutput: (data: string) => void
-): Promise<boolean> {
-  onProgress({ stage: 'building', progress: 5, message: 'Starting build...' });
+): Promise<BuildResult> {
+  onProgress({ stage: 'building', progress: 10, message: 'Starting build...' });
+
+  let fullOutput = '';
 
   try {
     const process = await spawn('npm', ['run', 'build']);
 
-    // Pipe output to callback
-    process.output.pipeTo(
+    // Pipe output to callback and collect it
+    await process.output.pipeTo(
       new WritableStream({
         write(data) {
+          fullOutput += data;
           onOutput(data);
         },
       })
     );
 
-    onProgress({ stage: 'building', progress: 20, message: 'Building production bundle...' });
+    onProgress({ stage: 'building', progress: 30, message: 'Building production bundle...' });
 
     const exitCode = await process.exit;
 
     if (exitCode !== 0) {
+      const errors = parseBuildErrors(fullOutput);
       onProgress({ stage: 'error', progress: 0, message: 'Build failed. Check the output for errors.' });
-      return false;
+      return { success: false, output: fullOutput, errors };
     }
 
-    onProgress({ stage: 'building', progress: 40, message: 'Build complete!' });
-    return true;
+    onProgress({ stage: 'building', progress: 45, message: 'Build complete!' });
+    return { success: true, output: fullOutput, errors: [] };
   } catch (err) {
     console.error('[publishService] Build failed:', err);
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error';
     onProgress({
       stage: 'error',
       progress: 0,
-      message: `Build error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      message: `Build error: ${errorMsg}`,
     });
-    return false;
+    return { success: false, output: fullOutput + '\n' + errorMsg, errors: [] };
   }
 }
 
@@ -398,7 +564,7 @@ export interface PublishOptions {
 
 /**
  * Main publish function that orchestrates the entire flow
- * Includes automatic TypeScript error fixing before build
+ * Includes automatic error fixing (TypeScript, ESLint, Build errors) before/during build
  */
 export async function publishGame(
   userIdOrOptions: string | PublishOptions,
@@ -416,29 +582,32 @@ export async function publishGame(
       }
     : userIdOrOptions;
 
-  const { onAutoFix, maxFixAttempts = 2 } = options;
+  const { onAutoFix, maxFixAttempts = 3 } = options;
 
   try {
-    // Step 0: Check TypeScript errors and auto-fix if needed
+    // Step 0: Pre-build checks and auto-fix (TypeScript + ESLint)
     if (onAutoFix) {
       options.onProgress({ stage: 'checking', progress: 2, message: 'Checking for errors...' });
 
       let attempts = 0;
-      let tsResult = await runTypeScriptCheck();
+      let checkResult = await runPreBuildChecks();
 
-      while (!tsResult.success && tsResult.errors.length > 0 && attempts < maxFixAttempts) {
+      while (!checkResult.success && checkResult.errors.length > 0 && attempts < maxFixAttempts) {
         attempts++;
-        console.log(`[publishService] Found ${tsResult.errors.length} TypeScript errors, attempting auto-fix (${attempts}/${maxFixAttempts})`);
+        const errorCount = checkResult.errors.length;
+        const errorTypes = [...new Set(checkResult.errors.map(e => e.type))].join(', ');
+
+        console.log(`[publishService] Found ${errorCount} errors (${errorTypes}), attempting auto-fix (${attempts}/${maxFixAttempts})`);
 
         options.onProgress({
           stage: 'fixing',
           progress: 3,
-          message: `Fixing ${tsResult.errors.length} error${tsResult.errors.length > 1 ? 's' : ''}...`
+          message: `Fixing ${errorCount} error${errorCount > 1 ? 's' : ''}...`
         });
-        options.onBuildOutput(`Found ${tsResult.errors.length} TypeScript error(s). Auto-fixing...`);
+        options.onBuildOutput(`\nFound ${errorCount} error(s). Auto-fixing...\n`);
 
         // Generate fix prompt and send to AI
-        const fixPrompt = generateFixPrompt(tsResult.errors);
+        const fixPrompt = generateFixPrompt(checkResult.errors);
         const fixApplied = await onAutoFix(fixPrompt);
 
         if (!fixApplied) {
@@ -446,26 +615,66 @@ export async function publishGame(
           break;
         }
 
-        // Wait a bit for files to be written
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Wait for files to be written
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        // Re-check TypeScript
-        options.onProgress({ stage: 'checking', progress: 4, message: 'Verifying fix...' });
-        tsResult = await runTypeScriptCheck();
+        // Re-check
+        options.onProgress({ stage: 'checking', progress: 5, message: 'Verifying fix...' });
+        checkResult = await runPreBuildChecks();
       }
 
-      if (!tsResult.success && tsResult.errors.length > 0) {
-        options.onBuildOutput(`\nTypeScript errors remain after ${attempts} fix attempts:\n${tsResult.rawOutput}`);
-        // Continue anyway - the build might still work or give clearer errors
+      if (!checkResult.success && checkResult.errors.length > 0) {
+        options.onBuildOutput(`\nSome errors remain after ${attempts} fix attempts. Attempting build anyway...\n`);
       } else if (attempts > 0) {
-        options.onBuildOutput(`\nTypeScript errors fixed successfully!`);
+        options.onBuildOutput(`\nAll pre-build errors fixed!\n`);
       }
     }
 
-    // Step 1: Build the project
-    const buildSuccess = await buildProject(options.onProgress, options.onBuildOutput);
-    if (!buildSuccess) {
-      return { success: false, error: 'Build failed' };
+    // Step 1: Build the project (with retry on failure)
+    let buildAttempts = 0;
+    let buildResult = await buildProject(options.onProgress, options.onBuildOutput);
+
+    while (!buildResult.success && onAutoFix && buildAttempts < maxFixAttempts) {
+      buildAttempts++;
+
+      // Parse errors from build output
+      const buildErrors = buildResult.errors.length > 0
+        ? buildResult.errors
+        : parseBuildErrors(buildResult.output);
+
+      if (buildErrors.length === 0) {
+        // Can't parse errors, can't fix
+        options.onBuildOutput(`\nBuild failed but couldn't identify specific errors to fix.\n`);
+        break;
+      }
+
+      console.log(`[publishService] Build failed with ${buildErrors.length} errors, attempting fix (${buildAttempts}/${maxFixAttempts})`);
+
+      options.onProgress({
+        stage: 'fixing',
+        progress: 8,
+        message: `Fixing ${buildErrors.length} build error${buildErrors.length > 1 ? 's' : ''}...`
+      });
+      options.onBuildOutput(`\nBuild failed. Fixing ${buildErrors.length} error(s)...\n`);
+
+      const fixPrompt = generateFixPrompt(buildErrors);
+      const fixApplied = await onAutoFix(fixPrompt);
+
+      if (!fixApplied) {
+        break;
+      }
+
+      // Wait for files to be written
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // Retry build
+      options.onProgress({ stage: 'building', progress: 10, message: 'Retrying build...' });
+      options.onBuildOutput(`\nRetrying build...\n`);
+      buildResult = await buildProject(options.onProgress, options.onBuildOutput);
+    }
+
+    if (!buildResult.success) {
+      return { success: false, error: 'Build failed after auto-fix attempts' };
     }
 
     // Step 2: Upload to Supabase Storage

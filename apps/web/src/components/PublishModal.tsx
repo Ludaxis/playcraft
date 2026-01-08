@@ -65,7 +65,7 @@ export const PublishModal = memo(function PublishModal({
       onProgress: (p) => setProgress(p),
       onBuildOutput: (output) => setBuildOutput((prev) => [...prev.slice(-100), output]),
       onAutoFix: autoFixHandler,
-      maxFixAttempts: 2,
+      maxFixAttempts: 3, // Try up to 3 times for each phase (pre-build + build)
     });
 
     setIsPublishing(false);
