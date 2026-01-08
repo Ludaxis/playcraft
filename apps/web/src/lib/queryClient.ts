@@ -90,5 +90,6 @@ export const queryKeys = {
       [...queryKeys.assets.all, 'detail', assetId] as const,
     manifest: (projectId: string) =>
       [...queryKeys.assets.all, 'manifest', projectId] as const,
+    usage: (projectId: string) => [...queryKeys.assets.all, 'usage', projectId] as const,
   },
 } as const;

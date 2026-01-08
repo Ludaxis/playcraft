@@ -11,6 +11,7 @@ import {
   getProjectAssets,
   getAsset,
   getAssetsByCategory,
+  getProjectAssetUsage,
   uploadAsset,
   updateAsset,
   deleteAsset,
@@ -43,6 +44,18 @@ export function useProjectAssets(projectId: string | undefined) {
     queryKey: queryKeys.assets.byProject(projectId ?? ''),
     queryFn: () => getProjectAssets(projectId!),
     enabled: !!projectId,
+  });
+}
+
+/**
+ * Fetch aggregate usage (size/count) for a project's assets
+ */
+export function useProjectAssetUsage(projectId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.assets.usage(projectId ?? ''),
+    queryFn: () => getProjectAssetUsage(projectId!),
+    enabled: !!projectId,
+    staleTime: 30_000,
   });
 }
 
@@ -120,6 +133,9 @@ export function useUploadAsset() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.assets.manifest(result.asset.projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.assets.usage(result.asset.projectId),
+      });
     },
   });
 }
@@ -173,6 +189,9 @@ export function useUploadMultipleAssets() {
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.assets.manifest(variables.projectId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.assets.usage(variables.projectId),
       });
     },
   });
@@ -229,6 +248,9 @@ export function useDeleteAsset() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.assets.manifest(deletedAsset.projectId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.assets.usage(deletedAsset.projectId),
+      });
     },
   });
 }
@@ -283,6 +305,9 @@ export function useInvalidateAssets() {
     });
     queryClient.invalidateQueries({
       queryKey: queryKeys.assets.manifest(projectId),
+    });
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.assets.usage(projectId),
     });
   };
 }

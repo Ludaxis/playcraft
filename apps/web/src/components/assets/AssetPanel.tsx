@@ -17,8 +17,9 @@ import {
   useUpdateAsset,
   useDeleteAsset,
   useInvalidateAssets,
+  useProjectAssetUsage,
 } from '../../hooks/useAssets';
-import type { Asset, CreateAssetInput, UpdateAssetInput } from '../../types/assets';
+import { ASSET_CONFIG, type Asset, type CreateAssetInput, type UpdateAssetInput } from '../../types/assets';
 
 type PanelView = 'gallery' | 'upload' | 'generate';
 
@@ -34,10 +35,16 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   const { data: assets = [], isLoading } = useProjectAssets(projectId);
+  const { data: usage } = useProjectAssetUsage(projectId);
   const uploadAsset = useUploadAsset();
   const updateAsset = useUpdateAsset();
   const deleteAsset = useDeleteAsset();
   const invalidateAssets = useInvalidateAssets();
+
+  const uploaderUsage = {
+    totalSizeBytes: usage?.totalSize ?? 0,
+    limitBytes: ASSET_CONFIG.projectStorageLimitBytes,
+  };
 
   const handleUpload = useCallback(
     async (file: File, input: CreateAssetInput) => {
@@ -154,6 +161,7 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
               userId={userId}
               onUpload={handleUpload}
               onUploadComplete={handleUploadComplete}
+              usage={uploaderUsage}
               disabled={uploadAsset.isPending}
             />
           </div>

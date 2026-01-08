@@ -310,4 +310,100 @@ describe('ChatInput', () => {
       expect(screen.getByText('Enter to send · Shift+Enter for new line')).toBeInTheDocument();
     });
   });
+
+  describe('Variants', () => {
+    describe('Landing variant', () => {
+      it('renders with light theme styling', () => {
+        render(<ChatInput {...defaultProps} variant="landing" />);
+        // Landing uses white background
+        const container = document.querySelector('.bg-white\\/95');
+        expect(container).toBeInTheDocument();
+      });
+
+      it('does not show attach button', () => {
+        render(<ChatInput {...defaultProps} variant="landing" />);
+        expect(screen.queryByTitle('Attach files')).not.toBeInTheDocument();
+      });
+
+      it('does not show mode toggle', () => {
+        render(<ChatInput {...defaultProps} variant="landing" />);
+        expect(screen.queryByText('Build')).not.toBeInTheDocument();
+        expect(screen.queryByText('Chat')).not.toBeInTheDocument();
+      });
+
+      it('does not show suggestions', () => {
+        render(<ChatInput {...defaultProps} variant="landing" />);
+        expect(screen.queryByText('Add power-ups')).not.toBeInTheDocument();
+      });
+
+      it('does not show footer hint', () => {
+        render(<ChatInput {...defaultProps} variant="landing" />);
+        expect(screen.queryByText('Enter to send · Shift+Enter for new line')).not.toBeInTheDocument();
+      });
+
+      it('shows animated placeholder when provided', () => {
+        render(
+          <ChatInput
+            {...defaultProps}
+            variant="landing"
+            animatedPhrases={['test phrase']}
+            staticPrefix="Create a "
+          />
+        );
+        expect(screen.getByText('Create a')).toBeInTheDocument();
+      });
+    });
+
+    describe('Home variant', () => {
+      it('renders with dark theme styling', () => {
+        render(<ChatInput {...defaultProps} variant="home" />);
+        // Home uses surface-overlay background
+        const container = document.querySelector('.bg-surface-overlay');
+        expect(container).toBeInTheDocument();
+      });
+
+      it('does not show attach button', () => {
+        render(<ChatInput {...defaultProps} variant="home" />);
+        expect(screen.queryByTitle('Attach files')).not.toBeInTheDocument();
+      });
+
+      it('does not show mode toggle', () => {
+        render(<ChatInput {...defaultProps} variant="home" />);
+        expect(screen.queryByText('Build')).not.toBeInTheDocument();
+        expect(screen.queryByText('Chat')).not.toBeInTheDocument();
+      });
+
+      it('does not show suggestions', () => {
+        render(<ChatInput {...defaultProps} variant="home" />);
+        expect(screen.queryByText('Add power-ups')).not.toBeInTheDocument();
+      });
+
+      it('does not show footer hint', () => {
+        render(<ChatInput {...defaultProps} variant="home" />);
+        expect(screen.queryByText('Enter to send · Shift+Enter for new line')).not.toBeInTheDocument();
+      });
+    });
+
+    describe('Builder variant (default)', () => {
+      it('shows attach button', () => {
+        render(<ChatInput {...defaultProps} variant="builder" />);
+        expect(screen.getByTitle('Attach files')).toBeInTheDocument();
+      });
+
+      it('shows mode toggle', () => {
+        render(<ChatInput {...defaultProps} variant="builder" />);
+        expect(screen.getByText('Build')).toBeInTheDocument();
+      });
+
+      it('shows suggestions', () => {
+        render(<ChatInput {...defaultProps} variant="builder" />);
+        expect(screen.getByText('Add power-ups')).toBeInTheDocument();
+      });
+
+      it('shows footer hint', () => {
+        render(<ChatInput {...defaultProps} variant="builder" />);
+        expect(screen.getByText('Enter to send · Shift+Enter for new line')).toBeInTheDocument();
+      });
+    });
+  });
 });

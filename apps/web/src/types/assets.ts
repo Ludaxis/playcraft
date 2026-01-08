@@ -146,6 +146,12 @@ export interface AssetManifest {
   totalSize: number;
 }
 
+export interface ProjectAssetUsage {
+  totalCount: number;
+  totalSize: number;
+  byType: Record<AssetType, { count: number; totalSize: number }>;
+}
+
 // ============================================================================
 // UPLOAD TYPES
 // ============================================================================
@@ -170,9 +176,9 @@ export interface AssetUploadProgress {
 export const ASSET_CONFIG = {
   /** Maximum file sizes by type (in bytes) */
   maxFileSize: {
-    '2d': 5 * 1024 * 1024, // 5MB for images
-    '3d': 20 * 1024 * 1024, // 20MB for 3D models
-    audio: 10 * 1024 * 1024, // 10MB for audio
+    '2d': 25 * 1024 * 1024, // 25MB per file per Phase 1 spec
+    '3d': 25 * 1024 * 1024,
+    audio: 25 * 1024 * 1024,
   },
 
   /** Supported MIME types */
@@ -219,6 +225,9 @@ export const ASSET_CONFIG = {
 
   /** Public path prefix in WebContainer */
   publicPathPrefix: '/public/assets',
+
+  /** Project-level storage quota (Phase 1 target: 1GB) */
+  projectStorageLimitBytes: 1024 * 1024 * 1024,
 } as const;
 
 // ============================================================================

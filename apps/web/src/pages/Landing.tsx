@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
-import { ArrowUp } from 'lucide-react';
+import { useState } from 'react';
 import { AuthModal, Logo, LogoIcon } from '../components';
+import { ChatInput } from '../components/builder/ChatInput';
 
 const TYPING_SUGGESTIONS = [
   'puzzle game with numbers',
@@ -19,67 +19,11 @@ interface LandingPageProps {
   onSignIn: () => void;
 }
 
-function useTypewriter(phrases: string[], typingSpeed = 80, deletingSpeed = 40, pauseTime = 2000) {
-  const [displayText, setDisplayText] = useState('');
-  const [phraseIndex, setPhraseIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-
-  useEffect(() => {
-    const currentPhrase = phrases[phraseIndex];
-
-    if (isPaused) {
-      const pauseTimer = setTimeout(() => {
-        setIsPaused(false);
-        setIsDeleting(true);
-      }, pauseTime);
-      return () => clearTimeout(pauseTimer);
-    }
-
-    if (isDeleting) {
-      if (displayText === '') {
-        setIsDeleting(false);
-        setPhraseIndex((prev) => (prev + 1) % phrases.length);
-      } else {
-        const deleteTimer = setTimeout(() => {
-          setDisplayText((prev) => prev.slice(0, -1));
-        }, deletingSpeed);
-        return () => clearTimeout(deleteTimer);
-      }
-    } else {
-      if (displayText === currentPhrase) {
-        setIsPaused(true);
-      } else {
-        const typeTimer = setTimeout(() => {
-          setDisplayText(currentPhrase.slice(0, displayText.length + 1));
-        }, typingSpeed);
-        return () => clearTimeout(typeTimer);
-      }
-    }
-  }, [displayText, phraseIndex, isDeleting, isPaused, phrases, typingSpeed, deletingSpeed, pauseTime]);
-
-  return displayText;
-}
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function LandingPage({ onSignIn }: LandingPageProps) {
   const [inputValue, setInputValue] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const animatedText = useTypewriter(TYPING_SUGGESTIONS);
-
-  const handleInputFocus = () => {
-    setIsFocused(true);
-  };
-
-  const handleInputBlur = () => {
-    if (!inputValue) {
-      setIsFocused(false);
-    }
-  };
 
   const handleShowSignIn = () => {
     setAuthMode('signin');
@@ -98,13 +42,6 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
     localStorage.setItem('playcraft_pending_prompt', inputValue.trim());
     setAuthMode('signup');
     setShowAuthModal(true);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
   };
 
   return (
@@ -170,41 +107,15 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
 
           {/* Chat Input Box */}
           <div className="relative mx-auto max-w-2xl">
-            <div className="rounded-2xl bg-white/95 shadow-2xl overflow-hidden">
-              {/* Input Area */}
-              <div className="p-4 relative">
-                {/* Animated placeholder overlay */}
-                {!isFocused && !inputValue && (
-                  <div className="absolute inset-0 p-4 pointer-events-none text-base text-gray-400">
-                    <span>{STATIC_PREFIX}</span>
-                    <span className="text-gray-600">{animatedText}</span>
-                    <span className="inline-block w-0.5 h-5 bg-gray-400 ml-0.5 animate-pulse align-middle" />
-                  </div>
-                )}
-                <textarea
-                  ref={textareaRef}
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onFocus={handleInputFocus}
-                  onBlur={handleInputBlur}
-                  onKeyDown={handleKeyDown}
-                  placeholder={isFocused ? "Describe what you want to build..." : ""}
-                  className="w-full resize-none bg-transparent text-gray-800 placeholder-gray-400 outline-none text-base min-h-[60px] relative z-10"
-                  rows={2}
-                />
-              </div>
-
-              {/* Toolbar */}
-              <div className="flex items-center justify-end px-4 py-3 border-t border-gray-100">
-                <button
-                  onClick={handleSubmit}
-                  disabled={!inputValue.trim()}
-                  className="p-2 bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-                >
-                  <ArrowUp className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
+            <ChatInput
+              variant="landing"
+              value={inputValue}
+              onChange={setInputValue}
+              onSend={handleSubmit}
+              placeholder="Describe what you want to build..."
+              animatedPhrases={TYPING_SUGGESTIONS}
+              staticPrefix={STATIC_PREFIX}
+            />
           </div>
         </div>
       </main>

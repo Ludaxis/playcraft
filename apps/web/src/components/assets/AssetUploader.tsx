@@ -32,6 +32,10 @@ interface UploadFile {
 interface AssetUploaderProps {
   projectId: string;
   userId: string;
+  usage?: {
+    totalSizeBytes: number;
+    limitBytes: number;
+  };
   onUpload: (file: File, input: CreateAssetInput) => Promise<void>;
   onUploadComplete?: () => void;
   maxConcurrent?: number;
@@ -54,7 +58,8 @@ function getFileIcon(assetType: AssetType) {
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
 function generateFileId(): string {
@@ -62,6 +67,7 @@ function generateFileId(): string {
 }
 
 export function AssetUploader({
+  usage,
   onUpload,
   onUploadComplete,
   maxConcurrent = 3,
@@ -73,33 +79,68 @@ export function AssetUploader({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadingCountRef = useRef(0);
 
+  const usedBytes = usage?.totalSizeBytes ?? 0;
+  const limitBytes = usage?.limitBytes ?? ASSET_CONFIG.projectStorageLimitBytes;
+  const remainingBytes = Math.max(limitBytes - usedBytes, 0);
+  const usagePercent = Math.min((usedBytes / limitBytes) * 100, 100);
+  const maxPerFileText = formatFileSize(ASSET_CONFIG.maxFileSize['2d']);
+
   const addFiles = useCallback((newFiles: FileList | File[]) => {
-    const filesToAdd: UploadFile[] = [];
+    setFiles((prev) => {
+      const filesToAdd: UploadFile[] = [];
+      const queuedBytes = prev.reduce((sum, f) => {
+        if (f.status === 'pending' || f.status === 'uploading') {
+          return sum + f.file.size;
+        }
+        return sum;
+      }, 0);
 
-    for (const file of Array.from(newFiles)) {
-      const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-      const assetType = getAssetTypeFromExtension(ext);
-      const validation = validateAssetFile(file);
+      let addedBytes = 0;
 
-      const uploadFile: UploadFile = {
-        id: generateFileId(),
-        file,
-        assetType: assetType || '2d',
-        status: validation.valid ? 'pending' : 'error',
-        progress: 0,
-        error: validation.error,
-      };
+      for (const file of Array.from(newFiles)) {
+        const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+        const assetType = getAssetTypeFromExtension(ext);
+        const validation = validateAssetFile(file);
 
-      if (assetType === '2d' && validation.valid) {
-        const url = URL.createObjectURL(file);
-        uploadFile.preview = url;
+        const projectedTotal = usedBytes + queuedBytes + addedBytes + file.size;
+        if (projectedTotal > limitBytes) {
+          filesToAdd.push({
+            id: generateFileId(),
+            file,
+            assetType: assetType || '2d',
+            status: 'error',
+            progress: 0,
+            error: `Storage limit exceeded. Remaining ${formatFileSize(
+              Math.max(limitBytes - (usedBytes + queuedBytes + addedBytes), 0)
+            )}`,
+          });
+          continue;
+        }
+
+        const uploadFile: UploadFile = {
+          id: generateFileId(),
+          file,
+          assetType: assetType || '2d',
+          status: validation.valid ? 'pending' : 'error',
+          progress: 0,
+          error: validation.error,
+        };
+
+        if (assetType === '2d' && validation.valid) {
+          const url = URL.createObjectURL(file);
+          uploadFile.preview = url;
+        }
+
+        if (validation.valid) {
+          addedBytes += file.size;
+        }
+
+        filesToAdd.push(uploadFile);
       }
 
-      filesToAdd.push(uploadFile);
-    }
-
-    setFiles((prev) => [...prev, ...filesToAdd]);
-  }, []);
+      return [...prev, ...filesToAdd];
+    });
+  }, [limitBytes, usedBytes]);
 
   const removeFile = useCallback((fileId: string) => {
     setFiles((prev) => {
@@ -256,6 +297,22 @@ export function AssetUploader({
 
   return (
     <div className="flex flex-col gap-4">
+      {limitBytes > 0 && (
+        <div className="space-y-1 rounded-lg bg-surface-elevated p-3 text-xs text-content-muted">
+          <div className="flex items-center justify-between">
+            <span>Storage</span>
+            <span>
+              {formatFileSize(usedBytes)} / {formatFileSize(limitBytes)}
+            </span>
+          </div>
+          <Progress value={usagePercent} className="h-1.5" />
+          <div className="flex justify-between text-[11px] text-content-subtle">
+            <span>Project limit: {formatFileSize(limitBytes)}</span>
+            <span>{formatFileSize(remainingBytes)} remaining</span>
+          </div>
+        </div>
+      )}
+
       <div
         className={cn(
           'relative flex min-h-[160px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all',
@@ -292,7 +349,7 @@ export function AssetUploader({
           PNG, JPG, WebP, GIF, SVG, GLB, GLTF, MP3, WAV, OGG
         </p>
         <p className="mt-1 text-xs text-content-subtle">
-          Max: 5MB (2D), 20MB (3D), 10MB (Audio)
+          Max per file: {maxPerFileText}. Project limit: {formatFileSize(limitBytes)}.
         </p>
       </div>
 

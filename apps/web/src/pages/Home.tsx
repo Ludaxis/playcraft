@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import {
   Search,
-  Send,
   Gamepad2,
   Plus,
   MoreHorizontal,
@@ -14,6 +13,7 @@ import {
   AlertTriangle,
   Star,
 } from 'lucide-react';
+import { ChatInput } from '../components/builder/ChatInput';
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
 import { ensureDraftPool } from '../lib/projectService';
@@ -69,17 +69,12 @@ const FEATURED_GAMES = [
 export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, pendingPrompt, onPendingPromptUsed }: HomePageProps) {
   // UI state
   const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Pre-fill input with pending prompt from landing page
   useEffect(() => {
     if (pendingPrompt) {
       setInputValue(pendingPrompt);
       onPendingPromptUsed?.();
-      // Focus the input after a short delay to ensure it's visible
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
     }
   }, [pendingPrompt, onPendingPromptUsed]);
   const [activeNav, setActiveNav] = useState<NavItem>('home');
@@ -499,29 +494,13 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                 </h1>
 
                 {/* Input box */}
-                <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl p-4">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-                    placeholder="Describe the game you want to create..."
-                    className="w-full bg-transparent text-lg text-content placeholder-content-subtle outline-none"
-                  />
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {/* Could add attach/theme buttons here */}
-                    </div>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={!inputValue.trim()}
-                      className="flex h-10 w-10 items-center justify-center rounded-full bg-accent text-content transition-all hover:bg-accent-light hover:shadow-glow-sm disabled:opacity-50"
-                    >
-                      <Send className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
+                <ChatInput
+                  variant="home"
+                  value={inputValue}
+                  onChange={setInputValue}
+                  onSend={handleSubmit}
+                  placeholder="Describe the game you want to create..."
+                />
               </div>
             </div>
 

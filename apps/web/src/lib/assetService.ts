@@ -19,6 +19,7 @@ import {
   getAssetTypeFromExtension,
   getAssetFormatFromExtension,
   getCategoryFromExtension,
+  type ProjectAssetUsage,
 } from '../types/assets';
 
 const COMPONENT = 'assetService';
@@ -87,6 +88,13 @@ function buildPublicPath(category: AssetCategory, filename: string): string {
   return `${ASSET_CONFIG.publicPathPrefix}/${category}/${sanitizedFilename}`;
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
 async function getImageDimensions(
   file: File
 ): Promise<{ width: number; height: number } | null> {
@@ -111,6 +119,72 @@ async function getImageDimensions(
 
     img.src = url;
   });
+}
+
+export async function getProjectAssetUsage(projectId: string): Promise<ProjectAssetUsage> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('playcraft_project_assets')
+    .select('asset_type, file_size')
+    .eq('project_id', projectId);
+
+  if (error) {
+    logger.error('Failed to get project asset usage', error as Error, {
+      component: COMPONENT,
+      action: 'getProjectAssetUsage',
+      projectId,
+    });
+    throw new Error(`Failed to get asset usage: ${error.message}`);
+  }
+
+  const usage: ProjectAssetUsage = {
+    totalCount: 0,
+    totalSize: 0,
+    byType: {
+      '2d': { count: 0, totalSize: 0 },
+      '3d': { count: 0, totalSize: 0 },
+      audio: { count: 0, totalSize: 0 },
+    },
+  };
+
+  (data || []).forEach((row) => {
+    const assetType = (row.asset_type as AssetType) || '2d';
+    const fileSize = typeof row.file_size === 'number' ? row.file_size : 0;
+    usage.totalCount += 1;
+    usage.totalSize += fileSize;
+    if (usage.byType[assetType]) {
+      usage.byType[assetType].count += 1;
+      usage.byType[assetType].totalSize += fileSize;
+    }
+  });
+
+  return usage;
+}
+
+async function assertProjectStorageCapacity(projectId: string, incomingSize: number) {
+  const usage = await getProjectAssetUsage(projectId);
+  const limit = ASSET_CONFIG.projectStorageLimitBytes;
+
+  if (usage.totalSize + incomingSize > limit) {
+    const remaining = Math.max(limit - usage.totalSize, 0);
+    const remainingText = formatBytes(remaining);
+
+    logger.warn('Project storage limit exceeded', {
+      component: COMPONENT,
+      action: 'assertProjectStorageCapacity',
+      projectId,
+      limit,
+      currentSize: usage.totalSize,
+      incomingSize,
+    });
+
+    throw new Error(
+      `Storage limit exceeded. Remaining capacity: ${remainingText} of ${formatBytes(limit)}.`
+    );
+  }
+
+  return usage;
 }
 
 function mapDbRowToAsset(row: Record<string, unknown>): Asset {
@@ -166,6 +240,8 @@ export async function uploadAsset(
 
   const storagePath = buildStoragePath(userId, projectId, category, file.name);
   const publicPath = buildPublicPath(category, file.name);
+
+  await assertProjectStorageCapacity(projectId, file.size);
 
   logger.info('Uploading asset', {
     component: COMPONENT,

@@ -35,6 +35,8 @@ describe('AssetUploader', () => {
 
     expect(screen.getByText(/Drop files or click to upload/i)).toBeInTheDocument();
     expect(screen.getByText(/PNG, JPG, WebP, GIF, SVG, GLB, GLTF, MP3, WAV, OGG/i)).toBeInTheDocument();
+    expect(screen.getByText(/Max per file/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Project limit/i).length).toBeGreaterThan(0);
   });
 
   it('shows drag over state when dragging files', () => {
@@ -172,5 +174,27 @@ describe('AssetUploader', () => {
 
     const input = document.querySelector('input[type="file"]');
     expect(input).toBeDisabled();
+  });
+
+  it('blocks queuing files when storage limit would be exceeded', async () => {
+    render(
+      <AssetUploader
+        projectId="project-1"
+        userId="user-1"
+        onUpload={mockOnUpload}
+        usage={{ totalSizeBytes: 1024 * 1024 * 1024 - 1024, limitBytes: 1024 * 1024 * 1024 }}
+      />
+    );
+
+    const file = new File([new Uint8Array(2048)], 'too-big.png', { type: 'image/png' });
+    const input = document.querySelector('input[type="file"]');
+
+    fireEvent.change(input!, {
+      target: { files: [file] },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/Storage limit exceeded/i)).toBeInTheDocument();
+    });
   });
 });
