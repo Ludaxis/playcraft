@@ -22,6 +22,7 @@ import {
   ChatInput,
   CreditsPanel,
   ChatHistory,
+  type ChatMode,
 } from '../components/builder';
 import { AssetPanel } from '../components/assets';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
@@ -852,20 +853,21 @@ export function BuilderPage({
   );
 
   // Handle send message from input
-  const handleSendMessage = useCallback(async () => {
+  const handleSendMessage = useCallback(async (mode: ChatMode) => {
     if (!inputValue.trim() || isGenerating || isSettingUp) return;
 
     const prompt = inputValue.trim();
     setInputValue('');
+    const chatOnly = mode === 'chat';
 
     if (!projectReady) {
       await startProject();
       // Wait for project to be ready, then send message
       setTimeout(() => {
-        sendAiMessage(prompt, selectedFile || undefined);
+        sendAiMessage(prompt, selectedFile || undefined, chatOnly);
       }, 100);
     } else {
-      await sendAiMessage(prompt, selectedFile || undefined);
+      await sendAiMessage(prompt, selectedFile || undefined, chatOnly);
     }
   }, [
     inputValue,

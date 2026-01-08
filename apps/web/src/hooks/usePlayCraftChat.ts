@@ -89,7 +89,8 @@ export interface UsePlayCraftChatReturn {
   isGenerating: boolean;
   generationProgress: GenerationProgress | null;
   error: string | null;
-  sendMessage: (prompt: string, selectedFile?: string) => Promise<void>;
+  /** Send a message to the AI. Set chatOnly=true for discussion without code edits */
+  sendMessage: (prompt: string, selectedFile?: string, chatOnly?: boolean) => Promise<void>;
   clearMessages: () => void;
   addSystemMessage: (content: string) => void;
   /** Current suggestions for the chatbox (from last assistant message or initial) */
@@ -280,7 +281,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   }, [messages, hasThreeJs]);
 
   const sendMessage = useCallback(
-    async (prompt: string, selectedFile?: string) => {
+    async (prompt: string, selectedFile?: string, chatOnly?: boolean) => {
       if (!prompt.trim() || isGenerating) return;
 
       setError(null);
@@ -290,7 +291,13 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
       // Track generation timing
       const generationStartTime = Date.now();
 
-      // Add user message
+      // Modify prompt for chat-only mode (discussion without code edits)
+      let effectivePrompt = prompt;
+      if (chatOnly) {
+        effectivePrompt = `[CHAT MODE - Do NOT generate or modify any code files. Respond with explanation/discussion only.]\n\n${prompt}`;
+      }
+
+      // Add user message (show original prompt to user, not the modified one)
       addMessage({ role: 'user', content: prompt });
       messageCountRef.current++;
 
@@ -346,7 +353,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
           // Preflight estimate (Phase 4.4) - estimate tokens before building full context
           const estimate = preflightEstimate(
-            prompt,
+            effectivePrompt,
             currentFiles,
             selectedFile,
             recentMessages,
@@ -365,7 +372,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           // Build smart context package with optional semantic search
           contextPackage = await buildContext(
             projectId,
-            prompt,
+            effectivePrompt,
             currentFiles,
             selectedFile,
             recentMessages,
@@ -402,7 +409,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
           // Make context-aware request (Gemini on server)
           const request: ContextAwareRequest = {
-            prompt,
+            prompt: effectivePrompt,
             projectId,
             templateId,
             hasThreeJs,
@@ -465,7 +472,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             }));
 
           const request: GenerateRequest = {
-            prompt,
+            prompt: effectivePrompt,
             currentFiles,
             selectedFile,
             conversationHistory,

@@ -3,7 +3,7 @@
  */
 
 export { ChatMessages } from './ChatMessages';
-export { ChatInput } from './ChatInput';
+export { ChatInput, type ChatMode } from './ChatInput';
 export { LeftPanel } from './LeftPanel';
 export { EditorPanel } from './EditorPanel';
 export { TerminalPanel } from './TerminalPanel';

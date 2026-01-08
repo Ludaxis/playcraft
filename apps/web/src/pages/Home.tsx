@@ -17,7 +17,7 @@ import {
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
 import { ensureDraftPool } from '../lib/projectService';
-import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon } from '../components';
+import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon, PublishModal } from '../components';
 import { useSidebar } from '../hooks';
 import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from '../hooks/useProjects';
 import { useWorkspaces, useCreateWorkspace } from '../hooks/useWorkspaces';
@@ -96,6 +96,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [starringProjectId, setStarringProjectId] = useState<string | null>(null);
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const [projectToPublish, setProjectToPublish] = useState<PlayCraftProject | null>(null);
   const draftPoolInitializedRef = useRef(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -407,6 +408,17 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                         <p className="text-sm text-content-subtle">
                           Edited {formatTimeAgo(project.updated_at)}
                         </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setProjectToPublish(project);
+                            }}
+                            className="rounded-full border border-border px-3 py-1 text-xs text-content-muted transition-colors hover:border-accent/40 hover:text-content"
+                          >
+                            Deploy
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </button>
@@ -594,6 +606,22 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
         onClose={() => setShowCreateWorkspace(false)}
         onCreated={handleWorkspaceCreated}
       />
+
+      {/* Publish from home */}
+      {projectToPublish && (
+        <PublishModal
+          isOpen={!!projectToPublish}
+          onClose={() => setProjectToPublish(null)}
+          projectId={projectToPublish.id}
+          userId={user.id}
+          projectName={projectToPublish.name}
+          isAlreadyPublished={projectToPublish.status === 'published'}
+          existingUrl={projectToPublish.published_url}
+          onPublishSuccess={(url) => {
+            setProjectToPublish({ ...projectToPublish, published_url: url, status: 'published' });
+          }}
+        />
+      )}
 
       {/* Search Modal */}
       <SearchModal
