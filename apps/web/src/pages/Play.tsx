@@ -67,11 +67,13 @@ export function PlayPage({ gameId }: PlayPageProps) {
         const text = await latest.data.text();
         const parsed = JSON.parse(text);
         if (parsed?.path) {
-          return supabase.storage.from('published-games').getPublicUrl(parsed.path).data.publicUrl;
+          const url = supabase.storage.from('published-games').getPublicUrl(parsed.path).data.publicUrl;
+          console.log('[PlayPage] Using versioned URL:', url);
+          return url;
         }
       }
-    } catch {
-      // ignore and fallback
+    } catch (err) {
+      console.log('[PlayPage] latest.json not found, trying versions.json', err);
     }
 
     // Fallback to versions.json (latest entry)
@@ -83,16 +85,20 @@ export function PlayPage({ gameId }: PlayPageProps) {
         if (Array.isArray(parsed) && parsed.length > 0) {
           const latestVersion = parsed[parsed.length - 1];
           if (latestVersion?.path) {
-            return supabase.storage.from('published-games').getPublicUrl(latestVersion.path).data.publicUrl;
+            const url = supabase.storage.from('published-games').getPublicUrl(latestVersion.path).data.publicUrl;
+            console.log('[PlayPage] Using manifest URL:', url);
+            return url;
           }
         }
       }
-    } catch {
-      // ignore and fallback
+    } catch (err) {
+      console.log('[PlayPage] versions.json not found, using legacy path', err);
     }
 
     // Legacy fallback
-    return supabase.storage.from('published-games').getPublicUrl(`${basePath}/index.html`).data.publicUrl;
+    const legacyUrl = supabase.storage.from('published-games').getPublicUrl(`${basePath}/index.html`).data.publicUrl;
+    console.log('[PlayPage] Using legacy URL:', legacyUrl);
+    return legacyUrl;
   }, [game]);
 
   const handleShare = async () => {
