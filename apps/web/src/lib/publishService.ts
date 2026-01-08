@@ -302,10 +302,18 @@ export function generateFixPrompt(errors: CodeError[]): string {
    ❌ const timerRef = useRef<NodeJS.Timeout>()
    ✅ const timerRef = useRef<ReturnType<typeof setTimeout>>()
 
-3. __dirname ERROR - In vite.config.ts, use import.meta.url instead:
-   ❌ path.resolve(__dirname, './src')
-   ✅ Use: import { fileURLToPath } from 'url'; const __dirname = path.dirname(fileURLToPath(import.meta.url));
-   OR just use relative paths: path.resolve('./src')
+3. vite.config.ts ERRORS (__dirname, path, url module errors):
+   Replace the ENTIRE vite.config.ts with this simple version:
+   \`\`\`
+   import { defineConfig } from 'vite'
+   import react from '@vitejs/plugin-react'
+
+   export default defineConfig({
+     plugins: [react()],
+     resolve: { alias: { '@': '/src' } },
+     server: { host: true, port: 3000 },
+   })
+   \`\`\`
 
 4. Type mismatches - Fix any type errors
 
