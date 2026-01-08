@@ -110,8 +110,10 @@ export function ChatInput({
   const [mode, setMode] = useState<ChatMode>(defaultMode);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isFocused, setIsFocused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const dragCounterRef = useRef(0);
 
   // Animated placeholder
   const hasAnimatedPlaceholder = animatedPhrases.length > 0;
@@ -220,25 +222,141 @@ export function ChatInput({
     setAttachedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Process files (shared by file input and drag/drop)
+  const processFiles = async (files: File[]) => {
+    const imageFiles = files.filter(f => f.type.startsWith('image/'));
+
+    if (imageFiles.length === 0) {
+      // Non-image files go to asset upload
+      onAttachFiles?.(files);
+      return;
+    }
+
+    // Process images for AI
+    const newAttached: AttachedFile[] = await Promise.all(
+      imageFiles.map(async (file) => {
+        const attached: AttachedFile = {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          file,
+        };
+
+        try {
+          const base64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              const base64Data = result.split(',')[1];
+              resolve(base64Data);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+          attached.base64 = base64;
+        } catch (err) {
+          console.warn('Failed to convert image to base64:', err);
+        }
+
+        return attached;
+      })
+    );
+
+    setAttachedFiles(prev => [...prev, ...newAttached]);
+
+    // Handle non-image files
+    const nonImageFiles = files.filter(f => !f.type.startsWith('image/'));
+    if (nonImageFiles.length > 0) {
+      onAttachFiles?.(nonImageFiles);
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounterRef.current = 0;
+
+    if (onAuthRequired) {
+      onAuthRequired();
+      return;
+    }
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      await processFiles(files);
+    }
+  };
+
   const dynamicPlaceholder = mode === 'chat'
     ? 'Ask a question about your code...'
     : placeholder;
 
   return (
-    <div>
+    <div
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className="relative"
+    >
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl border-2 border-dashed border-accent bg-accent/10 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2 text-accent">
+            <Image className="h-8 w-8" />
+            <span className="text-sm font-medium">Drop images here</span>
+          </div>
+        </div>
+      )}
+
       {/* Main input container */}
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
+      <div className={`overflow-hidden rounded-2xl border bg-black/40 backdrop-blur-xl transition-colors ${isDragging ? 'border-accent' : 'border-white/10'}`}>
         {/* Attached files preview */}
         {attachedFiles.length > 0 && (
-          <div className="flex flex-wrap gap-2 border-b border-white/10 px-4 py-2">
+          <div className="border-b border-white/10 px-4 py-2">
+            {/* AI vision indicator */}
+            {attachedFiles.some(f => f.type.startsWith('image/')) && (
+              <div className="mb-2 flex items-center gap-1.5 text-[11px] text-accent">
+                <Image className="h-3 w-3" />
+                <span>📸 {attachedFiles.filter(f => f.type.startsWith('image/')).length} image(s) will be sent to AI for analysis</span>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
             {attachedFiles.map((file, index) => {
               const FileIcon = getFileIcon(file.type);
+              const isImage = file.type.startsWith('image/');
               return (
                 <div
                   key={index}
-                  className="flex items-center gap-2 rounded-lg bg-white/10 px-2 py-1"
+                  className={`flex items-center gap-2 rounded-lg px-2 py-1 ${isImage ? 'bg-accent/20 ring-1 ring-accent/30' : 'bg-white/10'}`}
+                  title={isImage ? 'This image will be sent to AI' : undefined}
                 >
-                  <FileIcon className="h-4 w-4 text-accent" />
+                  <FileIcon className={`h-4 w-4 ${isImage ? 'text-accent' : 'text-white/70'}`} />
                   <span className="max-w-[120px] truncate text-xs text-white">
                     {file.name}
                   </span>
@@ -254,6 +372,7 @@ export function ChatInput({
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 

@@ -24,26 +24,50 @@ interface ProjectState {
 }
 
 let currentProjectState: ProjectState | null = null;
+const PROJECT_STATE_KEY = 'playcraft_project_state';
 
 /**
  * Get the current project state (for reconnecting after navigation)
+ * First checks memory, then falls back to sessionStorage
  */
 export function getProjectState(): ProjectState | null {
-  return currentProjectState;
+  if (currentProjectState) {
+    return currentProjectState;
+  }
+
+  // Try to restore from sessionStorage (survives refresh)
+  try {
+    const stored = sessionStorage.getItem(PROJECT_STATE_KEY);
+    if (stored) {
+      const state = JSON.parse(stored) as ProjectState;
+      currentProjectState = state;
+      return state;
+    }
+  } catch {
+    // sessionStorage not available or corrupted
+  }
+
+  return null;
 }
 
 /**
- * Set the current project state
+ * Set the current project state (persists to sessionStorage)
  */
 export function setProjectState(state: ProjectState): void {
   currentProjectState = state;
+  try {
+    sessionStorage.setItem(PROJECT_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // sessionStorage not available
+  }
 }
 
 /**
  * Check if a project is already set up and running
  */
 export function isProjectReady(projectId: string): boolean {
-  return currentProjectState?.projectId === projectId && currentProjectState.isReady;
+  const state = getProjectState();
+  return state?.projectId === projectId && state.isReady;
 }
 
 /**
@@ -51,6 +75,11 @@ export function isProjectReady(projectId: string): boolean {
  */
 export function clearProjectState(): void {
   currentProjectState = null;
+  try {
+    sessionStorage.removeItem(PROJECT_STATE_KEY);
+  } catch {
+    // sessionStorage not available
+  }
 }
 
 // =============================================================================

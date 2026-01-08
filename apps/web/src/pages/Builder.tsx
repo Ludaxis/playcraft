@@ -699,7 +699,7 @@ export function BuilderPage({
         }
       }
 
-      addSystemMessage('Installing dependencies... (this takes about a minute)');
+      addSystemMessage('Setting up dependencies...');
       console.log('[Builder] Calling install...');
       await install(project.id);
       console.log('[Builder] Install complete, calling startDev...');
