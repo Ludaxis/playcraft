@@ -37,6 +37,46 @@ describe('projectService', () => {
     vi.clearAllMocks();
   });
 
+  describe('draft reuse flag defaults', () => {
+    it('defaults reuseDraft to true when omitted', async () => {
+      const mockProject = { id: '1', name: 'Draft workspace' };
+
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+
+      const selectMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockProject, error: null }),
+                }),
+              }),
+            }),
+          }),
+        }),
+      });
+
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: mockProject, error: null }),
+          }),
+        }),
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return { select: selectMock, update: updateMock } as never;
+        }
+        return { select: vi.fn(), update: vi.fn() } as never;
+      });
+
+      await createProject({ name: 'Test Project' });
+      expect(selectMock).toHaveBeenCalled();
+    });
+  });
+
   describe('getProjects', () => {
     it('returns empty array when not authenticated', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({

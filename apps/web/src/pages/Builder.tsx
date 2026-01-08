@@ -27,7 +27,7 @@ import {
 import { AssetPanel } from '../components/assets';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
 import type { DeviceMode } from '../components/builder/DeviceToggle';
-import { useWebContainer, usePlayCraftChat, usePreviewErrors, useFileChangeTracker, useSyncAssetsToContainer } from '../hooks';
+import { useWebContainer, usePlayCraftChat, usePreviewErrors, useFileChangeTracker, useSyncAssetsToContainer, useUploadMultipleAssets } from '../hooks';
 import { viteStarterTemplate } from '../templates';
 import { applyGeneratedFiles, applyGeneratedEdits } from '../lib/playcraftService';
 import type { FileEdit } from '../lib/editApplyService';
@@ -296,6 +296,9 @@ export function BuilderPage({
 
   // Asset sync hook
   const syncAssets = useSyncAssetsToContainer();
+
+  // Asset upload hook for chat input attachments
+  const uploadAssets = useUploadMultipleAssets();
 
   // Sync assets to WebContainer when project is ready
   useEffect(() => {
@@ -893,6 +896,27 @@ export function BuilderPage({
     }
   }, [isGenerating, isSettingUp, projectReady, startProject, sendAiMessage, selectedFile]);
 
+  // Handle file attachments from chat input - upload to asset system
+  const handleAttachFiles = useCallback(async (files: File[]) => {
+    if (!project.id || files.length === 0) return;
+
+    try {
+      await uploadAssets.mutateAsync({
+        userId: user.id,
+        projectId: project.id,
+        files,
+        getInput: (file) => ({
+          name: file.name,
+          displayName: file.name.replace(/\.[^.]+$/, ''),
+        }),
+      });
+      addSystemMessage(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''} to project assets.`);
+    } catch (err) {
+      console.error('Failed to upload files:', err);
+      addSystemMessage(`Failed to upload files: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  }, [project.id, user.id, uploadAssets, addSystemMessage]);
+
   // Show file in editor when selected from file tree
   const handleSelectFile = useCallback((file: string | null) => {
     setSelectedFile(file);
@@ -1131,6 +1155,7 @@ export function BuilderPage({
             disabled={isGenerating}
             suggestions={suggestions}
             onSuggestionClick={handleSuggestionClick}
+            onAttachFiles={handleAttachFiles}
           />
         </>
       ) : chatPanelTab === 'history' ? (
