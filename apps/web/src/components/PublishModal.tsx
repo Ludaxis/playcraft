@@ -4,7 +4,7 @@
  */
 
 import { useState, memo, useCallback } from 'react';
-import { X, Rocket, Loader2, Check, Copy, ExternalLink, AlertCircle, Globe } from 'lucide-react';
+import { X, Rocket, Loader2, Check, Copy, ExternalLink, AlertCircle, Globe, Wrench } from 'lucide-react';
 import { publishGame, type PublishProgress } from '../lib/publishService';
 
 interface PublishModalProps {
@@ -16,6 +16,8 @@ interface PublishModalProps {
   isAlreadyPublished?: boolean;
   existingUrl?: string | null;
   onPublishSuccess?: (url: string) => void;
+  /** Callback to send a fix prompt to the AI. Returns promise that resolves when fix is complete. */
+  onAutoFix?: (fixPrompt: string) => Promise<void>;
 }
 
 export const PublishModal = memo(function PublishModal({
@@ -27,6 +29,7 @@ export const PublishModal = memo(function PublishModal({
   isAlreadyPublished = false,
   existingUrl,
   onPublishSuccess,
+  onAutoFix,
 }: PublishModalProps) {
   const [isPublishing, setIsPublishing] = useState(false);
   const [progress, setProgress] = useState<PublishProgress | null>(null);
@@ -41,12 +44,29 @@ export const PublishModal = memo(function PublishModal({
     setBuildOutput([]);
     setPublishedUrl(null);
 
-    const result = await publishGame(
+    // Create auto-fix wrapper that waits for generation to complete
+    const autoFixHandler = onAutoFix
+      ? async (fixPrompt: string): Promise<boolean> => {
+          try {
+            await onAutoFix(fixPrompt);
+            // Wait additional time for edits to be applied
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            return true;
+          } catch (err) {
+            console.error('[PublishModal] Auto-fix failed:', err);
+            return false;
+          }
+        }
+      : undefined;
+
+    const result = await publishGame({
       userId,
       projectId,
-      (p) => setProgress(p),
-      (output) => setBuildOutput((prev) => [...prev.slice(-100), output]) // Keep last 100 lines
-    );
+      onProgress: (p) => setProgress(p),
+      onBuildOutput: (output) => setBuildOutput((prev) => [...prev.slice(-100), output]),
+      onAutoFix: autoFixHandler,
+      maxFixAttempts: 2,
+    });
 
     setIsPublishing(false);
 
@@ -56,7 +76,7 @@ export const PublishModal = memo(function PublishModal({
     } else {
       setError(result.error || 'Publishing failed');
     }
-  }, [userId, projectId, onPublishSuccess]);
+  }, [userId, projectId, onPublishSuccess, onAutoFix]);
 
   const handleCopyUrl = useCallback(async () => {
     if (publishedUrl) {
@@ -168,12 +188,20 @@ export const PublishModal = memo(function PublishModal({
             /* Publishing State */
             <div>
               <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/20">
-                  <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                  progress?.stage === 'fixing' ? 'bg-warning/20' : 'bg-accent/20'
+                }`}>
+                  {progress?.stage === 'fixing' ? (
+                    <Wrench className="h-5 w-5 animate-pulse text-warning" />
+                  ) : (
+                    <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                  )}
                 </div>
                 <div>
                   <p className="font-medium text-content">{progress?.message}</p>
                   <p className="text-sm text-content-muted">
+                    {progress?.stage === 'checking' && 'Checking for TypeScript errors...'}
+                    {progress?.stage === 'fixing' && 'AI is fixing errors automatically...'}
                     {progress?.stage === 'building' && 'Creating production build...'}
                     {progress?.stage === 'uploading' && 'Uploading to servers...'}
                     {progress?.stage === 'finalizing' && 'Almost done...'}

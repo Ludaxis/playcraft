@@ -1,6 +1,7 @@
 /**
  * Publishing Service for PlayCraft
  * Handles building, uploading, and publishing games to public URLs
+ * Includes auto-fix for TypeScript errors before build
  */
 
 import { getSupabase } from './supabase';
@@ -11,7 +12,7 @@ import type { PublishedGame } from '../types';
 // Types
 // ============================================================================
 
-export type PublishStage = 'building' | 'uploading' | 'finalizing' | 'complete' | 'error';
+export type PublishStage = 'checking' | 'fixing' | 'building' | 'uploading' | 'finalizing' | 'complete' | 'error';
 
 export interface PublishProgress {
   stage: PublishStage;
@@ -19,10 +20,91 @@ export interface PublishProgress {
   message: string;
 }
 
+export interface TypeScriptError {
+  file: string;
+  line: number;
+  column: number;
+  code: string;
+  message: string;
+}
+
 export interface PublishResult {
   success: boolean;
   url?: string;
   error?: string;
+}
+
+// ============================================================================
+// TypeScript Check & Auto-Fix Functions
+// ============================================================================
+
+/**
+ * Run TypeScript check and return any errors
+ */
+export async function runTypeScriptCheck(): Promise<{ success: boolean; errors: TypeScriptError[]; rawOutput: string }> {
+  try {
+    const process = await spawn('npx', ['tsc', '--noEmit']);
+
+    let output = '';
+    await process.output.pipeTo(
+      new WritableStream({
+        write(data) {
+          output += data;
+        },
+      })
+    );
+
+    const exitCode = await process.exit;
+
+    if (exitCode === 0) {
+      return { success: true, errors: [], rawOutput: output };
+    }
+
+    // Parse TypeScript errors
+    const errors: TypeScriptError[] = [];
+    const errorRegex = /^(.+)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/gm;
+    let match;
+
+    while ((match = errorRegex.exec(output)) !== null) {
+      errors.push({
+        file: match[1],
+        line: parseInt(match[2], 10),
+        column: parseInt(match[3], 10),
+        code: match[4],
+        message: match[5],
+      });
+    }
+
+    return { success: false, errors, rawOutput: output };
+  } catch (err) {
+    console.error('[publishService] TypeScript check failed:', err);
+    return {
+      success: false,
+      errors: [],
+      rawOutput: err instanceof Error ? err.message : 'TypeScript check failed'
+    };
+  }
+}
+
+/**
+ * Generate a prompt for the AI to fix TypeScript errors
+ */
+export function generateFixPrompt(errors: TypeScriptError[]): string {
+  const errorList = errors.map(e =>
+    `- ${e.file}:${e.line}:${e.column} - ${e.code}: ${e.message}`
+  ).join('\n');
+
+  return `Fix these TypeScript errors in my code. Make minimal changes to fix only the errors listed:
+
+${errorList}
+
+Common fixes:
+- Remove unused imports
+- Use \`ReturnType<typeof setTimeout>\` instead of \`NodeJS.Timeout\`
+- Add missing type annotations
+- Fix type mismatches
+
+Apply the fixes now.`;
 }
 
 // ============================================================================
@@ -303,30 +385,97 @@ export async function finalizePublish(
 // Main Publish Function
 // ============================================================================
 
+export interface PublishOptions {
+  userId: string;
+  projectId: string;
+  onProgress: (progress: PublishProgress) => void;
+  onBuildOutput: (data: string) => void;
+  /** Callback to auto-fix TypeScript errors. Returns true when fix is complete. */
+  onAutoFix?: (fixPrompt: string) => Promise<boolean>;
+  /** Maximum number of auto-fix attempts (default: 2) */
+  maxFixAttempts?: number;
+}
+
 /**
  * Main publish function that orchestrates the entire flow
+ * Includes automatic TypeScript error fixing before build
  */
 export async function publishGame(
-  userId: string,
-  projectId: string,
-  onProgress: (progress: PublishProgress) => void,
-  onBuildOutput: (data: string) => void
+  userIdOrOptions: string | PublishOptions,
+  projectId?: string,
+  onProgress?: (progress: PublishProgress) => void,
+  onBuildOutput?: (data: string) => void
 ): Promise<PublishResult> {
+  // Support both old and new call signatures
+  const options: PublishOptions = typeof userIdOrOptions === 'string'
+    ? {
+        userId: userIdOrOptions,
+        projectId: projectId!,
+        onProgress: onProgress!,
+        onBuildOutput: onBuildOutput!,
+      }
+    : userIdOrOptions;
+
+  const { onAutoFix, maxFixAttempts = 2 } = options;
+
   try {
+    // Step 0: Check TypeScript errors and auto-fix if needed
+    if (onAutoFix) {
+      options.onProgress({ stage: 'checking', progress: 2, message: 'Checking for errors...' });
+
+      let attempts = 0;
+      let tsResult = await runTypeScriptCheck();
+
+      while (!tsResult.success && tsResult.errors.length > 0 && attempts < maxFixAttempts) {
+        attempts++;
+        console.log(`[publishService] Found ${tsResult.errors.length} TypeScript errors, attempting auto-fix (${attempts}/${maxFixAttempts})`);
+
+        options.onProgress({
+          stage: 'fixing',
+          progress: 3,
+          message: `Fixing ${tsResult.errors.length} error${tsResult.errors.length > 1 ? 's' : ''}...`
+        });
+        options.onBuildOutput(`Found ${tsResult.errors.length} TypeScript error(s). Auto-fixing...`);
+
+        // Generate fix prompt and send to AI
+        const fixPrompt = generateFixPrompt(tsResult.errors);
+        const fixApplied = await onAutoFix(fixPrompt);
+
+        if (!fixApplied) {
+          console.log('[publishService] Auto-fix was not applied');
+          break;
+        }
+
+        // Wait a bit for files to be written
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Re-check TypeScript
+        options.onProgress({ stage: 'checking', progress: 4, message: 'Verifying fix...' });
+        tsResult = await runTypeScriptCheck();
+      }
+
+      if (!tsResult.success && tsResult.errors.length > 0) {
+        options.onBuildOutput(`\nTypeScript errors remain after ${attempts} fix attempts:\n${tsResult.rawOutput}`);
+        // Continue anyway - the build might still work or give clearer errors
+      } else if (attempts > 0) {
+        options.onBuildOutput(`\nTypeScript errors fixed successfully!`);
+      }
+    }
+
     // Step 1: Build the project
-    const buildSuccess = await buildProject(onProgress, onBuildOutput);
+    const buildSuccess = await buildProject(options.onProgress, options.onBuildOutput);
     if (!buildSuccess) {
       return { success: false, error: 'Build failed' };
     }
 
     // Step 2: Upload to Supabase Storage
-    const storageUrl = await uploadToStorage(userId, projectId, onProgress);
+    const storageUrl = await uploadToStorage(options.userId, options.projectId, options.onProgress);
     if (!storageUrl) {
       return { success: false, error: 'Upload failed' };
     }
 
     // Step 3: Finalize and save to database
-    const shareableUrl = await finalizePublish(projectId, storageUrl, onProgress);
+    const shareableUrl = await finalizePublish(options.projectId, storageUrl, options.onProgress);
     if (!shareableUrl) {
       return { success: false, error: 'Failed to save publish status' };
     }
