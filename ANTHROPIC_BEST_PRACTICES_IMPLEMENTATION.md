@@ -6,7 +6,7 @@ Based on analysis of [Effective Context Engineering for AI Agents](https://www.a
 
 ## Executive Summary
 
-PlayCraft currently implements ~75% of Anthropic's recommended best practices. This plan addresses the remaining 25% through 5 focused implementation phases.
+PlayCraft currently implements ~75% of Anthropic's recommended best practices. This plan addresses the remaining 25% through 6 focused implementation phases.
 
 | Phase | Feature | Priority | Effort | Impact |
 |-------|---------|----------|--------|--------|
@@ -15,6 +15,7 @@ PlayCraft currently implements ~75% of Anthropic's recommended best practices. T
 | 3 | Enhanced Tool Documentation | 🟡 Medium | Low | Medium |
 | 4 | Service Consolidation | 🟡 Medium | Medium | Low |
 | 5 | Sub-Agent Architecture | 🟢 Future | High | High |
+| 6 | Next Step Prediction (Hybrid) | 🟡 Medium | Medium | High |
 
 ---
 
@@ -716,14 +717,868 @@ async function orchestrate(request: GenerationRequest): Promise<GenerationResult
 
 ---
 
+## Phase 6: Next Step Prediction (Hybrid)
+
+### Problem
+After each generation, users face "blank prompt paralysis" - they don't know what to ask next. A proactive suggestion system would guide users through multi-step workflows and increase task completion rates.
+
+### Design Philosophy
+
+**Hybrid Approach**: Combine fast rule-based predictions with AI-powered suggestions for novel situations.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    After Generation Completes                    │
+└─────────────────────────────┬───────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Prediction Engine                           │
+│  ┌─────────────────────┐    ┌─────────────────────────────────┐ │
+│  │   Rule Engine       │    │      AI Fallback                │ │
+│  │   (Fast, Free)      │───▶│   (Smart, Contextual)           │ │
+│  │                     │    │                                 │ │
+│  │ • Pattern matching  │    │ • Novel situations              │ │
+│  │ • Common workflows  │    │ • Complex projects              │ │
+│  │ • Error → Fix       │    │ • Creative suggestions          │ │
+│  └─────────────────────┘    └─────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  💡 Suggested next steps:                                       │
+│                                                                  │
+│  [Add collision detection]  [Add scoring]  [Add sound effects]  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Implementation
+
+#### 6.1 Core Types
+
+**File**: `/apps/web/src/lib/nextStepPredictor.ts`
+
+```typescript
+// Suggestion categories
+export type SuggestionCategory =
+  | 'enhance'    // Add new features
+  | 'fix'        // Fix errors/issues
+  | 'test'       // Add tests
+  | 'style'      // Improve UI/UX
+  | 'refactor'   // Improve code quality
+  | 'integrate'  // Connect components
+  | 'document';  // Add documentation
+
+export interface NextStepSuggestion {
+  id: string;
+  prompt: string;              // "Add collision detection"
+  category: SuggestionCategory;
+  confidence: number;          // 0-1, higher = more relevant
+  source: 'rule' | 'ai';       // How it was generated
+  reasoning?: string;          // Why this is suggested (for AI)
+  priority: number;            // Display order (1 = highest)
+}
+
+export interface PredictionContext {
+  // What just happened
+  recentChanges: string[];           // Files modified
+  lastAction: string;                // "Created Button component"
+  responseMode: ResponseMode;        // edit, file, plan, etc.
+
+  // Current state
+  taskLedger: TaskLedger | null;     // Goal/substeps/blockers
+  errors: ValidationError[];         // Any remaining errors
+  projectType: string;               // "game", "app", "website"
+
+  // Project knowledge
+  gameFeatures?: string[];           // For games: existing features
+  components?: string[];             // Existing components
+  techStack?: string[];              // React, Canvas, etc.
+}
+
+export interface PredictionResult {
+  suggestions: NextStepSuggestion[];
+  usedAiFallback: boolean;
+  generatedAt: number;
+}
+```
+
+#### 6.2 Rule Engine
+
+**File**: `/apps/web/src/lib/predictionRules.ts`
+
+```typescript
+interface PredictionRule {
+  id: string;
+  name: string;
+  // Condition to match
+  match: (ctx: PredictionContext) => boolean;
+  // Suggestions to generate
+  suggest: (ctx: PredictionContext) => NextStepSuggestion[];
+}
+
+export const PREDICTION_RULES: PredictionRule[] = [
+  // ============================================
+  // Error-based rules (highest priority)
+  // ============================================
+  {
+    id: 'fix-ts-errors',
+    name: 'Fix TypeScript Errors',
+    match: (ctx) => ctx.errors.some(e => e.type === 'typescript'),
+    suggest: (ctx) => [{
+      id: 'fix-ts',
+      prompt: `Fix the ${ctx.errors.filter(e => e.type === 'typescript').length} TypeScript errors`,
+      category: 'fix',
+      confidence: 0.95,
+      source: 'rule',
+      priority: 1,
+    }],
+  },
+  {
+    id: 'fix-eslint-errors',
+    name: 'Fix ESLint Errors',
+    match: (ctx) => ctx.errors.some(e => e.type === 'eslint'),
+    suggest: (ctx) => [{
+      id: 'fix-eslint',
+      prompt: 'Fix the ESLint warnings',
+      category: 'fix',
+      confidence: 0.9,
+      source: 'rule',
+      priority: 2,
+    }],
+  },
+
+  // ============================================
+  // Component creation rules
+  // ============================================
+  {
+    id: 'new-component-integrate',
+    name: 'Integrate New Component',
+    match: (ctx) =>
+      ctx.lastAction.toLowerCase().includes('created') &&
+      ctx.lastAction.toLowerCase().includes('component'),
+    suggest: (ctx) => {
+      const componentName = extractComponentName(ctx.lastAction);
+      return [
+        {
+          id: 'style-component',
+          prompt: `Add styles to ${componentName}`,
+          category: 'style',
+          confidence: 0.85,
+          source: 'rule',
+          priority: 3,
+        },
+        {
+          id: 'test-component',
+          prompt: `Create tests for ${componentName}`,
+          category: 'test',
+          confidence: 0.7,
+          source: 'rule',
+          priority: 4,
+        },
+        {
+          id: 'use-component',
+          prompt: `Use ${componentName} in the app`,
+          category: 'integrate',
+          confidence: 0.8,
+          source: 'rule',
+          priority: 3,
+        },
+      ];
+    },
+  },
+
+  // ============================================
+  // Game-specific rules
+  // ============================================
+  {
+    id: 'game-player-movement',
+    name: 'After Player Movement',
+    match: (ctx) =>
+      ctx.projectType === 'game' &&
+      ctx.lastAction.toLowerCase().includes('movement'),
+    suggest: () => [
+      {
+        id: 'add-collision',
+        prompt: 'Add collision detection',
+        category: 'enhance',
+        confidence: 0.9,
+        source: 'rule',
+        priority: 2,
+      },
+      {
+        id: 'add-boundaries',
+        prompt: 'Add screen boundaries',
+        category: 'enhance',
+        confidence: 0.85,
+        source: 'rule',
+        priority: 3,
+      },
+    ],
+  },
+  {
+    id: 'game-scoring',
+    name: 'After Adding Scoring',
+    match: (ctx) =>
+      ctx.projectType === 'game' &&
+      ctx.lastAction.toLowerCase().includes('scor'),
+    suggest: () => [
+      {
+        id: 'add-high-score',
+        prompt: 'Add high score tracking',
+        category: 'enhance',
+        confidence: 0.85,
+        source: 'rule',
+        priority: 2,
+      },
+      {
+        id: 'add-score-display',
+        prompt: 'Style the score display',
+        category: 'style',
+        confidence: 0.8,
+        source: 'rule',
+        priority: 3,
+      },
+    ],
+  },
+  {
+    id: 'game-initial-setup',
+    name: 'After Initial Game Setup',
+    match: (ctx) =>
+      ctx.projectType === 'game' &&
+      (!ctx.gameFeatures || ctx.gameFeatures.length < 3),
+    suggest: () => [
+      {
+        id: 'add-game-loop',
+        prompt: 'Add the main game loop',
+        category: 'enhance',
+        confidence: 0.9,
+        source: 'rule',
+        priority: 1,
+      },
+      {
+        id: 'add-controls',
+        prompt: 'Add keyboard/mouse controls',
+        category: 'enhance',
+        confidence: 0.85,
+        source: 'rule',
+        priority: 2,
+      },
+      {
+        id: 'add-game-state',
+        prompt: 'Add game state (start, playing, game over)',
+        category: 'enhance',
+        confidence: 0.8,
+        source: 'rule',
+        priority: 3,
+      },
+    ],
+  },
+
+  // ============================================
+  // Task ledger rules
+  // ============================================
+  {
+    id: 'continue-substeps',
+    name: 'Continue Task Substeps',
+    match: (ctx) =>
+      ctx.taskLedger?.goal_substeps?.some(s => !s.done) ?? false,
+    suggest: (ctx) => {
+      const nextStep = ctx.taskLedger!.goal_substeps!.find(s => !s.done);
+      return [{
+        id: 'next-substep',
+        prompt: nextStep!.step,
+        category: 'enhance',
+        confidence: 0.95,
+        source: 'rule',
+        reasoning: 'Next step in your current goal',
+        priority: 1,
+      }];
+    },
+  },
+  {
+    id: 'resolve-blockers',
+    name: 'Resolve Blockers',
+    match: (ctx) =>
+      (ctx.taskLedger?.known_blockers?.length ?? 0) > 0,
+    suggest: (ctx) =>
+      ctx.taskLedger!.known_blockers!.map((blocker, i) => ({
+        id: `blocker-${i}`,
+        prompt: `Resolve: ${blocker}`,
+        category: 'fix',
+        confidence: 0.9,
+        source: 'rule' as const,
+        priority: 1,
+      })),
+  },
+
+  // ============================================
+  // General workflow rules
+  // ============================================
+  {
+    id: 'after-refactor',
+    name: 'After Refactoring',
+    match: (ctx) =>
+      ctx.lastAction.toLowerCase().includes('refactor'),
+    suggest: () => [
+      {
+        id: 'run-tests',
+        prompt: 'Run tests to verify refactor',
+        category: 'test',
+        confidence: 0.9,
+        source: 'rule',
+        priority: 1,
+      },
+    ],
+  },
+  {
+    id: 'after-style-changes',
+    name: 'After Styling',
+    match: (ctx) =>
+      ctx.recentChanges.some(f => f.includes('.css') || f.includes('style')),
+    suggest: () => [
+      {
+        id: 'add-responsive',
+        prompt: 'Add responsive design',
+        category: 'style',
+        confidence: 0.7,
+        source: 'rule',
+        priority: 4,
+      },
+      {
+        id: 'add-dark-mode',
+        prompt: 'Add dark mode support',
+        category: 'style',
+        confidence: 0.6,
+        source: 'rule',
+        priority: 5,
+      },
+    ],
+  },
+];
+
+// Helper to extract component name from action string
+function extractComponentName(action: string): string {
+  const match = action.match(/(?:created|added|built)\s+(\w+)/i);
+  return match?.[1] || 'the component';
+}
+```
+
+#### 6.3 AI Fallback Service
+
+**File**: `/apps/web/src/lib/aiPredictionFallback.ts`
+
+```typescript
+const AI_PREDICTION_PROMPT = `Based on the current project state, suggest 3-4 logical next steps the user might want to take.
+
+Current context:
+- Project type: {projectType}
+- Last action: {lastAction}
+- Recently modified files: {recentChanges}
+- Current goal: {currentGoal}
+- Remaining errors: {errorCount}
+- Existing features: {existingFeatures}
+
+Return suggestions as JSON array:
+[
+  {
+    "prompt": "Brief action prompt (imperative, 3-8 words)",
+    "category": "enhance|fix|test|style|refactor|integrate",
+    "confidence": 0.0-1.0,
+    "reasoning": "One sentence explaining why"
+  }
+]
+
+Guidelines:
+- Suggest logical progressions from current state
+- Prioritize fixing errors if any exist
+- Consider what typically comes next in this type of project
+- Be specific, not generic (e.g., "Add enemy AI" not "Add features")
+- Don't suggest what was just done`;
+
+export async function getAiPredictions(
+  ctx: PredictionContext,
+  options?: { maxSuggestions?: number }
+): Promise<NextStepSuggestion[]> {
+  const prompt = AI_PREDICTION_PROMPT
+    .replace('{projectType}', ctx.projectType)
+    .replace('{lastAction}', ctx.lastAction)
+    .replace('{recentChanges}', ctx.recentChanges.join(', '))
+    .replace('{currentGoal}', ctx.taskLedger?.current_goal || 'None')
+    .replace('{errorCount}', String(ctx.errors.length))
+    .replace('{existingFeatures}', ctx.gameFeatures?.join(', ') || 'Unknown');
+
+  // Use cheaper/faster model for predictions
+  const response = await fetch('/api/predict-next-steps', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      prompt,
+      maxTokens: 500,
+      model: 'claude-3-haiku', // Fast & cheap
+    }),
+  });
+
+  const data = await response.json();
+  const suggestions = JSON.parse(data.content);
+
+  return suggestions.map((s: any, i: number) => ({
+    id: `ai-${i}`,
+    prompt: s.prompt,
+    category: s.category,
+    confidence: s.confidence,
+    source: 'ai' as const,
+    reasoning: s.reasoning,
+    priority: i + 1,
+  }));
+}
+```
+
+#### 6.4 Main Prediction Service
+
+**File**: `/apps/web/src/lib/nextStepPredictor.ts` (continued)
+
+```typescript
+import { PREDICTION_RULES } from './predictionRules';
+import { getAiPredictions } from './aiPredictionFallback';
+
+export class NextStepPredictor {
+  private ruleEngine: PredictionRule[];
+  private useAiFallback: boolean;
+  private minRuleSuggestions: number;
+
+  constructor(options?: {
+    useAiFallback?: boolean;
+    minRuleSuggestions?: number;
+  }) {
+    this.ruleEngine = PREDICTION_RULES;
+    this.useAiFallback = options?.useAiFallback ?? true;
+    this.minRuleSuggestions = options?.minRuleSuggestions ?? 2;
+  }
+
+  async predict(ctx: PredictionContext): Promise<PredictionResult> {
+    // Step 1: Run rule engine
+    const ruleSuggestions = this.runRules(ctx);
+
+    // Step 2: Check if we need AI fallback
+    const needsAiFallback =
+      this.useAiFallback &&
+      ruleSuggestions.length < this.minRuleSuggestions;
+
+    let aiSuggestions: NextStepSuggestion[] = [];
+    if (needsAiFallback) {
+      try {
+        aiSuggestions = await getAiPredictions(ctx, {
+          maxSuggestions: 4 - ruleSuggestions.length,
+        });
+      } catch (error) {
+        console.warn('AI prediction fallback failed:', error);
+      }
+    }
+
+    // Step 3: Merge and dedupe
+    const allSuggestions = this.mergeAndDedupe([
+      ...ruleSuggestions,
+      ...aiSuggestions,
+    ]);
+
+    // Step 4: Sort by priority and confidence
+    const sortedSuggestions = allSuggestions
+      .sort((a, b) => {
+        // Priority first (lower = better)
+        if (a.priority !== b.priority) return a.priority - b.priority;
+        // Then confidence (higher = better)
+        return b.confidence - a.confidence;
+      })
+      .slice(0, 4); // Max 4 suggestions
+
+    return {
+      suggestions: sortedSuggestions,
+      usedAiFallback: aiSuggestions.length > 0,
+      generatedAt: Date.now(),
+    };
+  }
+
+  private runRules(ctx: PredictionContext): NextStepSuggestion[] {
+    const suggestions: NextStepSuggestion[] = [];
+
+    for (const rule of this.ruleEngine) {
+      if (rule.match(ctx)) {
+        suggestions.push(...rule.suggest(ctx));
+      }
+    }
+
+    return suggestions;
+  }
+
+  private mergeAndDedupe(
+    suggestions: NextStepSuggestion[]
+  ): NextStepSuggestion[] {
+    const seen = new Set<string>();
+    return suggestions.filter(s => {
+      const key = s.prompt.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+}
+
+// Singleton for easy access
+export const nextStepPredictor = new NextStepPredictor();
+```
+
+#### 6.5 React Hook
+
+**File**: `/apps/web/src/hooks/useNextStepSuggestions.ts`
+
+```typescript
+import { useState, useEffect, useCallback } from 'react';
+import { nextStepPredictor, PredictionContext, PredictionResult } from '@/lib/nextStepPredictor';
+
+export function useNextStepSuggestions(ctx: PredictionContext | null) {
+  const [result, setResult] = useState<PredictionResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!ctx) {
+      setResult(null);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    nextStepPredictor.predict(ctx).then(prediction => {
+      if (!cancelled) {
+        setResult(prediction);
+        setIsLoading(false);
+      }
+    });
+
+    return () => { cancelled = true; };
+  }, [ctx]);
+
+  const selectSuggestion = useCallback((suggestion: NextStepSuggestion) => {
+    // Track which suggestions users click for learning
+    trackSuggestionSelected(suggestion);
+    return suggestion.prompt;
+  }, []);
+
+  return { suggestions: result?.suggestions ?? [], isLoading, selectSuggestion };
+}
+
+// Analytics for improving predictions
+async function trackSuggestionSelected(suggestion: NextStepSuggestion) {
+  await fetch('/api/track-suggestion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      suggestionId: suggestion.id,
+      prompt: suggestion.prompt,
+      category: suggestion.category,
+      source: suggestion.source,
+      confidence: suggestion.confidence,
+      selectedAt: Date.now(),
+    }),
+  });
+}
+```
+
+#### 6.6 UI Component
+
+**File**: `/apps/web/src/components/NextStepSuggestions.tsx`
+
+```typescript
+import { useNextStepSuggestions } from '@/hooks/useNextStepSuggestions';
+import { NextStepSuggestion, PredictionContext } from '@/lib/nextStepPredictor';
+import { cn } from '@/lib/utils';
+import { Sparkles, Zap, Bug, Palette, TestTube, GitMerge } from 'lucide-react';
+
+interface Props {
+  context: PredictionContext | null;
+  onSelect: (prompt: string) => void;
+  className?: string;
+}
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  enhance: Sparkles,
+  fix: Bug,
+  test: TestTube,
+  style: Palette,
+  refactor: Zap,
+  integrate: GitMerge,
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  enhance: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  fix: 'bg-red-500/10 text-red-400 border-red-500/20',
+  test: 'bg-green-500/10 text-green-400 border-green-500/20',
+  style: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  refactor: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+  integrate: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+};
+
+export function NextStepSuggestions({ context, onSelect, className }: Props) {
+  const { suggestions, isLoading, selectSuggestion } = useNextStepSuggestions(context);
+
+  if (!context || (suggestions.length === 0 && !isLoading)) {
+    return null;
+  }
+
+  const handleClick = (suggestion: NextStepSuggestion) => {
+    const prompt = selectSuggestion(suggestion);
+    onSelect(prompt);
+  };
+
+  return (
+    <div className={cn('space-y-2', className)}>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Sparkles className="w-4 h-4" />
+        <span>Suggested next steps</span>
+        {isLoading && (
+          <span className="animate-pulse text-xs">(thinking...)</span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {suggestions.map(suggestion => {
+          const Icon = CATEGORY_ICONS[suggestion.category] || Sparkles;
+          const colors = CATEGORY_COLORS[suggestion.category] || CATEGORY_COLORS.enhance;
+
+          return (
+            <button
+              key={suggestion.id}
+              onClick={() => handleClick(suggestion)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-full',
+                'text-sm font-medium border transition-all',
+                'hover:scale-105 hover:shadow-md',
+                colors
+              )}
+              title={suggestion.reasoning}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {suggestion.prompt}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+```
+
+#### 6.7 Integration with Chat
+
+**File**: `/apps/web/src/components/ChatPanel.tsx` (modify)
+
+```typescript
+// After generation completes, show suggestions
+const [predictionContext, setPredictionContext] = useState<PredictionContext | null>(null);
+
+// Update context after each generation
+useEffect(() => {
+  if (lastGeneration) {
+    setPredictionContext({
+      recentChanges: lastGeneration.filesChanged,
+      lastAction: lastGeneration.summary,
+      responseMode: lastGeneration.mode,
+      taskLedger: taskLedger,
+      errors: validationErrors,
+      projectType: projectMemory?.game_type || 'app',
+      gameFeatures: projectMemory?.key_entities?.filter(e => e.type === 'feature').map(e => e.name),
+      components: projectMemory?.key_entities?.filter(e => e.type === 'component').map(e => e.name),
+      techStack: projectMemory?.tech_stack,
+    });
+  }
+}, [lastGeneration, taskLedger, validationErrors, projectMemory]);
+
+// In render:
+<NextStepSuggestions
+  context={predictionContext}
+  onSelect={(prompt) => {
+    setInputValue(prompt);
+    // Optionally auto-submit
+  }}
+  className="mt-4 px-4"
+/>
+```
+
+#### 6.8 Database Schema for Learning
+
+**File**: `/supabase/migrations/20260109000000_add_suggestion_tracking.sql`
+
+```sql
+-- Track which suggestions users select (for improving predictions)
+CREATE TABLE IF NOT EXISTS playcraft_suggestion_clicks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  project_id UUID REFERENCES playcraft_projects(id) ON DELETE SET NULL,
+
+  -- Suggestion details
+  suggestion_id TEXT NOT NULL,
+  prompt TEXT NOT NULL,
+  category TEXT NOT NULL,
+  source TEXT NOT NULL,  -- 'rule' or 'ai'
+  confidence FLOAT,
+
+  -- Context when clicked
+  project_type TEXT,
+  last_action TEXT,
+
+  -- Timing
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Index for analytics
+CREATE INDEX idx_suggestion_clicks_category
+  ON playcraft_suggestion_clicks(category, created_at DESC);
+
+CREATE INDEX idx_suggestion_clicks_source
+  ON playcraft_suggestion_clicks(source, created_at DESC);
+
+-- RLS
+ALTER TABLE playcraft_suggestion_clicks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can insert their own clicks"
+  ON playcraft_suggestion_clicks FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can view their own clicks"
+  ON playcraft_suggestion_clicks FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Analytics function: Which categories are most clicked?
+CREATE OR REPLACE FUNCTION get_suggestion_analytics(p_days INTEGER DEFAULT 30)
+RETURNS TABLE (
+  category TEXT,
+  source TEXT,
+  click_count BIGINT,
+  avg_confidence NUMERIC
+)
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+  SELECT
+    category,
+    source,
+    COUNT(*)::BIGINT as click_count,
+    ROUND(AVG(confidence)::NUMERIC, 3) as avg_confidence
+  FROM public.playcraft_suggestion_clicks
+  WHERE created_at > NOW() - (p_days || ' days')::INTERVAL
+  GROUP BY category, source
+  ORDER BY click_count DESC;
+$$;
+
+GRANT EXECUTE ON FUNCTION get_suggestion_analytics(INTEGER) TO authenticated;
+```
+
+### Tests
+
+**File**: `/apps/web/src/lib/__tests__/nextStepPredictor.test.ts`
+
+```typescript
+describe('NextStepPredictor', () => {
+  describe('Rule Engine', () => {
+    it('suggests fixing TypeScript errors when present', async () => {
+      const ctx = createContext({ errors: [{ type: 'typescript' }] });
+      const result = await predictor.predict(ctx);
+      expect(result.suggestions[0].category).toBe('fix');
+    });
+
+    it('suggests integration after component creation', async () => {
+      const ctx = createContext({ lastAction: 'Created Button component' });
+      const result = await predictor.predict(ctx);
+      expect(result.suggestions.some(s => s.prompt.includes('Use Button'))).toBe(true);
+    });
+
+    it('suggests game features for game projects', async () => {
+      const ctx = createContext({
+        projectType: 'game',
+        lastAction: 'Added player movement',
+      });
+      const result = await predictor.predict(ctx);
+      expect(result.suggestions.some(s => s.prompt.includes('collision'))).toBe(true);
+    });
+
+    it('continues task ledger substeps', async () => {
+      const ctx = createContext({
+        taskLedger: {
+          goal_substeps: [
+            { step: 'Add scoring', done: true },
+            { step: 'Add high scores', done: false },
+          ],
+        },
+      });
+      const result = await predictor.predict(ctx);
+      expect(result.suggestions[0].prompt).toBe('Add high scores');
+    });
+  });
+
+  describe('AI Fallback', () => {
+    it('uses AI when rules produce < 2 suggestions', async () => {
+      const ctx = createContext({ lastAction: 'Something unusual' });
+      const result = await predictor.predict(ctx);
+      expect(result.usedAiFallback).toBe(true);
+    });
+
+    it('does not use AI when rules are sufficient', async () => {
+      const ctx = createContext({
+        errors: [{ type: 'typescript' }, { type: 'eslint' }],
+      });
+      const result = await predictor.predict(ctx);
+      expect(result.usedAiFallback).toBe(false);
+    });
+  });
+
+  describe('Deduplication', () => {
+    it('removes duplicate suggestions', async () => {
+      // Setup rules that could produce duplicates
+      const result = await predictor.predict(ctx);
+      const prompts = result.suggestions.map(s => s.prompt.toLowerCase());
+      const unique = new Set(prompts);
+      expect(prompts.length).toBe(unique.size);
+    });
+  });
+});
+```
+
+### Acceptance Criteria
+
+- [ ] Rule engine provides instant suggestions for common patterns
+- [ ] AI fallback activates when rules produce < 2 suggestions
+- [ ] Suggestions display with appropriate icons and colors
+- [ ] Clicking suggestion populates chat input
+- [ ] Suggestion clicks are tracked for analytics
+- [ ] Max 4 suggestions displayed at a time
+- [ ] Error-fixing suggestions have highest priority
+- [ ] Task ledger substeps appear as suggestions
+- [ ] Game-specific rules work for game projects
+
+### Configuration Options
+
+```typescript
+// Environment variables
+NEXT_STEP_AI_FALLBACK=true          // Enable AI fallback
+NEXT_STEP_MIN_RULES=2               // Min rule suggestions before AI
+NEXT_STEP_MAX_SUGGESTIONS=4         // Max suggestions to show
+NEXT_STEP_AI_MODEL=claude-3-haiku   // Model for AI predictions
+```
+
+---
+
 ## Implementation Timeline
 
 ```
-Phase 1 (Error Bridge)      ████████████░░░░░░░░  ~2-3 days
-Phase 2 (Response Formats)  ██████░░░░░░░░░░░░░░  ~1-2 days
-Phase 3 (Documentation)     ████░░░░░░░░░░░░░░░░  ~1 day
-Phase 4 (Consolidation)     ████████░░░░░░░░░░░░  ~2 days
-Phase 5 (Sub-Agents)        ████████████████████  ~5-7 days (future)
+Phase 1 (Error Bridge)       ████████████░░░░░░░░  ~2-3 days
+Phase 2 (Response Formats)   ██████░░░░░░░░░░░░░░  ~1-2 days
+Phase 3 (Documentation)      ████░░░░░░░░░░░░░░░░  ~1 day
+Phase 4 (Consolidation)      ████████░░░░░░░░░░░░  ~2 days
+Phase 5 (Sub-Agents)         ████████████████████  ~5-7 days (future)
+Phase 6 (Next Step Predict)  ██████████░░░░░░░░░░  ~2-3 days
 ```
 
 ---
@@ -736,6 +1591,8 @@ Phase 5 (Sub-Agents)        █████████████████�
 | Context relevance | Unknown | Track via selection_accuracy |
 | Response format accuracy | N/A | 90% appropriate mode selection |
 | User revert rate | Unknown | <10% |
+| Suggestion click rate | N/A | >30% of suggestions clicked |
+| AI fallback rate | N/A | <40% (rules should handle most cases) |
 
 ---
 
@@ -746,6 +1603,7 @@ Phase 5 (Sub-Agents)        █████████████████�
 - Phase 3: None
 - Phase 4: None (can do in parallel)
 - Phase 5: Phases 1-4 complete
+- Phase 6: None (can do in parallel with 1-4, benefits from task ledger)
 
 ---
 
@@ -755,8 +1613,18 @@ Phase 5 (Sub-Agents)        █████████████████�
 /apps/web/src/lib/
 ├── errorBridge.ts                    # Phase 1
 ├── fileIntelligenceService.ts        # Phase 4
+├── nextStepPredictor.ts              # Phase 6
+├── predictionRules.ts                # Phase 6
+├── aiPredictionFallback.ts           # Phase 6
 └── __tests__/
-    └── errorBridge.test.ts           # Phase 1
+    ├── errorBridge.test.ts           # Phase 1
+    └── nextStepPredictor.test.ts     # Phase 6
+
+/apps/web/src/hooks/
+└── useNextStepSuggestions.ts         # Phase 6
+
+/apps/web/src/components/
+└── NextStepSuggestions.tsx           # Phase 6
 
 /supabase/functions/
 ├── generate-playcraft/
@@ -772,7 +1640,8 @@ Phase 5 (Sub-Agents)        █████████████████�
         └── fixerAgent.ts             # Phase 5
 
 /supabase/migrations/
-└── 20260108000000_add_runtime_errors.sql  # Phase 1
+├── 20260108000000_add_runtime_errors.sql      # Phase 1
+└── 20260109000000_add_suggestion_tracking.sql # Phase 6
 ```
 
 ---
