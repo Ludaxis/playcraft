@@ -62,6 +62,7 @@ function parseBuildErrors(output: string): BuildError[] {
   const errors: BuildError[] = [];
 
   // Strip ANSI codes
+  // eslint-disable-next-line no-control-regex
   const clean = output.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
 
   // TypeScript colon format: file.ts:line:col - error TSxxxx: message
