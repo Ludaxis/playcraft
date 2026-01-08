@@ -439,6 +439,29 @@ interface FileEdit {
   replace: string;
 }
 
+// Response mode types
+type ResponseMode = 'edit' | 'file' | 'plan' | 'explanation' | 'debug';
+
+interface ImplementationPlan {
+  summary: string;
+  steps: Array<{
+    step: number;
+    description: string;
+    files?: string[];
+    complexity?: 'low' | 'medium' | 'high';
+  }>;
+  estimatedEffort?: string;
+  considerations?: string[];
+}
+
+interface DebugAnalysis {
+  issue: string;
+  rootCause: string;
+  affectedFiles: string[];
+  suggestedFix: string;
+  steps: string[];
+}
+
 interface GeneratedResponse {
   message: string;
   files: FileContent[];
@@ -446,6 +469,9 @@ interface GeneratedResponse {
   explanation: string;
   needsThreeJs?: boolean; // Signal to add Three.js template
   useEditMode?: boolean; // Indicates response uses edit mode
+  mode?: ResponseMode; // Response format chosen by AI
+  plan?: ImplementationPlan; // For 'plan' mode responses
+  debugAnalysis?: DebugAnalysis; // For 'debug' mode responses
 }
 
 // =============================================================================
@@ -757,12 +783,26 @@ OUTPUT FORMAT (FILE MODE):
   // Handle response format
   const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
   const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
+  const hasPlan = parsed.plan && typeof parsed.plan === 'object';
+  const hasDebugAnalysis = parsed.debugAnalysis && typeof parsed.debugAnalysis === 'object';
 
-  if (!parsed.message || (!hasFiles && !hasEdits)) {
+  // Determine response mode
+  let mode: ResponseMode = responseMode;
+  if (parsed.mode && ['edit', 'file', 'plan', 'explanation', 'debug'].includes(parsed.mode)) {
+    mode = parsed.mode as ResponseMode;
+  } else if (hasPlan) {
+    mode = 'plan';
+  } else if (hasDebugAnalysis) {
+    mode = 'debug';
+  }
+
+  const isNonCodeMode = mode === 'plan' || mode === 'explanation';
+  if (!parsed.message || (!hasFiles && !hasEdits && !isNonCodeMode && !hasDebugAnalysis)) {
     throw new Error('Response missing required fields');
   }
 
   logger.info('Gemini (with plan) completed', {
+    mode,
     filesGenerated: hasFiles ? parsed.files.length : 0,
     editsGenerated: hasEdits ? parsed.edits.length : 0,
     durationMs: apiDuration,
@@ -775,6 +815,9 @@ OUTPUT FORMAT (FILE MODE):
     explanation: parsed.explanation || '',
     needsThreeJs: parsed.needsThreeJs === true,
     useEditMode: hasEdits && !hasFiles,
+    mode,
+    plan: hasPlan ? parsed.plan : undefined,
+    debugAnalysis: hasDebugAnalysis ? parsed.debugAnalysis : undefined,
   };
 }
 
@@ -887,6 +930,37 @@ TECH STACK:
 - React Three Fiber for 3D (when needed)
 - Canvas API for 2D games
 
+## Response Format Selection
+
+Choose the most appropriate response format based on the user's request:
+
+### "edit" mode (default for modifications)
+Use when: Making targeted changes to existing code
+Output: Search/replace edit blocks
+Example requests: "fix the bug", "add a button", "change the color"
+
+### "file" mode (for new files or major rewrites)
+Use when: Creating new files OR >50% of file needs changing
+Output: Complete file contents
+Example requests: "create a new component", "rewrite this hook"
+
+### "plan" mode (for complex features)
+Use when: User asks "how would you" or request needs clarification
+Output: Step-by-step implementation plan without code
+Example requests: "how should I implement auth?", "plan the refactor"
+
+### "explanation" mode (for understanding)
+Use when: User asks "what does", "why", "explain"
+Output: Clear explanation of code behavior
+Example requests: "explain this function", "what does this hook do?"
+
+### "debug" mode (for troubleshooting)
+Use when: User reports an error or unexpected behavior
+Output: Analysis of issue, root cause, and fix
+Example requests: "why is this crashing?", "debug this error"
+
+Start your response with: <response_mode>MODE</response_mode>
+
 3D DETECTION:
 Analyze the user's request carefully. Set "needsThreeJs": true if ANY of these apply:
 - User mentions: 3D, three.js, WebGL, Three, R3F, React Three Fiber
@@ -986,13 +1060,137 @@ EDIT MODE RULES:
 - Use for: color changes, value tweaks, text updates, small fixes
 - DO NOT use for: new components, major structural changes
 
+## Edit Block Examples
+
+### Good Edit (minimal, targeted)
+{
+  "edits": [{
+    "file": "/src/pages/Index.tsx",
+    "find": "return <button className=\"btn\">{children}</button>;",
+    "replace": "return <button className=\"btn btn-primary\">{children}</button>;"
+  }]
+}
+
+### Bad Edit (too broad, loses context)
+DON'T include entire function when only changing one line:
+{
+  "edits": [{
+    "file": "/src/pages/Index.tsx",
+    "find": "export function Button({ children }) {\\n  return <button className=\\"btn\\">{children}</button>;\\n}",
+    "replace": "..."
+  }]
+}
+
+### Multiple Related Edits (correct approach)
+When changes span multiple locations, use multiple edit blocks:
+{
+  "edits": [
+    {
+      "file": "/src/hooks/useGame.ts",
+      "find": "const [score, setScore] = useState(0);",
+      "replace": "const [score, setScore] = useState(0);\\nconst [highScore, setHighScore] = useState(0);"
+    },
+    {
+      "file": "/src/hooks/useGame.ts",
+      "find": "setScore(prev => prev + points);",
+      "replace": "setScore(prev => {\\n  const newScore = prev + points;\\n  if (newScore > highScore) setHighScore(newScore);\\n  return newScore;\\n});"
+    }
+  ]
+}
+
 FILE MODE RULES:
 - Provide COMPLETE file content, not patches
 - Use for: new features, new files, major restructuring
 - Always include full file when changing >30% of the file
 
+## Common Patterns
+
+### Adding a New Component
+1. Create component file with proper exports
+2. Add any required types
+3. Import and use in parent component
+4. Add styles if needed
+
+### Adding State
+1. Add useState/useReducer in appropriate hook
+2. Pass down via props or context
+3. Update any dependent components
+
+### Fixing Type Errors
+1. Check the exact error message
+2. Identify the type mismatch
+3. Fix at the source (not with 'as' casts)
+4. Ensure all usages are updated
+
+## Common Errors and Fixes
+
+### "Cannot find module './X'"
+- Check file exists at exact path
+- Check export is named correctly
+- Check import syntax (default vs named)
+
+### "Property 'X' does not exist on type 'Y'"
+- Add property to interface/type
+- Or use optional chaining: obj?.property
+- Or check if using correct type
+
+### "React Hook useX cannot be called conditionally"
+- Move hook call before any returns
+- Move hook call before any conditions
+- Hooks must be at top level of component
+
+### "Type 'X' is not assignable to type 'Y'"
+- Check for null/undefined mismatches
+- Use proper type guards
+- Ensure consistent types across functions
+
 Set "needsThreeJs": true ONLY if the game requires 3D graphics (Three.js/R3F).
 For 2D games using Canvas or DOM, set it to false.
+
+OPTION C: PLAN MODE (for planning/clarification requests)
+Use this when user asks "how would you", "how should I", "plan":
+{
+  "message": "Brief overview",
+  "mode": "plan",
+  "plan": {
+    "summary": "High-level summary of the approach",
+    "steps": [
+      { "step": 1, "description": "First step", "files": ["/src/file.tsx"], "complexity": "low" },
+      { "step": 2, "description": "Second step", "files": ["/src/other.tsx"], "complexity": "medium" }
+    ],
+    "estimatedEffort": "~30 minutes",
+    "considerations": ["Thing to consider", "Another consideration"]
+  },
+  "explanation": "Detailed explanation of the plan",
+  "needsThreeJs": false
+}
+
+OPTION D: EXPLANATION MODE (for understanding requests)
+Use this when user asks "explain", "what does", "how does", "why":
+{
+  "message": "Brief answer",
+  "mode": "explanation",
+  "files": [],
+  "explanation": "Detailed explanation of the code/concept",
+  "needsThreeJs": false
+}
+
+OPTION E: DEBUG MODE (for error/issue analysis)
+Use this when user reports bugs, errors, or unexpected behavior:
+{
+  "message": "Issue identified",
+  "mode": "debug",
+  "debugAnalysis": {
+    "issue": "What is happening",
+    "rootCause": "Why it's happening",
+    "affectedFiles": ["/src/file.tsx"],
+    "suggestedFix": "How to fix it",
+    "steps": ["Step 1 to fix", "Step 2 to fix"]
+  },
+  "edits": [{ "file": "/path", "find": "buggy code", "replace": "fixed code" }],
+  "explanation": "Explanation of the fix",
+  "needsThreeJs": false
+}
 
 IMPORTANT:
 - Only include files that need to be created or modified
@@ -1000,6 +1198,7 @@ IMPORTANT:
 - Make sure all imports are correct
 - Test that the code is syntactically valid
 - The main entry point is /src/pages/Index.tsx, NOT /src/app/page.tsx
+- For plan/explanation modes, do NOT modify any files
 
 ITERATION RULES (when existing files are provided):
 - ALWAYS build upon the existing code - DO NOT recreate from scratch
@@ -1435,12 +1634,31 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   // Response can have either files array OR edits array (or both)
   const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
   const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
+  const hasPlan = parsed.plan && typeof parsed.plan === 'object';
+  const hasDebugAnalysis = parsed.debugAnalysis && typeof parsed.debugAnalysis === 'object';
 
-  if (!parsed.message || (!hasFiles && !hasEdits)) {
+  // Determine response mode from explicit mode field or infer from content
+  let mode: ResponseMode = 'edit';
+  if (parsed.mode && ['edit', 'file', 'plan', 'explanation', 'debug'].includes(parsed.mode)) {
+    mode = parsed.mode as ResponseMode;
+  } else if (hasPlan) {
+    mode = 'plan';
+  } else if (hasDebugAnalysis) {
+    mode = 'debug';
+  } else if (hasFiles && !hasEdits) {
+    mode = 'file';
+  } else if (hasEdits) {
+    mode = 'edit';
+  }
+
+  // For plan/explanation modes, files/edits are optional
+  const isNonCodeMode = mode === 'plan' || mode === 'explanation';
+  if (!parsed.message || (!hasFiles && !hasEdits && !isNonCodeMode && !hasDebugAnalysis)) {
     logger.error('Gemini response missing required fields', {
       hasMessage: !!parsed.message,
       hasFiles,
       hasEdits,
+      mode,
       durationMs: apiDuration
     });
     throw new Error('Response missing required fields (need message and either files or edits)');
@@ -1450,6 +1668,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   const useEditMode = hasEdits && !hasFiles;
 
   logger.info('Gemini API call successful', {
+    mode,
     filesGenerated: hasFiles ? parsed.files.length : 0,
     editsGenerated: hasEdits ? parsed.edits.length : 0,
     useEditMode,
@@ -1464,6 +1683,9 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
     explanation: parsed.explanation || '',
     needsThreeJs: parsed.needsThreeJs === true,
     useEditMode,
+    mode,
+    plan: hasPlan ? parsed.plan : undefined,
+    debugAnalysis: hasDebugAnalysis ? parsed.debugAnalysis : undefined,
   };
 }
 

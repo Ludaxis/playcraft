@@ -263,6 +263,9 @@ export default config
     <link rel="icon" type="image/svg+xml" href="/placeholder.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PlayCraft Game</title>
+    <script>
+(function(){var s={},D=500;function p(t,d){var k=t+':'+(d.message||'').substring(0,100),n=Date.now();if(s[k]&&n-s[k]<D)return;s[k]=n;try{window.parent.postMessage({type:t,payload:d},'*')}catch(e){}}function loc(st){if(!st)return{};var m=st.match(/at\\s+(?:\\S+\\s+)?\\(?([^:]+):(\\d+):(\\d+)\\)?/);return m?{source:m[1],line:parseInt(m[2],10),col:parseInt(m[3],10)}:{}}window.onerror=function(m,src,ln,col,e){p('playcraft-runtime-error',{level:'error',message:String(m),source:src,line:ln,col:col,stack:e&&e.stack,timestamp:Date.now()})};window.onunhandledrejection=function(ev){var r=ev.reason,m=r&&r.message?r.message:String(r),st=r&&r.stack,l=loc(st);p('playcraft-unhandled-rejection',{level:'error',message:m,source:l.source,line:l.line,col:l.col,stack:st,timestamp:Date.now()})};var oE=console.error;console.error=function(){var a=Array.prototype.slice.call(arguments),m=a.map(function(x){if(x instanceof Error)return x.message+(x.stack?'\\n'+x.stack:'');if(typeof x==='object'){try{return JSON.stringify(x)}catch(e){return String(x)}}return String(x)}).join(' ');p('playcraft-console-error',{level:'error',message:m,timestamp:Date.now()});oE.apply(console,arguments)};var oW=console.warn;console.warn=function(){var a=Array.prototype.slice.call(arguments),m=a.map(function(x){if(typeof x==='object'){try{return JSON.stringify(x)}catch(e){return String(x)}}return String(x)}).join(' ');p('playcraft-console-warn',{level:'warn',message:m,timestamp:Date.now()});oW.apply(console,arguments)}})();
+    </script>
   </head>
   <body>
     <div id="root"></div>

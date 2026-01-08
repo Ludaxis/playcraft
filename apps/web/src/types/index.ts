@@ -251,12 +251,24 @@ export type WebContainerStatus =
 // AI Generation Types
 // ============================================================================
 
+/**
+ * Response mode determines how the AI formats its response.
+ * The AI can choose the most appropriate format based on the request.
+ */
+export type ResponseMode =
+  | 'edit'        // Search/replace edits for small changes
+  | 'file'        // Full file rewrites for new features
+  | 'plan'        // Implementation plan without code
+  | 'explanation' // Explain existing code
+  | 'debug';      // Focused debugging analysis
+
 export interface GenerateCodeRequest {
   prompt: string;
   conversationHistory?: ConversationMessage[];
   currentFile?: string;
   currentFileContent?: string;
   hasThreeJs?: boolean;
+  responseMode?: ResponseMode | 'auto';
 }
 
 export interface GeneratedFile {
@@ -264,11 +276,34 @@ export interface GeneratedFile {
   content: string;
 }
 
+export interface ImplementationPlan {
+  summary: string;
+  steps: Array<{
+    step: number;
+    description: string;
+    files?: string[];
+    complexity?: 'low' | 'medium' | 'high';
+  }>;
+  estimatedEffort?: string;
+  considerations?: string[];
+}
+
+export interface DebugAnalysis {
+  issue: string;
+  rootCause: string;
+  affectedFiles: string[];
+  suggestedFix: string;
+  steps: string[];
+}
+
 export interface GenerateCodeResponse {
   message: string;
   files: GeneratedFile[];
   explanation: string;
   needsThreeJs?: boolean;
+  mode?: ResponseMode;
+  plan?: ImplementationPlan;
+  debugAnalysis?: DebugAnalysis;
 }
 
 // Generation progress states for UX feedback

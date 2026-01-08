@@ -390,19 +390,24 @@ export function BuilderPage({
   }, [hasThreeJs, runCommand, project.id]);
 
   // AI Chat hook with file generation callback
-  const { messages, isGenerating, generationProgress, sendMessage: sendAiMessage, addSystemMessage } =
+  const { messages, isGenerating, generationProgress, sendMessage: sendAiMessage, addSystemMessage, suggestions } =
     usePlayCraftChat({
       projectId: project.id,
       readFile: readProjectFile,
-      readAllFiles, // Pass function to read all project files for AI context
+      readAllFiles,
       hasThreeJs,
       onNeedsThreeJs: upgradeToThreeJs,
-      initialMessages: activeSessionMessages, // Restore previous conversation
-      runTypeCheck, // Enable auto-fix by running TypeScript checks
-      runESLint, // Enable ESLint validation
-      enableAutoFix: true, // Auto-fix errors after generation
-      maxRetries: 3, // Max auto-fix attempts
-      voyageApiKey, // Enable semantic search if API key is available
+      initialMessages: activeSessionMessages,
+      runTypeCheck,
+      runESLint,
+      enableAutoFix: true,
+      maxRetries: 3,
+      voyageApiKey,
+      previewErrors,
+      clearPreviewErrors: () => {
+        clearPreviewErrors();
+        setPreviewErrors([]);
+      },
       onFilesGenerated: async (files) => {
         // Update in-memory file state
         const updatedFiles = { ...projectFiles };
@@ -1068,6 +1073,7 @@ export function BuilderPage({
             onChange={setInputValue}
             onSend={handleSendMessage}
             disabled={isGenerating}
+            suggestions={suggestions}
             onSuggestionClick={handleSuggestionClick}
           />
         </>

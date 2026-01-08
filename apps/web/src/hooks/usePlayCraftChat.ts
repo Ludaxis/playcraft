@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   generateCode,
   generateCodeWithContext,
@@ -16,7 +16,9 @@ import {
   createErrorFixPrompt,
   areErrorsAutoFixable,
   parseESLintErrors,
+  parsePreviewErrors,
   type CodeError,
+  type PreviewError,
 } from '../lib/codeValidator';
 import { recordGenerationOutcome } from '../lib/outcomeService';
 import { indexProjectFiles } from '../lib/embeddingIndexer';
@@ -25,20 +27,23 @@ import {
   extractGoalFromPrompt,
   setNewGoal,
 } from '../lib/taskLedgerService';
-import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
+import {
+  predictNextSteps,
+  extractPredictionContext,
+  getInitialSuggestions,
+} from '../lib/nextStepPredictionService';
+import type { ChatMessage, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage } from '../types';
 export type { GenerationStage, GenerationProgress } from '../types';
 
-// Helper to parse AI response and extract features/next steps
+// Helper to parse AI response and extract features
 function parseAIResponse(message: string): {
   content: string;
   features: string[];
-  nextSteps: NextStep[];
 } {
   const features: string[] = [];
-  const nextSteps: NextStep[] = [];
   const content = message;
 
   // Extract bullet points that start with common bullet characters
@@ -53,41 +58,9 @@ function parseAIResponse(message: string): {
     });
   }
 
-  // Generate smart next step suggestions based on content
-  const lowerContent = content.toLowerCase();
-
-  if (lowerContent.includes('game') || lowerContent.includes('created') || lowerContent.includes('built')) {
-    nextSteps.push(
-      { label: 'Add sound effects', prompt: 'Add sound effects for game actions like collecting items, jumping, and game over' },
-      { label: 'Add animations', prompt: 'Add smooth animations for player movement and transitions' },
-      { label: 'Add a leaderboard', prompt: 'Add a local leaderboard to track high scores' }
-    );
-  }
-
-  if (lowerContent.includes('player') || lowerContent.includes('character')) {
-    nextSteps.push(
-      { label: 'Add power-ups', prompt: 'Add power-up items that give the player special abilities' },
-      { label: 'Add enemies', prompt: 'Add enemies that the player must avoid or defeat' }
-    );
-  }
-
-  if (lowerContent.includes('score') || lowerContent.includes('points')) {
-    nextSteps.push(
-      { label: 'Add combo system', prompt: 'Add a combo multiplier system for consecutive actions' }
-    );
-  }
-
-  if (lowerContent.includes('level') || lowerContent.includes('stage')) {
-    nextSteps.push(
-      { label: 'Add more levels', prompt: 'Add 3 more levels with increasing difficulty' }
-    );
-  }
-
-  // Limit to 3 suggestions
   return {
     content,
     features: features.slice(0, 5),
-    nextSteps: nextSteps.slice(0, 3),
   };
 }
 
@@ -107,6 +80,8 @@ interface UsePlayCraftChatOptions {
   enableAutoFix?: boolean; // Enable automatic error fixing (default: true)
   maxRetries?: number; // Max auto-fix attempts (default: 3)
   voyageApiKey?: string; // Voyage AI API key for semantic search
+  previewErrors?: PreviewError[]; // Runtime errors from preview iframe
+  clearPreviewErrors?: () => void; // Clear preview errors after fix
 }
 
 export interface UsePlayCraftChatReturn {
@@ -117,6 +92,8 @@ export interface UsePlayCraftChatReturn {
   sendMessage: (prompt: string, selectedFile?: string) => Promise<void>;
   clearMessages: () => void;
   addSystemMessage: (content: string) => void;
+  /** Current suggestions for the chatbox (from last assistant message or initial) */
+  suggestions: Array<{ label: string; prompt: string }>;
 }
 
 // Default welcome message
@@ -166,6 +143,8 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     enableAutoFix = true,
     maxRetries = 3,
     voyageApiKey,
+    previewErrors = [],
+    clearPreviewErrors,
   } = options;
 
   // Determine if we should use smart context
@@ -485,6 +464,70 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           await onNeedsThreeJs();
         }
 
+        // Handle plan/explanation modes (no file changes)
+        const responseMode = response.mode || 'edit';
+        if (responseMode === 'plan' || responseMode === 'explanation') {
+          updateProgress('complete', responseMode === 'plan' ? 'Plan ready' : 'Explanation ready');
+
+          // Format plan for display
+          let formattedContent = response.message;
+          if (responseMode === 'plan' && response.plan) {
+            const plan = response.plan;
+            formattedContent = `## ${plan.summary}\n\n`;
+            formattedContent += '### Steps:\n';
+            for (const step of plan.steps) {
+              formattedContent += `${step.step}. ${step.description}`;
+              if (step.files?.length) {
+                formattedContent += ` (${step.files.join(', ')})`;
+              }
+              if (step.complexity) {
+                formattedContent += ` [${step.complexity}]`;
+              }
+              formattedContent += '\n';
+            }
+            if (plan.considerations?.length) {
+              formattedContent += '\n### Considerations:\n';
+              for (const consideration of plan.considerations) {
+                formattedContent += `- ${consideration}\n`;
+              }
+            }
+            if (plan.estimatedEffort) {
+              formattedContent += `\n**Estimated effort:** ${plan.estimatedEffort}`;
+            }
+          } else if (response.explanation) {
+            formattedContent = response.explanation;
+          }
+
+          addMessage({
+            role: 'assistant',
+            content: formattedContent,
+          });
+
+          updateProgress('complete', 'Done!');
+          return;
+        }
+
+        // Handle debug mode (show analysis + apply fixes)
+        if (responseMode === 'debug' && response.debugAnalysis) {
+          const debug = response.debugAnalysis;
+          let debugContent = `## Debug Analysis\n\n`;
+          debugContent += `**Issue:** ${debug.issue}\n\n`;
+          debugContent += `**Root Cause:** ${debug.rootCause}\n\n`;
+          debugContent += `**Affected Files:** ${debug.affectedFiles.join(', ')}\n\n`;
+          debugContent += `**Fix:** ${debug.suggestedFix}\n\n`;
+          if (debug.steps?.length) {
+            debugContent += '**Steps to fix:**\n';
+            for (const step of debug.steps) {
+              debugContent += `- ${step}\n`;
+            }
+          }
+          addMessage({
+            role: 'assistant',
+            content: debugContent,
+          });
+          // Continue to apply any fixes (edits) if provided
+        }
+
         // Track what was applied
         let filesApplied = 0;
         let editsApplied = 0;
@@ -540,17 +583,22 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         // Run validation and auto-fix if enabled
         let validationErrors: CodeError[] = [];
         let eslintErrors: CodeError[] = [];
+        let runtimeErrors: CodeError[] = [];
         let autoFixAttempts = 0;
         let autoFixSucceeded = false;
 
-        if (runTypeCheck && enableAutoFix && (filesApplied > 0 || editsApplied > 0)) {
-          updateProgress('validating', 'Running TypeScript check...');
+        if (enableAutoFix && (filesApplied > 0 || editsApplied > 0)) {
+          updateProgress('validating', 'Checking for errors...');
 
           try {
-            const tsOutput = await runTypeCheck();
-            const validationResult = validateCode(tsOutput);
+            // Collect TypeScript errors if runTypeCheck available
+            if (runTypeCheck) {
+              const tsOutput = await runTypeCheck();
+              const validationResult = validateCode(tsOutput);
+              validationErrors = validationResult.errors;
+            }
 
-            // Also run ESLint if available
+            // Collect ESLint errors if available
             if (runESLint) {
               try {
                 const eslintOutput = await runESLint();
@@ -563,17 +611,36 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
               }
             }
 
-            if (!validationResult.success && validationResult.errors.length > 0) {
-              validationErrors = validationResult.errors;
-              updateProgress('validating', `Found ${validationErrors.length} TypeScript error${validationErrors.length === 1 ? '' : 's'}`, {
+            // Collect runtime/preview errors
+            if (previewErrors.length > 0) {
+              runtimeErrors = parsePreviewErrors(previewErrors).filter(e => e.severity === 'error');
+              if (runtimeErrors.length > 0) {
+                console.log('[Chat] Found', runtimeErrors.length, 'runtime errors');
+              }
+            }
+
+            // Combine all errors for auto-fix
+            const allErrors = [...validationErrors, ...eslintErrors, ...runtimeErrors];
+
+            if (allErrors.length > 0) {
+              const tsCount = validationErrors.length;
+              const eslintCount = eslintErrors.length;
+              const runtimeCount = runtimeErrors.length;
+
+              const errorParts: string[] = [];
+              if (tsCount > 0) errorParts.push(`${tsCount} TypeScript`);
+              if (eslintCount > 0) errorParts.push(`${eslintCount} ESLint`);
+              if (runtimeCount > 0) errorParts.push(`${runtimeCount} runtime`);
+
+              updateProgress('validating', `Found ${errorParts.join(', ')} error${allErrors.length === 1 ? '' : 's'}`, {
                 completed: 0,
-                total: validationErrors.length,
+                total: allErrors.length,
               });
-              console.log('[Chat] Found', validationErrors.length, 'errors, attempting auto-fix...');
+              console.log('[Chat] Found', allErrors.length, 'total errors, attempting auto-fix...');
 
               // Check if errors are auto-fixable
-              if (areErrorsAutoFixable(validationErrors)) {
-                let currentErrors = validationErrors;
+              if (areErrorsAutoFixable(allErrors)) {
+                let currentErrors = allErrors;
 
                 while (currentErrors.length > 0 && autoFixAttempts < maxRetries) {
                   autoFixAttempts++;
@@ -586,7 +653,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
                   const fixRequest: GenerateRequest = {
                     prompt: fixPrompt,
                     currentFiles: filesRef.current,
-                    selectedFile: currentErrors[0]?.file, // Focus on first file with error
+                    selectedFile: currentErrors[0]?.file,
                     conversationHistory: [],
                     hasThreeJs,
                   };
@@ -610,7 +677,6 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
                     await onEditsGenerated(fixResponse.edits, async (path: string) => {
                       return await readFile(path);
                     });
-                    // Update cache with edited files
                     for (const edit of fixResponse.edits) {
                       const normalizedPath = edit.file.startsWith('/') ? edit.file : `/${edit.file}`;
                       try {
@@ -622,20 +688,28 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
                     }
                   }
 
-                  // Re-validate
-                  updateProgress('validating', `Verifying fix ${autoFixAttempts}...`);
-                  const revalidateOutput = await runTypeCheck();
-                  const revalidateResult = validateCode(revalidateOutput);
+                  // Clear preview errors after applying fixes (they may be stale)
+                  clearPreviewErrors?.();
 
-                  if (revalidateResult.success) {
+                  // Re-validate TypeScript
+                  updateProgress('validating', `Verifying fix ${autoFixAttempts}...`);
+                  let revalidateErrors: CodeError[] = [];
+
+                  if (runTypeCheck) {
+                    const revalidateOutput = await runTypeCheck();
+                    const revalidateResult = validateCode(revalidateOutput);
+                    revalidateErrors = revalidateResult.errors;
+                  }
+
+                  if (revalidateErrors.length === 0) {
                     currentErrors = [];
                     autoFixSucceeded = true;
                     addMessage({
                       role: 'system',
-                      content: `Auto-fixed ${validationErrors.length} error${validationErrors.length > 1 ? 's' : ''} in ${autoFixAttempts} attempt${autoFixAttempts > 1 ? 's' : ''}`,
+                      content: `Auto-fixed ${allErrors.length} error${allErrors.length > 1 ? 's' : ''} in ${autoFixAttempts} attempt${autoFixAttempts > 1 ? 's' : ''}`,
                     });
                   } else {
-                    currentErrors = revalidateResult.errors;
+                    currentErrors = revalidateErrors;
                     console.log('[Chat] Still have', currentErrors.length, 'errors after fix attempt', autoFixAttempts);
                   }
                 }
@@ -650,7 +724,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
                 }
               } else {
                 // Errors need user intervention (e.g., missing npm packages)
-                const errorSummary = validationErrors.slice(0, 3).map(e => `${e.file}:${e.line} - ${e.message}`).join('\n');
+                const errorSummary = allErrors.slice(0, 3).map(e => `${e.file}:${e.line} - ${e.message}`).join('\n');
                 addMessage({
                   role: 'system',
                   content: `Some errors need manual intervention:\n${errorSummary}`,
@@ -659,7 +733,6 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             }
           } catch (validationErr) {
             console.warn('[Chat] Validation failed:', validationErr);
-            // Don't fail the whole generation if validation errors
           }
         }
 
@@ -688,10 +761,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             durationMs,
             hadTsErrors: validationErrors.length > 0,
             hadEslintErrors: eslintErrors.length > 0,
-            errorCount: validationErrors.length + eslintErrors.length,
+            hadRuntimeErrors: runtimeErrors.length > 0,
+            errorCount: validationErrors.length + eslintErrors.length + runtimeErrors.length,
             autoFixAttempts,
             autoFixSucceeded: autoFixAttempts > 0 ? autoFixSucceeded : undefined,
-            // Selection quality metrics
             filesSelectedForContext,
             filesActuallyModified,
             selectionAccuracy,
@@ -735,17 +808,36 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         // Mark complete briefly before resetting
         updateProgress('complete');
 
-        // Parse the AI response to extract features and next steps
+        // Parse the AI response to extract features
         const fullContent = response.message + (response.explanation ? `\n\n${response.explanation}` : '');
         const parsed = parseAIResponse(fullContent);
 
-        // Add assistant response with parsed features and suggestions
+        // Generate next step predictions using hybrid service
+        const filesModified = [
+          ...(response.files?.map(f => f.path) || []),
+          ...(response.edits?.map(e => e.file) || []),
+        ];
+        const predictionContext = extractPredictionContext(
+          messages,
+          filesRef.current,
+          hasThreeJs,
+          validationErrors.length > 0
+            ? validationErrors.map(e => `${e.file}:${e.line} - ${e.message}`)
+            : undefined
+        );
+        predictionContext.lastUserPrompt = prompt;
+        predictionContext.lastAssistantResponse = parsed.content;
+        predictionContext.filesModified = filesModified;
+
+        const nextSteps = predictNextSteps(predictionContext);
+
+        // Add assistant response with parsed features and predictions
         addMessage({
           role: 'assistant',
           content: parsed.content,
           files: response.files,
           features: parsed.features,
-          nextSteps: parsed.nextSteps,
+          nextSteps,
         });
         messageCountRef.current++;
 
@@ -780,8 +872,22 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         }, 1000);
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries]
+    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
   );
+
+  // Compute current suggestions for the chatbox
+  // Uses last assistant message's nextSteps or initial suggestions
+  const suggestions = useMemo(() => {
+    // Find the last assistant message with nextSteps
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant' && msg.nextSteps && msg.nextSteps.length > 0) {
+        return msg.nextSteps;
+      }
+    }
+    // Fallback to initial suggestions
+    return getInitialSuggestions();
+  }, [messages]);
 
   return {
     messages,
@@ -791,5 +897,6 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     sendMessage,
     clearMessages,
     addSystemMessage,
+    suggestions,
   };
 }
