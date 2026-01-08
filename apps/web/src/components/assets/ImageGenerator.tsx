@@ -8,7 +8,6 @@
 import { useState, useCallback } from 'react';
 import { Sparkles, Wand2, Download, Plus, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Progress } from '../ui/progress';
@@ -19,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../ui/select';
-import { cn } from '../../lib/utils';
 import {
   generateImage,
   getStyleOptions,

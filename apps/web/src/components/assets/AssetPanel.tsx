@@ -81,7 +81,7 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
   }, []);
 
   const handleAssetCreated = useCallback(
-    (asset: Asset) => {
+    () => {
       if (projectId) {
         invalidateAssets(projectId);
       }

@@ -437,10 +437,8 @@ export async function checkForRemoteChanges(
 }
 
 export function isGitHubConnected(): boolean {
-  // Check if we have a provider token
-  const supabase = getSupabase();
-
   // This is sync check - actual validation requires async call
+  // Real check happens via validateGitHubConnection()
   return true;
 }
 
