@@ -2,23 +2,25 @@
  * AssetPanel Component
  *
  * Main panel for asset management in the Builder sidebar.
- * Combines uploader, gallery, and detail modal.
+ * Combines uploader, gallery, AI generator, and detail modal.
  */
 
 import { useState, useCallback } from 'react';
-import { Upload, FolderOpen } from 'lucide-react';
+import { Upload, FolderOpen, Sparkles } from 'lucide-react';
 import { AssetUploader } from './AssetUploader';
 import { AssetGallery } from './AssetGallery';
 import { AssetDetailModal } from './AssetDetailModal';
+import { ImageGenerator } from './ImageGenerator';
 import {
   useProjectAssets,
   useUploadAsset,
   useUpdateAsset,
   useDeleteAsset,
+  useInvalidateAssets,
 } from '../../hooks/useAssets';
 import type { Asset, CreateAssetInput, UpdateAssetInput } from '../../types/assets';
 
-type PanelView = 'gallery' | 'upload';
+type PanelView = 'gallery' | 'upload' | 'generate';
 
 interface AssetPanelProps {
   projectId: string | undefined;
@@ -35,6 +37,7 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
   const uploadAsset = useUploadAsset();
   const updateAsset = useUpdateAsset();
   const deleteAsset = useDeleteAsset();
+  const invalidateAssets = useInvalidateAssets();
 
   const handleUpload = useCallback(
     async (file: File, input: CreateAssetInput) => {
@@ -77,6 +80,16 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
     navigator.clipboard.writeText(asset.publicPath);
   }, []);
 
+  const handleAssetCreated = useCallback(
+    (asset: Asset) => {
+      if (projectId) {
+        invalidateAssets(projectId);
+      }
+      setView('gallery');
+    },
+    [projectId, invalidateAssets]
+  );
+
   if (!projectId || !userId) {
     return (
       <div className="flex h-full items-center justify-center p-4">
@@ -90,29 +103,40 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
       <div className="flex border-b border-border-muted">
         <button
           onClick={() => setView('gallery')}
-          className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+          className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${
             view === 'gallery'
               ? 'border-b-2 border-accent text-content'
               : 'text-content-muted hover:text-content'
           }`}
         >
-          <FolderOpen className="h-4 w-4" />
+          <FolderOpen className="h-3.5 w-3.5" />
           Assets
         </button>
         <button
           onClick={() => setView('upload')}
-          className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+          className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${
             view === 'upload'
               ? 'border-b-2 border-accent text-content'
               : 'text-content-muted hover:text-content'
           }`}
         >
-          <Upload className="h-4 w-4" />
+          <Upload className="h-3.5 w-3.5" />
           Upload
+        </button>
+        <button
+          onClick={() => setView('generate')}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors ${
+            view === 'generate'
+              ? 'border-b-2 border-accent text-content'
+              : 'text-content-muted hover:text-content'
+          }`}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          Generate
         </button>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         {view === 'gallery' ? (
           <AssetGallery
             assets={assets}
@@ -121,9 +145,9 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
             onSelectAsset={handleSelectAsset}
             onDeleteAsset={handleDeleteAsset}
             onCopyPath={handleCopyPath}
-            emptyMessage="No assets uploaded yet. Click Upload to add files."
+            emptyMessage="No assets yet. Upload files or generate with AI."
           />
-        ) : (
+        ) : view === 'upload' ? (
           <div className="p-3">
             <AssetUploader
               projectId={projectId}
@@ -133,6 +157,12 @@ export function AssetPanel({ projectId, userId, onAssetSelect }: AssetPanelProps
               disabled={uploadAsset.isPending}
             />
           </div>
+        ) : (
+          <ImageGenerator
+            projectId={projectId}
+            userId={userId}
+            onAssetCreated={handleAssetCreated}
+          />
         )}
       </div>
 
