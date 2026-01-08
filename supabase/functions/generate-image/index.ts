@@ -84,8 +84,10 @@ Deno.serve(async (req: Request) => {
   try {
     // Authentication
     const authHeader = req.headers.get('Authorization');
+    console.log('[generate-image] Auth header present:', !!authHeader);
+
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'No authorization header' }), {
+      return new Response(JSON.stringify({ error: 'No authorization header', code: 'NO_AUTH_HEADER' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -98,9 +100,14 @@ Deno.serve(async (req: Request) => {
     });
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
+    console.log('[generate-image] User check:', user?.id || 'no user', userError?.message || 'no error');
 
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      return new Response(JSON.stringify({
+        error: 'Unauthorized',
+        code: 'USER_AUTH_FAILED',
+        details: userError?.message
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
