@@ -240,21 +240,57 @@ export function PlayPage({ gameId }: PlayPageProps) {
         </div>
 
         {/* Game iframe */}
-        <div className="aspect-video overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated shadow-lg">
+        <div className="relative aspect-video overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated shadow-lg">
           {gameUrl ? (
-            <iframe
-              id="game-iframe"
-              src={gameUrl}
-              className="h-full w-full"
-              title={game.name}
-              allow="fullscreen; autoplay; encrypted-media"
-            />
+            <>
+              <iframe
+                id="game-iframe"
+                src={gameUrl}
+                className="h-full w-full"
+                title={game.name}
+                allow="fullscreen; autoplay; encrypted-media"
+                onError={() => console.log('[PlayPage] iframe error')}
+              />
+              {/* Fallback overlay - shows if iframe fails to load */}
+              <div
+                id="iframe-fallback"
+                className="absolute inset-0 flex flex-col items-center justify-center bg-surface-elevated/95 opacity-0 pointer-events-none transition-opacity"
+                style={{ opacity: 0 }}
+              >
+                <Gamepad2 className="h-16 w-16 text-content-muted mb-4" />
+                <p className="text-content-muted mb-4">Game preview unavailable</p>
+                <a
+                  href={gameUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-secondary px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+                >
+                  <PlayIcon className="h-4 w-4" />
+                  Open Game in New Tab
+                </a>
+              </div>
+            </>
           ) : (
             <div className="flex h-full items-center justify-center">
-              <p className="text-content-muted">Failed to load game</p>
+              <p className="text-content-muted">Loading game...</p>
             </div>
           )}
         </div>
+
+        {/* Direct play link */}
+        {gameUrl && (
+          <div className="mt-4 text-center">
+            <a
+              href={gameUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
+            >
+              <PlayIcon className="h-4 w-4" />
+              Open game in new tab
+            </a>
+          </div>
+        )}
 
         {/* CTA Section */}
         <div className="mt-12 rounded-2xl border border-border-muted bg-surface-elevated p-8 text-center">
