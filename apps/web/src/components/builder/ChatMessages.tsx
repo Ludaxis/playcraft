@@ -72,16 +72,15 @@ function MessageBubble({
       </div>
 
       {/* Message content */}
-      <div className={`flex-1 ${isUser ? 'text-right' : ''}`}>
+      <div className={`min-w-0 flex-1 ${isUser ? 'flex justify-end' : ''}`}>
         <div
-          className={`inline-block rounded-2xl px-4 py-3 ${
+          className={`rounded-2xl px-4 py-3 ${
             isUser
-              ? 'bg-accent text-content'
+              ? 'bg-accent text-content max-w-[85%]'
               : 'bg-surface-overlay text-content'
           }`}
-          style={{ maxWidth: isUser ? '85%' : '100%' }}
         >
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
 
           {/* Features list for assistant messages */}
           {isAssistant && message.features && message.features.length > 0 && (
@@ -227,7 +226,7 @@ export function ChatMessages({
   }, [messages, isGenerating, generationProgress]);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-auto p-4">
       <div className="mx-auto max-w-2xl space-y-6">
         {messages.map((msg) => (
           <MessageBubble

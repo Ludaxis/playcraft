@@ -54,10 +54,10 @@
     flex-direction: column;
   }
 
-  /* Custom Scrollbar (2026: thinner, subtler) */
+  /* Custom Scrollbar (2026: minimal, auto-hiding) */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
   }
 
   ::-webkit-scrollbar-track {
@@ -65,18 +65,18 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--border-default);
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--content-tertiary);
+    background: rgba(255, 255, 255, 0.2);
   }
 
   /* Firefox scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--border-default) transparent;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
   }
 
   /* Text Selection - Neon accent */
@@ -384,6 +384,24 @@
   /* Custom Scrollbar (thin) */
   .scrollbar-thin {
     scrollbar-width: thin;
+  }
+
+  /* Auto-hiding scrollbar - only shows on hover */
+  .scrollbar-auto {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .scrollbar-auto::-webkit-scrollbar-thumb {
+    background: transparent;
+  }
+
+  .scrollbar-auto:hover {
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+
+  .scrollbar-auto:hover::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
   }
 
   /* Animation Utilities */
