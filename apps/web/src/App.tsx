@@ -22,6 +22,7 @@ function AppRoutes() {
   const [loadingProject, setLoadingProject] = useState(false);
   const workspaceId = useAppStore((state) => state.workspaceId);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const LAST_PROJECT_CACHE_KEY = 'playcraft_last_project_id';
 
   // Track if we're on the builder page (derived from URL, single source of truth)
   const isOnBuilder = location.pathname.startsWith('/builder/');
@@ -94,15 +95,18 @@ function AppRoutes() {
           if (project) {
             console.log('[App] Loaded project:', project.name, 'with', Object.keys(project.files || {}).length, 'files');
             setCurrentProject(project);
+            localStorage.setItem(LAST_PROJECT_CACHE_KEY, project.id);
           } else {
             console.warn('[App] Project not found:', projectId);
             loadedProjectIdRef.current = null;
+            localStorage.removeItem(LAST_PROJECT_CACHE_KEY);
             navigate('/');
           }
         })
         .catch(err => {
           console.error('[App] Failed to load project:', err);
           loadedProjectIdRef.current = null;
+          localStorage.removeItem(LAST_PROJECT_CACHE_KEY);
           navigate('/');
         })
         .finally(() => {
@@ -110,6 +114,16 @@ function AppRoutes() {
         });
     }
   }, [user, loading, location.pathname, currentProject?.id, loadingProject, navigate]);
+
+  // Fast-path: if on home and idle, resume last project from cache
+  useEffect(() => {
+    if (!user || loading || loadingProject || currentProject || isOnBuilder) return;
+    const cachedId = localStorage.getItem(LAST_PROJECT_CACHE_KEY);
+    if (cachedId) {
+      console.log('[App] Restoring last project from cache:', cachedId);
+      navigate(`/builder/${cachedId}`);
+    }
+  }, [user, loading, loadingProject, currentProject, isOnBuilder, navigate]);
 
   const handleSignIn = async () => {
     const supabase = getSupabase();
@@ -126,6 +140,7 @@ function AppRoutes() {
     await supabase.auth.signOut();
     setCurrentProject(null);
     setInitialPrompt(null);
+    localStorage.removeItem(LAST_PROJECT_CACHE_KEY);
     loadedProjectIdRef.current = null;
     navigate('/');
   };
@@ -142,6 +157,7 @@ function AppRoutes() {
     setCurrentProject(project);
     setInitialPrompt(null);
     loadedProjectIdRef.current = project.id;
+    localStorage.setItem(LAST_PROJECT_CACHE_KEY, project.id);
     navigate(`/builder/${project.id}`);
   };
 
@@ -157,6 +173,7 @@ function AppRoutes() {
       const project = await createProject({
         name: projectName,
         workspace_id: workspaceId ?? null,
+        reuseDraft: true,
       });
 
       // Save initial prompt to localStorage so it survives page refresh
@@ -165,6 +182,7 @@ function AppRoutes() {
       setCurrentProject(project);
       setInitialPrompt(prompt);
       loadedProjectIdRef.current = project.id;
+      localStorage.setItem(LAST_PROJECT_CACHE_KEY, project.id);
       navigate(`/builder/${project.id}`);
     } catch (err) {
       console.error('Failed to create project:', err);

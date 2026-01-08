@@ -12,6 +12,7 @@ export interface PlayCraftProject {
   user_id: string;
   name: string;
   description: string | null;
+  template_id?: string | null;
   has_three_js: boolean;
   status: 'draft' | 'building' | 'ready' | 'published';
   files: Record<string, string>;
@@ -32,6 +33,8 @@ export interface CreateProjectInput {
   name: string;
   description?: string;
   workspace_id?: string | null;
+  template_id?: string | null;
+  reuseDraft?: boolean;
 }
 
 export interface UpdateProjectInput {
@@ -46,6 +49,8 @@ export interface UpdateProjectInput {
   published_at?: string | null;
   is_public?: boolean;
   is_starred?: boolean;
+  workspace_id?: string | null;
+  template_id?: string | null;
 }
 
 /**
@@ -160,20 +165,73 @@ export async function createProject(input: CreateProjectInput): Promise<PlayCraf
 
   logger.info(`Creating project "${input.name}"`, { component: 'projectService', userId: user.id });
 
+  const reuseDraft = input.reuseDraft ?? true;
+  const { reuseDraft: _discard, ...payload } = input;
+
+  async function findReusableDraft() {
+    const { data, error } = await supabase
+      .from('playcraft_projects')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'draft')
+      .eq('template_id', 'draft-pool')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') {
+      logger.warn('Reusable draft lookup failed', error, { component: 'projectService' });
+      return null;
+    }
+    return (data as PlayCraftProject | null) ?? null;
+  }
+
+  async function repurposeDraft(draft: PlayCraftProject) {
+    const { data, error } = await supabase
+      .from('playcraft_projects')
+      .update({
+        name: payload.name,
+        description: payload.description ?? null,
+        workspace_id: payload.workspace_id ?? null,
+        template_id: null,
+        updated_at: new Date().toISOString(),
+        last_opened_at: new Date().toISOString(),
+        status: 'draft',
+      })
+      .eq('id', draft.id)
+      .select()
+      .single();
+
+    if (error) {
+      logger.error('Failed to repurpose draft', new Error(error.message), { component: 'projectService' });
+      throw new Error(`Failed to reuse draft: ${error.message}`);
+    }
+
+    return data as PlayCraftProject;
+  }
+
+  if (reuseDraft) {
+    const draft = await findReusableDraft();
+    if (draft) {
+      return repurposeDraft(draft);
+    }
+  }
+
   return withRetry(
     async () => {
       const { data, error } = await supabase
         .from('playcraft_projects')
         .insert({
           user_id: user.id,
-          name: input.name,
-          description: input.description || null,
-          workspace_id: input.workspace_id ?? null,
+          name: payload.name,
+          description: payload.description || null,
+          workspace_id: payload.workspace_id ?? null,
           has_three_js: false,
           status: 'draft',
           files: {}, // Empty JSON for backward compatibility
           conversation: [],
           use_storage: true, // New projects use Supabase Storage
+          template_id: payload.template_id ?? (reuseDraft ? 'draft-pool' : null),
         })
         .select()
         .single();
@@ -193,6 +251,41 @@ export async function createProject(input: CreateProjectInput): Promise<PlayCraf
       },
     }
   );
+}
+
+export async function ensureDraftPool(): Promise<void> {
+  const supabase = getSupabase();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return;
+
+  const { data, error } = await supabase
+    .from('playcraft_projects')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('status', 'draft')
+    .eq('template_id', 'draft-pool')
+    .limit(1)
+    .maybeSingle();
+
+  if (!error && data) return;
+  if (error && error.code !== 'PGRST116') {
+    logger.warn('Draft pool lookup failed', error, { component: 'projectService' });
+    return;
+  }
+
+  await supabase
+    .from('playcraft_projects')
+    .insert({
+      user_id: user.id,
+      name: 'Draft workspace',
+      description: null,
+      has_three_js: false,
+      status: 'draft',
+      files: {},
+      conversation: [],
+      use_storage: true,
+      template_id: 'draft-pool',
+    });
 }
 
 /**

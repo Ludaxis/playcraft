@@ -42,6 +42,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
       const project = await createProjectMutation.mutateAsync({
         name: newProjectName.trim(),
         workspace_id: workspaceId ?? null,
+        reuseDraft: true,
       });
       setShowNewModal(false);
       setNewProjectName('');

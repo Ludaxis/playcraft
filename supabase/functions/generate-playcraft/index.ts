@@ -154,6 +154,8 @@ const ALLOWED_ORIGINS = [
   // Production domains
   'https://playcraft.app',
   'https://www.playcraft.app',
+  'https://www.playcraft.games',
+  'https://playcraft.games',
   // Vercel production deployment (specific subdomain only)
   'https://playcraft.vercel.app',
 ];

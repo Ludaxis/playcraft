@@ -77,6 +77,7 @@ export interface PlayCraftProject {
   name: string;
   description: string | null;
   thumbnail_url?: string | null; // Optional - column doesn't exist in DB yet
+  template_id?: string | null;
   workspace_id?: string | null;
   has_three_js: boolean;
   status: ProjectStatus;
@@ -98,6 +99,8 @@ export interface CreateProjectInput {
   name: string;
   description?: string;
   workspace_id?: string | null;
+  template_id?: string | null;
+  reuseDraft?: boolean;
 }
 
 export interface UpdateProjectInput {
@@ -114,6 +117,7 @@ export interface UpdateProjectInput {
   is_public?: boolean;
   is_starred?: boolean;
   workspace_id?: string | null;
+  template_id?: string | null;
 }
 
 // Published game for showcase/discover

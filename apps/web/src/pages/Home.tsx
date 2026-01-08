@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
+import { ensureDraftPool } from '../lib/projectService';
 import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon } from '../components';
 import { useSidebar } from '../hooks';
 import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from '../hooks/useProjects';
@@ -95,6 +96,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [starringProjectId, setStarringProjectId] = useState<string | null>(null);
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
+  const draftPoolInitializedRef = useRef(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Sidebar collapse state
@@ -124,6 +126,13 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
       setWorkspaceId(workspaces[0].workspace.id);
     }
   }, [workspaceId, workspaces, setWorkspaceId]);
+
+  // Ensure a reusable draft exists for faster starts
+  useEffect(() => {
+    if (!user || draftPoolInitializedRef.current) return;
+    draftPoolInitializedRef.current = true;
+    ensureDraftPool().catch((err) => console.error('Failed to ensure draft pool', err));
+  }, [user]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -177,6 +186,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
       const project = await createProjectMutation.mutateAsync({
         name: 'Untitled Game',
         workspace_id: workspaceId ?? null,
+        reuseDraft: true,
       });
       onSelectProject(project);
     } catch (err) {
