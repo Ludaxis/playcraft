@@ -5,14 +5,9 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, Sparkles, MessageSquare, Code, Paperclip, X, Image, FileText } from 'lucide-react';
+import { ArrowUp, MessageSquare, Code, Paperclip, X, Image, FileText } from 'lucide-react';
 
 export type ChatMode = 'build' | 'chat';
-
-interface SuggestionChip {
-  label: string;
-  prompt: string;
-}
 
 interface AttachedFile {
   name: string;
@@ -27,25 +22,14 @@ interface ChatInputProps {
   onSend: (mode: ChatMode) => void;
   disabled?: boolean;
   placeholder?: string;
-  // Features
-  suggestions?: SuggestionChip[];
-  onSuggestionClick?: (prompt: string) => void;
   defaultMode?: ChatMode;
   onAttachFiles?: (files: File[]) => void;
-  showSuggestions?: boolean;
   // Auth callback - called when unauthenticated user tries to use a feature
   onAuthRequired?: () => void;
   // Landing-specific props
   animatedPhrases?: string[];
   staticPrefix?: string;
 }
-
-// Default quick suggestions
-const DEFAULT_SUGGESTIONS: SuggestionChip[] = [
-  { label: 'Add power-ups', prompt: 'Add power-up items that give special abilities' },
-  { label: 'Sound effects', prompt: 'Add sound effects for game actions' },
-  { label: 'Better graphics', prompt: 'Improve the visual design with animations and effects' },
-];
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -109,11 +93,8 @@ export function ChatInput({
   onSend,
   disabled = false,
   placeholder = 'Describe what you want to build...',
-  suggestions = DEFAULT_SUGGESTIONS,
-  onSuggestionClick,
   defaultMode = 'build',
   onAttachFiles,
-  showSuggestions = true,
   onAuthRequired,
   animatedPhrases = [],
   staticPrefix = '',
@@ -142,20 +123,6 @@ export function ChatInput({
       if (value.trim()) {
         handleSend();
       }
-    }
-  };
-
-  const handleSuggestionClick = (prompt: string) => {
-    if (onAuthRequired) {
-      // Store prompt and trigger auth
-      localStorage.setItem('playcraft_pending_prompt', prompt);
-      onAuthRequired();
-      return;
-    }
-    if (onSuggestionClick) {
-      onSuggestionClick(prompt);
-    } else {
-      onChange(prompt);
     }
   };
 
@@ -204,23 +171,6 @@ export function ChatInput({
 
   return (
     <div>
-      {/* Suggestion chips */}
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              onClick={() => handleSuggestionClick(suggestion.prompt)}
-              disabled={disabled}
-              className="group flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Sparkles className="h-3 w-3 text-accent/70 transition-colors group-hover:text-accent" />
-              {suggestion.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Main input container */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
         {/* Attached files preview */}

@@ -22,6 +22,7 @@ import {
   ChatInput,
   CreditsPanel,
   ChatHistory,
+  SuggestionChips,
   type ChatMode,
 } from '../components/builder';
 import { AssetPanel } from '../components/assets';
@@ -1147,14 +1148,21 @@ export function BuilderPage({
             isDismissed={creditsDismissed}
           />
 
+          {/* Suggestion chips */}
+          <div className="px-4 pb-2">
+            <SuggestionChips
+              suggestions={suggestions}
+              onSelect={handleSuggestionClick}
+              disabled={isGenerating}
+            />
+          </div>
+
           {/* Chat input */}
           <ChatInput
             value={inputValue}
             onChange={setInputValue}
             onSend={handleSendMessage}
             disabled={isGenerating}
-            suggestions={suggestions}
-            onSuggestionClick={handleSuggestionClick}
             onAttachFiles={handleAttachFiles}
           />
         </>

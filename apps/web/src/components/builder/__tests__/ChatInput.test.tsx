@@ -26,16 +26,6 @@ describe('ChatInput', () => {
       expect(screen.getByPlaceholderText('Describe what you want to build...')).toBeInTheDocument();
     });
 
-    it('renders suggestion chips', () => {
-      const suggestions = [
-        { label: 'Add feature', prompt: 'Add a cool feature' },
-        { label: 'Fix bug', prompt: 'Fix the bug' },
-      ];
-      render(<ChatInput {...defaultProps} suggestions={suggestions} />);
-      expect(screen.getByText('Add feature')).toBeInTheDocument();
-      expect(screen.getByText('Fix bug')).toBeInTheDocument();
-    });
-
     it('renders send button', () => {
       render(<ChatInput {...defaultProps} />);
       expect(screen.getByTitle('Send message')).toBeInTheDocument();
@@ -167,46 +157,6 @@ describe('ChatInput', () => {
       await user.click(sendButton);
 
       expect(onSend).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('Suggestions', () => {
-    it('calls onSuggestionClick when suggestion is clicked', async () => {
-      const onSuggestionClick = vi.fn();
-      const user = userEvent.setup();
-      const suggestions = [{ label: 'Test', prompt: 'Test prompt' }];
-
-      render(
-        <ChatInput
-          {...defaultProps}
-          suggestions={suggestions}
-          onSuggestionClick={onSuggestionClick}
-        />
-      );
-
-      await user.click(screen.getByText('Test'));
-      expect(onSuggestionClick).toHaveBeenCalledWith('Test prompt');
-    });
-
-    it('sets value when suggestion clicked without onSuggestionClick handler', async () => {
-      const onChange = vi.fn();
-      const user = userEvent.setup();
-      const suggestions = [{ label: 'Test', prompt: 'Test prompt' }];
-
-      render(
-        <ChatInput {...defaultProps} suggestions={suggestions} onChange={onChange} />
-      );
-
-      await user.click(screen.getByText('Test'));
-      expect(onChange).toHaveBeenCalledWith('Test prompt');
-    });
-
-    it('disables suggestions when disabled', () => {
-      const suggestions = [{ label: 'Test', prompt: 'Test prompt' }];
-      render(<ChatInput {...defaultProps} suggestions={suggestions} disabled={true} />);
-
-      const suggestionButton = screen.getByText('Test').closest('button');
-      expect(suggestionButton).toBeDisabled();
     });
   });
 
@@ -363,40 +313,6 @@ describe('ChatInput', () => {
       await user.click(attachButton);
 
       expect(onAuthRequired).toHaveBeenCalled();
-    });
-
-    it('calls onAuthRequired when suggestion is clicked', async () => {
-      const onAuthRequired = vi.fn();
-      const user = userEvent.setup();
-      const suggestions = [{ label: 'Test', prompt: 'Test prompt' }];
-
-      render(
-        <ChatInput
-          {...defaultProps}
-          suggestions={suggestions}
-          onAuthRequired={onAuthRequired}
-        />
-      );
-
-      await user.click(screen.getByText('Test'));
-      expect(onAuthRequired).toHaveBeenCalled();
-    });
-
-    it('stores suggestion prompt in localStorage when auth required', async () => {
-      const onAuthRequired = vi.fn();
-      const user = userEvent.setup();
-      const suggestions = [{ label: 'Test', prompt: 'Test prompt value' }];
-
-      render(
-        <ChatInput
-          {...defaultProps}
-          suggestions={suggestions}
-          onAuthRequired={onAuthRequired}
-        />
-      );
-
-      await user.click(screen.getByText('Test'));
-      expect(localStorage.getItem('playcraft_pending_prompt')).toBe('Test prompt value');
     });
   });
 

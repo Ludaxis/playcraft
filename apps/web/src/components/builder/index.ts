@@ -4,6 +4,7 @@
 
 export { ChatMessages } from './ChatMessages';
 export { ChatInput, type ChatMode } from './ChatInput';
+export { SuggestionChips, DEFAULT_SUGGESTIONS, type Suggestion } from './SuggestionChips';
 export { LeftPanel } from './LeftPanel';
 export { EditorPanel } from './EditorPanel';
 export { TerminalPanel } from './TerminalPanel';
