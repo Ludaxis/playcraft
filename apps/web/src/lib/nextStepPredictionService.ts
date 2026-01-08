@@ -256,6 +256,7 @@ export function predictNextSteps(context: PredictionContext): NextStep[] {
 
 function buildContextualSuggestions(context: PredictionContext): NextStep[] {
   const suggestions: NextStep[] = [];
+  const genre = inferGameGenre(context);
   const recentFile = context.filesModified[context.filesModified.length - 1];
   if (recentFile) {
     const base = recentFile.split('/').pop()?.replace(/\.[^/.]+$/, '') || 'the current file';
@@ -270,10 +271,18 @@ function buildContextualSuggestions(context: PredictionContext): NextStep[] {
       label: 'Add core loop',
       prompt: 'Add the main game loop with a clear win/lose condition and basic UI.',
     });
+    suggestions.push({
+      label: 'Add onboarding',
+      prompt: 'Add a quick start screen that explains controls and starts the first level.',
+    });
   } else if (context.projectState === 'iterating') {
     suggestions.push({
       label: 'Add feedback & sounds',
       prompt: 'Add subtle animations and sound effects for user actions and key game events.',
+    });
+    suggestions.push({
+      label: 'Add pause/restart flow',
+      prompt: 'Add a pause menu, restart button, and keyboard shortcuts (R to restart, P to pause).',
     });
   } else if (context.projectState === 'polishing') {
     suggestions.push({
@@ -289,7 +298,73 @@ function buildContextualSuggestions(context: PredictionContext): NextStep[] {
     });
   }
 
+   // Genre-aware steps to keep suggestions meaningful
+  const genreSteps: Record<string, NextStep[]> = {
+    platformer: [
+      { label: 'Add checkpoints', prompt: 'Add checkpoints and respawn logic so players don’t restart from level start.' },
+      { label: 'Tighten controls', prompt: 'Tune jump/gravity/friction values for responsive platforming and add coyote time.' },
+      { label: 'Enemy patrol AI', prompt: 'Add simple patrol AI with raycast edge detection and knockback on collision.' },
+    ],
+    shooter: [
+      { label: 'Add cooldowns', prompt: 'Add fire rate, reload, and ammo UI to the shooter loop.' },
+      { label: 'Spawn waves', prompt: 'Add wave-based spawns with pacing and a brief telegraph before each wave.' },
+      { label: 'Hit feedback', prompt: 'Add muzzle flash, hit markers, and camera shake for shots and hits.' },
+    ],
+    puzzle: [
+      { label: 'Add level goals', prompt: 'Add per-level goals, move/turn counters, and a level complete screen.' },
+      { label: 'Hint system', prompt: 'Add an optional hint system with limited hints per level.' },
+      { label: 'Undo/redo', prompt: 'Add undo/redo for puzzle moves with a short history stack.' },
+    ],
+    arcade: [
+      { label: 'Power-ups', prompt: 'Add time-limited power-ups with clear icons and drop chances.' },
+      { label: 'Combo meter', prompt: 'Add a combo multiplier that decays over time to reward continuous play.' },
+      { label: 'Leaderboard', prompt: 'Add a session score HUD and local leaderboard with initials input.' },
+    ],
+    rpg: [
+      { label: 'Quests', prompt: 'Add a basic quest log with objectives and completion states.' },
+      { label: 'Inventory', prompt: 'Add an inventory UI with equip/use actions and item stats.' },
+      { label: 'NPC dialogue', prompt: 'Add NPC dialogue with branching choices and simple state tracking.' },
+    ],
+    builder: [
+      { label: 'Save/load builds', prompt: 'Add save/load slots for player creations with thumbnail previews.' },
+      { label: 'Tooltips', prompt: 'Add contextual tooltips explaining each tool and keyboard shortcuts.' },
+      { label: 'Undo/redo build', prompt: 'Add undo/redo and a history panel for edits in the builder.' },
+    ],
+  };
+
+  if (genre && genreSteps[genre]) {
+    suggestions.push(...genreSteps[genre]);
+  }
+
+  // User-flow suggestions
+  suggestions.push({
+    label: 'HUD polish',
+    prompt: 'Add an in-game HUD with score/health, clear iconography, and responsive layout.',
+  });
+
+  suggestions.push({
+    label: 'Tutorial moment',
+    prompt: 'Add a short guided tutorial or inline tips that disappear after the first success.',
+  });
+
   return suggestions.slice(0, 3);
+}
+
+function inferGameGenre(context: PredictionContext): string | null {
+  const text = `${context.lastUserPrompt} ${context.lastAssistantResponse}`.toLowerCase();
+  const patterns: Array<{ key: string; regex: RegExp }> = [
+    { key: 'platformer', regex: /(platformer|jump|level|platform)/ },
+    { key: 'shooter', regex: /(shoot|bullet|weapon|gun|enemy fire|projectile)/ },
+    { key: 'puzzle', regex: /(puzzle|match-3|logic|grid|tile)/ },
+    { key: 'arcade', regex: /(arcade|endless|high score|wave)/ },
+    { key: 'rpg', regex: /(quest|inventory|npc|dialogue|rpg|role-playing)/ },
+    { key: 'builder', regex: /(editor|builder|sandbox|place|tilemap)/ },
+  ];
+  for (const { key, regex } of patterns) {
+    if (regex.test(text)) return key;
+  }
+  if (context.lastAssistantResponse.includes('Three.js')) return 'builder';
+  return null;
 }
 
 /**
