@@ -3,6 +3,7 @@ import { withRetry } from './retry';
 import { logger } from './logger';
 import type { ProjectMemory, RelevantFile } from './contextBuilder';
 import { applyEdits, type FileEdit } from './editApplyService';
+import type { ResponseMode, ImplementationPlan, DebugAnalysis } from '../types';
 
 interface FileContent {
   path: string;
@@ -16,6 +17,9 @@ export interface GenerateResponse {
   explanation: string;
   needsThreeJs?: boolean;
   useEditMode?: boolean; // Indicates response uses edit mode
+  mode?: ResponseMode; // Response format chosen by AI
+  plan?: ImplementationPlan; // For 'plan' mode responses
+  debugAnalysis?: DebugAnalysis; // For 'debug' mode responses
 }
 
 // Legacy request format (for backwards compatibility)

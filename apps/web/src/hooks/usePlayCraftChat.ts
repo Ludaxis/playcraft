@@ -491,6 +491,70 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           await onNeedsThreeJs();
         }
 
+        // Handle plan/explanation modes (no file changes)
+        const responseMode = response.mode || 'edit';
+        if (responseMode === 'plan' || responseMode === 'explanation') {
+          updateProgress('complete', responseMode === 'plan' ? 'Plan ready' : 'Explanation ready');
+
+          // Format plan for display
+          let formattedContent = response.message;
+          if (responseMode === 'plan' && response.plan) {
+            const plan = response.plan;
+            formattedContent = `## ${plan.summary}\n\n`;
+            formattedContent += '### Steps:\n';
+            for (const step of plan.steps) {
+              formattedContent += `${step.step}. ${step.description}`;
+              if (step.files?.length) {
+                formattedContent += ` (${step.files.join(', ')})`;
+              }
+              if (step.complexity) {
+                formattedContent += ` [${step.complexity}]`;
+              }
+              formattedContent += '\n';
+            }
+            if (plan.considerations?.length) {
+              formattedContent += '\n### Considerations:\n';
+              for (const consideration of plan.considerations) {
+                formattedContent += `- ${consideration}\n`;
+              }
+            }
+            if (plan.estimatedEffort) {
+              formattedContent += `\n**Estimated effort:** ${plan.estimatedEffort}`;
+            }
+          } else if (response.explanation) {
+            formattedContent = response.explanation;
+          }
+
+          addMessage({
+            role: 'assistant',
+            content: formattedContent,
+          });
+
+          updateProgress('complete', 'Done!');
+          return;
+        }
+
+        // Handle debug mode (show analysis + apply fixes)
+        if (responseMode === 'debug' && response.debugAnalysis) {
+          const debug = response.debugAnalysis;
+          let debugContent = `## Debug Analysis\n\n`;
+          debugContent += `**Issue:** ${debug.issue}\n\n`;
+          debugContent += `**Root Cause:** ${debug.rootCause}\n\n`;
+          debugContent += `**Affected Files:** ${debug.affectedFiles.join(', ')}\n\n`;
+          debugContent += `**Fix:** ${debug.suggestedFix}\n\n`;
+          if (debug.steps?.length) {
+            debugContent += '**Steps to fix:**\n';
+            for (const step of debug.steps) {
+              debugContent += `- ${step}\n`;
+            }
+          }
+          addMessage({
+            role: 'assistant',
+            content: debugContent,
+          });
+          // Continue to apply any fixes (edits) if provided
+        }
+
         // Track what was applied
         let filesApplied = 0;
         let editsApplied = 0;
