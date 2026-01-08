@@ -445,6 +445,20 @@ export function BuilderPage({
           });
         }
       },
+      // Update project name when AI generates a game with a proper title
+      onGameNameDetected: async (detectedName) => {
+        // Only update if name looks like the prompt (starts with "I want", etc.)
+        const looksLikePrompt = /^(I want|Make|Create|Build|A |An |The )/i.test(project.name);
+        if (looksLikePrompt || project.name === 'New Game' || project.name === 'Untitled Game') {
+          console.log('[Builder] Updating project name from detected title:', detectedName);
+          try {
+            await updateProject(project.id, { name: detectedName });
+            setProject(prev => ({ ...prev, name: detectedName }));
+          } catch (err) {
+            console.warn('[Builder] Failed to update project name:', err);
+          }
+        }
+      },
       onFilesGenerated: async (files) => {
         // Update in-memory file state
         const updatedFiles = { ...projectFiles };

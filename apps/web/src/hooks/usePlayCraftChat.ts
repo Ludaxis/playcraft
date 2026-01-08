@@ -71,6 +71,7 @@ interface UsePlayCraftChatOptions {
   onEditsGenerated?: (edits: FileEdit[], readFile: (path: string) => Promise<string | null>) => Promise<{ success: boolean; errors: string[] }>;
   onNeedsThreeJs?: () => Promise<void>; // Called when AI requests Three.js
   onFirstPrompt?: (prompt: string) => void; // Called immediately when first prompt is sent (for naming)
+  onGameNameDetected?: (name: string) => void; // Called when AI generates a game with a title
   readFile?: (path: string) => Promise<string>;
   readAllFiles?: () => Promise<Record<string, string>>; // Read all project files
   hasThreeJs?: boolean; // Whether Three.js template is already loaded
@@ -128,6 +129,39 @@ function convertToDisplayMessages(
   }));
 }
 
+/**
+ * Extract game name from generated files (looks for <title> tag)
+ */
+function extractGameName(files: Array<{ path: string; content: string }>): string | null {
+  // Look for index.html first
+  const indexHtml = files.find(f => f.path.includes('index.html'));
+  if (indexHtml) {
+    const titleMatch = indexHtml.content.match(/<title>([^<]+)<\/title>/i);
+    if (titleMatch && titleMatch[1]) {
+      const title = titleMatch[1].trim();
+      // Skip default titles
+      if (title !== 'PlayCraft Game' && title !== 'Vite + React + TS' && title !== 'Vite App') {
+        return title;
+      }
+    }
+  }
+
+  // Look for a game title in Index.tsx comments or component
+  const indexTsx = files.find(f => f.path.includes('Index.tsx') || f.path.includes('App.tsx'));
+  if (indexTsx) {
+    // Look for /* Game: GameName */ or // GameName - A game...
+    const commentMatch = indexTsx.content.match(/\/[/*]\s*(?:Game:|Title:)?\s*([A-Z][^*\n]+?)(?:\s*[-–—]\s*|\s*\*\/|\n)/);
+    if (commentMatch && commentMatch[1]) {
+      const name = commentMatch[1].trim();
+      if (name.length > 2 && name.length < 50) {
+        return name;
+      }
+    }
+  }
+
+  return null;
+}
+
 export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlayCraftChatReturn {
   const {
     projectId,
@@ -136,6 +170,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     onEditsGenerated,
     onNeedsThreeJs,
     onFirstPrompt,
+    onGameNameDetected,
     readFile,
     readAllFiles,
     hasThreeJs = false,
@@ -613,6 +648,15 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           if (onFilesGenerated) {
             await onFilesGenerated(response.files);
             filesApplied = response.files.length;
+
+            // Try to detect game name from generated files
+            if (onGameNameDetected) {
+              const detectedName = extractGameName(response.files);
+              if (detectedName) {
+                console.log('[usePlayCraftChat] Detected game name:', detectedName);
+                onGameNameDetected(detectedName);
+              }
+            }
           }
         }
 
@@ -908,7 +952,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         }, 1000);
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, onFirstPrompt, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
+    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, onFirstPrompt, onGameNameDetected, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
   );
 
   // Compute current suggestions for the chatbox
