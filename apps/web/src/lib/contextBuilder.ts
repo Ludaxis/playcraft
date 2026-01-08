@@ -17,6 +17,12 @@ import {
   formatTaskContextForPrompt,
   type TaskContext,
 } from './taskLedgerService';
+import {
+  getAssetManifest,
+  formatAssetManifestForPrompt,
+  formatAssetManifestCompact,
+} from './assetManifestService';
+import type { AssetManifest } from '../types/assets';
 
 // ============================================================================
 // TYPES
@@ -57,6 +63,10 @@ export interface ContextPackage {
   // Structured plan for complex tasks (Phase 4.5)
   structuredPlan?: StructuredPlan;
   structuredPlanFormatted?: string; // Pre-formatted for prompt injection
+
+  // Asset manifest (for AI to use uploaded assets)
+  assetManifest?: AssetManifest;
+  assetManifestFormatted?: string; // Pre-formatted for prompt injection
 
   // Conversation context
   conversationSummaries: string[];
@@ -1244,6 +1254,22 @@ export async function buildContext(
     }
   }
 
+  // Get asset manifest for AI to use uploaded assets
+  let assetManifest: AssetManifest | undefined;
+  let assetManifestFormatted: string | undefined;
+  try {
+    assetManifest = await getAssetManifest(projectId);
+    if (assetManifest && assetManifest.totalCount > 0) {
+      // Use compact format for minimal context, full format otherwise
+      assetManifestFormatted = intent.isTrivialChange
+        ? formatAssetManifestCompact(assetManifest)
+        : formatAssetManifestForPrompt(assetManifest);
+      console.log(`[ContextBuilder] Asset manifest: ${assetManifest.totalCount} assets`);
+    }
+  } catch (error) {
+    console.warn('[ContextBuilder] Failed to get asset manifest:', error);
+  }
+
   // Build file tree (just paths)
   const fileTree = Object.keys(files).sort();
 
@@ -1261,8 +1287,11 @@ export async function buildContext(
   const planTokens = structuredPlanFormatted
     ? Math.ceil(structuredPlanFormatted.length / CHARS_PER_TOKEN)
     : 0;
+  const assetTokens = assetManifestFormatted
+    ? Math.ceil(assetManifestFormatted.length / CHARS_PER_TOKEN)
+    : 0;
 
-  const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + taskContextTokens + planTokens + 500;
+  const totalTokens = tokenEstimate + memoryTokens + summaryTokens + messageTokens + taskContextTokens + planTokens + assetTokens + 500;
 
   const contextMode = useOutlines ? 'outline' : 'full';
   console.log(`[ContextBuilder] Built ${contextMode} context: ${relevantFiles.length} files, ~${totalTokens}/${tokenBudget} tokens${usedSemanticSearch ? ' (with semantic search)' : ''}`);
@@ -1273,6 +1302,8 @@ export async function buildContext(
     taskContextFormatted,
     structuredPlan,
     structuredPlanFormatted,
+    assetManifest,
+    assetManifestFormatted,
     conversationSummaries: summaryTexts,
     recentMessages,
     relevantFiles,

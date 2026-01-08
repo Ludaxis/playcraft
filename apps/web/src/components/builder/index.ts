@@ -25,3 +25,6 @@ export { PreviewHeader } from './PreviewHeader';
 
 // Async job components
 export { JobProgress } from './JobProgress';
+
+// GitHub integration
+export { GitHubSync } from './GitHubSync';

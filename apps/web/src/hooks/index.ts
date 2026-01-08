@@ -24,3 +24,19 @@ export type {
 } from './useFileChangeTracker';
 
 export { useWorkspaces, useCreateWorkspace, useInviteToWorkspace, useInvalidateWorkspaces } from './useWorkspaces';
+
+export {
+  useProjectAssets,
+  useAsset,
+  useAssetsByCategory,
+  useAssetManifest,
+  useUploadAsset,
+  useUploadMultipleAssets,
+  useUpdateAsset,
+  useDeleteAsset,
+  useSyncAssetsToContainer,
+  useWriteAllAssetsToContainer,
+  useInvalidateAssets,
+  useGroupedAssets,
+  useAssetStats,
+} from './useAssets';

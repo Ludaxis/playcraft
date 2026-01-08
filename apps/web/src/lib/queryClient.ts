@@ -80,4 +80,15 @@ export const queryKeys = {
     detail: (sessionId: string) =>
       [...queryKeys.chatSessions.all, 'detail', sessionId] as const,
   },
+  assets: {
+    all: ['assets'] as const,
+    byProject: (projectId: string) =>
+      [...queryKeys.assets.all, 'project', projectId] as const,
+    byCategory: (projectId: string, category: string) =>
+      [...queryKeys.assets.all, 'project', projectId, 'category', category] as const,
+    detail: (assetId: string) =>
+      [...queryKeys.assets.all, 'detail', assetId] as const,
+    manifest: (projectId: string) =>
+      [...queryKeys.assets.all, 'manifest', projectId] as const,
+  },
 } as const;
