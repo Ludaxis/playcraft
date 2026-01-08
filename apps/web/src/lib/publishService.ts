@@ -81,7 +81,7 @@ export async function runTypeScriptCheck(): Promise<CheckResult> {
       if (exitCode === 0) {
         return { success: true, errors: [], rawOutput: output };
       }
-    } catch (timeoutErr) {
+    } catch {
       console.warn('[publishService] TypeScript check timed out, skipping...');
       return { success: true, errors: [], rawOutput: 'Check timed out - skipping' };
     }
@@ -140,7 +140,7 @@ export async function runESLintCheck(): Promise<CheckResult> {
       if (exitCode === 0 || output.trim() === '') {
         return { success: true, errors: [], rawOutput: output };
       }
-    } catch (timeoutErr) {
+    } catch {
       console.warn('[publishService] ESLint check timed out, skipping...');
       return { success: true, errors: [], rawOutput: '' };
     }
