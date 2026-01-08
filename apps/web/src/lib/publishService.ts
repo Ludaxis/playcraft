@@ -554,24 +554,31 @@ export async function uploadToStorage(
 
     // Delete existing files first (for republishing)
     try {
-      const { data: existingFiles } = await supabase.storage
+      const { data: existingFiles, error: listError } = await supabase.storage
         .from('published-games')
         .list(basePath, { limit: 1000 });
 
+      if (listError) {
+        throw new Error(`Storage list failed: ${listError.message}`);
+      }
+
       if (existingFiles && existingFiles.length > 0) {
-        // Need to list recursively and delete all files
         const filesToDelete = existingFiles
-          .filter(f => !f.id) // Filter out folders (they have no id in some Supabase versions)
+          .filter(f => !f.id)
           .map(f => `${basePath}/${f.name}`);
 
         if (filesToDelete.length > 0) {
-          await supabase.storage.from('published-games').remove(filesToDelete);
+          const { error: removeError } = await supabase.storage.from('published-games').remove(filesToDelete);
+          if (removeError) {
+            throw new Error(`Storage cleanup failed: ${removeError.message}`);
+          }
           console.log(`[publishService] Deleted ${filesToDelete.length} existing files`);
         }
       }
     } catch (err) {
-      // Ignore deletion errors - folder might not exist yet
-      console.log('[publishService] No existing files to delete or error:', err);
+      const message = err instanceof Error ? err.message : 'Unknown storage cleanup error';
+      console.error('[publishService] Storage cleanup failed:', message);
+      throw new Error(`${message}. Check Supabase Storage CORS/permissions for published-games bucket.`);
     }
 
     onProgress({ stage: 'uploading', progress: 50, message: `Uploading ${totalFiles} files...` });
@@ -604,7 +611,7 @@ export async function uploadToStorage(
 
       if (error) {
         console.error(`[publishService] Failed to upload ${file.path}:`, error);
-        throw new Error(`Failed to upload ${file.path}: ${error.message}`);
+        throw new Error(`Failed to upload ${file.path}: ${error.message}. Ensure published-games bucket CORS allows your origin.`);
       }
 
       uploadedCount++;
@@ -625,13 +632,14 @@ export async function uploadToStorage(
 
     return urlData.publicUrl;
   } catch (err) {
-    console.error('[publishService] Upload failed:', err);
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    console.error('[publishService] Upload failed:', message);
     onProgress({
       stage: 'error',
       progress: 0,
-      message: `Upload error: ${err instanceof Error ? err.message : 'Unknown error'}`,
+      message: `Upload error: ${message}`,
     });
-    return null;
+    throw err instanceof Error ? err : new Error(message);
   }
 }
 

@@ -5,6 +5,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:5174',
   'https://playcraft.app',
+  'https://playcraft.games',
+  'https://www.playcraft.games',
   'https://www.playcraft.app',
   'https://playcraft.vercel.app',
 ];

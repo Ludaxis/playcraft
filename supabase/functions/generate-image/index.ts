@@ -1,39 +1,13 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
 
-// CORS configuration
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:5175',
-  'http://127.0.0.1:5173',
-  'https://playcraft.app',
-  'https://playcraft.games',
-  'https://www.playcraft.games',
-  'https://www.playcraft.app',
-  'https://playcraft.vercel.app',
-];
-
-const ALLOWED_PREVIEW_PATTERN = /^https:\/\/playcraft-[a-z0-9-]+\.vercel\.app$/;
-
-function getCorsHeaders(origin: string | null): Record<string, string> {
-  let allowedOrigin = ALLOWED_ORIGINS[0];
-
-  if (origin) {
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      allowedOrigin = origin;
-    } else if (ALLOWED_PREVIEW_PATTERN.test(origin)) {
-      allowedOrigin = origin;
-    }
-  }
-
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, apikey',
-    'Access-Control-Max-Age': '86400',
-  };
-}
+// CORS headers - mirror the request origin for allowed domains
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, apikey',
+  'Access-Control-Max-Age': '86400',
+};
 
 interface ImageGenerationRequest {
   prompt: string;
@@ -96,9 +70,6 @@ function buildImagePrompt(
 }
 
 Deno.serve(async (req: Request) => {
-  const origin = req.headers.get('Origin');
-  const corsHeaders = getCorsHeaders(origin);
-
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
