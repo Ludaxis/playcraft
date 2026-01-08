@@ -1322,10 +1322,6 @@ export function BuilderPage({
             published_at: new Date().toISOString(),
           }));
         }}
-        onAutoFix={async (fixPrompt) => {
-          // Send fix prompt to AI and wait for generation to complete
-          await sendAiMessage(fixPrompt);
-        }}
       />
     </div>
   );
