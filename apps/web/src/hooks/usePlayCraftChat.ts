@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   generateCode,
   generateCodeWithContext,
@@ -30,6 +30,7 @@ import {
 import {
   predictNextSteps,
   extractPredictionContext,
+  getInitialSuggestions,
 } from '../lib/nextStepPredictionService';
 import type { ChatMessage, GenerationStage, GenerationProgress } from '../types';
 
@@ -91,6 +92,8 @@ export interface UsePlayCraftChatReturn {
   sendMessage: (prompt: string, selectedFile?: string) => Promise<void>;
   clearMessages: () => void;
   addSystemMessage: (content: string) => void;
+  /** Current suggestions for the chatbox (from last assistant message or initial) */
+  suggestions: Array<{ label: string; prompt: string }>;
 }
 
 // Default welcome message
@@ -872,6 +875,20 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
   );
 
+  // Compute current suggestions for the chatbox
+  // Uses last assistant message's nextSteps or initial suggestions
+  const suggestions = useMemo(() => {
+    // Find the last assistant message with nextSteps
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant' && msg.nextSteps && msg.nextSteps.length > 0) {
+        return msg.nextSteps;
+      }
+    }
+    // Fallback to initial suggestions
+    return getInitialSuggestions();
+  }, [messages]);
+
   return {
     messages,
     isGenerating,
@@ -880,5 +897,6 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     sendMessage,
     clearMessages,
     addSystemMessage,
+    suggestions,
   };
 }
