@@ -108,6 +108,7 @@ async function hasBuildArtifacts(): Promise<boolean> {
 
 /**
  * Build the project using npm run build
+ * Uses --base=./ to ensure relative paths work when served from Supabase Storage
  */
 async function buildProject(
   onProgress: (progress: PublishProgress) => void,
@@ -118,7 +119,9 @@ async function buildProject(
   let fullOutput = '';
 
   try {
-    const process = await spawn('npm', ['run', 'build']);
+    // Pass --base=./ to Vite so the build uses relative paths
+    // This is critical for published games served from Supabase Storage subdirectories
+    const process = await spawn('npm', ['run', 'build', '--', '--base=./']);
 
     // Timeout promise
     const timeout = new Promise<never>((_, reject) => {
