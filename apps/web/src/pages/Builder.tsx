@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Terminal as TerminalIcon, AlertTriangle } from 'lucide-react';
+import { Terminal as TerminalIcon, AlertTriangle, Image } from 'lucide-react';
 import { Preview, ExportModal, PublishModal } from '../components';
 import {
   EditorPanel,
@@ -23,9 +23,10 @@ import {
   CreditsPanel,
   ChatHistory,
 } from '../components/builder';
+import { AssetPanel } from '../components/assets';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
 import type { DeviceMode } from '../components/builder/DeviceToggle';
-import { useWebContainer, usePlayCraftChat, usePreviewErrors, useFileChangeTracker } from '../hooks';
+import { useWebContainer, usePlayCraftChat, usePreviewErrors, useFileChangeTracker, useSyncAssetsToContainer } from '../hooks';
 import { viteStarterTemplate } from '../templates';
 import { applyGeneratedFiles, applyGeneratedEdits } from '../lib/playcraftService';
 import type { FileEdit } from '../lib/editApplyService';
@@ -244,7 +245,7 @@ export function BuilderPage({
   const setupCompletedForProjectRef = useRef<string | null>(null); // Track which project we've set up
   const [initialPromptProcessed, setInitialPromptProcessed] = useState(false);
   const [creditsDismissed, setCreditsDismissed] = useState(false);
-  const [chatPanelTab, setChatPanelTab] = useState<'chat' | 'history'>('chat');
+  const [chatPanelTab, setChatPanelTab] = useState<'chat' | 'history' | 'assets'>('chat');
 
   // Chat session state
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
@@ -291,6 +292,24 @@ export function BuilderPage({
     },
     logToConsole: false, // We handle logging ourselves
   });
+
+  // Asset sync hook
+  const syncAssets = useSyncAssetsToContainer();
+
+  // Sync assets to WebContainer when project is ready
+  useEffect(() => {
+    if (projectReady && project.id) {
+      console.log('[Builder] Syncing assets to WebContainer...');
+      syncAssets.mutate({
+        projectId: project.id,
+        onProgress: (progress) => {
+          if (progress.current === progress.total) {
+            console.log(`[Builder] Asset sync complete: ${progress.total} assets`);
+          }
+        },
+      });
+    }
+  }, [projectReady, project.id]);
 
   // Sync projectFiles when project data loads
   useEffect(() => {
@@ -1041,6 +1060,41 @@ export function BuilderPage({
         onCopyChat={handleCopyChat}
       />
 
+      {/* Tab Switcher */}
+      <div className="flex shrink-0 border-b border-border-muted">
+        <button
+          onClick={() => setChatPanelTab('chat')}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+            chatPanelTab === 'chat'
+              ? 'border-b-2 border-accent text-content'
+              : 'text-content-muted hover:text-content'
+          }`}
+        >
+          Chat
+        </button>
+        <button
+          onClick={() => setChatPanelTab('history')}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+            chatPanelTab === 'history'
+              ? 'border-b-2 border-accent text-content'
+              : 'text-content-muted hover:text-content'
+          }`}
+        >
+          History
+        </button>
+        <button
+          onClick={() => setChatPanelTab('assets')}
+          className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+            chatPanelTab === 'assets'
+              ? 'border-b-2 border-accent text-content'
+              : 'text-content-muted hover:text-content'
+          }`}
+        >
+          <Image className="h-3.5 w-3.5" />
+          Assets
+        </button>
+      </div>
+
       {/* Tab Content */}
       {chatPanelTab === 'chat' ? (
         <>
@@ -1071,7 +1125,7 @@ export function BuilderPage({
             onSuggestionClick={handleSuggestionClick}
           />
         </>
-      ) : (
+      ) : chatPanelTab === 'history' ? (
         /* History tab - Chat sessions list */
         <div className="flex-1 overflow-auto">
           <ChatHistory
@@ -1082,6 +1136,12 @@ export function BuilderPage({
             isLoading={isLoadingChatSessions}
           />
         </div>
+      ) : (
+        /* Assets tab - Asset management panel */
+        <AssetPanel
+          projectId={project.id}
+          userId={user.id}
+        />
       )}
     </div>
   );
