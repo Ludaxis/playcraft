@@ -27,20 +27,22 @@ import {
   extractGoalFromPrompt,
   setNewGoal,
 } from '../lib/taskLedgerService';
+import {
+  predictNextSteps,
+  extractPredictionContext,
+} from '../lib/nextStepPredictionService';
 import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage } from '../types';
 export type { GenerationStage, GenerationProgress } from '../types';
 
-// Helper to parse AI response and extract features/next steps
+// Helper to parse AI response and extract features
 function parseAIResponse(message: string): {
   content: string;
   features: string[];
-  nextSteps: NextStep[];
 } {
   const features: string[] = [];
-  const nextSteps: NextStep[] = [];
   const content = message;
 
   // Extract bullet points that start with common bullet characters
@@ -55,41 +57,9 @@ function parseAIResponse(message: string): {
     });
   }
 
-  // Generate smart next step suggestions based on content
-  const lowerContent = content.toLowerCase();
-
-  if (lowerContent.includes('game') || lowerContent.includes('created') || lowerContent.includes('built')) {
-    nextSteps.push(
-      { label: 'Add sound effects', prompt: 'Add sound effects for game actions like collecting items, jumping, and game over' },
-      { label: 'Add animations', prompt: 'Add smooth animations for player movement and transitions' },
-      { label: 'Add a leaderboard', prompt: 'Add a local leaderboard to track high scores' }
-    );
-  }
-
-  if (lowerContent.includes('player') || lowerContent.includes('character')) {
-    nextSteps.push(
-      { label: 'Add power-ups', prompt: 'Add power-up items that give the player special abilities' },
-      { label: 'Add enemies', prompt: 'Add enemies that the player must avoid or defeat' }
-    );
-  }
-
-  if (lowerContent.includes('score') || lowerContent.includes('points')) {
-    nextSteps.push(
-      { label: 'Add combo system', prompt: 'Add a combo multiplier system for consecutive actions' }
-    );
-  }
-
-  if (lowerContent.includes('level') || lowerContent.includes('stage')) {
-    nextSteps.push(
-      { label: 'Add more levels', prompt: 'Add 3 more levels with increasing difficulty' }
-    );
-  }
-
-  // Limit to 3 suggestions
   return {
     content,
     features: features.slice(0, 5),
-    nextSteps: nextSteps.slice(0, 3),
   };
 }
 
@@ -835,17 +805,36 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         // Mark complete briefly before resetting
         updateProgress('complete');
 
-        // Parse the AI response to extract features and next steps
+        // Parse the AI response to extract features
         const fullContent = response.message + (response.explanation ? `\n\n${response.explanation}` : '');
         const parsed = parseAIResponse(fullContent);
 
-        // Add assistant response with parsed features and suggestions
+        // Generate next step predictions using hybrid service
+        const filesModified = [
+          ...(response.files?.map(f => f.path) || []),
+          ...(response.edits?.map(e => e.file) || []),
+        ];
+        const predictionContext = extractPredictionContext(
+          messages,
+          filesRef.current,
+          hasThreeJs,
+          validationErrors.length > 0
+            ? validationErrors.map(e => `${e.file}:${e.line} - ${e.message}`)
+            : undefined
+        );
+        predictionContext.lastUserPrompt = prompt;
+        predictionContext.lastAssistantResponse = parsed.content;
+        predictionContext.filesModified = filesModified;
+
+        const nextSteps = predictNextSteps(predictionContext);
+
+        // Add assistant response with parsed features and predictions
         addMessage({
           role: 'assistant',
           content: parsed.content,
           files: response.files,
           features: parsed.features,
-          nextSteps: parsed.nextSteps,
+          nextSteps,
         });
         messageCountRef.current++;
 
