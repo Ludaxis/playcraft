@@ -237,6 +237,9 @@ export function generateFixPrompt(errors: CodeError[]): string {
 - Add missing type annotations
 - Fix type mismatches
 - Fix syntax errors
+- IMPORTANT: Replace external icon URLs with lucide-react imports:
+  ❌ <img src="https://lucide.dev/api/icons/gamepad-2" />
+  ✅ import { Gamepad2 } from 'lucide-react'; <Gamepad2 className="w-6 h-6" />
 
 Apply the fixes now.`;
 

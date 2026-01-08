@@ -1026,11 +1026,21 @@ CRITICAL RULES:
 6. Use the existing UI components from @/components/ui
 7. DO NOT modify main.tsx or App.tsx unless absolutely necessary
 8. For Canvas games, use useRef and useEffect for the canvas element
-9. NEVER use external URLs for icons or images - they are blocked by COEP policy
-   - Use lucide-react icons via import: import { Gamepad2 } from 'lucide-react'
-   - Use inline SVGs for custom icons
-   - Use canvas drawing for game sprites
-   - DO NOT fetch from lucide.dev, iconify.design, or any external icon API
+9. ⚠️ NEVER USE EXTERNAL URLs FOR ICONS/IMAGES - BLOCKED BY COEP ⚠️
+   This WILL break the game! External URLs are blocked.
+
+   ❌ WRONG (will fail):
+   - <img src="https://lucide.dev/api/icons/gamepad-2" />
+   - <img src="https://example.com/icon.png" />
+   - fetch('https://iconify.design/...')
+
+   ✅ CORRECT (always use these):
+   - import { Gamepad2, Trophy, Star } from 'lucide-react';
+   - <Gamepad2 className="w-6 h-6" />
+   - Inline SVG: <svg viewBox="0 0 24 24">...</svg>
+   - Canvas drawing for game sprites
+
+   Available lucide icons: Gamepad2, Trophy, Star, Heart, Zap, Target, etc.
 
 RESPONSE FORMAT - HYBRID EDIT/REPLACE:
 Choose the appropriate format based on change size:
@@ -1356,9 +1366,10 @@ CRITICAL RULES:
 5. Game must be playable with touch (mobile) and mouse/keyboard (desktop)
 6. Include game over detection that triggers handleWin or handleLose
 7. Use state.player.currentLevel to adjust difficulty
-8. NEVER use external URLs for icons/images - blocked by COEP policy
-   - Use lucide-react icons: import { Gamepad2 } from 'lucide-react'
-   - Use inline SVGs or canvas drawing for sprites
+8. ⚠️ NEVER USE EXTERNAL URLs FOR ICONS/IMAGES - BLOCKED BY COEP ⚠️
+   ❌ WRONG: <img src="https://lucide.dev/api/icons/..." />
+   ✅ CORRECT: import { Gamepad2 } from 'lucide-react'; <Gamepad2 />
+   Use inline SVGs or canvas drawing for custom sprites
 9. Use TypeScript with BROWSER TYPES ONLY:
    - For setTimeout/setInterval refs: useRef<ReturnType<typeof setTimeout>>() or useRef<number>()
    - NEVER use NodeJS.Timeout or NodeJS namespace - this is browser code
