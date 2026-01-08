@@ -49,6 +49,12 @@ export type TypeScriptError = CodeError;
 
 const BUILD_TIMEOUT_MS = 90000; // 90 second timeout (generous for WebContainer)
 
+interface PublishedVersion {
+  id: string;
+  createdAt: string;
+  path: string;
+}
+
 interface BuildResult {
   success: boolean;
   output: string;
@@ -257,35 +263,6 @@ function getContentType(filename: string): string {
 }
 
 /**
- * Quick HEAD probe to ensure Storage allows our origin before uploading
- */
-async function verifyStorageAccess(
-  bucket: string,
-  testPath: string,
-  onProgress: (progress: PublishProgress) => void
-): Promise<void> {
-  const supabase = getSupabase();
-  const testUrl = supabase.storage.from(bucket).getPublicUrl(testPath).data.publicUrl;
-
-  onProgress({ stage: 'uploading', progress: 46, message: 'Checking storage CORS...' });
-
-  try {
-    const res = await fetch(testUrl, { method: 'HEAD', mode: 'no-cors' });
-
-    // no-cors returns opaque; if it throws, CORS is likely blocking
-    if (res.type === 'opaque') return;
-    if (!res.ok) {
-      throw new Error(`Storage HEAD failed: ${res.status}`);
-    }
-  } catch (err) {
-    const detail = err instanceof Error ? err.message : 'Unknown error';
-    throw new Error(
-      `Storage CORS check failed for ${bucket}. Allow origins https://www.playcraft.games and https://playcraft.games with methods GET,HEAD,OPTIONS. Detail: ${detail}`
-    );
-  }
-}
-
-/**
  * Upload built files to Supabase Storage
  */
 async function uploadToStorage(
@@ -308,32 +285,15 @@ async function uploadToStorage(
     console.log(`[publishService] Uploading ${distFiles.length} files`);
 
     const basePath = `${userId}/${projectId}`;
-
-    // Preflight: ensure Storage accepts our origin
-    await verifyStorageAccess('published-games', `${basePath}/cors-probe.txt`, onProgress);
-
-    // Clean up existing files
-    try {
-      const { data: existing } = await supabase.storage
-        .from('published-games')
-        .list(basePath, { limit: 1000 });
-
-      if (existing && existing.length > 0) {
-        const toDelete = existing.filter(f => !f.id).map(f => `${basePath}/${f.name}`);
-        if (toDelete.length > 0) {
-          await supabase.storage.from('published-games').remove(toDelete);
-        }
-      }
-    } catch {
-      // Cleanup is best-effort
-    }
+    const versionId = `${Date.now()}`;
+    const versionPrefix = `${basePath}/versions/${versionId}`;
 
     onProgress({ stage: 'uploading', progress: 50, message: `Uploading ${distFiles.length} files...` });
 
     // Upload files
     let uploaded = 0;
     for (const file of distFiles) {
-      const storagePath = `${basePath}/${file.path}`;
+      const storagePath = `${versionPrefix}/${file.path}`;
       const contentType = getContentType(file.path);
 
       const content = typeof file.content === 'string'
@@ -353,12 +313,44 @@ async function uploadToStorage(
       onProgress({ stage: 'uploading', progress, message: `Uploading ${uploaded}/${distFiles.length}...` });
     }
 
-    console.log(`[publishService] Uploaded ${uploaded} files`);
+    console.log(`[publishService] Uploaded ${uploaded} files for version ${versionId}`);
 
-    // Get public URL
+    // Update versions manifest
+    let versions: PublishedVersion[] = [];
+    try {
+      const existing = await supabase.storage
+        .from('published-games')
+        .download(`${basePath}/versions.json`);
+      if (existing.data) {
+        const text = await existing.data.text();
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed)) {
+          versions = parsed as PublishedVersion[];
+        }
+      }
+    } catch {
+      // ignore
+    }
+
+    const versionPath = `${versionPrefix}/index.html`;
+    versions.push({ id: versionId, createdAt: new Date().toISOString(), path: versionPath });
+
+    const manifestBlob = new Blob([JSON.stringify(versions, null, 2)], { type: 'application/json' });
+    await supabase.storage
+      .from('published-games')
+      .upload(`${basePath}/versions.json`, manifestBlob, { upsert: true, contentType: 'application/json' });
+
+    const latestBlob = new Blob([JSON.stringify({ versionId, path: versionPath })], {
+      type: 'application/json',
+    });
+    await supabase.storage
+      .from('published-games')
+      .upload(`${basePath}/latest.json`, latestBlob, { upsert: true, contentType: 'application/json' });
+
+    // Get public URL for this version
     const { data: urlData } = supabase.storage
       .from('published-games')
-      .getPublicUrl(`${basePath}/index.html`);
+      .getPublicUrl(versionPath);
 
     return urlData.publicUrl;
 
