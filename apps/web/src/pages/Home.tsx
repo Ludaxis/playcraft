@@ -499,6 +499,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                   onChange={setInputValue}
                   onSend={handleSubmit}
                   placeholder="Describe the game you want to create..."
+                  showSuggestions={false}
                 />
               </div>
             </div>

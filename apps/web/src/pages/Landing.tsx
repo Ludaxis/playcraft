@@ -115,6 +115,7 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
               animatedPhrases={TYPING_SUGGESTIONS}
               staticPrefix={STATIC_PREFIX}
               onAuthRequired={handleShowSignUp}
+              showSuggestions={false}
             />
           </div>
         </div>
