@@ -3,7 +3,7 @@
  */
 
 export { ChatMessages } from './ChatMessages';
-export { ChatInput, type ChatMode } from './ChatInput';
+export { ChatInput, type ChatMode, type ChatImage } from './ChatInput';
 export { SuggestionChips, DEFAULT_SUGGESTIONS, type Suggestion } from './SuggestionChips';
 export { LeftPanel } from './LeftPanel';
 export { EditorPanel } from './EditorPanel';

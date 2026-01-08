@@ -1,21 +1,30 @@
 /**
  * Play Page - Public game player
- * Allows anyone to play published games without authentication
+ *
+ * This page handles the legacy /play/:id route.
+ * For new games with subdomain URLs, it redirects to the subdomain.
+ * For legacy games without subdomain, it serves via the Edge Function.
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { Play as PlayIcon, Maximize2, Share2, ArrowLeft, Loader2, Gamepad2 } from 'lucide-react';
-import { getPublishedGame, incrementPlayCount } from '../lib/publishService';
+import { incrementPlayCount } from '../lib/publishService';
 import { getSupabase } from '../lib/supabase';
 import { LogoIcon, Logo } from '../components/Logo';
 import type { PublishedGame } from '../types';
+
+// Extended type to include subdomain fields
+interface PublishedGameWithSubdomain extends PublishedGame {
+  slug?: string;
+  subdomain_url?: string;
+}
 
 interface PlayPageProps {
   gameId: string;
 }
 
 export function PlayPage({ gameId }: PlayPageProps) {
-  const [game, setGame] = useState<PublishedGame | null>(null);
+  const [game, setGame] = useState<PublishedGameWithSubdomain | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [, setIsFullscreen] = useState(false);
@@ -30,13 +39,53 @@ export function PlayPage({ gameId }: PlayPageProps) {
       }
 
       try {
-        const gameData = await getPublishedGame(gameId);
+        // Fetch game with subdomain fields
+        const supabase = getSupabase();
+        const { data, error: fetchError } = await supabase
+          .from('playcraft_projects')
+          .select(`
+            id,
+            name,
+            description,
+            published_url,
+            published_at,
+            play_count,
+            user_id,
+            slug,
+            subdomain_url
+          `)
+          .eq('id', gameId)
+          .eq('status', 'published')
+          .single();
 
-        if (!gameData) {
+        if (fetchError || !data) {
           setError('Game not found or not published');
           setLoading(false);
           return;
         }
+
+        // If game has subdomain URL, redirect to it
+        if (data.subdomain_url) {
+          console.log('[PlayPage] Redirecting to subdomain:', data.subdomain_url);
+          window.location.href = data.subdomain_url;
+          return;
+        }
+
+        // Legacy game without subdomain - use Edge Function
+        const gameData: PublishedGameWithSubdomain = {
+          id: data.id,
+          name: data.name,
+          description: data.description,
+          thumbnail_url: null,
+          published_url: data.published_url,
+          published_at: data.published_at,
+          play_count: data.play_count || 0,
+          user_id: data.user_id,
+          author_name: 'PlayCraft Creator',
+          author_avatar: null,
+          slug: data.slug,
+          subdomain_url: data.subdomain_url,
+        };
 
         setGame(gameData);
 
@@ -53,54 +102,21 @@ export function PlayPage({ gameId }: PlayPageProps) {
     fetchGame();
   }, [gameId]);
 
-  // Get the storage URL for the game's index.html
-  const getGameUrl = useCallback(async () => {
+  // Get the game URL - use Edge Function to serve without X-Frame-Options
+  const getGameUrl = useCallback(() => {
     if (!game) return null;
 
-    const supabase = getSupabase();
-    const basePath = `${game.user_id}/${game.id}`;
+    // Use the Edge Function to serve the game
+    // This proxies Supabase Storage but without X-Frame-Options header
+    const edgeFunctionUrl = `/api/game/${game.id}/index.html`;
 
-    // First check if legacy index.html exists (most common case)
-    const legacyPath = `${basePath}/index.html`;
-    try {
-      const { data: legacyCheck } = await supabase.storage
-        .from('published-games')
-        .list(basePath, { limit: 10 });
-
-      const hasDirectIndex = legacyCheck?.some(f => f.name === 'index.html');
-      if (hasDirectIndex) {
-        const url = supabase.storage.from('published-games').getPublicUrl(legacyPath).data.publicUrl;
-        console.log('[PlayPage] Using legacy URL (direct index.html):', url);
-        return url;
-      }
-    } catch (err) {
-      console.log('[PlayPage] Error checking legacy path:', err);
-    }
-
-    // Try latest.json for versioned publish
-    try {
-      const latest = await supabase.storage.from('published-games').download(`${basePath}/latest.json`);
-      if (latest.data) {
-        const text = await latest.data.text();
-        const parsed = JSON.parse(text);
-        if (parsed?.path) {
-          const url = supabase.storage.from('published-games').getPublicUrl(parsed.path).data.publicUrl;
-          console.log('[PlayPage] Using versioned URL:', url);
-          return url;
-        }
-      }
-    } catch (err) {
-      console.log('[PlayPage] latest.json not found', err);
-    }
-
-    // Final fallback - just try the legacy path anyway
-    const url = supabase.storage.from('published-games').getPublicUrl(legacyPath).data.publicUrl;
-    console.log('[PlayPage] Using fallback legacy URL:', url);
-    return url;
+    console.log('[PlayPage] Using Edge Function URL:', edgeFunctionUrl);
+    return edgeFunctionUrl;
   }, [game]);
 
   const handleShare = async () => {
-    const url = window.location.href;
+    // Use subdomain URL for sharing if available
+    const url = game?.subdomain_url || window.location.href;
 
     if (navigator.share) {
       try {
@@ -155,11 +171,8 @@ export function PlayPage({ gameId }: PlayPageProps) {
   const [gameUrl, setGameUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadUrl = async () => {
-      const url = await getGameUrl();
-      setGameUrl(url);
-    };
-    loadUrl();
+    const url = getGameUrl();
+    setGameUrl(url);
   }, [getGameUrl]);
 
   if (loading) {

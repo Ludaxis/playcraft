@@ -4,6 +4,7 @@ import {
   generateCodeWithContext,
   type GenerateRequest,
   type ContextAwareRequest,
+  type ImageAttachment,
 } from '../lib/playcraftService';
 import { buildContext, preflightEstimate, type ContextPackage } from '../lib/contextBuilder';
 import type { FileEdit } from '../lib/editApplyService';
@@ -91,8 +92,8 @@ export interface UsePlayCraftChatReturn {
   isGenerating: boolean;
   generationProgress: GenerationProgress | null;
   error: string | null;
-  /** Send a message to the AI. Set chatOnly=true for discussion without code edits */
-  sendMessage: (prompt: string, selectedFile?: string, chatOnly?: boolean) => Promise<void>;
+  /** Send a message to the AI. Set chatOnly=true for discussion without code edits. images for vision analysis. */
+  sendMessage: (prompt: string, selectedFile?: string, chatOnly?: boolean, images?: ImageAttachment[]) => Promise<void>;
   clearMessages: () => void;
   addSystemMessage: (content: string) => void;
   /** Current suggestions for the chatbox (from last assistant message or initial) */
@@ -318,7 +319,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   }, [messages, hasThreeJs]);
 
   const sendMessage = useCallback(
-    async (prompt: string, selectedFile?: string, chatOnly?: boolean) => {
+    async (prompt: string, selectedFile?: string, chatOnly?: boolean, images?: ImageAttachment[]) => {
       if (!prompt.trim() || isGenerating) return;
 
       // Call onFirstPrompt immediately when first message is sent (for AI naming)
@@ -456,6 +457,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             projectId,
             templateId,
             hasThreeJs,
+            images, // Include attached images for vision AI
             contextPackage,
           };
 
@@ -520,6 +522,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             selectedFile,
             conversationHistory,
             hasThreeJs,
+            images, // Include attached images for vision AI
           };
 
           response = await generateCode(request);

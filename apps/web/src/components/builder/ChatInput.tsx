@@ -9,17 +9,25 @@ import { ArrowUp, MessageSquare, Code, Paperclip, X, Image, FileText } from 'luc
 
 export type ChatMode = 'build' | 'chat';
 
+// Image data to send to AI
+export interface ChatImage {
+  data: string; // base64 encoded
+  mimeType: string;
+  name: string;
+}
+
 interface AttachedFile {
   name: string;
   type: string;
   size: number;
   file: File;
+  base64?: string; // Cached base64 data for images
 }
 
 interface ChatInputProps {
   value: string;
   onChange: (value: string) => void;
-  onSend: (mode: ChatMode) => void;
+  onSend: (mode: ChatMode, images?: ChatImage[]) => void;
   disabled?: boolean;
   placeholder?: string;
   defaultMode?: ChatMode;
@@ -135,7 +143,21 @@ export function ChatInput({
       onAuthRequired();
       return;
     }
-    onSend(mode);
+
+    // Extract images from attached files
+    const images: ChatImage[] = attachedFiles
+      .filter(f => f.type.startsWith('image/') && f.base64)
+      .map(f => ({
+        data: f.base64!,
+        mimeType: f.type,
+        name: f.name,
+      }));
+
+    // Clear attached files after sending
+    setAttachedFiles([]);
+
+    // Send with images if any
+    onSend(mode, images.length > 0 ? images : undefined);
   };
 
   const handleAttachClick = () => {
@@ -146,17 +168,50 @@ export function ChatInput({
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      const newAttached = files.map(file => ({
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        file,
-      }));
+      // Process files and convert images to base64
+      const newAttached: AttachedFile[] = await Promise.all(
+        files.map(async (file) => {
+          const attached: AttachedFile = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            file,
+          };
+
+          // Convert images to base64 for AI analysis
+          if (file.type.startsWith('image/')) {
+            try {
+              const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  // Remove data URL prefix to get pure base64
+                  const result = reader.result as string;
+                  const base64Data = result.split(',')[1];
+                  resolve(base64Data);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+              attached.base64 = base64;
+            } catch (err) {
+              console.warn('Failed to convert image to base64:', err);
+            }
+          }
+
+          return attached;
+        })
+      );
+
       setAttachedFiles(prev => [...prev, ...newAttached]);
-      onAttachFiles?.(files);
+
+      // Still call onAttachFiles for non-image files (asset upload)
+      const nonImageFiles = files.filter(f => !f.type.startsWith('image/'));
+      if (nonImageFiles.length > 0) {
+        onAttachFiles?.(nonImageFiles);
+      }
     }
     e.target.value = '';
   };

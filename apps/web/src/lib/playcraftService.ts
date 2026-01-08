@@ -10,6 +10,13 @@ interface FileContent {
   content: string;
 }
 
+// Image attachment for vision AI
+export interface ImageAttachment {
+  data: string; // base64 encoded image data
+  mimeType: string; // image/png, image/jpeg, image/webp, image/gif
+  name?: string; // optional filename for reference
+}
+
 export interface GenerateResponse {
   message: string;
   files: FileContent[];
@@ -29,6 +36,7 @@ export interface GenerateRequest {
   selectedFile?: string;
   conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
   hasThreeJs?: boolean;
+  images?: ImageAttachment[]; // Images to analyze with vision AI
 }
 
 // New context-aware request format
@@ -37,6 +45,7 @@ export interface ContextAwareRequest {
   projectId: string;
   templateId?: string;
   hasThreeJs?: boolean;
+  images?: ImageAttachment[]; // Images to analyze with vision AI
 
   // Smart context (from contextBuilder)
   contextPackage: {

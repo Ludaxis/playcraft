@@ -24,6 +24,7 @@ import {
   ChatHistory,
   SuggestionChips,
   type ChatMode,
+  type ChatImage,
 } from '../components/builder';
 import { AssetPanel } from '../components/assets';
 import type { BuilderViewMode } from '../components/builder/HeaderTabs';
@@ -886,21 +887,28 @@ export function BuilderPage({
   );
 
   // Handle send message from input
-  const handleSendMessage = useCallback(async (mode: ChatMode) => {
+  const handleSendMessage = useCallback(async (mode: ChatMode, images?: ChatImage[]) => {
     if (!inputValue.trim() || isGenerating || isSettingUp) return;
 
     const prompt = inputValue.trim();
     setInputValue('');
     const chatOnly = mode === 'chat';
 
+    // Convert ChatImage to ImageAttachment format
+    const imageAttachments = images?.map(img => ({
+      data: img.data,
+      mimeType: img.mimeType,
+      name: img.name,
+    }));
+
     if (!projectReady) {
       await startProject();
       // Wait for project to be ready, then send message
       setTimeout(() => {
-        sendAiMessage(prompt, selectedFile || undefined, chatOnly);
+        sendAiMessage(prompt, selectedFile || undefined, chatOnly, imageAttachments);
       }, 100);
     } else {
-      await sendAiMessage(prompt, selectedFile || undefined, chatOnly);
+      await sendAiMessage(prompt, selectedFile || undefined, chatOnly, imageAttachments);
     }
   }, [
     inputValue,

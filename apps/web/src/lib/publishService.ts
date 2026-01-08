@@ -363,11 +363,79 @@ async function uploadToStorage(
 }
 
 // ============================================================================
-// Finalize
+// Slug Generation
 // ============================================================================
 
 /**
- * Update project record with published URL
+ * Generate a URL-safe slug from game name
+ * Format: [sanitized-name]-[short-id]
+ * Example: "Neon Chess" + "abc123..." -> "neon-chess-abc123"
+ */
+function generateSlug(gameName: string, projectId: string): string {
+  // Normalize: lowercase, remove accents
+  let slug = gameName.toLowerCase();
+
+  // Remove diacritics/accents using normalize
+  slug = slug.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+  // Replace non-alphanumeric with hyphens
+  slug = slug.replace(/[^a-z0-9]+/g, '-');
+
+  // Remove leading/trailing hyphens
+  slug = slug.replace(/^-+|-+$/g, '');
+
+  // Limit length
+  slug = slug.substring(0, 40);
+
+  // Handle empty slug
+  if (!slug) {
+    slug = 'game';
+  }
+
+  // Add short unique suffix from project ID
+  const suffix = projectId.substring(0, 6);
+  return `${slug}-${suffix}`;
+}
+
+/**
+ * Get game name from WebContainer (reads the title from index.html or package.json)
+ */
+async function getGameName(projectId: string): Promise<string> {
+  try {
+    // Try to get name from index.html title tag
+    const indexHtml = await readFile('/index.html');
+    const titleMatch = indexHtml.match(/<title>([^<]+)<\/title>/i);
+    if (titleMatch && titleMatch[1] && titleMatch[1].trim() !== 'Vite + React + TS') {
+      return titleMatch[1].trim();
+    }
+  } catch {
+    // Ignore
+  }
+
+  try {
+    // Fallback to package.json name
+    const packageJson = await readFile('/package.json');
+    const pkg = JSON.parse(packageJson);
+    if (pkg.name && pkg.name !== 'vite-project') {
+      return pkg.name;
+    }
+  } catch {
+    // Ignore
+  }
+
+  // Final fallback
+  return `Game ${projectId.substring(0, 6)}`;
+}
+
+// ============================================================================
+// Finalize
+// ============================================================================
+
+// Subdomain base URL - configurable for different environments
+const GAME_SUBDOMAIN_BASE = 'play.playcraft.games';
+
+/**
+ * Update project record with published URL and generate subdomain
  */
 async function finalizePublish(
   projectId: string,
@@ -376,16 +444,40 @@ async function finalizePublish(
 ): Promise<string | null> {
   const supabase = getSupabase();
 
-  onProgress({ stage: 'finalizing', progress: 92, message: 'Saving...' });
+  onProgress({ stage: 'finalizing', progress: 92, message: 'Generating URL...' });
 
   try {
-    const shareableUrl = `${window.location.origin}/play/${projectId}`;
+    // Get game name for slug generation
+    const gameName = await getGameName(projectId);
+
+    // Generate slug
+    const slug = generateSlug(gameName, projectId);
+
+    // Check if slug already exists for this project
+    const { data: existingProject } = await supabase
+      .from('playcraft_projects')
+      .select('slug')
+      .eq('id', projectId)
+      .single();
+
+    // Use existing slug if project was already published, otherwise use new one
+    const finalSlug = existingProject?.slug || slug;
+
+    // Generate subdomain URL
+    const subdomainUrl = `https://${finalSlug}.${GAME_SUBDOMAIN_BASE}`;
+
+    // Also keep the legacy /play/:id URL for backwards compatibility
+    const legacyUrl = `${window.location.origin}/play/${projectId}`;
+
+    onProgress({ stage: 'finalizing', progress: 95, message: 'Saving...' });
 
     const { error } = await supabase
       .from('playcraft_projects')
       .update({
         status: 'published',
-        published_url: shareableUrl,
+        slug: finalSlug,
+        subdomain_url: subdomainUrl,
+        published_url: legacyUrl, // Keep legacy URL for backwards compat
         published_at: new Date().toISOString(),
       })
       .eq('id', projectId);
@@ -395,7 +487,9 @@ async function finalizePublish(
     }
 
     onProgress({ stage: 'complete', progress: 100, message: 'Published!' });
-    return shareableUrl;
+
+    // Return the subdomain URL as the primary shareable URL
+    return subdomainUrl;
 
   } catch (err) {
     console.error('[publishService] Finalize failed:', err);

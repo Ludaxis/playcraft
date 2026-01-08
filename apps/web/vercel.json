@@ -3,9 +3,23 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "installCommand": "cd ../.. && pnpm install",
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node@3"
+    }
+  },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/api/game/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/((?!api/).*)",
       "headers": [
         {
           "key": "Cross-Origin-Embedder-Policy",
@@ -20,7 +34,11 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!assets/).*)",
+      "source": "/api/game/:slug/:path*",
+      "destination": "/api/game/[...path]"
+    },
+    {
+      "source": "/((?!api/|assets/).*)",
       "destination": "/index.html"
     }
   ]

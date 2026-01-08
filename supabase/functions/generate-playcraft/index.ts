@@ -390,6 +390,13 @@ interface FileContent {
   content: string;
 }
 
+// Image attachment for vision AI
+interface ImageAttachment {
+  data: string; // base64 encoded image data
+  mimeType: string; // image/png, image/jpeg, image/webp, image/gif
+  name?: string; // optional filename for reference
+}
+
 // Legacy request format
 interface GenerateRequest {
   prompt: string;
@@ -399,6 +406,7 @@ interface GenerateRequest {
   hasThreeJs?: boolean; // Whether Three.js is already installed
   isFirstPrompt?: boolean; // Is this the first prompt (need to determine template)?
   templateId?: string; // Which template is being used (e.g., 'vite-game-shell')
+  images?: ImageAttachment[]; // Images attached by user for vision AI analysis
 }
 
 // New context-aware request format
@@ -1523,7 +1531,8 @@ async function callGemini(
   hasThreeJs: boolean = false,
   templateId: string = 'vite-starter',
   contextPackage: ContextAwareRequest['contextPackage'] | undefined,
-  logger: Logger
+  logger: Logger,
+  images?: ImageAttachment[] // Images for vision AI analysis
 ): Promise<GeneratedResponse> {
   // Select the appropriate system prompt based on template
   const systemPrompt = templateId === 'vite-game-shell' ? GAME_SHELL_PROMPT : SYSTEM_PROMPT;
@@ -1599,7 +1608,25 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
 
   let response: Response;
   try {
-    logger.debug('Calling Gemini 3 Flash', { model: GEMINI_CODE_MODEL });
+    // Build parts array - text first, then images if provided
+    const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
+      { text: `${systemPrompt}\n\n${userPrompt}` }
+    ];
+
+    // Add images for vision AI analysis
+    if (images && images.length > 0) {
+      logger.info('Including images in Gemini request', { imageCount: images.length });
+      for (const image of images) {
+        parts.push({
+          inlineData: {
+            mimeType: image.mimeType,
+            data: image.data,
+          }
+        });
+      }
+    }
+
+    logger.debug('Calling Gemini 3 Flash', { model: GEMINI_CODE_MODEL, hasImages: !!(images && images.length > 0) });
 
     response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${apiKey}`,
@@ -1611,7 +1638,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
         body: JSON.stringify({
           contents: [
             {
-              parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+              parts,
             },
           ],
           generationConfig: {
@@ -1878,6 +1905,7 @@ Deno.serve(async (req: Request) => {
       async: asyncMode = false,
       projectId,
       contextPackage,
+      images, // Images attached by user for vision AI analysis
       mode, // Special modes: 'generate_name' for project naming
     }: ContextAwareRequest & { mode?: string } = await req.json();
 
@@ -2131,7 +2159,8 @@ Name:`;
         hasThreeJs,
         templateId,
         useSmartContext ? contextPackage : undefined,
-        logger
+        logger,
+        images // Pass images for vision AI analysis
       );
     }
 
