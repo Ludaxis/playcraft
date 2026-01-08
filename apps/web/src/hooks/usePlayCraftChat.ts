@@ -258,6 +258,27 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     filesRef.current = {};
   }, []);
 
+  // Backfill nextSteps for restored assistant messages when missing
+  useEffect(() => {
+    // Find last assistant message without nextSteps
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === 'assistant') {
+        if (msg.nextSteps && msg.nextSteps.length > 0) return; // already present
+        const context = extractPredictionContext(messages, filesRef.current, hasThreeJs, undefined);
+        const nextSteps = predictNextSteps({ ...context, lastAssistantResponse: msg.content });
+        setMessages((prev) => {
+          const cloned = [...prev];
+          const idx = cloned.findIndex((m) => m.id === msg.id);
+          if (idx === -1) return prev;
+          cloned[idx] = { ...cloned[idx], nextSteps };
+          return cloned;
+        });
+        return;
+      }
+    }
+  }, [messages, hasThreeJs]);
+
   const sendMessage = useCallback(
     async (prompt: string, selectedFile?: string) => {
       if (!prompt.trim() || isGenerating) return;

@@ -165,8 +165,7 @@ export async function createProject(input: CreateProjectInput): Promise<PlayCraf
 
   logger.info(`Creating project "${input.name}"`, { component: 'projectService', userId: user.id });
 
-  const reuseDraft = input.reuseDraft ?? true;
-  const { reuseDraft: _discard, ...payload } = input;
+  const { reuseDraft = true, ...payload } = input;
 
   async function findReusableDraft() {
     const { data, error } = await supabase

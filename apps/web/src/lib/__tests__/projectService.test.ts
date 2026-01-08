@@ -30,7 +30,7 @@ vi.mock('../fileStorageService', () => ({
   deleteAllProjectFiles: vi.fn(),
 }));
 
-import { getProjects, createProject, updateProject, deleteProject } from '../projectService';
+import { getProjects, createProject, updateProject, deleteProject, ensureDraftPool } from '../projectService';
 
 describe('projectService', () => {
   beforeEach(() => {
@@ -107,7 +107,7 @@ describe('projectService', () => {
       await expect(createProject({ name: 'Test' })).rejects.toThrow('Not authenticated');
     });
 
-    it('creates project successfully', async () => {
+    it('creates project successfully when reuseDraft is false', async () => {
       const mockProject = { id: '1', name: 'Test Project' };
 
       mockSupabase.auth.getUser.mockResolvedValue({
@@ -115,19 +115,69 @@ describe('projectService', () => {
         error: null,
       });
 
-      mockSupabase.from.mockReturnValue({
-        insert: vi.fn().mockReturnValue({
-          select: vi.fn().mockReturnValue({
-            single: vi.fn().mockResolvedValue({
-              data: mockProject,
-              error: null,
+      const insertMock = vi.fn().mockReturnValue({
+        select: vi.fn().mockReturnValue({
+          single: vi.fn().mockResolvedValue({
+            data: mockProject,
+            error: null,
+          }),
+        }),
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return { insert: insertMock } as never;
+        }
+        return { insert: vi.fn() } as never;
+      });
+
+      const project = await createProject({ name: 'Test Project', reuseDraft: false });
+      expect(project).toEqual(mockProject);
+      expect(insertMock).toHaveBeenCalled();
+    });
+
+    it('reuses draft when available', async () => {
+      const mockDraft = { id: 'draft-1', name: 'Draft workspace' };
+      const updatedProject = { id: 'draft-1', name: 'Renamed' };
+
+      mockSupabase.auth.getUser.mockResolvedValue({
+        data: { user: { id: 'user-1' } },
+        error: null,
+      });
+
+      const selectMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockReturnValue({
+                  maybeSingle: vi.fn().mockResolvedValue({ data: mockDraft, error: null }),
+                }),
+              }),
             }),
           }),
         }),
       });
 
-      const project = await createProject({ name: 'Test Project' });
-      expect(project).toEqual(mockProject);
+      const updateMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
+            single: vi.fn().mockResolvedValue({ data: updatedProject, error: null }),
+          }),
+        }),
+      });
+
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return { select: selectMock, update: updateMock } as never;
+        }
+        return { select: vi.fn(), update: vi.fn() } as never;
+      });
+
+      const project = await createProject({ name: 'Renamed', reuseDraft: true });
+      expect(project).toEqual(updatedProject);
+      expect(selectMock).toHaveBeenCalled();
+      expect(updateMock).toHaveBeenCalled();
     });
   });
 
@@ -243,6 +293,58 @@ describe('projectService', () => {
       });
 
       await expect(deleteProject('1')).rejects.toThrow('Failed to delete project');
+    });
+  });
+
+  describe('ensureDraftPool', () => {
+    it('does nothing if draft pool exists', async () => {
+      const selectMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'draft' }, error: null }),
+            }),
+          }),
+        }),
+      });
+
+      const insertMock = vi.fn();
+
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return { select: selectMock, insert: insertMock } as never;
+        }
+        return { select: vi.fn() } as never;
+      });
+
+      await ensureDraftPool();
+      expect(insertMock).not.toHaveBeenCalled();
+    });
+
+    it('creates draft pool when missing', async () => {
+      const selectMock = vi.fn().mockReturnValue({
+        eq: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            limit: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+            }),
+          }),
+        }),
+      });
+
+      const insertMock = vi.fn().mockResolvedValue({});
+
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: { id: 'user-1' } }, error: null });
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'playcraft_projects') {
+          return { select: selectMock, insert: insertMock } as never;
+        }
+        return { select: vi.fn() } as never;
+      });
+
+      await ensureDraftPool();
+      expect(insertMock).toHaveBeenCalled();
     });
   });
 });
