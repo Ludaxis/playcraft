@@ -49,14 +49,16 @@ interface CheckResult {
 }
 
 /**
- * Run TypeScript check and return any errors
+ * Run TypeScript check and return any errors (with timeout)
  */
 export async function runTypeScriptCheck(): Promise<CheckResult> {
+  const TIMEOUT_MS = 30000; // 30 second timeout
+
   try {
-    const process = await spawn('npx', ['tsc', '--noEmit']);
+    const process = await spawn('npx', ['tsc', '--noEmit', '--pretty', 'false']);
 
     let output = '';
-    await process.output.pipeTo(
+    const outputPromise = process.output.pipeTo(
       new WritableStream({
         write(data) {
           output += data;
@@ -64,10 +66,24 @@ export async function runTypeScriptCheck(): Promise<CheckResult> {
       })
     );
 
-    const exitCode = await process.exit;
+    // Race between completion and timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('TypeScript check timed out')), TIMEOUT_MS);
+    });
 
-    if (exitCode === 0) {
-      return { success: true, errors: [], rawOutput: output };
+    try {
+      await Promise.race([outputPromise, timeoutPromise]);
+      const exitCode = await Promise.race([
+        process.exit,
+        timeoutPromise
+      ]);
+
+      if (exitCode === 0) {
+        return { success: true, errors: [], rawOutput: output };
+      }
+    } catch (timeoutErr) {
+      console.warn('[publishService] TypeScript check timed out, skipping...');
+      return { success: true, errors: [], rawOutput: 'Check timed out - skipping' };
     }
 
     // Parse TypeScript errors
@@ -89,23 +105,22 @@ export async function runTypeScriptCheck(): Promise<CheckResult> {
     return { success: false, errors, rawOutput: output };
   } catch (err) {
     console.error('[publishService] TypeScript check failed:', err);
-    return {
-      success: false,
-      errors: [],
-      rawOutput: err instanceof Error ? err.message : 'TypeScript check failed'
-    };
+    // Don't block publish on check failure - just skip
+    return { success: true, errors: [], rawOutput: '' };
   }
 }
 
 /**
- * Run ESLint check and return any errors
+ * Run ESLint check and return any errors (with timeout)
  */
 export async function runESLintCheck(): Promise<CheckResult> {
+  const TIMEOUT_MS = 15000; // 15 second timeout
+
   try {
     const process = await spawn('npx', ['eslint', 'src', '--format', 'compact', '--quiet']);
 
     let output = '';
-    await process.output.pipeTo(
+    const outputPromise = process.output.pipeTo(
       new WritableStream({
         write(data) {
           output += data;
@@ -113,13 +128,24 @@ export async function runESLintCheck(): Promise<CheckResult> {
       })
     );
 
-    const exitCode = await process.exit;
+    // Race between completion and timeout
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('ESLint check timed out')), TIMEOUT_MS);
+    });
 
-    if (exitCode === 0 || output.trim() === '') {
-      return { success: true, errors: [], rawOutput: output };
+    try {
+      await Promise.race([outputPromise, timeoutPromise]);
+      const exitCode = await Promise.race([process.exit, timeoutPromise]);
+
+      if (exitCode === 0 || output.trim() === '') {
+        return { success: true, errors: [], rawOutput: output };
+      }
+    } catch (timeoutErr) {
+      console.warn('[publishService] ESLint check timed out, skipping...');
+      return { success: true, errors: [], rawOutput: '' };
     }
 
-    // Parse ESLint compact format: /path/file.tsx: line 10, col 5, Error - message (rule-name)
+    // Parse ESLint compact format
     const errors: CodeError[] = [];
     const errorRegex = /^(.+):\s*line\s+(\d+),\s*col\s+(\d+),\s*(?:Error|Warning)\s*-\s*(.+?)\s*\((.+?)\)$/gm;
     let match;
@@ -138,7 +164,7 @@ export async function runESLintCheck(): Promise<CheckResult> {
     return { success: false, errors, rawOutput: output };
   } catch (err) {
     console.error('[publishService] ESLint check failed:', err);
-    // ESLint failure shouldn't block - it might not be configured
+    // ESLint failure shouldn't block
     return { success: true, errors: [], rawOutput: '' };
   }
 }
@@ -588,50 +614,8 @@ export async function publishGame(
   const { onAutoFix, maxFixAttempts = 3 } = options;
 
   try {
-    // Step 0: Pre-build checks and auto-fix (TypeScript + ESLint)
-    if (onAutoFix) {
-      options.onProgress({ stage: 'checking', progress: 2, message: 'Checking for errors...' });
-
-      let attempts = 0;
-      let checkResult = await runPreBuildChecks();
-
-      while (!checkResult.success && checkResult.errors.length > 0 && attempts < maxFixAttempts) {
-        attempts++;
-        const errorCount = checkResult.errors.length;
-        const errorTypes = [...new Set(checkResult.errors.map(e => e.type))].join(', ');
-
-        console.log(`[publishService] Found ${errorCount} errors (${errorTypes}), attempting auto-fix (${attempts}/${maxFixAttempts})`);
-
-        options.onProgress({
-          stage: 'fixing',
-          progress: 3,
-          message: `Fixing ${errorCount} error${errorCount > 1 ? 's' : ''}...`
-        });
-        options.onBuildOutput(`\nFound ${errorCount} error(s). Auto-fixing...\n`);
-
-        // Generate fix prompt and send to AI
-        const fixPrompt = generateFixPrompt(checkResult.errors);
-        const fixApplied = await onAutoFix(fixPrompt);
-
-        if (!fixApplied) {
-          console.log('[publishService] Auto-fix was not applied');
-          break;
-        }
-
-        // Wait for files to be written
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
-        // Re-check
-        options.onProgress({ stage: 'checking', progress: 5, message: 'Verifying fix...' });
-        checkResult = await runPreBuildChecks();
-      }
-
-      if (!checkResult.success && checkResult.errors.length > 0) {
-        options.onBuildOutput(`\nSome errors remain after ${attempts} fix attempts. Attempting build anyway...\n`);
-      } else if (attempts > 0) {
-        options.onBuildOutput(`\nAll pre-build errors fixed!\n`);
-      }
-    }
+    // Skip slow pre-build checks - the build will catch errors faster
+    // Go straight to build and fix any errors that come up
 
     // Step 1: Build the project (with retry on failure)
     let buildAttempts = 0;

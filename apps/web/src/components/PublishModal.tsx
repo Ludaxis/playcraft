@@ -200,7 +200,6 @@ export const PublishModal = memo(function PublishModal({
                 <div>
                   <p className="font-medium text-content">{progress?.message}</p>
                   <p className="text-sm text-content-muted">
-                    {progress?.stage === 'checking' && 'Checking for TypeScript errors...'}
                     {progress?.stage === 'fixing' && 'AI is fixing errors automatically...'}
                     {progress?.stage === 'building' && 'Creating production build...'}
                     {progress?.stage === 'uploading' && 'Uploading to servers...'}
