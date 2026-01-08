@@ -1016,13 +1016,17 @@ DESIGN STYLE:
 
 CRITICAL RULES:
 1. Main game logic goes in /src/pages/Index.tsx
-2. Use TypeScript with proper types
-3. Use Tailwind classes for styling (no inline styles)
-4. Keep components small and focused
-5. Use the existing UI components from @/components/ui
-6. DO NOT modify main.tsx or App.tsx unless absolutely necessary
-7. For Canvas games, use useRef and useEffect for the canvas element
-8. NEVER use external URLs for icons or images - they are blocked by COEP policy
+2. Use TypeScript with proper types - BROWSER TYPES ONLY:
+   - For setTimeout/setInterval refs, use: useRef<ReturnType<typeof setTimeout>>() or useRef<number>()
+   - NEVER use NodeJS.Timeout - it doesn't exist in browsers
+   - NEVER use NodeJS namespace - this is browser code, not Node
+3. ONLY import what you actually use - remove ALL unused imports
+4. Use Tailwind classes for styling (no inline styles)
+5. Keep components small and focused
+6. Use the existing UI components from @/components/ui
+7. DO NOT modify main.tsx or App.tsx unless absolutely necessary
+8. For Canvas games, use useRef and useEffect for the canvas element
+9. NEVER use external URLs for icons or images - they are blocked by COEP policy
    - Use lucide-react icons via import: import { Gamepad2 } from 'lucide-react'
    - Use inline SVGs for custom icons
    - Use canvas drawing for game sprites
@@ -1354,7 +1358,11 @@ CRITICAL RULES:
 7. Use state.player.currentLevel to adjust difficulty
 8. NEVER use external URLs for icons/images - blocked by COEP policy
    - Use lucide-react icons: import { Gamepad2 } from 'lucide-react'
-   - Use inline SVGs or canvas drawing for sprites`;
+   - Use inline SVGs or canvas drawing for sprites
+9. Use TypeScript with BROWSER TYPES ONLY:
+   - For setTimeout/setInterval refs: useRef<ReturnType<typeof setTimeout>>() or useRef<number>()
+   - NEVER use NodeJS.Timeout or NodeJS namespace - this is browser code
+10. ONLY import what you actually use - remove ALL unused imports`;
 
 // Build context using smart context package (new system)
 function buildSmartContextPrompt(
