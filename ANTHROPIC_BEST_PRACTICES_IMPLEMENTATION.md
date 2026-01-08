@@ -14,8 +14,9 @@ PlayCraft now implements ~95% of Anthropic's recommended best practices. The fol
 | 2 | Response Format Flexibility | ✅ DONE | `ResponseMode` type, edge function parsing |
 | 3 | Enhanced Tool Documentation | ✅ DONE | Edit examples, common patterns in system prompt |
 | 4 | Service Consolidation | ✅ DONE | `fileIntelligenceService.ts` |
-| 5 | Sub-Agent Architecture | 🟢 Future | Not yet implemented |
-| 6 | Next Step Prediction (Hybrid) | ✅ DONE | `nextStepPredictionService.ts`, wired to UI |
+| 5 | Next Step Prediction (Hybrid) | ✅ DONE | `nextStepPredictionService.ts`, wired to UI |
+
+**Note:** Sub-Agent Architecture was evaluated and deemed unnecessary for PlayCraft's game-building use case. The current single-agent approach with auto-fix loop provides sufficient capability.
 
 ---
 
@@ -589,154 +590,7 @@ export class FileIntelligenceService {
 
 ---
 
-## Phase 5: Sub-Agent Architecture (Future)
-
-### Problem
-Single generation call handles everything. Complex tasks would benefit from specialized sub-agents.
-
-### Design
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Orchestrator Agent                    │
-│  - Receives user request                                │
-│  - Decides which sub-agents to invoke                   │
-│  - Coordinates results                                  │
-└─────────────────┬───────────────────────────────────────┘
-                  │
-    ┌─────────────┼─────────────┬─────────────┐
-    ▼             ▼             ▼             ▼
-┌───────┐   ┌───────────┐   ┌───────┐   ┌───────────┐
-│Research│   │ Generator │   │Validator│  │  Fixer   │
-│ Agent  │   │   Agent   │   │  Agent  │  │  Agent   │
-└───────┘   └───────────┘   └───────┘   └───────────┘
-    │             │             │             │
-    │ Explores    │ Writes      │ Runs        │ Fixes
-    │ codebase    │ code        │ tests/lint  │ errors
-    └─────────────┴─────────────┴─────────────┘
-```
-
-### Sub-Agent Definitions
-
-#### Research Agent
-- **Purpose**: Explore codebase before making changes
-- **Tools**: File search, grep, read files, semantic search
-- **Output**: Summary of relevant code, patterns found, recommendations
-- **When**: Complex features, unfamiliar codebases
-
-#### Generator Agent
-- **Purpose**: Write code changes
-- **Tools**: Edit files, create files
-- **Output**: Code edits or new files
-- **When**: All code generation requests
-
-#### Validator Agent
-- **Purpose**: Verify code quality
-- **Tools**: Run TypeScript, ESLint, tests
-- **Output**: Validation results with specific errors
-- **When**: After every generation
-
-#### Fixer Agent
-- **Purpose**: Fix validation errors
-- **Tools**: Edit files based on error messages
-- **Output**: Fixed code
-- **When**: Validation finds errors
-
-### Implementation Approach
-
-#### 5.1 Create Sub-Agent Infrastructure
-
-**File**: `/supabase/functions/lib/subAgent.ts`
-
-```typescript
-interface SubAgent {
-  name: string;
-  systemPrompt: string;
-  tools: Tool[];
-  maxTokens: number;
-}
-
-interface SubAgentResult {
-  success: boolean;
-  output: unknown;
-  tokensUsed: number;
-  duration: number;
-}
-
-async function invokeSubAgent(
-  agent: SubAgent,
-  task: string,
-  context: Context
-): Promise<SubAgentResult>;
-```
-
-#### 5.2 Define Each Agent
-
-**File**: `/supabase/functions/lib/agents/researchAgent.ts`
-**File**: `/supabase/functions/lib/agents/generatorAgent.ts`
-**File**: `/supabase/functions/lib/agents/validatorAgent.ts`
-**File**: `/supabase/functions/lib/agents/fixerAgent.ts`
-
-#### 5.3 Create Orchestrator
-
-**File**: `/supabase/functions/lib/orchestrator.ts`
-
-```typescript
-async function orchestrate(request: GenerationRequest): Promise<GenerationResult> {
-  // 1. Analyze request complexity
-  const complexity = analyzeComplexity(request);
-
-  if (complexity === 'simple') {
-    // Direct generation without sub-agents
-    return await generateDirectly(request);
-  }
-
-  // 2. Research phase (for complex requests)
-  const research = await invokeSubAgent(researchAgent, request.prompt, context);
-
-  // 3. Generation phase
-  const generation = await invokeSubAgent(generatorAgent, request.prompt, {
-    ...context,
-    research: research.output,
-  });
-
-  // 4. Validation phase
-  const validation = await invokeSubAgent(validatorAgent, 'validate changes', {
-    changes: generation.output,
-  });
-
-  // 5. Fix phase (if needed)
-  if (!validation.output.success) {
-    const fix = await invokeSubAgent(fixerAgent, 'fix errors', {
-      errors: validation.output.errors,
-      changes: generation.output,
-    });
-    // Re-validate...
-  }
-
-  return result;
-}
-```
-
-### Considerations
-
-- **Cost**: Multiple API calls increase cost
-- **Latency**: Sub-agents add latency
-- **Complexity**: More moving parts to debug
-- **Value**: Best for complex, multi-file changes
-
-### Acceptance Criteria
-
-- [ ] Sub-agent infrastructure created
-- [ ] Research, Generator, Validator, Fixer agents defined
-- [ ] Orchestrator coordinates agents
-- [ ] Simple requests bypass sub-agents
-- [ ] Token usage tracked per agent
-- [ ] Configurable agent selection
-
----
-
-## Phase 6: Next Step Prediction (Hybrid)
+## Phase 5: Next Step Prediction (Hybrid)
 
 ### Problem
 After each generation, users face "blank prompt paralysis" - they don't know what to ask next. A proactive suggestion system would guide users through multi-step workflows and increase task completion rates.
@@ -1600,12 +1454,11 @@ NEXT_STEP_AI_MODEL=claude-3-haiku   // Model for AI predictions
 ## Implementation Timeline
 
 ```
-Phase 1 (Error Bridge)       ████████████░░░░░░░░  ~2-3 days
-Phase 2 (Response Formats)   ██████░░░░░░░░░░░░░░  ~1-2 days
-Phase 3 (Documentation)      ████░░░░░░░░░░░░░░░░  ~1 day
-Phase 4 (Consolidation)      ████████░░░░░░░░░░░░  ~2 days
-Phase 5 (Sub-Agents)         ████████████████████  ~5-7 days (future)
-Phase 6 (Next Step Predict)  ██████████░░░░░░░░░░  ~2-3 days
+Phase 1 (Error Bridge)       ████████████████████  DONE
+Phase 2 (Response Formats)   ████████████████████  DONE
+Phase 3 (Documentation)      ████████████████████  DONE
+Phase 4 (Consolidation)      ████████████████████  DONE
+Phase 5 (Next Step Predict)  ████████████████████  DONE
 ```
 
 ---
@@ -1629,60 +1482,47 @@ Phase 6 (Next Step Predict)  ██████████░░░░░░░
 - Phase 2: None
 - Phase 3: None
 - Phase 4: None (can do in parallel)
-- Phase 5: Phases 1-4 complete
-- Phase 6: None (can do in parallel with 1-4, benefits from task ledger)
+- Phase 5: None (can do in parallel with 1-4, benefits from task ledger)
 
 ---
 
-## Files to Create
+## Files Created
 
 ```
 /apps/web/src/lib/
-├── errorBridge.ts                    # Phase 1
+├── errorBridgeService.ts             # Phase 1
 ├── fileIntelligenceService.ts        # Phase 4
-├── nextStepPredictor.ts              # Phase 6
-├── predictionRules.ts                # Phase 6
-├── aiPredictionFallback.ts           # Phase 6
+├── nextStepPredictionService.ts      # Phase 5
 └── __tests__/
-    ├── errorBridge.test.ts           # Phase 1
-    └── nextStepPredictor.test.ts     # Phase 6
+    ├── errorBridgeService.test.ts    # Phase 1 (22 tests)
+    ├── fileIntelligenceService.test.ts # Phase 4 (12 tests)
+    └── nextStepPredictionService.test.ts # Phase 5 (17 tests)
 
 /apps/web/src/hooks/
-└── useNextStepSuggestions.ts         # Phase 6
+└── usePreviewErrors.ts               # Phase 1
 
-/apps/web/src/components/
-└── NextStepSuggestions.tsx           # Phase 6
+/apps/web/src/components/builder/
+├── NextStepsCards.tsx                # Phase 5 (inline suggestions)
+└── ChatInput.tsx                     # Phase 5 (chatbox suggestions)
 
-/supabase/functions/
-├── generate-playcraft/
-│   ├── systemPrompt.ts               # Phase 3 (extend)
-│   └── parseResponse.ts              # Phase 2 (extend)
-└── lib/
-    ├── subAgent.ts                   # Phase 5
-    ├── orchestrator.ts               # Phase 5
-    └── agents/
-        ├── researchAgent.ts          # Phase 5
-        ├── generatorAgent.ts         # Phase 5
-        ├── validatorAgent.ts         # Phase 5
-        └── fixerAgent.ts             # Phase 5
+/supabase/functions/generate-playcraft/
+└── index.ts                          # Phases 2, 3 (response modes, documentation)
 
-/supabase/migrations/
-├── 20260108000000_add_runtime_errors.sql      # Phase 1
-└── 20260109000000_add_suggestion_tracking.sql # Phase 6
+/apps/web/src/types/
+└── index.ts                          # Phase 2 (ResponseMode, ImplementationPlan, DebugAnalysis)
 ```
 
 ---
 
 ## Implementation Status
 
-**Completed (January 2026):**
+**All Phases Completed (January 2026):**
 1. ✅ Phase 1: Runtime Error Bridge - Preview iframe errors captured and fed to auto-fix loop
 2. ✅ Phase 2: Response Format Flexibility - AI can choose edit/file/plan/explanation/debug modes
 3. ✅ Phase 3: Enhanced Tool Documentation - Edit examples and patterns in system prompt
 4. ✅ Phase 4: Service Consolidation - FileIntelligenceService provides unified API
-5. ✅ Phase 6: Next Step Prediction - Rule-based suggestions wired to chatbox and messages
+5. ✅ Phase 5: Next Step Prediction - Rule-based suggestions wired to chatbox and messages
 
-**Future Work:**
-- Phase 5: Sub-Agent Architecture - For complex multi-step tasks
-- AI Fallback for Phase 6 - Use LLM when rules don't match
+**Optional Future Enhancements:**
+- AI Fallback for Phase 5 - Use LLM when rules don't match
 - Analytics for suggestion clicks
