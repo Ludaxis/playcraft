@@ -705,18 +705,45 @@ export async function publishGame(
 
   try {
     // Step 0: Run lint:fix to auto-clean common issues (unused imports, etc.)
+    // This is best-effort with a timeout - we don't block publish on lint failures
     options.onProgress({ stage: 'checking', progress: 5, message: 'Auto-fixing lint issues...' });
+    const LINT_TIMEOUT_MS = 15000; // 15 second timeout
+
     try {
       const lintProcess = await spawn('npm', ['run', 'lint:fix', '--if-present']);
-      await lintProcess.output.pipeTo(new WritableStream({
-        write(data) {
-          console.log('[publishService] lint:fix:', data);
+
+      // Create timeout promise
+      const timeoutPromise = new Promise<void>((resolve) => {
+        setTimeout(() => {
+          console.log('[publishService] lint:fix timed out, continuing...');
+          resolve();
+        }, LINT_TIMEOUT_MS);
+      });
+
+      // Race between lint completion and timeout
+      const lintPromise = (async () => {
+        try {
+          await lintProcess.output.pipeTo(new WritableStream({
+            write(data) {
+              console.log('[publishService] lint:fix:', data);
+            }
+          }));
+        } catch {
+          // Ignore stream errors
         }
-      }));
-      await lintProcess.exit;
-    } catch {
-      // lint:fix is optional, don't fail if it doesn't exist
-      console.log('[publishService] lint:fix not available, skipping');
+        // Wait for exit but don't care about exit code (lint errors are ok)
+        try {
+          await lintProcess.exit;
+        } catch {
+          // Ignore exit errors
+        }
+      })();
+
+      await Promise.race([lintPromise, timeoutPromise]);
+      console.log('[publishService] lint:fix step complete');
+    } catch (err) {
+      // lint:fix is optional, don't fail if it doesn't exist or has issues
+      console.log('[publishService] lint:fix skipped:', err);
     }
 
     // Step 1: Build the project (with retry on failure)

@@ -743,6 +743,8 @@ export default tseslint.config(
       }],
       // Don't error on any type (AI generates these sometimes)
       '@typescript-eslint/no-explicit-any': 'warn',
+      // Allow empty interfaces (common in React component props)
+      '@typescript-eslint/no-empty-object-type': 'warn',
     },
   },
 )

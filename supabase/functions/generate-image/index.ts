@@ -151,6 +151,16 @@ Deno.serve(async (req: Request) => {
 
     // Build enhanced prompt for game assets
     const enhancedPrompt = buildImagePrompt(prompt, style, category);
+    const allowedAspectRatios = ['1:1', '16:9', '9:16'];
+    const resolvedAspectRatio = allowedAspectRatios.includes(aspectRatio)
+      ? aspectRatio
+      : '1:1';
+    const sizeToImageSize: Record<string, '1K' | '2K' | '4K'> = {
+      '256': '1K',
+      '512': '1K',
+      '1024': '1K',
+    };
+    const resolvedImageSize = sizeToImageSize[size] || '1K';
 
     // Get Gemini API key
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
@@ -161,26 +171,33 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Call Gemini Imagen API
+    // Call Gemini 3 Pro Image Preview API
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     try {
-      // Use Imagen 3 via Gemini API
+      const requestBody = {
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: enhancedPrompt }],
+          },
+        ],
+        generationConfig: {
+          responseModalities: ['IMAGE'],
+          imageConfig: {
+            aspectRatio: resolvedAspectRatio,
+            imageSize: resolvedImageSize,
+          },
+        },
+      };
+
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiApiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${geminiApiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            instances: [{ prompt: enhancedPrompt }],
-            parameters: {
-              sampleCount: 1,
-              aspectRatio: aspectRatio,
-              personGeneration: 'allow_adult',
-              safetyFilterLevel: 'block_few',
-            },
-          }),
+          body: JSON.stringify(requestBody),
           signal: controller.signal,
         }
       );
@@ -189,9 +206,8 @@ Deno.serve(async (req: Request) => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Imagen API error:', response.status, errorText);
+        console.error('Gemini image API error:', response.status, errorText);
 
-        // Fallback to Gemini text model for image description if Imagen fails
         return new Response(
           JSON.stringify({
             success: false,
@@ -207,8 +223,24 @@ Deno.serve(async (req: Request) => {
       const data = await response.json();
 
       // Extract image from response
-      const prediction = data.predictions?.[0];
-      if (!prediction?.bytesBase64Encoded) {
+      const candidates = data.candidates || [];
+      let imagePart: { data: string; mimeType?: string } | null = null;
+
+      for (const candidate of candidates) {
+        const parts = candidate?.content?.parts || [];
+        for (const part of parts) {
+          if (part?.inlineData?.data) {
+            imagePart = {
+              data: part.inlineData.data as string,
+              mimeType: part.inlineData.mimeType as string | undefined,
+            };
+            break;
+          }
+        }
+        if (imagePart) break;
+      }
+
+      if (!imagePart) {
         return new Response(
           JSON.stringify({
             success: false,
@@ -223,8 +255,8 @@ Deno.serve(async (req: Request) => {
 
       const result: ImageGenerationResponse = {
         success: true,
-        imageBase64: prediction.bytesBase64Encoded,
-        mimeType: prediction.mimeType || 'image/png',
+        imageBase64: imagePart.data,
+        mimeType: imagePart.mimeType || 'image/png',
       };
 
       return new Response(JSON.stringify(result), {
