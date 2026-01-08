@@ -19,7 +19,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Switch } from '../ui/checkbox';
+import { Switch } from '../ui/switch';
 import {
   Select,
   SelectContent,
