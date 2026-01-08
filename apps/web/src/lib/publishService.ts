@@ -471,15 +471,23 @@ async function finalizePublish(
 
     onProgress({ stage: 'finalizing', progress: 95, message: 'Saving...' });
 
+    // Build update payload - only include slug if project doesn't have one yet
+    // This prevents UNIQUE constraint issues on republish
+    const updatePayload: Record<string, unknown> = {
+      status: 'published',
+      subdomain_url: subdomainUrl,
+      published_url: legacyUrl, // Keep legacy URL for backwards compat
+      published_at: new Date().toISOString(),
+    };
+
+    // Only set slug on first publish (when project doesn't have one)
+    if (!existingProject?.slug) {
+      updatePayload.slug = finalSlug;
+    }
+
     const { error } = await supabase
       .from('playcraft_projects')
-      .update({
-        status: 'published',
-        slug: finalSlug,
-        subdomain_url: subdomainUrl,
-        published_url: legacyUrl, // Keep legacy URL for backwards compat
-        published_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq('id', projectId);
 
     if (error) {

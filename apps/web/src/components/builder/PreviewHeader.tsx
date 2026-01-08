@@ -102,8 +102,17 @@ export function PreviewHeader({
           Upgrade
         </button>
 
-        {/* Publish button */}
-        {isPublished && publishedUrl ? (
+        {/* Publish/Update button */}
+        <button
+          onClick={onPublish}
+          disabled={status !== 'running'}
+          className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isPublished ? 'Update' : 'Publish'}
+        </button>
+
+        {/* View Live button (shown when published) */}
+        {isPublished && publishedUrl && (
           <a
             href={publishedUrl}
             target="_blank"
@@ -113,14 +122,6 @@ export function PreviewHeader({
             <ExternalLink className="h-4 w-4" />
             View Live
           </a>
-        ) : (
-          <button
-            onClick={onPublish}
-            disabled={status !== 'running'}
-            className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Publish
-          </button>
         )}
       </div>
     </header>
