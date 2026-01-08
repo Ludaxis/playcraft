@@ -7,7 +7,6 @@ export { ChatInput, type ChatMode, type ChatImage } from './ChatInput';
 export { SuggestionChips, DEFAULT_SUGGESTIONS, type Suggestion } from './SuggestionChips';
 export { LeftPanel } from './LeftPanel';
 export { EditorPanel } from './EditorPanel';
-export { TerminalPanel } from './TerminalPanel';
 export { DependencyBanner } from './DependencyBanner';
 export { FileBrowserPanel } from './FileBrowserPanel';
 export { ChatHistory } from './ChatHistory';

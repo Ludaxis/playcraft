@@ -4,16 +4,14 @@
  * - Chat panel on left with AI suggestions
  * - Tab-based view (Preview OR Code) on right
  * - Device toggles and view tabs in header
- * - Collapsible terminal at bottom
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Terminal as TerminalIcon, AlertTriangle, Image } from 'lucide-react';
+import { AlertTriangle, Image } from 'lucide-react';
 import { Preview, ExportModal, PublishModal } from '../components';
 import {
   EditorPanel,
-  TerminalPanel,
   FileBrowserPanel,
   ResizablePanels,
   ChatHeader,
@@ -214,7 +212,6 @@ export function BuilderPage({
   const {
     status,
     previewUrl,
-    terminalOutput,
     fileTree,
     boot,
     mountProject,
@@ -234,7 +231,6 @@ export function BuilderPage({
   const [viewMode, setViewMode] = useState<BuilderViewMode>('preview');
   const [deviceMode, setDeviceMode] = useState<DeviceMode>('desktop');
   const [refreshKey, setRefreshKey] = useState(0);
-  const [showTerminal, setShowTerminal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<string | null>(null);
   const [fileContent, setFileContent] = useState('');
   const [isFileLoading, setIsFileLoading] = useState(false);
@@ -1272,21 +1268,9 @@ export function BuilderPage({
         </div>
       )}
 
-      {/* Bottom Bar - Terminal toggle + Error indicator */}
+      {/* Bottom Bar - Status + Error indicator */}
       <div className="flex h-10 shrink-0 items-center justify-between border-t border-border-muted bg-surface-elevated px-4">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowTerminal(!showTerminal)}
-            className={`flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-all ${
-              showTerminal
-                ? 'bg-accent/20 text-accent-light shadow-glow-sm'
-                : 'text-content-subtle hover:text-content-muted'
-            }`}
-          >
-            <TerminalIcon className="h-3.5 w-3.5" />
-            Terminal
-          </button>
-
           {/* Preview errors indicator */}
           {previewErrors.length > 0 && (
             <div
@@ -1295,7 +1279,6 @@ export function BuilderPage({
                 // Show the most recent error in console for now
                 const latestError = previewErrors[previewErrors.length - 1];
                 console.error('[Preview Error Details]', latestError);
-                // Could open a modal or panel here in the future
               }}
               title={previewErrors[previewErrors.length - 1]?.message || 'Runtime errors detected'}
             >
@@ -1308,15 +1291,6 @@ export function BuilderPage({
           {status === 'running' ? 'Server running' : status}
         </div>
       </div>
-
-      {/* Terminal Panel - Collapsible */}
-      {showTerminal && (
-        <TerminalPanel
-          output={terminalOutput}
-          isOpen={true}
-          onToggle={() => setShowTerminal(false)}
-        />
-      )}
     </div>
   );
 
