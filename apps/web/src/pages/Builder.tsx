@@ -1148,15 +1148,6 @@ export function BuilderPage({
             isDismissed={creditsDismissed}
           />
 
-          {/* Suggestion chips */}
-          <div className="px-4 pb-2">
-            <SuggestionChips
-              suggestions={suggestions}
-              onSelect={handleSuggestionClick}
-              disabled={isGenerating}
-            />
-          </div>
-
           {/* Chat input */}
           <ChatInput
             value={inputValue}
@@ -1165,6 +1156,15 @@ export function BuilderPage({
             disabled={isGenerating}
             onAttachFiles={handleAttachFiles}
           />
+
+          {/* Suggestion chips */}
+          <div className="px-4 pt-2 pb-3">
+            <SuggestionChips
+              suggestions={suggestions}
+              onSelect={handleSuggestionClick}
+              disabled={isGenerating}
+            />
+          </div>
         </>
       ) : chatPanelTab === 'history' ? (
         /* History tab - Chat sessions list */
