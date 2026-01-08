@@ -147,6 +147,17 @@ export function PlayPage({ gameId }: PlayPageProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
+  // State for game URL (must be before early returns)
+  const [gameUrl, setGameUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadUrl = async () => {
+      const url = await getGameUrl();
+      setGameUrl(url);
+    };
+    loadUrl();
+  }, [getGameUrl]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-surface">
@@ -178,16 +189,6 @@ export function PlayPage({ gameId }: PlayPageProps) {
       </div>
     );
   }
-
-  const [gameUrl, setGameUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const loadUrl = async () => {
-      const url = await getGameUrl();
-      setGameUrl(url);
-    };
-    loadUrl();
-  }, [getGameUrl]);
 
   return (
     <div className="min-h-screen bg-surface">
