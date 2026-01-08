@@ -45,19 +45,19 @@ export function CreateWorkspaceModal({ isOpen, onClose, onCreated }: CreateWorks
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1a1a1a]/95 px-4">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#1a1a1a]/95 backdrop-blur-sm px-4 py-10">
       {/* Close button - top right of screen */}
       <button
         aria-label="Close"
         onClick={onClose}
-        className="absolute right-6 top-6 rounded-lg p-2 text-white/40 transition-colors hover:text-white"
+        className="fixed right-6 top-6 rounded-lg p-2 text-white/40 transition-colors hover:text-white"
       >
         <X className="h-6 w-6" />
       </button>
 
       {/* Modal */}
-      <div className="w-full max-w-md">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <div className="mx-auto w-full max-w-md">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-[#111111]/80 px-5 py-6 shadow-2xl sm:px-7 sm:py-8">
           {/* Logo */}
           <LogoIcon size={56} />
 

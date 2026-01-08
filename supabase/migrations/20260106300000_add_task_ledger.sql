@@ -111,6 +111,7 @@ RETURNS TABLE (
 )
 LANGUAGE SQL
 STABLE
+SET search_path = pg_catalog, public
 AS $$
   SELECT
     id,
@@ -126,7 +127,7 @@ AS $$
   WHERE project_id = p_project_id
   ORDER BY created_at DESC
   LIMIT 1;
-$$ LANGUAGE SQL STABLE SET search_path = pg_catalog, public;
+$$;
 
 -- Get recent deltas for context (last N turns)
 CREATE OR REPLACE FUNCTION get_recent_deltas(
