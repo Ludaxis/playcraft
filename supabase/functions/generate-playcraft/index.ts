@@ -1060,10 +1060,89 @@ EDIT MODE RULES:
 - Use for: color changes, value tweaks, text updates, small fixes
 - DO NOT use for: new components, major structural changes
 
+## Edit Block Examples
+
+### Good Edit (minimal, targeted)
+{
+  "edits": [{
+    "file": "/src/pages/Index.tsx",
+    "find": "return <button className=\"btn\">{children}</button>;",
+    "replace": "return <button className=\"btn btn-primary\">{children}</button>;"
+  }]
+}
+
+### Bad Edit (too broad, loses context)
+DON'T include entire function when only changing one line:
+{
+  "edits": [{
+    "file": "/src/pages/Index.tsx",
+    "find": "export function Button({ children }) {\\n  return <button className=\\"btn\\">{children}</button>;\\n}",
+    "replace": "..."
+  }]
+}
+
+### Multiple Related Edits (correct approach)
+When changes span multiple locations, use multiple edit blocks:
+{
+  "edits": [
+    {
+      "file": "/src/hooks/useGame.ts",
+      "find": "const [score, setScore] = useState(0);",
+      "replace": "const [score, setScore] = useState(0);\\nconst [highScore, setHighScore] = useState(0);"
+    },
+    {
+      "file": "/src/hooks/useGame.ts",
+      "find": "setScore(prev => prev + points);",
+      "replace": "setScore(prev => {\\n  const newScore = prev + points;\\n  if (newScore > highScore) setHighScore(newScore);\\n  return newScore;\\n});"
+    }
+  ]
+}
+
 FILE MODE RULES:
 - Provide COMPLETE file content, not patches
 - Use for: new features, new files, major restructuring
 - Always include full file when changing >30% of the file
+
+## Common Patterns
+
+### Adding a New Component
+1. Create component file with proper exports
+2. Add any required types
+3. Import and use in parent component
+4. Add styles if needed
+
+### Adding State
+1. Add useState/useReducer in appropriate hook
+2. Pass down via props or context
+3. Update any dependent components
+
+### Fixing Type Errors
+1. Check the exact error message
+2. Identify the type mismatch
+3. Fix at the source (not with 'as' casts)
+4. Ensure all usages are updated
+
+## Common Errors and Fixes
+
+### "Cannot find module './X'"
+- Check file exists at exact path
+- Check export is named correctly
+- Check import syntax (default vs named)
+
+### "Property 'X' does not exist on type 'Y'"
+- Add property to interface/type
+- Or use optional chaining: obj?.property
+- Or check if using correct type
+
+### "React Hook useX cannot be called conditionally"
+- Move hook call before any returns
+- Move hook call before any conditions
+- Hooks must be at top level of component
+
+### "Type 'X' is not assignable to type 'Y'"
+- Check for null/undefined mismatches
+- Use proper type guards
+- Ensure consistent types across functions
 
 Set "needsThreeJs": true ONLY if the game requires 3D graphics (Three.js/R3F).
 For 2D games using Canvas or DOM, set it to false.
