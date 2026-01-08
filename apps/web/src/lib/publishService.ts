@@ -170,16 +170,28 @@ export async function runESLintCheck(): Promise<CheckResult> {
 }
 
 /**
+ * Strip ANSI color codes from string
+ */
+function stripAnsi(str: string): string {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '');
+}
+
+/**
  * Parse build errors from Vite output
  */
 export function parseBuildErrors(output: string): CodeError[] {
   const errors: CodeError[] = [];
   let match;
 
+  // Strip ANSI color codes that might interfere with regex
+  const cleanOutput = stripAnsi(output);
+  console.log('[publishService] Parsing build output, length:', cleanOutput.length);
+
   // TypeScript errors - colon format: file.ts:line:col - error TSxxxx: message
   // Example: vite.config.ts:9:25 - error TS2304: Cannot find name '__dirname'.
   const tsColonRegex = /^(.+?):(\d+):(\d+)\s*-\s*error\s+(TS\d+):\s*(.+)$/gm;
-  while ((match = tsColonRegex.exec(output)) !== null) {
+  while ((match = tsColonRegex.exec(cleanOutput)) !== null) {
     const file = match[1].trim();
     // Avoid duplicates
     if (!errors.some(e => e.file === file && e.line === parseInt(match[2], 10))) {
@@ -196,7 +208,7 @@ export function parseBuildErrors(output: string): CodeError[] {
 
   // TypeScript errors - parenthesis format: file.ts(line,col): error TSxxxx: message
   const tsParenRegex = /^(.+?)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/gm;
-  while ((match = tsParenRegex.exec(output)) !== null) {
+  while ((match = tsParenRegex.exec(cleanOutput)) !== null) {
     const file = match[1].trim();
     if (!errors.some(e => e.file === file && e.line === parseInt(match[2], 10))) {
       errors.push({
@@ -212,7 +224,7 @@ export function parseBuildErrors(output: string): CodeError[] {
 
   // Vite/Rollup error format: error in /path/file.tsx:line:col
   const viteErrorRegex = /(?:error|ERROR)[:\s]+(?:in\s+)?(.+?):(\d+):(\d+)[\s\S]*?(?:error|Error)[:\s]+(.+?)(?=\n\n|\n[A-Z]|$)/gi;
-  while ((match = viteErrorRegex.exec(output)) !== null) {
+  while ((match = viteErrorRegex.exec(cleanOutput)) !== null) {
     const file = match[1].trim();
     if (!errors.some(e => e.file.includes(file))) {
       errors.push({
@@ -228,7 +240,7 @@ export function parseBuildErrors(output: string): CodeError[] {
 
   // Generic error messages with file paths
   const genericErrorRegex = /(?:Error|ERROR):\s*(.+?\.tsx?):?\s*(.+)/gi;
-  while ((match = genericErrorRegex.exec(output)) !== null) {
+  while ((match = genericErrorRegex.exec(cleanOutput)) !== null) {
     const file = match[1].trim();
     if (!errors.some(e => e.file.includes(file))) {
       errors.push({
@@ -345,12 +357,18 @@ export async function buildProject(
   onProgress({ stage: 'building', progress: 10, message: 'Starting build...' });
 
   let fullOutput = '';
+  const BUILD_TIMEOUT_MS = 120000; // 2 minute timeout
 
   try {
     const process = await spawn('npm', ['run', 'build']);
 
-    // Pipe output to callback and collect it
-    await process.output.pipeTo(
+    // Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Build timed out after 2 minutes')), BUILD_TIMEOUT_MS);
+    });
+
+    // Pipe output to callback and collect it (with timeout)
+    const outputPromise = process.output.pipeTo(
       new WritableStream({
         write(data) {
           fullOutput += data;
@@ -359,9 +377,39 @@ export async function buildProject(
       })
     );
 
+    try {
+      await Promise.race([outputPromise, timeoutPromise]);
+    } catch (err) {
+      // If timeout, we still have partial output - check for errors
+      if (err instanceof Error && err.message.includes('timed out')) {
+        console.warn('[publishService] Build output stream timed out, checking for errors in partial output');
+        const errors = parseBuildErrors(fullOutput);
+        if (errors.length > 0) {
+          onProgress({ stage: 'error', progress: 0, message: 'Build failed with errors' });
+          return { success: false, output: fullOutput, errors };
+        }
+      }
+      throw err;
+    }
+
     onProgress({ stage: 'building', progress: 30, message: 'Building production bundle...' });
 
-    const exitCode = await process.exit;
+    // Wait for exit code with timeout
+    let exitCode: number;
+    try {
+      exitCode = await Promise.race([
+        process.exit,
+        timeoutPromise
+      ]) as number;
+    } catch (err) {
+      // Timeout waiting for exit - check if we have errors
+      console.warn('[publishService] Waiting for exit timed out, checking partial output');
+      const errors = parseBuildErrors(fullOutput);
+      if (errors.length > 0) {
+        return { success: false, output: fullOutput, errors };
+      }
+      throw err;
+    }
 
     if (exitCode !== 0) {
       const errors = parseBuildErrors(fullOutput);

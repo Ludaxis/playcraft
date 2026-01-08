@@ -1020,13 +1020,18 @@ CRITICAL RULES:
    - For setTimeout/setInterval refs, use: useRef<ReturnType<typeof setTimeout>>() or useRef<number>()
    - NEVER use NodeJS.Timeout - it doesn't exist in browsers
    - NEVER use NodeJS namespace - this is browser code, not Node
-3. ONLY import what you actually use - remove ALL unused imports
+3. ONLY import what you actually use - REMOVE ALL UNUSED IMPORTS including React if not directly referenced
 4. Use Tailwind classes for styling (no inline styles)
 5. Keep components small and focused
 6. Use the existing UI components from @/components/ui
 7. DO NOT modify main.tsx or App.tsx unless absolutely necessary
 8. For Canvas games, use useRef and useEffect for the canvas element
-9. ⚠️ NEVER USE EXTERNAL URLs FOR ICONS/IMAGES - BLOCKED BY COEP ⚠️
+9. NEVER use __dirname in vite.config.ts - use import.meta.url instead:
+   \`\`\`
+   import { fileURLToPath } from 'url'
+   const __dirname = path.dirname(fileURLToPath(import.meta.url))
+   \`\`\`
+10. ⚠️ NEVER USE EXTERNAL URLs FOR ICONS/IMAGES - BLOCKED BY COEP ⚠️
    This WILL break the game! External URLs are blocked.
 
    ❌ WRONG (will fail):
