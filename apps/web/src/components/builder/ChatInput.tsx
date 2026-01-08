@@ -1,7 +1,7 @@
 /**
  * Chat Input Component
  * Unified chat input used across Landing, Home, and Builder pages
- * Features: variants for different contexts, Chat/Build toggle, file attachments, animated placeholder
+ * Same visual style everywhere, different features per variant
  */
 
 import { useState, useRef, useEffect } from 'react';
@@ -28,7 +28,7 @@ interface ChatInputProps {
   onSend: (mode: ChatMode) => void;
   disabled?: boolean;
   placeholder?: string;
-  // Variant controls the overall look and features
+  // Variant controls which features are shown (not styling)
   variant?: ChatInputVariant;
   // Builder-specific props
   suggestions?: SuggestionChip[];
@@ -193,23 +193,9 @@ export function ChatInput({
   const showSuggestions = variant === 'builder' && suggestions.length > 0;
   const showAttachButton = variant === 'builder' && showAttach;
   const showModeToggleButton = variant === 'builder' && showModeToggle;
-  const isLanding = variant === 'landing';
-
-  // Style variants
-  const containerStyles = isLanding
-    ? 'rounded-2xl bg-white/95 shadow-2xl overflow-hidden'
-    : 'overflow-hidden rounded-2xl border border-border-muted bg-surface-overlay';
-
-  const textareaStyles = isLanding
-    ? 'w-full resize-none bg-transparent text-gray-800 placeholder-gray-400 outline-none text-base'
-    : 'w-full resize-none bg-transparent text-sm text-content placeholder-content-subtle outline-none disabled:cursor-not-allowed disabled:opacity-50';
-
-  const sendButtonStyles = isLanding
-    ? 'flex h-10 w-10 items-center justify-center rounded-full bg-teal-500 hover:bg-teal-600 disabled:bg-gray-200 disabled:cursor-not-allowed text-white transition-colors'
-    : 'flex h-8 w-8 items-center justify-center rounded-full bg-content text-surface transition-all hover:bg-content/90 disabled:cursor-not-allowed disabled:bg-content-subtle disabled:opacity-50';
 
   return (
-    <div className={isLanding ? '' : 'bg-surface-elevated px-4 py-3'}>
+    <div>
       {/* Suggestion chips - builder only */}
       {showSuggestions && (
         <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
@@ -218,7 +204,7 @@ export function ChatInput({
               key={index}
               onClick={() => handleSuggestionClick(suggestion.prompt)}
               disabled={disabled}
-              className="group flex items-center gap-1.5 rounded-full border border-border-muted bg-surface-overlay/60 px-3 py-1.5 text-xs text-content-muted transition-all hover:border-accent/50 hover:bg-accent/10 hover:text-accent-light disabled:cursor-not-allowed disabled:opacity-50"
+              className="group flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Sparkles className="h-3 w-3 text-accent/70 transition-colors group-hover:text-accent" />
               {suggestion.label}
@@ -227,28 +213,28 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Main input container */}
-      <div className={containerStyles}>
+      {/* Main input container - SAME STYLE FOR ALL VARIANTS */}
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
         {/* Attached files preview - builder only */}
         {attachedFiles.length > 0 && variant === 'builder' && (
-          <div className="flex flex-wrap gap-2 border-b border-border-muted px-4 py-2">
+          <div className="flex flex-wrap gap-2 border-b border-white/10 px-4 py-2">
             {attachedFiles.map((file, index) => {
               const FileIcon = getFileIcon(file.type);
               return (
                 <div
                   key={index}
-                  className="flex items-center gap-2 rounded-lg bg-surface-base px-2 py-1"
+                  className="flex items-center gap-2 rounded-lg bg-white/10 px-2 py-1"
                 >
                   <FileIcon className="h-4 w-4 text-accent" />
-                  <span className="max-w-[120px] truncate text-xs text-content">
+                  <span className="max-w-[120px] truncate text-xs text-white">
                     {file.name}
                   </span>
-                  <span className="text-[10px] text-content-subtle">
+                  <span className="text-[10px] text-white/50">
                     {formatFileSize(file.size)}
                   </span>
                   <button
                     onClick={() => handleRemoveFile(index)}
-                    className="rounded p-0.5 text-content-subtle transition-colors hover:bg-surface-elevated hover:text-content"
+                    className="rounded p-0.5 text-white/50 transition-colors hover:bg-white/10 hover:text-white"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -259,13 +245,13 @@ export function ChatInput({
         )}
 
         {/* Text input area */}
-        <div className={isLanding ? 'p-4 relative' : 'px-4 py-3'}>
+        <div className="relative px-4 py-3">
           {/* Animated placeholder overlay - landing only */}
           {hasAnimatedPlaceholder && !isFocused && !value && (
-            <div className="absolute inset-0 p-4 pointer-events-none text-base text-gray-400">
+            <div className="pointer-events-none absolute inset-0 px-4 py-3 text-base text-white/50">
               <span>{staticPrefix}</span>
-              <span className="text-gray-600">{animatedText}</span>
-              <span className="inline-block w-0.5 h-5 bg-gray-400 ml-0.5 animate-pulse align-middle" />
+              <span className="text-white/70">{animatedText}</span>
+              <span className="ml-0.5 inline-block h-5 w-0.5 animate-pulse bg-white/50 align-middle" />
             </div>
           )}
           <textarea
@@ -276,15 +262,15 @@ export function ChatInput({
             onFocus={() => setIsFocused(true)}
             onBlur={() => !value && setIsFocused(false)}
             placeholder={hasAnimatedPlaceholder ? (isFocused ? dynamicPlaceholder : '') : dynamicPlaceholder}
-            className={textareaStyles}
+            className="w-full resize-none bg-transparent text-base text-white placeholder-white/40 outline-none disabled:cursor-not-allowed disabled:opacity-50"
             disabled={disabled}
-            rows={isLanding ? 2 : 1}
-            style={{ minHeight: isLanding ? '60px' : '44px', maxHeight: '120px' }}
+            rows={1}
+            style={{ minHeight: '28px', maxHeight: '120px' }}
           />
         </div>
 
         {/* Bottom toolbar */}
-        <div className={`flex items-center justify-between ${isLanding ? 'px-4 py-3 border-t border-gray-100' : 'px-3 pb-3'}`}>
+        <div className="flex items-center justify-between px-3 pb-3">
           {/* Left side - Attach button (builder only) */}
           <div className="flex items-center gap-2">
             {showAttachButton && (
@@ -301,7 +287,7 @@ export function ChatInput({
                   onClick={handleAttachClick}
                   disabled={disabled}
                   title="Attach files"
-                  className="flex items-center gap-1.5 rounded-full border border-border-muted bg-transparent px-3 py-1.5 text-xs text-content-muted transition-all hover:border-content-subtle hover:text-content disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-xs text-white/70 transition-all hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Paperclip className="h-3.5 w-3.5" />
                   <span>Attach</span>
@@ -318,7 +304,7 @@ export function ChatInput({
                 onClick={() => setMode(mode === 'chat' ? 'build' : 'chat')}
                 disabled={disabled}
                 title={mode === 'chat' ? 'Chat without making edits to your project' : 'Build mode - AI will generate and edit code'}
-                className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white transition-all"
+                className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-accent-light"
               >
                 {mode === 'chat' ? (
                   <>
@@ -339,9 +325,9 @@ export function ChatInput({
               onClick={handleSend}
               disabled={disabled || !value.trim()}
               title="Send message"
-              className={sendButtonStyles}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-black transition-all hover:bg-white disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/40"
             >
-              <ArrowUp className={isLanding ? 'h-5 w-5' : 'h-4 w-4'} />
+              <ArrowUp className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -349,7 +335,7 @@ export function ChatInput({
 
       {/* Footer hint - builder only */}
       {variant === 'builder' && (
-        <div className="mt-2 flex items-center justify-center text-[11px] text-content-subtle">
+        <div className="mt-2 flex items-center justify-center text-[11px] text-white/40">
           <span>Enter to send · Shift+Enter for new line</span>
         </div>
       )}

@@ -313,10 +313,10 @@ describe('ChatInput', () => {
 
   describe('Variants', () => {
     describe('Landing variant', () => {
-      it('renders with light theme styling', () => {
+      it('renders with unified dark theme styling', () => {
         render(<ChatInput {...defaultProps} variant="landing" />);
-        // Landing uses white background
-        const container = document.querySelector('.bg-white\\/95');
+        // All variants use same dark glass container
+        const container = document.querySelector('.bg-black\\/40');
         expect(container).toBeInTheDocument();
       });
 
@@ -355,10 +355,10 @@ describe('ChatInput', () => {
     });
 
     describe('Home variant', () => {
-      it('renders with dark theme styling', () => {
+      it('renders with unified dark theme styling', () => {
         render(<ChatInput {...defaultProps} variant="home" />);
-        // Home uses surface-overlay background
-        const container = document.querySelector('.bg-surface-overlay');
+        // All variants use same dark glass container
+        const container = document.querySelector('.bg-black\\/40');
         expect(container).toBeInTheDocument();
       });
 
