@@ -692,6 +692,11 @@ async function callClaudeOrchestrator(
 // Supported models: gemini-3-flash-preview, gemini-2.0-flash, gemini-1.5-pro, etc.
 const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3-flash-preview';
 
+// Check if model supports thinkingConfig (only Gemini 3 models)
+const isGemini3Model = (model: string): boolean => {
+  return model.includes('gemini-3') || model.includes('gemini-3.0');
+};
+
 async function callGeminiWithPlan(
   planPrompt: string,
   apiKey: string,
@@ -731,7 +736,19 @@ OUTPUT FORMAT (FILE MODE):
 
   let response: Response;
   try {
-    logger.debug('Calling Gemini 3 Flash (with plan)', { model: GEMINI_CODE_MODEL });
+    logger.debug('Calling Gemini (with plan)', { model: GEMINI_CODE_MODEL, supportsThinking: isGemini3Model(GEMINI_CODE_MODEL) });
+
+    // Build generation config - thinkingConfig only supported by Gemini 3 models
+    const generationConfig: Record<string, unknown> = {
+      temperature: 1.0,
+      maxOutputTokens: 65536,
+      responseMimeType: 'application/json',
+    };
+
+    // Only add thinkingConfig for Gemini 3 models
+    if (isGemini3Model(GEMINI_CODE_MODEL)) {
+      generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+    }
 
     response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${apiKey}`,
@@ -743,15 +760,7 @@ OUTPUT FORMAT (FILE MODE):
             { role: 'user', parts: [{ text: planPrompt }] }
           ],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: {
-            temperature: 1.0, // Gemini 3 recommends keeping at 1.0
-            maxOutputTokens: 65536,
-            responseMimeType: 'application/json',
-            // Gemini 3 Flash thinking config - use 'low' for faster responses
-            thinkingConfig: {
-              thinkingLevel: 'low',
-            },
-          },
+          generationConfig,
         }),
         signal: controller.signal,
       }
@@ -1627,7 +1636,19 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
       }
     }
 
-    logger.debug('Calling Gemini 3 Flash', { model: GEMINI_CODE_MODEL, hasImages: !!(images && images.length > 0) });
+    logger.debug('Calling Gemini', { model: GEMINI_CODE_MODEL, hasImages: !!(images && images.length > 0), supportsThinking: isGemini3Model(GEMINI_CODE_MODEL) });
+
+    // Build generation config - thinkingConfig only supported by Gemini 3 models
+    const generationConfig: Record<string, unknown> = {
+      maxOutputTokens: 32768,
+      temperature: 1.0,
+      responseMimeType: 'application/json',
+    };
+
+    // Only add thinkingConfig for Gemini 3 models
+    if (isGemini3Model(GEMINI_CODE_MODEL)) {
+      generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+    }
 
     response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${apiKey}`,
@@ -1642,15 +1663,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
               parts,
             },
           ],
-          generationConfig: {
-            maxOutputTokens: 32768,
-            temperature: 1.0, // Gemini 3 recommends keeping at 1.0
-            responseMimeType: 'application/json',
-            // Gemini 3 Flash thinking config - use 'low' for faster responses
-            thinkingConfig: {
-              thinkingLevel: 'low',
-            },
-          },
+          generationConfig,
         }),
         signal: controller.signal,
       }
@@ -1959,6 +1972,17 @@ Examples of good names:
 
 Name:`;
 
+        // Build generation config for name generation
+        const nameGenConfig: Record<string, unknown> = {
+          temperature: 1.0,
+          maxOutputTokens: 50,
+        };
+
+        // Only add thinkingConfig for Gemini 3 models
+        if (isGemini3Model(GEMINI_CODE_MODEL)) {
+          nameGenConfig.thinkingConfig = { thinkingLevel: 'low' };
+        }
+
         const nameResponse = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${geminiApiKey}`,
           {
@@ -1966,14 +1990,7 @@ Name:`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: namePrompt }] }],
-              generationConfig: {
-                temperature: 1.0, // Gemini 3 recommends keeping at 1.0
-                maxOutputTokens: 50,
-                // Minimal thinking for simple name generation
-                thinkingConfig: {
-                  thinkingLevel: 'low',
-                },
-              },
+              generationConfig: nameGenConfig,
             }),
           }
         );
