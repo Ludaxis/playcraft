@@ -688,9 +688,21 @@ async function callClaudeOrchestrator(
  * Call Gemini with a plan from Claude orchestrator
  * This is a simplified code-generation-focused call
  */
+// =============================================================================
+// AI PROVIDER CONFIGURATION
+// =============================================================================
+// AI_PROVIDER options:
+//   - 'gemini' (default): Gemini only for code generation
+//   - 'claude': Claude only for code generation
+//   - 'dual': Claude for planning/orchestration + Gemini for code generation
+const AI_PROVIDER = Deno.env.get('AI_PROVIDER') || 'gemini';
+
 // Gemini model for code generation - configurable via environment variable
 // Supported models: gemini-3-flash-preview, gemini-2.0-flash, gemini-1.5-pro, etc.
 const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3-flash-preview';
+
+// Claude model for code generation (when AI_PROVIDER is 'claude')
+const CLAUDE_CODE_MODEL = Deno.env.get('CLAUDE_MODEL') || 'claude-sonnet-4-20250514';
 
 // Check if model supports thinkingConfig (only Gemini 3 models)
 const isGemini3Model = (model: string): boolean => {
@@ -1532,6 +1544,238 @@ Return valid JSON with needsThreeJs boolean.`);
   return parts.join('\n\n');
 }
 
+/**
+ * Call Claude for code generation (when AI_PROVIDER is 'claude')
+ */
+async function callClaude(
+  prompt: string,
+  currentFiles: Record<string, string>,
+  selectedFile: string | undefined,
+  conversationHistory: Array<{ role: 'user' | 'assistant'; content: string }>,
+  apiKey: string,
+  hasThreeJs: boolean = false,
+  templateId: string = 'vite-starter',
+  contextPackage: ContextAwareRequest['contextPackage'] | undefined,
+  logger: Logger,
+  images?: ImageAttachment[]
+): Promise<GeneratedResponse> {
+  // Select the appropriate system prompt based on template
+  const systemPrompt = templateId === 'vite-game-shell' ? GAME_SHELL_PROMPT : SYSTEM_PROMPT;
+
+  let userPrompt: string;
+
+  // Use smart context if provided
+  if (contextPackage && contextPackage.relevantFiles.length > 0) {
+    userPrompt = buildSmartContextPrompt(contextPackage, prompt, hasThreeJs);
+
+    logger.info('Using smart context for Claude', {
+      filesCount: contextPackage.relevantFiles.length,
+      estimatedTokens: contextPackage.estimatedTokens
+    });
+  } else {
+    // Legacy context building
+    let fileContext = '';
+    const importantFiles = templateId === 'vite-game-shell'
+      ? [
+          '/src/pages/GameplayPage.tsx',
+          '/src/store/GameContext.tsx',
+          '/src/store/NavigationContext.tsx',
+          selectedFile,
+        ]
+      : [
+          '/src/pages/Index.tsx',
+          '/src/App.tsx',
+          '/src/main.tsx',
+          selectedFile,
+        ];
+    const filteredFiles = importantFiles.filter(Boolean);
+
+    for (const filePath of filteredFiles) {
+      if (filePath && currentFiles[filePath]) {
+        fileContext += `\n--- ${filePath} ---\n${currentFiles[filePath]}\n`;
+      }
+    }
+
+    // Build conversation context
+    let conversationContext = '';
+    if (conversationHistory.length > 0) {
+      conversationContext = '\n\nPREVIOUS CONVERSATION:\n';
+      for (const msg of conversationHistory.slice(-5)) {
+        conversationContext += `${msg.role.toUpperCase()}: ${msg.content}\n`;
+      }
+    }
+
+    const threeJsContext = hasThreeJs
+      ? 'Three.js/React Three Fiber is ALREADY INSTALLED. You can use @react-three/fiber, @react-three/drei, and three imports.'
+      : 'Three.js is NOT installed yet. If this game needs 3D, set needsThreeJs: true and the system will install it.';
+
+    userPrompt = `${conversationContext}
+
+CURRENT PROJECT FILES:
+${fileContext || '(No files available - starting fresh)'}
+
+${selectedFile ? `CURRENTLY SELECTED FILE: ${selectedFile}` : ''}
+
+3D STATUS: ${threeJsContext}
+
+USER REQUEST:
+${prompt}
+
+Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boolean.`;
+  }
+
+  // Start timer for AI generation
+  logger.startTimer('claudeApi');
+
+  // Add timeout to prevent gateway timeout (504)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s timeout
+
+  let response: Response;
+  try {
+    logger.debug('Calling Claude', { model: CLAUDE_CODE_MODEL, hasImages: !!(images && images.length > 0) });
+
+    // Build content array - text first, then images if provided
+    const content: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> = [
+      { type: 'text', text: userPrompt }
+    ];
+
+    // Add images for vision AI analysis
+    if (images && images.length > 0) {
+      logger.info('Including images in Claude request', { imageCount: images.length });
+      for (const image of images) {
+        content.push({
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: image.mimeType,
+            data: image.data,
+          }
+        });
+      }
+    }
+
+    response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: CLAUDE_CODE_MODEL,
+        max_tokens: 32768,
+        system: systemPrompt,
+        messages: [{ role: 'user', content }],
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      logger.error('Claude API timeout', { timeoutMs: 55000 });
+      throw new Error('Claude API request timed out after 55 seconds');
+    }
+    throw err;
+  }
+  clearTimeout(timeoutId);
+
+  const apiDuration = logger.endTimer('claudeApi');
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    logger.error('Claude API error', {
+      status: response.status,
+      statusText: response.statusText,
+      error: errorText.slice(0, 500),
+      durationMs: apiDuration
+    });
+    throw new Error(`Claude API request failed: ${response.status} - ${errorText.slice(0, 200)}`);
+  }
+
+  const data = await response.json();
+  const responseText = data.content?.[0]?.text || '';
+
+  if (!responseText) {
+    logger.error('Claude returned empty response', { durationMs: apiDuration });
+    throw new Error('Claude returned empty response');
+  }
+
+  // Parse JSON response
+  let parsed;
+  try {
+    parsed = JSON.parse(responseText);
+  } catch {
+    // Try to extract JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      logger.error('Failed to parse Claude JSON response', {
+        responsePreview: responseText.slice(0, 200),
+        durationMs: apiDuration
+      });
+      throw new Error('Claude did not return valid JSON');
+    }
+    parsed = JSON.parse(jsonMatch[0]);
+  }
+
+  // Response can have either files array OR edits array (or both)
+  const hasFiles = Array.isArray(parsed.files) && parsed.files.length > 0;
+  const hasEdits = Array.isArray(parsed.edits) && parsed.edits.length > 0;
+  const hasPlan = parsed.plan && typeof parsed.plan === 'object';
+  const hasDebugAnalysis = parsed.debugAnalysis && typeof parsed.debugAnalysis === 'object';
+
+  // Determine response mode from explicit mode field or infer from content
+  let mode: ResponseMode = 'edit';
+  if (parsed.mode && ['edit', 'file', 'plan', 'explanation', 'debug'].includes(parsed.mode)) {
+    mode = parsed.mode as ResponseMode;
+  } else if (hasPlan) {
+    mode = 'plan';
+  } else if (hasDebugAnalysis) {
+    mode = 'debug';
+  } else if (hasFiles && !hasEdits) {
+    mode = 'file';
+  } else if (hasEdits) {
+    mode = 'edit';
+  }
+
+  // For plan/explanation modes, files/edits are optional
+  const isNonCodeMode = mode === 'plan' || mode === 'explanation';
+  if (!parsed.message || (!hasFiles && !hasEdits && !isNonCodeMode && !hasDebugAnalysis)) {
+    logger.error('Claude response missing required fields', {
+      hasMessage: !!parsed.message,
+      hasFiles,
+      hasEdits,
+      mode,
+      durationMs: apiDuration
+    });
+    throw new Error('Response missing required fields (need message and either files or edits)');
+  }
+
+  // Determine response mode
+  const useEditMode = hasEdits && !hasFiles;
+
+  logger.info('Claude API call successful', {
+    mode,
+    filesGenerated: hasFiles ? parsed.files.length : 0,
+    editsGenerated: hasEdits ? parsed.edits.length : 0,
+    useEditMode,
+    needsThreeJs: parsed.needsThreeJs === true,
+    durationMs: apiDuration
+  });
+
+  return {
+    message: parsed.message,
+    files: parsed.files || [],
+    edits: parsed.edits,
+    explanation: parsed.explanation || '',
+    needsThreeJs: parsed.needsThreeJs === true,
+    useEditMode,
+    mode,
+    plan: hasPlan ? parsed.plan : undefined,
+    debugAnalysis: hasDebugAnalysis ? parsed.debugAnalysis : undefined,
+  };
+}
+
 async function callGemini(
   prompt: string,
   currentFiles: Record<string, string>,
@@ -1888,22 +2132,36 @@ Deno.serve(async (req: Request) => {
     }
 
     // ==========================================================================
-    // API KEY CHECK
+    // API KEY CHECK (based on AI_PROVIDER setting)
     // ==========================================================================
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      logger.error('Gemini API key not configured');
-      return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
-      });
+    const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
+
+    // Validate required API keys based on provider
+    if (AI_PROVIDER === 'gemini' || AI_PROVIDER === 'dual') {
+      if (!geminiApiKey) {
+        logger.error('Gemini API key not configured', { provider: AI_PROVIDER });
+        return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+        });
+      }
     }
 
-    // Claude API key for orchestration (disabled for Gemini hackathon)
-    // const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-    // const useDualModel = !!claudeApiKey;
-    const claudeApiKey = null;
-    const useDualModel = false; // Gemini-only mode for hackathon
+    if (AI_PROVIDER === 'claude' || AI_PROVIDER === 'dual') {
+      if (!claudeApiKey) {
+        logger.error('Claude API key not configured', { provider: AI_PROVIDER });
+        return new Response(JSON.stringify({ error: 'Claude API key not configured' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+        });
+      }
+    }
+
+    // Determine if we should use dual model mode
+    const useDualModel = AI_PROVIDER === 'dual' && !!claudeApiKey && !!geminiApiKey;
+
+    logger.info('AI Provider configured', { provider: AI_PROVIDER, useDualModel });
 
     // ==========================================================================
     // INPUT VALIDATION
@@ -2125,12 +2383,28 @@ Name:`;
     });
 
     // ==========================================================================
-    // GENERATE CODE (Dual-model or Gemini-only)
+    // GENERATE CODE (based on AI_PROVIDER setting)
     // ==========================================================================
     let generated: GeneratedResponse;
 
-    // Use dual-model flow if Claude API key is available AND we have context
-    if (useDualModel && useSmartContext && contextPackage && contextPackage.relevantFiles.length > 0) {
+    if (AI_PROVIDER === 'claude') {
+      // Claude-only mode: Use Claude for code generation
+      logger.info('Using Claude-only flow for code generation', { model: CLAUDE_CODE_MODEL });
+
+      generated = await callClaude(
+        prompt,
+        currentFiles,
+        selectedFile,
+        conversationHistory,
+        claudeApiKey!,
+        hasThreeJs,
+        templateId,
+        useSmartContext ? contextPackage : undefined,
+        logger,
+        images
+      );
+    } else if (useDualModel && useSmartContext && contextPackage && contextPackage.relevantFiles.length > 0) {
+      // Dual-model flow: Claude plans, Gemini generates
       logger.info('Using dual-model flow: Claude (orchestrator) + Gemini (code generator)');
 
       // Step 1: Claude analyzes and plans
@@ -2155,7 +2429,7 @@ Name:`;
       // Step 3: Gemini generates code following the plan
       generated = await callGeminiWithPlan(
         geminiPrompt,
-        geminiApiKey,
+        geminiApiKey!,
         plan.responseMode,
         logger
       );
@@ -2165,11 +2439,11 @@ Name:`;
         generated.explanation = `${plan.understanding}\n\n${generated.explanation || ''}`;
       }
     } else {
-      // Fallback: Gemini-only flow
+      // Gemini-only flow (default)
       if (useDualModel && (!contextPackage || contextPackage.relevantFiles.length === 0)) {
         logger.info('Skipping Claude orchestrator: no existing files to analyze');
-      } else if (!useDualModel) {
-        logger.info('Using Gemini-only flow (no Claude API key)');
+      } else {
+        logger.info('Using Gemini-only flow', { model: GEMINI_CODE_MODEL });
       }
 
       generated = await callGemini(
@@ -2177,7 +2451,7 @@ Name:`;
         currentFiles,
         selectedFile,
         conversationHistory,
-        geminiApiKey,
+        geminiApiKey!,
         hasThreeJs,
         templateId,
         useSmartContext ? contextPackage : undefined,
