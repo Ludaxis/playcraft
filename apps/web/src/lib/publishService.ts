@@ -704,8 +704,20 @@ export async function publishGame(
   const { onAutoFix, maxFixAttempts = 3 } = options;
 
   try {
-    // Skip slow pre-build checks - the build will catch errors faster
-    // Go straight to build and fix any errors that come up
+    // Step 0: Run lint:fix to auto-clean common issues (unused imports, etc.)
+    options.onProgress({ stage: 'checking', progress: 5, message: 'Auto-fixing lint issues...' });
+    try {
+      const lintProcess = await spawn('npm', ['run', 'lint:fix', '--if-present']);
+      await lintProcess.output.pipeTo(new WritableStream({
+        write(data) {
+          console.log('[publishService] lint:fix:', data);
+        }
+      }));
+      await lintProcess.exit;
+    } catch {
+      // lint:fix is optional, don't fail if it doesn't exist
+      console.log('[publishService] lint:fix not available, skipping');
+    }
 
     // Step 1: Build the project (with retry on failure)
     let buildAttempts = 0;

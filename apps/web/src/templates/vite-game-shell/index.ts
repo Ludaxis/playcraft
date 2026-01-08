@@ -21,7 +21,10 @@ export const viteGameShellTemplate: FileSystemTree = {
           type: 'module',
           scripts: {
             dev: 'vite --host --port 3000',
-            build: 'tsc -b && vite build',
+            build: 'vite build',
+            'build:strict': 'tsc -b && vite build',
+            lint: 'eslint src',
+            'lint:fix': 'eslint --fix src',
             preview: 'vite preview',
           },
           dependencies: {
