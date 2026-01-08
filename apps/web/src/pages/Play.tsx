@@ -251,6 +251,8 @@ export function PlayPage({ gameId }: PlayPageProps) {
               title={game.name}
               allow="fullscreen; autoplay; encrypted-media"
               sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              // @ts-expect-error - credentialless is a valid attribute but not in React types yet
+              credentialless="true"
             />
           ) : (
             <div className="flex h-full items-center justify-center">
