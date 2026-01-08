@@ -251,9 +251,10 @@ describe('Asset Type Predicates', () => {
 
 describe('Asset Configuration', () => {
   it('has correct max file sizes', () => {
-    expect(ASSET_CONFIG.maxFileSize['2d']).toBe(5 * 1024 * 1024);
-    expect(ASSET_CONFIG.maxFileSize['3d']).toBe(20 * 1024 * 1024);
-    expect(ASSET_CONFIG.maxFileSize['audio']).toBe(10 * 1024 * 1024);
+    // All asset types have 25MB limit per Phase 1 spec
+    expect(ASSET_CONFIG.maxFileSize['2d']).toBe(25 * 1024 * 1024);
+    expect(ASSET_CONFIG.maxFileSize['3d']).toBe(25 * 1024 * 1024);
+    expect(ASSET_CONFIG.maxFileSize['audio']).toBe(25 * 1024 * 1024);
   });
 
   it('has correct MIME types', () => {
@@ -307,8 +308,9 @@ describe('validateAssetFile', () => {
   });
 
   it('rejects file exceeding size limit for 2D', () => {
-    const file = createMockFile('large.png', 10 * 1024 * 1024, 'image/png');
-    Object.defineProperty(file, 'size', { value: 10 * 1024 * 1024 });
+    // 30MB exceeds 25MB limit
+    const file = createMockFile('large.png', 30 * 1024 * 1024, 'image/png');
+    Object.defineProperty(file, 'size', { value: 30 * 1024 * 1024 });
     const result = validateAssetFile(file);
     expect(result.valid).toBe(false);
     expect(result.error).toContain('File too large');
