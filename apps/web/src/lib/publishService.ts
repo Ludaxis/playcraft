@@ -463,11 +463,11 @@ async function finalizePublish(
     // Use existing slug if project was already published, otherwise use new one
     const finalSlug = existingProject?.slug || slug;
 
-    // Generate subdomain URL
-    const subdomainUrl = `https://${finalSlug}.${GAME_SUBDOMAIN_BASE}`;
+    // Primary shareable URL - use /play/:id format (works without DNS config)
+    const publishedUrl = `${window.location.origin}/play/${projectId}`;
 
-    // Also keep the legacy /play/:id URL for backwards compatibility
-    const legacyUrl = `${window.location.origin}/play/${projectId}`;
+    // Also generate subdomain URL for future use (requires DNS wildcard)
+    const subdomainUrl = `https://${finalSlug}.${GAME_SUBDOMAIN_BASE}`;
 
     onProgress({ stage: 'finalizing', progress: 95, message: 'Saving...' });
 
@@ -475,8 +475,8 @@ async function finalizePublish(
     // This prevents UNIQUE constraint issues on republish
     const updatePayload: Record<string, unknown> = {
       status: 'published',
-      subdomain_url: subdomainUrl,
-      published_url: legacyUrl, // Keep legacy URL for backwards compat
+      subdomain_url: subdomainUrl, // For future DNS wildcard setup
+      published_url: publishedUrl, // Primary shareable URL
       published_at: new Date().toISOString(),
     };
 
@@ -496,8 +496,8 @@ async function finalizePublish(
 
     onProgress({ stage: 'complete', progress: 100, message: 'Published!' });
 
-    // Return the subdomain URL as the primary shareable URL
-    return subdomainUrl;
+    // Return the /play/:id URL as the primary shareable URL
+    return publishedUrl;
 
   } catch (err) {
     console.error('[publishService] Finalize failed:', err);

@@ -1,9 +1,9 @@
 /**
  * Play Page - Public game player
  *
- * This page handles the legacy /play/:id route.
- * For new games with subdomain URLs, it redirects to the subdomain.
- * For legacy games without subdomain, it serves via the Edge Function.
+ * Serves published games at /play/:id via the Edge Function.
+ * The Edge Function proxies game files from Supabase Storage
+ * without X-Frame-Options, allowing iframe embedding.
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -64,14 +64,7 @@ export function PlayPage({ gameId }: PlayPageProps) {
           return;
         }
 
-        // If game has subdomain URL, redirect to it
-        if (data.subdomain_url) {
-          console.log('[PlayPage] Redirecting to subdomain:', data.subdomain_url);
-          window.location.href = data.subdomain_url;
-          return;
-        }
-
-        // Legacy game without subdomain - use Edge Function
+        // Serve game via Edge Function (no subdomain redirect - requires DNS config)
         const gameData: PublishedGameWithSubdomain = {
           id: data.id,
           name: data.name,
@@ -115,8 +108,8 @@ export function PlayPage({ gameId }: PlayPageProps) {
   }, [game]);
 
   const handleShare = async () => {
-    // Use subdomain URL for sharing if available
-    const url = game?.subdomain_url || window.location.href;
+    // Share the current URL (/play/:id)
+    const url = window.location.href;
 
     if (navigator.share) {
       try {
