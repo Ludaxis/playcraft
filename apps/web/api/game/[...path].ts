@@ -15,6 +15,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Declare process.env for Edge Runtime (env vars are available but not typed)
+declare const process: { env: Record<string, string | undefined> };
+
 export const config = {
   runtime: 'edge',
 };
