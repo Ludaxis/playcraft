@@ -8,6 +8,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5175',
   'http://127.0.0.1:5173',
   'https://playcraft.app',
+  'https://playcraft.games',
+  'https://www.playcraft.games',
   'https://www.playcraft.app',
   'https://playcraft.vercel.app',
 ];
@@ -162,8 +164,8 @@ Deno.serve(async (req: Request) => {
     };
     const resolvedImageSize = sizeToImageSize[size] || '1K';
 
-    // Get Gemini API key
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    // Get Gemini Image API key (separate from code generation key)
+    const geminiApiKey = Deno.env.get('GEMINI_IMAGE_API_KEY');
     if (!geminiApiKey) {
       return new Response(JSON.stringify({ error: 'Image generation API not configured' }), {
         status: 500,

@@ -448,6 +448,12 @@ interface CollectedFile {
   content: Uint8Array | string;
 }
 
+function stripBlockedIconUrls(content: string): { sanitized: string; changed: boolean } {
+  const blockedPattern = /https?:\/\/lucide\.dev\/api\/icons\/[^\s"'`>)]+/g;
+  const sanitized = content.replace(blockedPattern, '');
+  return { sanitized, changed: sanitized !== content };
+}
+
 /**
  * Recursively collect all files from the dist directory
  */
@@ -575,10 +581,19 @@ export async function uploadToStorage(
       const storagePath = `${basePath}/${file.path}`;
       const contentType = getContentType(file.path);
 
+      let uploadContent = file.content;
+      if (typeof uploadContent === 'string') {
+        const { sanitized, changed } = stripBlockedIconUrls(uploadContent);
+        if (changed) {
+          console.log(`[publishService] Stripped blocked icon URLs in ${file.path}`);
+        }
+        uploadContent = sanitized;
+      }
+
       // Convert string content to Uint8Array for upload
-      const content = typeof file.content === 'string'
-        ? new TextEncoder().encode(file.content)
-        : file.content;
+      const content = typeof uploadContent === 'string'
+        ? new TextEncoder().encode(uploadContent)
+        : uploadContent;
 
       const { error } = await supabase.storage
         .from('published-games')
