@@ -188,14 +188,23 @@ async function assertProjectStorageCapacity(projectId: string, incomingSize: num
 }
 
 function mapDbRowToAsset(row: Record<string, unknown>): Asset {
+  const storagePath = row.storage_path as string;
+  const supabase = getSupabase();
+
+  // Generate preview URL from Supabase storage
+  const { data: publicUrlData } = supabase.storage
+    .from(ASSET_CONFIG.bucketName)
+    .getPublicUrl(storagePath);
+
   return {
     id: row.id as string,
     projectId: row.project_id as string,
     userId: row.user_id as string,
     name: row.name as string,
     displayName: (row.display_name as string) || (row.name as string),
-    storagePath: row.storage_path as string,
+    storagePath,
     publicPath: row.public_path as string,
+    previewUrl: publicUrlData?.publicUrl,
     assetType: row.asset_type as AssetType,
     category: row.category as AssetCategory,
     format: row.format as AssetFormat,

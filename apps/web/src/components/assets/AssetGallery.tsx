@@ -84,10 +84,10 @@ function getAssetIcon(assetType: AssetType) {
 function AssetThumbnail({ asset }: { asset: Asset }) {
   const Icon = getAssetIcon(asset.assetType);
 
-  if (asset.assetType === '2d') {
+  if (asset.assetType === '2d' && asset.previewUrl) {
     return (
       <img
-        src={asset.publicPath}
+        src={asset.previewUrl}
         alt={asset.displayName}
         className="h-full w-full object-contain"
         loading="lazy"
@@ -215,9 +215,9 @@ function AssetListItem({
       onClick={onSelect}
     >
       <div className="h-10 w-10 shrink-0 overflow-hidden rounded bg-surface-overlay">
-        {asset.assetType === '2d' ? (
+        {asset.assetType === '2d' && asset.previewUrl ? (
           <img
-            src={asset.publicPath}
+            src={asset.previewUrl}
             alt={asset.displayName}
             className="h-full w-full object-contain"
             loading="lazy"

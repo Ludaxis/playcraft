@@ -174,9 +174,9 @@ export function AssetDetailModal({
         <div className="flex flex-col gap-4">
           <div className="flex items-start gap-4">
             <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-surface-overlay">
-              {asset.assetType === '2d' ? (
+              {asset.assetType === '2d' && asset.previewUrl ? (
                 <img
-                  src={asset.publicPath}
+                  src={asset.previewUrl}
                   alt={asset.displayName}
                   className="h-full w-full object-contain"
                 />

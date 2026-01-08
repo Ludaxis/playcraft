@@ -56,6 +56,8 @@ export interface Asset {
   storagePath: string;
   /** Path in WebContainer (/public/assets/...) */
   publicPath: string;
+  /** URL for previewing asset in UI (Supabase storage URL) */
+  previewUrl?: string;
 
   /** Asset classification */
   assetType: AssetType;
