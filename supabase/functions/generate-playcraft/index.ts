@@ -1022,6 +1022,11 @@ CRITICAL RULES:
 5. Use the existing UI components from @/components/ui
 6. DO NOT modify main.tsx or App.tsx unless absolutely necessary
 7. For Canvas games, use useRef and useEffect for the canvas element
+8. NEVER use external URLs for icons or images - they are blocked by COEP policy
+   - Use lucide-react icons via import: import { Gamepad2 } from 'lucide-react'
+   - Use inline SVGs for custom icons
+   - Use canvas drawing for game sprites
+   - DO NOT fetch from lucide.dev, iconify.design, or any external icon API
 
 RESPONSE FORMAT - HYBRID EDIT/REPLACE:
 Choose the appropriate format based on change size:
@@ -1346,7 +1351,10 @@ CRITICAL RULES:
 4. Use Tailwind CSS matching the shell theme (purple/indigo gradient, dark theme)
 5. Game must be playable with touch (mobile) and mouse/keyboard (desktop)
 6. Include game over detection that triggers handleWin or handleLose
-7. Use state.player.currentLevel to adjust difficulty`;
+7. Use state.player.currentLevel to adjust difficulty
+8. NEVER use external URLs for icons/images - blocked by COEP policy
+   - Use lucide-react icons: import { Gamepad2 } from 'lucide-react'
+   - Use inline SVGs or canvas drawing for sprites`;
 
 // Build context using smart context package (new system)
 function buildSmartContextPrompt(

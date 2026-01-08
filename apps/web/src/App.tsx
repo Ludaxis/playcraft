@@ -115,15 +115,9 @@ function AppRoutes() {
     }
   }, [user, loading, location.pathname, currentProject?.id, loadingProject, navigate]);
 
-  // Fast-path: if on home and idle, resume last project from cache
-  useEffect(() => {
-    if (!user || loading || loadingProject || currentProject || isOnBuilder) return;
-    const cachedId = localStorage.getItem(LAST_PROJECT_CACHE_KEY);
-    if (cachedId) {
-      console.log('[App] Restoring last project from cache:', cachedId);
-      navigate(`/builder/${cachedId}`);
-    }
-  }, [user, loading, loadingProject, currentProject, isOnBuilder, navigate]);
+  // NOTE: Removed auto-redirect to last project on home page load.
+  // Users should explicitly navigate to projects from the home page.
+  // The cache is still used when loading a project by ID from URL.
 
   const handleSignIn = async () => {
     const supabase = getSupabase();
