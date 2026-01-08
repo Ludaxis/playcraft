@@ -19,7 +19,6 @@ import {
   analyzeFile,
   computeHash,
   type FileChangeResult,
-  type FileHash,
 } from './fileHashService';
 import {
   getAdaptiveWeights,

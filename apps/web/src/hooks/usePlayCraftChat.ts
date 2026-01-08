@@ -31,7 +31,7 @@ import {
   predictNextSteps,
   extractPredictionContext,
 } from '../lib/nextStepPredictionService';
-import type { ChatMessage, NextStep, GenerationStage, GenerationProgress } from '../types';
+import type { ChatMessage, GenerationStage, GenerationProgress } from '../types';
 
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage } from '../types';
