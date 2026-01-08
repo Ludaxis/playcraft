@@ -60,6 +60,23 @@ export function PlayPage({ gameId }: PlayPageProps) {
     const supabase = getSupabase();
     const basePath = `${game.user_id}/${game.id}`;
 
+    // First check if legacy index.html exists (most common case)
+    const legacyPath = `${basePath}/index.html`;
+    try {
+      const { data: legacyCheck } = await supabase.storage
+        .from('published-games')
+        .list(basePath, { limit: 10 });
+
+      const hasDirectIndex = legacyCheck?.some(f => f.name === 'index.html');
+      if (hasDirectIndex) {
+        const url = supabase.storage.from('published-games').getPublicUrl(legacyPath).data.publicUrl;
+        console.log('[PlayPage] Using legacy URL (direct index.html):', url);
+        return url;
+      }
+    } catch (err) {
+      console.log('[PlayPage] Error checking legacy path:', err);
+    }
+
     // Try latest.json for versioned publish
     try {
       const latest = await supabase.storage.from('published-games').download(`${basePath}/latest.json`);
@@ -73,32 +90,13 @@ export function PlayPage({ gameId }: PlayPageProps) {
         }
       }
     } catch (err) {
-      console.log('[PlayPage] latest.json not found, trying versions.json', err);
+      console.log('[PlayPage] latest.json not found', err);
     }
 
-    // Fallback to versions.json (latest entry)
-    try {
-      const manifest = await supabase.storage.from('published-games').download(`${basePath}/versions.json`);
-      if (manifest.data) {
-        const text = await manifest.data.text();
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const latestVersion = parsed[parsed.length - 1];
-          if (latestVersion?.path) {
-            const url = supabase.storage.from('published-games').getPublicUrl(latestVersion.path).data.publicUrl;
-            console.log('[PlayPage] Using manifest URL:', url);
-            return url;
-          }
-        }
-      }
-    } catch (err) {
-      console.log('[PlayPage] versions.json not found, using legacy path', err);
-    }
-
-    // Legacy fallback
-    const legacyUrl = supabase.storage.from('published-games').getPublicUrl(`${basePath}/index.html`).data.publicUrl;
-    console.log('[PlayPage] Using legacy URL:', legacyUrl);
-    return legacyUrl;
+    // Final fallback - just try the legacy path anyway
+    const url = supabase.storage.from('published-games').getPublicUrl(legacyPath).data.publicUrl;
+    console.log('[PlayPage] Using fallback legacy URL:', url);
+    return url;
   }, [game]);
 
   const handleShare = async () => {
