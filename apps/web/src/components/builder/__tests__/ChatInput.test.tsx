@@ -47,10 +47,6 @@ describe('ChatInput', () => {
       expect(screen.getByText('Attach')).toBeInTheDocument();
     });
 
-    it('hides attach button when showAttach is false', () => {
-      render(<ChatInput {...defaultProps} showAttach={false} />);
-      expect(screen.queryByTitle('Attach files')).not.toBeInTheDocument();
-    });
   });
 
   describe('Chat Mode Toggle', () => {
@@ -311,99 +307,128 @@ describe('ChatInput', () => {
     });
   });
 
-  describe('Variants', () => {
-    describe('Landing variant', () => {
-      it('renders with unified dark theme styling', () => {
-        render(<ChatInput {...defaultProps} variant="landing" />);
-        // All variants use same dark glass container
-        const container = document.querySelector('.bg-black\\/40');
-        expect(container).toBeInTheDocument();
-      });
-
-      it('does not show attach button', () => {
-        render(<ChatInput {...defaultProps} variant="landing" />);
-        expect(screen.queryByTitle('Attach files')).not.toBeInTheDocument();
-      });
-
-      it('does not show mode toggle', () => {
-        render(<ChatInput {...defaultProps} variant="landing" />);
-        expect(screen.queryByText('Build')).not.toBeInTheDocument();
-        expect(screen.queryByText('Chat')).not.toBeInTheDocument();
-      });
-
-      it('does not show suggestions', () => {
-        render(<ChatInput {...defaultProps} variant="landing" />);
-        expect(screen.queryByText('Add power-ups')).not.toBeInTheDocument();
-      });
-
-      it('does not show footer hint', () => {
-        render(<ChatInput {...defaultProps} variant="landing" />);
-        expect(screen.queryByText('Enter to send · Shift+Enter for new line')).not.toBeInTheDocument();
-      });
-
-      it('shows animated placeholder when provided', () => {
-        render(
-          <ChatInput
-            {...defaultProps}
-            variant="landing"
-            animatedPhrases={['test phrase']}
-            staticPrefix="Create a "
-          />
-        );
-        expect(screen.getByText('Create a')).toBeInTheDocument();
-      });
+  describe('Auth Required Callback', () => {
+    beforeEach(() => {
+      localStorage.clear();
     });
 
-    describe('Home variant', () => {
-      it('renders with unified dark theme styling', () => {
-        render(<ChatInput {...defaultProps} variant="home" />);
-        // All variants use same dark glass container
-        const container = document.querySelector('.bg-black\\/40');
-        expect(container).toBeInTheDocument();
-      });
+    it('calls onAuthRequired instead of onSend when set', async () => {
+      const onSend = vi.fn();
+      const onAuthRequired = vi.fn();
+      const user = userEvent.setup();
 
-      it('does not show attach button', () => {
-        render(<ChatInput {...defaultProps} variant="home" />);
-        expect(screen.queryByTitle('Attach files')).not.toBeInTheDocument();
-      });
+      render(
+        <ChatInput
+          {...defaultProps}
+          value="test message"
+          onSend={onSend}
+          onAuthRequired={onAuthRequired}
+        />
+      );
 
-      it('does not show mode toggle', () => {
-        render(<ChatInput {...defaultProps} variant="home" />);
-        expect(screen.queryByText('Build')).not.toBeInTheDocument();
-        expect(screen.queryByText('Chat')).not.toBeInTheDocument();
-      });
+      const sendButton = screen.getByTitle('Send message');
+      await user.click(sendButton);
 
-      it('does not show suggestions', () => {
-        render(<ChatInput {...defaultProps} variant="home" />);
-        expect(screen.queryByText('Add power-ups')).not.toBeInTheDocument();
-      });
-
-      it('does not show footer hint', () => {
-        render(<ChatInput {...defaultProps} variant="home" />);
-        expect(screen.queryByText('Enter to send · Shift+Enter for new line')).not.toBeInTheDocument();
-      });
+      expect(onAuthRequired).toHaveBeenCalled();
+      expect(onSend).not.toHaveBeenCalled();
     });
 
-    describe('Builder variant (default)', () => {
-      it('shows attach button', () => {
-        render(<ChatInput {...defaultProps} variant="builder" />);
-        expect(screen.getByTitle('Attach files')).toBeInTheDocument();
-      });
+    it('stores prompt in localStorage before auth callback', async () => {
+      const onAuthRequired = vi.fn();
+      const user = userEvent.setup();
 
-      it('shows mode toggle', () => {
-        render(<ChatInput {...defaultProps} variant="builder" />);
-        expect(screen.getByText('Build')).toBeInTheDocument();
-      });
+      render(
+        <ChatInput
+          {...defaultProps}
+          value="my test prompt"
+          onAuthRequired={onAuthRequired}
+        />
+      );
 
-      it('shows suggestions', () => {
-        render(<ChatInput {...defaultProps} variant="builder" />);
-        expect(screen.getByText('Add power-ups')).toBeInTheDocument();
-      });
+      const sendButton = screen.getByTitle('Send message');
+      await user.click(sendButton);
 
-      it('shows footer hint', () => {
-        render(<ChatInput {...defaultProps} variant="builder" />);
-        expect(screen.getByText('Enter to send · Shift+Enter for new line')).toBeInTheDocument();
-      });
+      expect(localStorage.getItem('playcraft_pending_prompt')).toBe('my test prompt');
+    });
+
+    it('calls onAuthRequired when attach button is clicked', async () => {
+      const onAuthRequired = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <ChatInput {...defaultProps} onAuthRequired={onAuthRequired} />
+      );
+
+      const attachButton = screen.getByTitle('Attach files');
+      await user.click(attachButton);
+
+      expect(onAuthRequired).toHaveBeenCalled();
+    });
+
+    it('calls onAuthRequired when suggestion is clicked', async () => {
+      const onAuthRequired = vi.fn();
+      const user = userEvent.setup();
+      const suggestions = [{ label: 'Test', prompt: 'Test prompt' }];
+
+      render(
+        <ChatInput
+          {...defaultProps}
+          suggestions={suggestions}
+          onAuthRequired={onAuthRequired}
+        />
+      );
+
+      await user.click(screen.getByText('Test'));
+      expect(onAuthRequired).toHaveBeenCalled();
+    });
+
+    it('stores suggestion prompt in localStorage when auth required', async () => {
+      const onAuthRequired = vi.fn();
+      const user = userEvent.setup();
+      const suggestions = [{ label: 'Test', prompt: 'Test prompt value' }];
+
+      render(
+        <ChatInput
+          {...defaultProps}
+          suggestions={suggestions}
+          onAuthRequired={onAuthRequired}
+        />
+      );
+
+      await user.click(screen.getByText('Test'));
+      expect(localStorage.getItem('playcraft_pending_prompt')).toBe('Test prompt value');
+    });
+  });
+
+  describe('Unified Styling', () => {
+    it('renders with dark theme styling', () => {
+      render(<ChatInput {...defaultProps} />);
+      const container = document.querySelector('.bg-black\\/40');
+      expect(container).toBeInTheDocument();
+    });
+
+    it('shows all features by default', () => {
+      render(<ChatInput {...defaultProps} />);
+
+      // Attach button
+      expect(screen.getByTitle('Attach files')).toBeInTheDocument();
+
+      // Mode toggle
+      expect(screen.getByText('Build')).toBeInTheDocument();
+
+      // Send button
+      expect(screen.getByTitle('Send message')).toBeInTheDocument();
+    });
+
+    it('shows animated placeholder when provided', () => {
+      render(
+        <ChatInput
+          {...defaultProps}
+          animatedPhrases={['test phrase']}
+          staticPrefix="Create a "
+        />
+      );
+      expect(screen.getByText('Create a')).toBeInTheDocument();
     });
   });
 });

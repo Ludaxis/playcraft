@@ -1,14 +1,13 @@
 /**
  * Chat Input Component
  * Unified chat input used across Landing, Home, and Builder pages
- * Same visual style everywhere, different features per variant
+ * All features available everywhere - auth required callback for unauthenticated users
  */
 
 import { useState, useRef, useEffect } from 'react';
 import { ArrowUp, Sparkles, MessageSquare, Code, Paperclip, X, Image, FileText } from 'lucide-react';
 
 export type ChatMode = 'build' | 'chat';
-export type ChatInputVariant = 'landing' | 'home' | 'builder';
 
 interface SuggestionChip {
   label: string;
@@ -28,21 +27,20 @@ interface ChatInputProps {
   onSend: (mode: ChatMode) => void;
   disabled?: boolean;
   placeholder?: string;
-  // Variant controls which features are shown (not styling)
-  variant?: ChatInputVariant;
-  // Builder-specific props
+  // Features
   suggestions?: SuggestionChip[];
   onSuggestionClick?: (prompt: string) => void;
   defaultMode?: ChatMode;
   onAttachFiles?: (files: File[]) => void;
-  showAttach?: boolean;
-  showModeToggle?: boolean;
+  showSuggestions?: boolean;
+  // Auth callback - called when unauthenticated user tries to use a feature
+  onAuthRequired?: () => void;
   // Landing-specific props
   animatedPhrases?: string[];
   staticPrefix?: string;
 }
 
-// Default quick suggestions for builder
+// Default quick suggestions
 const DEFAULT_SUGGESTIONS: SuggestionChip[] = [
   { label: 'Add power-ups', prompt: 'Add power-up items that give special abilities' },
   { label: 'Sound effects', prompt: 'Add sound effects for game actions' },
@@ -111,13 +109,12 @@ export function ChatInput({
   onSend,
   disabled = false,
   placeholder = 'Describe what you want to build...',
-  variant = 'builder',
   suggestions = DEFAULT_SUGGESTIONS,
   onSuggestionClick,
   defaultMode = 'build',
   onAttachFiles,
-  showAttach = true,
-  showModeToggle = true,
+  showSuggestions = true,
+  onAuthRequired,
   animatedPhrases = [],
   staticPrefix = '',
 }: ChatInputProps) {
@@ -127,8 +124,8 @@ export function ChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Animated placeholder for landing variant
-  const hasAnimatedPlaceholder = variant === 'landing' && animatedPhrases.length > 0;
+  // Animated placeholder
+  const hasAnimatedPlaceholder = animatedPhrases.length > 0;
   const animatedText = useTypewriter(animatedPhrases, hasAnimatedPlaceholder && !isFocused && !value);
 
   // Auto-resize textarea
@@ -143,12 +140,18 @@ export function ChatInput({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       if (value.trim()) {
-        onSend(mode);
+        handleSend();
       }
     }
   };
 
   const handleSuggestionClick = (prompt: string) => {
+    if (onAuthRequired) {
+      // Store prompt and trigger auth
+      localStorage.setItem('playcraft_pending_prompt', prompt);
+      onAuthRequired();
+      return;
+    }
     if (onSuggestionClick) {
       onSuggestionClick(prompt);
     } else {
@@ -157,12 +160,22 @@ export function ChatInput({
   };
 
   const handleSend = () => {
-    if (value.trim()) {
-      onSend(mode);
+    if (!value.trim()) return;
+
+    if (onAuthRequired) {
+      // Store prompt and trigger auth
+      localStorage.setItem('playcraft_pending_prompt', value.trim());
+      onAuthRequired();
+      return;
     }
+    onSend(mode);
   };
 
   const handleAttachClick = () => {
+    if (onAuthRequired) {
+      onAuthRequired();
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -189,15 +202,10 @@ export function ChatInput({
     ? 'Ask a question about your code...'
     : placeholder;
 
-  // Feature flags based on variant
-  const showSuggestions = variant === 'builder' && suggestions.length > 0;
-  const showAttachButton = variant === 'builder' && showAttach;
-  const showModeToggleButton = variant === 'builder' && showModeToggle;
-
   return (
     <div>
-      {/* Suggestion chips - builder only */}
-      {showSuggestions && (
+      {/* Suggestion chips */}
+      {showSuggestions && suggestions.length > 0 && (
         <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
           {suggestions.map((suggestion, index) => (
             <button
@@ -213,10 +221,10 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Main input container - SAME STYLE FOR ALL VARIANTS */}
+      {/* Main input container */}
       <div className="overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl">
-        {/* Attached files preview - builder only */}
-        {attachedFiles.length > 0 && variant === 'builder' && (
+        {/* Attached files preview */}
+        {attachedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 border-b border-white/10 px-4 py-2">
             {attachedFiles.map((file, index) => {
               const FileIcon = getFileIcon(file.type);
@@ -246,7 +254,7 @@ export function ChatInput({
 
         {/* Text input area */}
         <div className="relative px-4 py-3">
-          {/* Animated placeholder overlay - landing only */}
+          {/* Animated placeholder overlay */}
           {hasAnimatedPlaceholder && !isFocused && !value && (
             <div className="pointer-events-none absolute inset-0 px-4 py-3 text-base text-white/50">
               <span>{staticPrefix}</span>
@@ -271,54 +279,48 @@ export function ChatInput({
 
         {/* Bottom toolbar */}
         <div className="flex items-center justify-between px-3 pb-3">
-          {/* Left side - Attach button (builder only) */}
+          {/* Left side - Attach button */}
           <div className="flex items-center gap-2">
-            {showAttachButton && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileChange}
-                  accept="image/*,.txt,.json,.md,.csv"
-                />
-                <button
-                  onClick={handleAttachClick}
-                  disabled={disabled}
-                  title="Attach files"
-                  className="flex items-center gap-1.5 rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-xs text-white/70 transition-all hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Paperclip className="h-3.5 w-3.5" />
-                  <span>Attach</span>
-                </button>
-              </>
-            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileChange}
+              accept="image/*,.txt,.json,.md,.csv"
+            />
+            <button
+              onClick={handleAttachClick}
+              disabled={disabled}
+              title="Attach files"
+              className="flex items-center gap-1.5 rounded-full border border-white/20 bg-transparent px-3 py-1.5 text-xs text-white/70 transition-all hover:border-white/30 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Paperclip className="h-3.5 w-3.5" />
+              <span>Attach</span>
+            </button>
           </div>
 
           {/* Right side - Mode toggle + Send */}
           <div className="flex items-center gap-2">
-            {/* Chat/Build toggle - builder only */}
-            {showModeToggleButton && (
-              <button
-                onClick={() => setMode(mode === 'chat' ? 'build' : 'chat')}
-                disabled={disabled}
-                title={mode === 'chat' ? 'Chat without making edits to your project' : 'Build mode - AI will generate and edit code'}
-                className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-accent-light"
-              >
-                {mode === 'chat' ? (
-                  <>
-                    <MessageSquare className="h-3.5 w-3.5" />
-                    <span>Chat</span>
-                  </>
-                ) : (
-                  <>
-                    <Code className="h-3.5 w-3.5" />
-                    <span>Build</span>
-                  </>
-                )}
-              </button>
-            )}
+            {/* Chat/Build toggle */}
+            <button
+              onClick={() => setMode(mode === 'chat' ? 'build' : 'chat')}
+              disabled={disabled}
+              title={mode === 'chat' ? 'Chat without making edits to your project' : 'Build mode - AI will generate and edit code'}
+              className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-accent-light"
+            >
+              {mode === 'chat' ? (
+                <>
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span>Chat</span>
+                </>
+              ) : (
+                <>
+                  <Code className="h-3.5 w-3.5" />
+                  <span>Build</span>
+                </>
+              )}
+            </button>
 
             {/* Send button */}
             <button
@@ -333,12 +335,10 @@ export function ChatInput({
         </div>
       </div>
 
-      {/* Footer hint - builder only */}
-      {variant === 'builder' && (
-        <div className="mt-2 flex items-center justify-center text-[11px] text-white/40">
-          <span>Enter to send · Shift+Enter for new line</span>
-        </div>
-      )}
+      {/* Footer hint */}
+      <div className="mt-2 flex items-center justify-center text-[11px] text-white/40">
+        <span>Enter to send · Shift+Enter for new line</span>
+      </div>
     </div>
   );
 }

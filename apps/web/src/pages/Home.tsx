@@ -495,7 +495,6 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
 
                 {/* Input box */}
                 <ChatInput
-                  variant="home"
                   value={inputValue}
                   onChange={setInputValue}
                   onSend={handleSubmit}

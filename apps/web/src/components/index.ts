@@ -16,4 +16,4 @@ export { OnboardingTour } from './OnboardingTour';
 export { FAQModal } from './FAQModal';
 export { AuthModal } from './AuthModal';
 export { Logo, LogoIcon, LogoMark } from './Logo';
-export { ChatInput, type ChatMode, type ChatInputVariant } from './builder/ChatInput';
+export { ChatInput, type ChatMode } from './builder/ChatInput';

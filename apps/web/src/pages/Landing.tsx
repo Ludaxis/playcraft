@@ -108,13 +108,13 @@ export function LandingPage({ onSignIn }: LandingPageProps) {
           {/* Chat Input Box */}
           <div className="relative mx-auto max-w-2xl">
             <ChatInput
-              variant="landing"
               value={inputValue}
               onChange={setInputValue}
               onSend={handleSubmit}
               placeholder="Describe what you want to build..."
               animatedPhrases={TYPING_SUGGESTIONS}
               staticPrefix={STATIC_PREFIX}
+              onAuthRequired={handleShowSignUp}
             />
           </div>
         </div>
