@@ -355,6 +355,15 @@ interface BuildResult {
   errors: CodeError[];
 }
 
+async function hasBuildArtifacts(): Promise<boolean> {
+  try {
+    await readFile('/dist/index.html');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Build the project using npm run build in WebContainer
  */
@@ -388,13 +397,20 @@ export async function buildProject(
     try {
       await Promise.race([outputPromise, timeoutPromise]);
     } catch (err) {
-      // If timeout, we still have partial output - check for errors
+      // If timeout, we still have partial output - check for errors or artifacts
       if (err instanceof Error && err.message.includes('timed out')) {
         console.warn('[publishService] Build output stream timed out, checking for errors in partial output');
         const errors = parseBuildErrors(fullOutput);
         if (errors.length > 0) {
           onProgress({ stage: 'error', progress: 0, message: 'Build failed with errors' });
           return { success: false, output: fullOutput, errors };
+        }
+
+        // If no errors parsed but dist exists, treat as success
+        if (await hasBuildArtifacts()) {
+          console.warn('[publishService] Build output timed out, but artifacts exist. Continuing.');
+          onProgress({ stage: 'building', progress: 45, message: 'Build complete (timeout), proceeding...' });
+          return { success: true, output: fullOutput, errors: [] };
         }
       }
       throw err;
@@ -410,11 +426,17 @@ export async function buildProject(
         timeoutPromise
       ]) as number;
     } catch (err) {
-      // Timeout waiting for exit - check if we have errors
+      // Timeout waiting for exit - check if we have errors or artifacts
       console.warn('[publishService] Waiting for exit timed out, checking partial output');
       const errors = parseBuildErrors(fullOutput);
       if (errors.length > 0) {
         return { success: false, output: fullOutput, errors };
+      }
+
+      if (await hasBuildArtifacts()) {
+        console.warn('[publishService] Exit wait timed out, but artifacts exist. Continuing.');
+        onProgress({ stage: 'building', progress: 45, message: 'Build complete (timeout), proceeding...' });
+        return { success: true, output: fullOutput, errors: [] };
       }
       throw err;
     }

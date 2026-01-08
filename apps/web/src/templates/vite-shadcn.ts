@@ -144,11 +144,10 @@ export default defineConfig({
       ),
     },
   },
-  'tailwind.config.ts': {
+  'tailwind.config.js': {
     file: {
-      contents: `import type { Config } from 'tailwindcss'
-
-const config: Config = {
+      contents: `/** @type {import('tailwindcss').Config} */
+export default {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
@@ -211,8 +210,6 @@ const config: Config = {
   },
   plugins: [require('tailwindcss-animate')],
 }
-
-export default config
 `,
     },
   },
@@ -236,7 +233,7 @@ export default config
           rsc: false,
           tsx: true,
           tailwind: {
-            config: 'tailwind.config.ts',
+            config: 'tailwind.config.js',
             css: 'src/index.css',
             baseColor: 'slate',
             cssVariables: true,
