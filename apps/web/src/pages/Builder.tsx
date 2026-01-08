@@ -633,7 +633,10 @@ export function BuilderPage({
     }
 
     try {
-      await updateProjectStatus(project.id, 'building');
+      // Only update status if not already published (preserve published state)
+      if (project.status !== 'published') {
+        await updateProjectStatus(project.id, 'building');
+      }
 
       if (status === 'idle') {
         console.log('[Builder] Booting WebContainer...');
@@ -698,7 +701,10 @@ export function BuilderPage({
       setupCompletedForProjectRef.current = project.id; // Mark this project as set up
       isSettingUpRef.current = false;
       setIsSettingUp(false);
-      await updateProjectStatus(project.id, 'ready');
+      // Only update status if not already published (preserve published state)
+      if (project.status !== 'published') {
+        await updateProjectStatus(project.id, 'ready');
+      }
       console.log('[Builder] Project setup complete for:', project.id);
 
       if (hasSavedFiles) {
@@ -710,7 +716,10 @@ export function BuilderPage({
       console.error('[Builder] startProject error:', err);
       isSettingUpRef.current = false;
       setIsSettingUp(false);
-      await updateProjectStatus(project.id, 'draft');
+      // Only reset to draft if not published (preserve published state)
+      if (project.status !== 'published') {
+        await updateProjectStatus(project.id, 'draft');
+      }
       addSystemMessage(
         `Error: ${err instanceof Error ? err.message : 'Something went wrong'}`
       );
