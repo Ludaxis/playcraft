@@ -1863,7 +1863,8 @@ Deno.serve(async (req: Request) => {
       async: asyncMode = false,
       projectId,
       contextPackage,
-    }: ContextAwareRequest = await req.json();
+      mode, // Special modes: 'generate_name' for project naming
+    }: ContextAwareRequest & { mode?: string } = await req.json();
 
     if (!prompt) {
       logger.warn('Missing prompt in request');
@@ -1885,6 +1886,90 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
         }
       );
+    }
+
+    // ==========================================================================
+    // GENERATE NAME MODE: Lightweight AI call to generate project name
+    // ==========================================================================
+    if (mode === 'generate_name') {
+      logger.info('Generate name mode', { promptLength: prompt.length });
+      logger.startTimer('nameGeneration');
+
+      try {
+        const namePrompt = `Generate a short, catchy project name (2-4 words max) for this game idea. Return ONLY the name, nothing else.
+
+Game idea: "${prompt.substring(0, 500)}"
+
+Requirements:
+- 2-4 words maximum
+- Catchy and memorable
+- Related to the game concept
+- No quotes or punctuation
+- Title case (capitalize each word)
+
+Examples of good names:
+- "Make a space shooter" → "Stellar Blaster"
+- "Create a puzzle game with blocks" → "Block Logic"
+- "Build a platformer with a cat" → "Whisker Quest"
+- "Racing game with boats" → "Wave Racer"
+
+Name:`;
+
+        const nameResponse = await fetch(
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + geminiApiKey,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: namePrompt }] }],
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 50,
+              },
+            }),
+          }
+        );
+
+        if (!nameResponse.ok) {
+          throw new Error(`Gemini API error: ${nameResponse.status}`);
+        }
+
+        const nameData = await nameResponse.json();
+        const generatedName = nameData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Untitled Game';
+
+        // Clean up the name (remove quotes, limit length)
+        const cleanName = generatedName
+          .replace(/^["']|["']$/g, '')
+          .replace(/[^\w\s-]/g, '')
+          .trim()
+          .substring(0, 50);
+
+        const duration = logger.endTimer('nameGeneration');
+        logger.info('Name generated', { name: cleanName, durationMs: duration });
+
+        return new Response(
+          JSON.stringify({ name: cleanName || 'Untitled Game' }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+          }
+        );
+      } catch (e) {
+        logger.error('Name generation failed', { error: e instanceof Error ? e.message : 'Unknown error' });
+        // Fallback: extract key words from prompt
+        const words = prompt.split(/\s+/).filter(w => w.length > 3).slice(0, 3);
+        const fallbackName = words.length > 0
+          ? words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+          : 'Untitled Game';
+
+        return new Response(
+          JSON.stringify({ name: fallbackName }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+          }
+        );
+      }
     }
 
     // ==========================================================================

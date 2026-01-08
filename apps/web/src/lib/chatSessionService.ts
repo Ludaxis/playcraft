@@ -141,7 +141,7 @@ export async function saveChatSessionMessages(
 }
 
 /**
- * Generate a title from the first user message
+ * Generate a title from the first user message (simple truncation)
  */
 export function generateSessionTitle(firstMessage: string): string {
   // Truncate and clean up the message for a title
@@ -150,4 +150,79 @@ export function generateSessionTitle(firstMessage: string): string {
     return cleaned;
   }
   return cleaned.substring(0, 47) + '...';
+}
+
+/**
+ * Generate a catchy project name from a prompt using AI
+ * Falls back to smart extraction if AI call fails
+ */
+export async function generateProjectName(prompt: string): Promise<string> {
+  const supabase = getSupabase();
+
+  try {
+    // Call the edge function with generate_name mode
+    const { data, error } = await supabase.functions.invoke('generate-playcraft', {
+      body: {
+        prompt,
+        mode: 'generate_name',
+      },
+    });
+
+    if (error) {
+      console.warn('[generateProjectName] Edge function error:', error);
+      return extractNameFromPrompt(prompt);
+    }
+
+    if (data?.name) {
+      console.log('[generateProjectName] AI generated name:', data.name);
+      return data.name;
+    }
+
+    return extractNameFromPrompt(prompt);
+  } catch (err) {
+    console.warn('[generateProjectName] Failed, using fallback:', err);
+    return extractNameFromPrompt(prompt);
+  }
+}
+
+/**
+ * Extract a reasonable name from a prompt using pattern matching (fallback)
+ */
+function extractNameFromPrompt(prompt: string): string {
+  const cleaned = prompt.trim().toLowerCase();
+
+  // Common patterns to extract game type
+  const patterns = [
+    /(?:make|create|build|design)\s+(?:a|an|me)?\s*(.+?)(?:\s+game|\s+app|\s+with|$)/i,
+    /(.+?)\s+(?:game|simulator|adventure)/i,
+    /(?:game|app)\s+(?:about|with|featuring)\s+(.+)/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = cleaned.match(pattern);
+    if (match && match[1]) {
+      const extracted = match[1]
+        .replace(/\b(a|an|the|my|with|that|like|similar|to)\b/gi, '')
+        .trim()
+        .split(/\s+/)
+        .filter(w => w.length > 2)
+        .slice(0, 3)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+
+      if (extracted.length >= 3) {
+        return extracted;
+      }
+    }
+  }
+
+  // Fallback: Take first meaningful words
+  const words = cleaned
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(w => w.length > 3 && !['make', 'create', 'build', 'game', 'want', 'like', 'with', 'that'].includes(w))
+    .slice(0, 3)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1));
+
+  return words.length > 0 ? words.join(' ') : 'Untitled Game';
 }

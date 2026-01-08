@@ -45,6 +45,7 @@ import {
   createChatSession,
   saveChatSessionMessages,
   generateSessionTitle,
+  generateProjectName,
 } from '../lib/chatSessionService';
 import { getUserSettings } from '../lib/settingsService';
 import { indexProjectFiles, getIndexingStatus } from '../lib/embeddingIndexer';
@@ -562,10 +563,18 @@ export function BuilderPage({
 
           // Auto-rename project if it's still "Untitled Game"
           if (project.name === 'Untitled Game') {
-            const newName = title;
-            await updateProject(project.id, { name: newName });
-            setProject(prev => ({ ...prev, name: newName }));
-            console.log('[Builder] Auto-renamed project from "Untitled Game" to:', newName);
+            // Generate a catchy AI-powered name (don't await - let it happen in background)
+            generateProjectName(userMessages[0].content).then(async (aiName) => {
+              await updateProject(project.id, { name: aiName });
+              setProject(prev => ({ ...prev, name: aiName }));
+              console.log('[Builder] Auto-renamed project with AI name:', aiName);
+            }).catch(err => {
+              console.warn('[Builder] AI name generation failed, using fallback:', err);
+              // Fallback to truncated title
+              updateProject(project.id, { name: title })
+                .then(() => setProject(prev => ({ ...prev, name: title })))
+                .catch(e => console.error('[Builder] Fallback rename failed:', e));
+            });
           }
         }
       } catch (err) {

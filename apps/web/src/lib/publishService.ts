@@ -174,43 +174,65 @@ export async function runESLintCheck(): Promise<CheckResult> {
  */
 export function parseBuildErrors(output: string): CodeError[] {
   const errors: CodeError[] = [];
+  let match;
+
+  // TypeScript errors - colon format: file.ts:line:col - error TSxxxx: message
+  // Example: vite.config.ts:9:25 - error TS2304: Cannot find name '__dirname'.
+  const tsColonRegex = /^(.+?):(\d+):(\d+)\s*-\s*error\s+(TS\d+):\s*(.+)$/gm;
+  while ((match = tsColonRegex.exec(output)) !== null) {
+    const file = match[1].trim();
+    // Avoid duplicates
+    if (!errors.some(e => e.file === file && e.line === parseInt(match[2], 10))) {
+      errors.push({
+        file,
+        line: parseInt(match[2], 10),
+        column: parseInt(match[3], 10),
+        code: match[4],
+        message: match[5].trim(),
+        type: 'typescript',
+      });
+    }
+  }
+
+  // TypeScript errors - parenthesis format: file.ts(line,col): error TSxxxx: message
+  const tsParenRegex = /^(.+?)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/gm;
+  while ((match = tsParenRegex.exec(output)) !== null) {
+    const file = match[1].trim();
+    if (!errors.some(e => e.file === file && e.line === parseInt(match[2], 10))) {
+      errors.push({
+        file,
+        line: parseInt(match[2], 10),
+        column: parseInt(match[3], 10),
+        code: match[4],
+        message: match[5].trim(),
+        type: 'typescript',
+      });
+    }
+  }
 
   // Vite/Rollup error format: error in /path/file.tsx:line:col
   const viteErrorRegex = /(?:error|ERROR)[:\s]+(?:in\s+)?(.+?):(\d+):(\d+)[\s\S]*?(?:error|Error)[:\s]+(.+?)(?=\n\n|\n[A-Z]|$)/gi;
-  let match;
-
   while ((match = viteErrorRegex.exec(output)) !== null) {
-    errors.push({
-      file: match[1],
-      line: parseInt(match[2], 10),
-      column: parseInt(match[3], 10),
-      code: 'BUILD',
-      message: match[4].trim(),
-      type: 'build',
-    });
-  }
-
-  // TypeScript errors in build output (different format)
-  const tsBuildRegex = /^(.+?)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/gm;
-  while ((match = tsBuildRegex.exec(output)) !== null) {
-    errors.push({
-      file: match[1],
-      line: parseInt(match[2], 10),
-      column: parseInt(match[3], 10),
-      code: match[4],
-      message: match[5],
-      type: 'typescript',
-    });
+    const file = match[1].trim();
+    if (!errors.some(e => e.file.includes(file))) {
+      errors.push({
+        file,
+        line: parseInt(match[2], 10),
+        column: parseInt(match[3], 10),
+        code: 'BUILD',
+        message: match[4].trim(),
+        type: 'build',
+      });
+    }
   }
 
   // Generic error messages with file paths
   const genericErrorRegex = /(?:Error|ERROR):\s*(.+?\.tsx?):?\s*(.+)/gi;
   while ((match = genericErrorRegex.exec(output)) !== null) {
-    // Avoid duplicates
-    const file = match[1];
+    const file = match[1].trim();
     if (!errors.some(e => e.file.includes(file))) {
       errors.push({
-        file: file,
+        file,
         line: 1,
         column: 1,
         code: 'BUILD',
@@ -220,6 +242,7 @@ export function parseBuildErrors(output: string): CodeError[] {
     }
   }
 
+  console.log('[publishService] Parsed errors:', errors.length, errors.map(e => `${e.file}:${e.line} - ${e.code}: ${e.message.substring(0, 50)}`));
   return errors;
 }
 
@@ -257,17 +280,28 @@ export function generateFixPrompt(errors: CodeError[]): string {
     prompt += '\n\n';
   }
 
-  prompt += `Common fixes:
-- Remove unused imports and variables
-- Use \`ReturnType<typeof setTimeout>\` instead of \`NodeJS.Timeout\`
-- Add missing type annotations
-- Fix type mismatches
-- Fix syntax errors
-- IMPORTANT: Replace external icon URLs with lucide-react imports:
-  ❌ <img src="https://lucide.dev/api/icons/gamepad-2" />
-  ✅ import { Gamepad2 } from 'lucide-react'; <Gamepad2 className="w-6 h-6" />
+  prompt += `FIXES REQUIRED (apply ALL of these):
 
-Apply the fixes now.`;
+1. UNUSED IMPORTS - Remove or comment out any unused imports:
+   - If React is not used directly (only JSX), remove "import React"
+   - Delete unused components like CardFooter, Gamepad2, Trophy, etc.
+
+2. NodeJS.Timeout ERROR - Replace with browser-compatible type:
+   ❌ const timerRef = useRef<NodeJS.Timeout>()
+   ✅ const timerRef = useRef<ReturnType<typeof setTimeout>>()
+
+3. __dirname ERROR - In vite.config.ts, use import.meta.url instead:
+   ❌ path.resolve(__dirname, './src')
+   ✅ Use: import { fileURLToPath } from 'url'; const __dirname = path.dirname(fileURLToPath(import.meta.url));
+   OR just use relative paths: path.resolve('./src')
+
+4. Type mismatches - Fix any type errors
+
+5. External URLs blocked by COEP:
+   ❌ <img src="https://lucide.dev/api/icons/gamepad-2" />
+   ✅ import { Gamepad2 } from 'lucide-react'; <Gamepad2 />
+
+Apply ALL these fixes now. Remove ALL unused imports.`;
 
   return prompt;
 }
