@@ -26,7 +26,7 @@ describe('ChatInput', () => {
       expect(screen.getByPlaceholderText('Describe what you want to build...')).toBeInTheDocument();
     });
 
-    it('renders suggestion chips centered', () => {
+    it('renders suggestion chips', () => {
       const suggestions = [
         { label: 'Add feature', prompt: 'Add a cool feature' },
         { label: 'Fix bug', prompt: 'Fix the bug' },
@@ -44,6 +44,7 @@ describe('ChatInput', () => {
     it('renders attach button by default', () => {
       render(<ChatInput {...defaultProps} />);
       expect(screen.getByTitle('Attach files')).toBeInTheDocument();
+      expect(screen.getByText('Attach')).toBeInTheDocument();
     });
 
     it('hides attach button when showAttach is false', () => {
@@ -53,57 +54,36 @@ describe('ChatInput', () => {
   });
 
   describe('Chat Mode Toggle', () => {
-    it('renders Chat and Build mode buttons', () => {
+    it('renders mode toggle button', () => {
       render(<ChatInput {...defaultProps} />);
-      expect(screen.getByTitle('Chat without making edits to your project')).toBeInTheDocument();
-      expect(screen.getByTitle('Build mode - AI will generate and edit code')).toBeInTheDocument();
+      // Default is build mode
+      expect(screen.getByText('Build')).toBeInTheDocument();
     });
 
     it('defaults to build mode', () => {
       render(<ChatInput {...defaultProps} />);
-      const buildButton = screen.getByTitle('Build mode - AI will generate and edit code');
-      expect(buildButton).toHaveClass('bg-accent');
+      expect(screen.getByText('Build')).toBeInTheDocument();
     });
 
     it('can default to chat mode', () => {
       render(<ChatInput {...defaultProps} defaultMode="chat" />);
-      const chatButton = screen.getByTitle('Chat without making edits to your project');
-      expect(chatButton).toHaveClass('bg-accent');
+      expect(screen.getByText('Chat')).toBeInTheDocument();
     });
 
-    it('switches to chat mode when clicked', async () => {
+    it('toggles between modes when clicked', async () => {
       const user = userEvent.setup();
       render(<ChatInput {...defaultProps} />);
 
-      const chatButton = screen.getByTitle('Chat without making edits to your project');
-      await user.click(chatButton);
+      // Starts in build mode
+      expect(screen.getByText('Build')).toBeInTheDocument();
 
-      expect(chatButton).toHaveClass('bg-accent');
-    });
+      // Click to toggle to chat mode
+      await user.click(screen.getByText('Build'));
+      expect(screen.getByText('Chat')).toBeInTheDocument();
 
-    it('switches to build mode when clicked', async () => {
-      const user = userEvent.setup();
-      render(<ChatInput {...defaultProps} defaultMode="chat" />);
-
-      const buildButton = screen.getByTitle('Build mode - AI will generate and edit code');
-      await user.click(buildButton);
-
-      expect(buildButton).toHaveClass('bg-accent');
-    });
-
-    it('shows chat mode hint text when in chat mode', async () => {
-      const user = userEvent.setup();
-      render(<ChatInput {...defaultProps} />);
-
-      const chatButton = screen.getByTitle('Chat without making edits to your project');
-      await user.click(chatButton);
-
-      expect(screen.getByText('Chat mode: Ask questions without editing files')).toBeInTheDocument();
-    });
-
-    it('shows build mode hint text when in build mode', () => {
-      render(<ChatInput {...defaultProps} />);
-      expect(screen.getByText('Build mode: AI will generate and edit code')).toBeInTheDocument();
+      // Click to toggle back to build mode
+      await user.click(screen.getByText('Chat'));
+      expect(screen.getByText('Build')).toBeInTheDocument();
     });
 
     it('changes placeholder based on mode', async () => {
@@ -113,10 +93,8 @@ describe('ChatInput', () => {
       // Default build mode
       expect(screen.getByPlaceholderText('Describe what you want to build...')).toBeInTheDocument();
 
-      // Switch to chat mode
-      const chatButton = screen.getByTitle('Chat without making edits to your project');
-      await user.click(chatButton);
-
+      // Toggle to chat mode
+      await user.click(screen.getByText('Build'));
       expect(screen.getByPlaceholderText('Ask a question about your code...')).toBeInTheDocument();
     });
   });
@@ -138,9 +116,8 @@ describe('ChatInput', () => {
       const user = userEvent.setup();
       render(<ChatInput {...defaultProps} value="test message" onSend={onSend} />);
 
-      // Switch to chat mode
-      const chatButton = screen.getByTitle('Chat without making edits to your project');
-      await user.click(chatButton);
+      // Toggle to chat mode
+      await user.click(screen.getByText('Build'));
 
       // Send message
       const sendButton = screen.getByTitle('Send message');
@@ -320,12 +297,10 @@ describe('ChatInput', () => {
       expect(screen.getByRole('textbox')).toBeDisabled();
     });
 
-    it('disables mode toggle buttons when disabled', () => {
+    it('disables mode toggle button when disabled', () => {
       render(<ChatInput {...defaultProps} disabled={true} />);
-      const chatButton = screen.getByTitle('Chat without making edits to your project');
-      const buildButton = screen.getByTitle('Build mode - AI will generate and edit code');
-      expect(chatButton).toBeDisabled();
-      expect(buildButton).toBeDisabled();
+      const modeButton = screen.getByText('Build').closest('button');
+      expect(modeButton).toBeDisabled();
     });
   });
 

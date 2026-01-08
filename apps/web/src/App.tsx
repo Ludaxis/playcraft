@@ -119,6 +119,15 @@ function AppRoutes() {
   // Users should explicitly navigate to projects from the home page.
   // The cache is still used when loading a project by ID from URL.
 
+  // Reset loadingProject if we're not on a builder route (prevents stuck loading state)
+  useEffect(() => {
+    if (!isOnBuilder && loadingProject) {
+      console.log('[App] Resetting stuck loadingProject state');
+      setLoadingProject(false);
+      loadedProjectIdRef.current = null;
+    }
+  }, [isOnBuilder, loadingProject]);
+
   const handleSignIn = async () => {
     const supabase = getSupabase();
     await supabase.auth.signInWithOAuth({
@@ -190,7 +199,8 @@ function AppRoutes() {
     navigate('/');
   };
 
-  if (loading || loadingProject) {
+  // Show loading spinner for auth check or when loading project on builder route
+  if (loading || (loadingProject && isOnBuilder)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-3">

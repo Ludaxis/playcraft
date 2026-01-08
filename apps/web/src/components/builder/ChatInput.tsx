@@ -1,11 +1,11 @@
 /**
  * Chat Input Component
- * Modern, centralized text input for sending messages to the AI
+ * Modern chat input with unified container design
  * Features: Chat/Build mode toggle, file attachments, suggestion chips
  */
 
-import { useState, useRef } from 'react';
-import { Send, Sparkles, MessageSquare, Code, Paperclip, X, Image, FileText } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowUp, Sparkles, MessageSquare, Code, Paperclip, X, Image, FileText } from 'lucide-react';
 
 export type ChatMode = 'build' | 'chat';
 
@@ -67,6 +67,15 @@ export function ChatInput({
   const [mode, setMode] = useState<ChatMode>(defaultMode);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  }, [value]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -107,7 +116,6 @@ export function ChatInput({
       setAttachedFiles(prev => [...prev, ...newAttached]);
       onAttachFiles?.(files);
     }
-    // Reset input so same file can be selected again
     e.target.value = '';
   };
 
@@ -120,10 +128,10 @@ export function ChatInput({
     : placeholder;
 
   return (
-    <div className="border-t border-border-muted bg-surface-elevated">
+    <div className="bg-surface-elevated px-4 py-3">
       {/* Suggestion chips */}
       {suggestions.length > 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 px-4 pt-3">
+        <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
           {suggestions.map((suggestion, index) => (
             <button
               key={index}
@@ -138,62 +146,28 @@ export function ChatInput({
         </div>
       )}
 
-      {/* Main input container */}
-      <div className="px-4 py-3">
-        {/* Mode toggle - centered above input */}
-        <div className="mb-3 flex justify-center">
-          <div className="inline-flex items-center rounded-full border border-border-muted bg-surface-overlay/60 p-1">
-            <button
-              onClick={() => setMode('chat')}
-              disabled={disabled}
-              title="Chat without making edits to your project"
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                mode === 'chat'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-content-muted hover:text-content'
-              }`}
-            >
-              <MessageSquare className="h-3.5 w-3.5" />
-              Chat
-            </button>
-            <button
-              onClick={() => setMode('build')}
-              disabled={disabled}
-              title="Build mode - AI will generate and edit code"
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
-                mode === 'build'
-                  ? 'bg-accent text-white shadow-sm'
-                  : 'text-content-muted hover:text-content'
-              }`}
-            >
-              <Code className="h-3.5 w-3.5" />
-              Build
-            </button>
-          </div>
-        </div>
-
+      {/* Main input container - unified rounded box */}
+      <div className="overflow-hidden rounded-2xl border border-border-muted bg-surface-overlay">
         {/* Attached files preview */}
         {attachedFiles.length > 0 && (
-          <div className="mb-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 border-b border-border-muted px-4 py-2">
             {attachedFiles.map((file, index) => {
               const FileIcon = getFileIcon(file.type);
               return (
                 <div
                   key={index}
-                  className="flex items-center gap-2 rounded-lg border border-border-muted bg-surface-overlay/60 px-2 py-1.5"
+                  className="flex items-center gap-2 rounded-lg bg-surface-base px-2 py-1"
                 >
                   <FileIcon className="h-4 w-4 text-accent" />
-                  <div className="flex flex-col">
-                    <span className="max-w-[120px] truncate text-xs text-content">
-                      {file.name}
-                    </span>
-                    <span className="text-[10px] text-content-subtle">
-                      {formatFileSize(file.size)}
-                    </span>
-                  </div>
+                  <span className="max-w-[120px] truncate text-xs text-content">
+                    {file.name}
+                  </span>
+                  <span className="text-[10px] text-content-subtle">
+                    {formatFileSize(file.size)}
+                  </span>
                   <button
                     onClick={() => handleRemoveFile(index)}
-                    className="rounded p-0.5 text-content-subtle transition-colors hover:bg-surface-base hover:text-content"
+                    className="rounded p-0.5 text-content-subtle transition-colors hover:bg-surface-elevated hover:text-content"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -203,74 +177,88 @@ export function ChatInput({
           </div>
         )}
 
-        {/* Input row */}
-        <div className="flex items-end gap-2">
-          {/* Attach button */}
-          {showAttach && (
-            <>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                className="hidden"
-                onChange={handleFileChange}
-                accept="image/*,.txt,.json,.md,.csv"
-              />
-              <button
-                onClick={handleAttachClick}
-                disabled={disabled}
-                title="Attach files"
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border-muted bg-surface-overlay/60 text-content-muted transition-all hover:border-accent/50 hover:bg-accent/10 hover:text-accent-light disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Paperclip className="h-5 w-5" />
-              </button>
-            </>
-          )}
+        {/* Text input area */}
+        <textarea
+          ref={textareaRef}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={dynamicPlaceholder}
+          className="w-full resize-none bg-transparent px-4 py-3 text-sm text-content placeholder-content-subtle outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={disabled}
+          rows={1}
+          style={{ minHeight: '44px', maxHeight: '120px' }}
+        />
 
-          {/* Text input */}
-          <div className="relative flex-1">
-            <textarea
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={dynamicPlaceholder}
-              className="w-full resize-none rounded-xl border border-border-muted bg-surface-overlay/60 px-4 py-3 pr-4 text-sm text-content placeholder-content-subtle outline-none transition-all focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={disabled}
-              rows={1}
-              style={{ minHeight: '44px', maxHeight: '120px' }}
-            />
-          </div>
-
-          {/* Send button */}
-          <button
-            onClick={handleSend}
-            disabled={disabled || !value.trim()}
-            title="Send message"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition-all hover:bg-accent-light hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:bg-accent"
-          >
-            <Send className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Footer hint */}
-        <div className="mt-2 flex items-center justify-between text-[11px] text-content-subtle">
-          <span className="flex items-center gap-1">
-            {mode === 'chat' ? (
+        {/* Bottom toolbar */}
+        <div className="flex items-center justify-between px-3 pb-3">
+          {/* Left side - Attach button */}
+          <div className="flex items-center gap-2">
+            {showAttach && (
               <>
-                <MessageSquare className="h-3 w-3" />
-                Chat mode: Ask questions without editing files
-              </>
-            ) : (
-              <>
-                <Code className="h-3 w-3" />
-                Build mode: AI will generate and edit code
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileChange}
+                  accept="image/*,.txt,.json,.md,.csv"
+                />
+                <button
+                  onClick={handleAttachClick}
+                  disabled={disabled}
+                  title="Attach files"
+                  className="flex items-center gap-1.5 rounded-full border border-border-muted bg-transparent px-3 py-1.5 text-xs text-content-muted transition-all hover:border-content-subtle hover:text-content disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Paperclip className="h-3.5 w-3.5" />
+                  <span>Attach</span>
+                </button>
               </>
             )}
-          </span>
-          <span className="text-content-subtle/70">
-            Enter to send · Shift+Enter for new line
-          </span>
+          </div>
+
+          {/* Right side - Mode toggle + Send */}
+          <div className="flex items-center gap-2">
+            {/* Chat/Build toggle */}
+            <button
+              onClick={() => setMode(mode === 'chat' ? 'build' : 'chat')}
+              disabled={disabled}
+              title={mode === 'chat' ? 'Chat without making edits to your project' : 'Build mode - AI will generate and edit code'}
+              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                mode === 'chat'
+                  ? 'bg-accent text-white'
+                  : 'bg-accent text-white'
+              }`}
+            >
+              {mode === 'chat' ? (
+                <>
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span>Chat</span>
+                </>
+              ) : (
+                <>
+                  <Code className="h-3.5 w-3.5" />
+                  <span>Build</span>
+                </>
+              )}
+            </button>
+
+            {/* Send button */}
+            <button
+              onClick={handleSend}
+              disabled={disabled || !value.trim()}
+              title="Send message"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-content text-surface transition-all hover:bg-content/90 disabled:cursor-not-allowed disabled:bg-content-subtle disabled:opacity-50"
+            >
+              <ArrowUp className="h-4 w-4" />
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Footer hint */}
+      <div className="mt-2 flex items-center justify-center text-[11px] text-content-subtle">
+        <span>Enter to send · Shift+Enter for new line</span>
       </div>
     </div>
   );
