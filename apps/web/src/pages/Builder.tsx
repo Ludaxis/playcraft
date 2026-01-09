@@ -737,16 +737,18 @@ export function BuilderPage({
     refreshFileTree,
   ]);
 
-  // Auto-start project if it has saved files (restore on page load)
+  // Auto-start project on page load (restore saved files or use fresh template)
   useEffect(() => {
     // Wait for project to finish loading
     if (isLoadingProject) return;
+    // Skip if initial prompt is provided (handled by separate effect)
+    if (initialPrompt) return;
+    // Skip if already setting up or ready
+    if (isSettingUp || projectReady) return;
 
     const hasSavedFiles = Object.keys(project.files || {}).length > 0;
-    if (hasSavedFiles && !isSettingUp && !projectReady && !initialPrompt) {
-      console.log('[Builder] Auto-starting project with', Object.keys(project.files).length, 'saved files');
-      startProject();
-    }
+    console.log('[Builder] Auto-starting project with', hasSavedFiles ? Object.keys(project.files).length : 0, 'saved files');
+    startProject();
   }, [isLoadingProject, project.files, isSettingUp, projectReady, initialPrompt, startProject]);
 
   // Handle initial prompt from home page - auto-start project AND send prompt in parallel
