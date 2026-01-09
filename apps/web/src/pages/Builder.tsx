@@ -36,7 +36,6 @@ import {
   updateProjectStatus,
   saveProjectFiles,
   saveProjectFilesImmediate,
-  getProject,
   type PlayCraftProject,
 } from '../lib/projectService';
 import {
@@ -102,9 +101,10 @@ export function BuilderPage({
   initialPrompt: initialPromptProp,
   onBackToHome,
 }: BuilderPageProps) {
-  // Project state - use fresh data from database
+  // Project state - initialProject from App.tsx is already fresh (loaded via getProject)
   const [project, setProject] = useState<PlayCraftProject>(initialProject);
-  const [isLoadingProject, setIsLoadingProject] = useState(true);
+  // No need to re-fetch - App.tsx already loaded fresh data before mounting Builder
+  const isLoadingProject = false;
 
   // Voyage API key for semantic search
   const [voyageApiKey, setVoyageApiKey] = useState<string | undefined>();
@@ -127,23 +127,10 @@ export function BuilderPage({
     localStorage.removeItem(`playcraft_initial_prompt_${initialProject.id}`);
   };
 
-  // Fetch fresh project data on mount
+  // Sync project state when initialProject changes (e.g., navigating between projects)
   useEffect(() => {
-    const loadProject = async () => {
-      try {
-        console.log('[Builder] Fetching fresh project data for:', initialProject.id);
-        const freshProject = await getProject(initialProject.id);
-        if (freshProject) {
-          console.log('[Builder] Loaded project with', Object.keys(freshProject.files || {}).length, 'files');
-          setProject(freshProject);
-        }
-      } catch (err) {
-        console.error('[Builder] Failed to load project:', err);
-      } finally {
-        setIsLoadingProject(false);
-      }
-    };
-    loadProject();
+    console.log('[Builder] Project loaded with', Object.keys(initialProject.files || {}).length, 'files');
+    setProject(initialProject);
   }, [initialProject.id]);
 
   // Load Voyage API key from settings for semantic search
