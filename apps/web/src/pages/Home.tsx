@@ -33,38 +33,6 @@ interface HomePageProps {
   onPendingPromptUsed?: () => void;
 }
 
-// Featured games made with PlayCraft
-const FEATURED_GAMES = [
-  {
-    id: 'space-shooter',
-    name: 'Space Invaders',
-    author: 'Alex Chen',
-    thumbnail: 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=300&fit=crop',
-    plays: '2.4k'
-  },
-  {
-    id: 'puzzle-quest',
-    name: 'Puzzle Quest',
-    author: 'Maria Santos',
-    thumbnail: 'https://images.unsplash.com/photo-1611996575749-79a3a250f948?w=400&h=300&fit=crop',
-    plays: '1.8k'
-  },
-  {
-    id: 'neon-racer',
-    name: 'Neon Racer',
-    author: 'Jake Wilson',
-    thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop',
-    plays: '3.1k'
-  },
-  {
-    id: 'tower-defense',
-    name: 'Tower Defense',
-    author: 'Emma Liu',
-    thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=300&fit=crop',
-    plays: '956'
-  },
-];
-
 export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, pendingPrompt, onPendingPromptUsed }: HomePageProps) {
   // UI state
   const [inputValue, setInputValue] = useState('');
@@ -99,10 +67,14 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
 
   // Featured published games
   const [featuredGames, setFeaturedGames] = useState<PublishedGame[]>([]);
+  const [isLoadingFeatured, setIsLoadingFeatured] = useState(true);
 
   // Fetch published games on mount
   useEffect(() => {
-    getPublishedGames(4).then(setFeaturedGames).catch(console.error);
+    getPublishedGames(4)
+      .then(setFeaturedGames)
+      .catch(console.error)
+      .finally(() => setIsLoadingFeatured(false));
   }, []);
 
   // Data fetching with TanStack Query
@@ -524,34 +496,29 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                 </div>
                 {/* iOS-style icon grid */}
                 <div className="flex justify-center gap-8">
-                  {(featuredGames.length > 0 ? featuredGames : FEATURED_GAMES).map((game) => {
-                    const isRealGame = 'published_url' in game;
-                    const thumbnail = isRealGame
-                      ? game.thumbnail_url
-                      : (game as typeof FEATURED_GAMES[0]).thumbnail;
-                    const fallbackThumbnail = 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop';
-
-                    return (
+                  {isLoadingFeatured ? (
+                    // Loading skeletons
+                    Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex flex-col items-center gap-2">
+                        <div className="h-[72px] w-[72px] animate-pulse rounded-[16px] bg-surface-elevated" />
+                        <div className="h-3 w-16 animate-pulse rounded bg-surface-elevated" />
+                      </div>
+                    ))
+                  ) : featuredGames.length > 0 ? (
+                    // Real games
+                    featuredGames.map((game) => (
                       <a
                         key={game.id}
-                        href={isRealGame ? `/play/${game.id}` : '#'}
+                        href={`/play/${game.id}`}
                         className="group flex flex-col items-center gap-2"
                       >
                         {/* iOS-style app icon */}
                         <div className="relative h-[72px] w-[72px] overflow-hidden rounded-[16px] bg-surface-elevated shadow-lg transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
-                          {isRealGame ? (
-                            <BlobImage
-                              src={thumbnail || fallbackThumbnail}
-                              alt={game.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <img
-                              src={thumbnail || fallbackThumbnail}
-                              alt={game.name}
-                              className="h-full w-full object-cover"
-                            />
-                          )}
+                          <BlobImage
+                            src={game.thumbnail_url}
+                            alt={game.name}
+                            className="h-full w-full object-cover"
+                          />
                           {/* Subtle shine overlay like iOS */}
                           <div className="pointer-events-none absolute inset-0 rounded-[16px] ring-1 ring-inset ring-white/10" />
                         </div>
@@ -560,8 +527,11 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                           {game.name}
                         </span>
                       </a>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    // No games yet - show placeholder message
+                    <p className="text-sm text-content-muted">No published games yet</p>
+                  )}
                 </div>
               </div>
             </div>
