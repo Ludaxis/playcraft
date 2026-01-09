@@ -127,11 +127,10 @@ export function BuilderPage({
     localStorage.removeItem(`playcraft_initial_prompt_${initialProject.id}`);
   };
 
-  // Sync project state when initialProject changes (e.g., navigating between projects)
+  // Log project info on mount (no state update needed - useState already has initialProject)
   useEffect(() => {
-    console.log('[Builder] Project loaded with', Object.keys(initialProject.files || {}).length, 'files');
-    setProject(initialProject);
-  }, [initialProject.id]);
+    console.log('[Builder] Project mounted with', Object.keys(initialProject.files || {}).length, 'files');
+  }, []);
 
   // Load Voyage API key from settings for semantic search
   useEffect(() => {
