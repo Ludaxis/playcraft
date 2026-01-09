@@ -315,21 +315,21 @@ async function generateAppIcon(
   console.log('[generateAppIcon] Generating icon with prompt:', fullPrompt.substring(0, 100) + '...');
 
   try {
-    // Call Imagen 3 API with timeout
+    // Call Gemini 2.5 Flash Image model
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          instances: [{ prompt: fullPrompt }],
-          parameters: {
-            sampleCount: 1,
-            aspectRatio: '1:1',
-            outputOptions: { mimeType: 'image/png' },
+          contents: [{
+            parts: [{ text: `Generate an image: ${fullPrompt}` }]
+          }],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'],
           },
         }),
         signal: controller.signal,
@@ -345,16 +345,21 @@ async function generateAppIcon(
     }
 
     const data = await response.json();
-    console.log('[generateAppIcon] API response keys:', Object.keys(data));
+    console.log('[generateAppIcon] API response received');
 
-    // Extract image from Imagen response
+    // Extract image from Gemini response
     let imageData: string | null = null;
-    const predictions = data.predictions || [];
-    for (const prediction of predictions) {
-      if (prediction?.bytesBase64Encoded) {
-        imageData = prediction.bytesBase64Encoded as string;
-        break;
+    const candidates = data.candidates || [];
+    for (const candidate of candidates) {
+      const parts = candidate?.content?.parts || [];
+      for (const part of parts) {
+        if (part?.inlineData?.data) {
+          imageData = part.inlineData.data as string;
+          console.log('[generateAppIcon] Found image data, mimeType:', part.inlineData.mimeType);
+          break;
+        }
       }
+      if (imageData) break;
     }
 
     if (!imageData) {
