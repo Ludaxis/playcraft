@@ -947,6 +947,23 @@ export function BuilderPage({
     setRefreshKey((prev) => prev + 1);
   }, []);
 
+  // Handle publish - save files first, then open modal
+  const handlePublish = useCallback(async () => {
+    try {
+      // Read all current files from WebContainer
+      const currentFiles = await readAllFiles();
+      if (Object.keys(currentFiles).length > 0) {
+        // Force immediate save to Storage before publishing
+        console.log('[Builder] Saving', Object.keys(currentFiles).length, 'files before publish');
+        await saveProjectFilesImmediate(project.id, currentFiles);
+      }
+    } catch (err) {
+      console.error('[Builder] Failed to save files before publish:', err);
+      // Continue to publish modal anyway - the publish runner will use whatever is in storage
+    }
+    setShowPublishModal(true);
+  }, [project.id, readAllFiles]);
+
   // Handle add credits (placeholder)
   const handleAddCredits = useCallback(() => {
     console.log('Add credits clicked - TODO: Implement credits flow');
@@ -1214,7 +1231,7 @@ export function BuilderPage({
         user={user}
         status={status}
         onShare={() => console.log('Share clicked')}
-        onPublish={() => setShowPublishModal(true)}
+        onPublish={handlePublish}
         onUpgrade={() => console.log('Upgrade clicked')}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
