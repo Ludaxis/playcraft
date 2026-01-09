@@ -947,22 +947,47 @@ export function BuilderPage({
     setRefreshKey((prev) => prev + 1);
   }, []);
 
-  // Handle publish - save files first, then open modal
+  // Handle publish - build, save files, then open modal
   const handlePublish = useCallback(async () => {
     try {
-      // Read all current files from WebContainer
+      // Step 1: Save source files to Storage
       const currentFiles = await readAllFiles();
       if (Object.keys(currentFiles).length > 0) {
-        // Force immediate save to Storage before publishing
-        console.log('[Builder] Saving', Object.keys(currentFiles).length, 'files before publish');
+        console.log('[Builder] Saving', Object.keys(currentFiles).length, 'source files before publish');
         await saveProjectFilesImmediate(project.id, currentFiles);
       }
+
+      // Step 2: Run production build in WebContainer
+      console.log('[Builder] Running production build...');
+      const buildExitCode = await runCommand('npm', ['run', 'build']);
+
+      if (buildExitCode === 0) {
+        // Step 3: Read and upload dist/ files
+        console.log('[Builder] Build succeeded, uploading dist files...');
+        const allFiles = await readAllFiles();
+
+        // Filter to only dist/ files
+        const distFiles: Record<string, string> = {};
+        for (const [path, content] of Object.entries(allFiles)) {
+          if (path.startsWith('/dist/') || path.startsWith('dist/')) {
+            distFiles[path] = content;
+          }
+        }
+
+        if (Object.keys(distFiles).length > 0) {
+          console.log('[Builder] Uploading', Object.keys(distFiles).length, 'dist files');
+          await saveProjectFilesImmediate(project.id, distFiles);
+        }
+      } else {
+        console.warn('[Builder] Build failed with exit code:', buildExitCode);
+        // Continue anyway - publish-runner will try its own build or show placeholder
+      }
     } catch (err) {
-      console.error('[Builder] Failed to save files before publish:', err);
-      // Continue to publish modal anyway - the publish runner will use whatever is in storage
+      console.error('[Builder] Failed to prepare for publish:', err);
+      // Continue to publish modal anyway
     }
     setShowPublishModal(true);
-  }, [project.id, readAllFiles]);
+  }, [project.id, readAllFiles, runCommand]);
 
   // Handle add credits (placeholder)
   const handleAddCredits = useCallback(() => {
