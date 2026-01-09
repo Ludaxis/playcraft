@@ -1,6 +1,6 @@
 # PlayCraft
 
-Craft amazing apps with AI. Create full-stack applications using natural language.
+Craft amazing games with AI. Create browser games using natural language.
 
 ## Getting Started
 
