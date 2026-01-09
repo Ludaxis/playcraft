@@ -171,16 +171,10 @@ function AppRoutes() {
   };
 
   const handleStartNewProject = async (prompt: string) => {
-    // Generate a project name from the prompt (first few words)
-    const words = prompt.split(' ').slice(0, 4);
-    const projectName = words.length > 0
-      ? words.join(' ').substring(0, 50) + (prompt.length > 50 ? '...' : '')
-      : 'New Game';
-
     try {
-      // Auto-create project
+      // Create project with placeholder name - AI will generate proper name in Builder
       const project = await createProject({
-        name: projectName,
+        name: 'Untitled Game',
         workspace_id: workspaceId ?? null,
         reuseDraft: true,
       });
