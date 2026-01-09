@@ -740,7 +740,7 @@ export function PitchPage() {
           <h2 className="text-2xl md:text-5xl font-bold text-content-primary mb-3 md:mb-8">
             The Team
           </h2>
-          <div className="grid grid-cols-3 gap-2 md:gap-6 max-w-4xl mb-3 md:mb-8 px-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-6 max-w-5xl mb-3 md:mb-8 px-2">
             {/* Reza Hassanzadeh - Product Lead */}
             <a
               href="https://www.linkedin.com/in/reza-h/"
@@ -802,6 +802,28 @@ export function PitchPage() {
               </p>
               <p className="text-content-tertiary text-xs md:hidden">8+ years dev</p>
               <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-cyan-400 transition-colors">
+                <Linkedin className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="text-xs hidden md:inline">LinkedIn</span>
+              </div>
+            </a>
+
+            {/* Ahmad Yazdanmehr - Business Lead */}
+            <a
+              href="https://www.linkedin.com/in/ayazdan13"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-purple-500/50 transition-colors group"
+            >
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-purple-500/20">
+                <img src="/founders/ahmad.png" alt="Ahmad Yazdanmehr" className="w-full h-full object-cover" />
+              </div>
+              <h3 className="text-xs md:text-lg font-semibold text-content-primary mb-0.5">Ahmad Yazdanmehr</h3>
+              <p className="text-purple-400 mb-1 md:mb-2 text-xs md:text-sm font-medium">Business Lead</p>
+              <p className="text-content-secondary text-xs hidden md:block leading-relaxed">
+                Fintech founder & finance expert. 10+ years in wealth management and business strategy.
+              </p>
+              <p className="text-content-tertiary text-xs md:hidden">Fintech founder</p>
+              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-purple-400 transition-colors">
                 <Linkedin className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-xs hidden md:inline">LinkedIn</span>
               </div>
