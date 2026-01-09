@@ -204,6 +204,7 @@ export function BuilderPage({
     writeProjectFile,
     readProjectFile,
     readAllFiles,
+    readDistFiles,
     install,
     startDev,
     refreshFileTree,
@@ -962,21 +963,15 @@ export function BuilderPage({
       const buildExitCode = await runCommand('npm', ['run', 'build']);
 
       if (buildExitCode === 0) {
-        // Step 3: Read and upload dist/ files
-        console.log('[Builder] Build succeeded, uploading dist files...');
-        const allFiles = await readAllFiles();
-
-        // Filter to only dist/ files
-        const distFiles: Record<string, string> = {};
-        for (const [path, content] of Object.entries(allFiles)) {
-          if (path.startsWith('/dist/') || path.startsWith('dist/')) {
-            distFiles[path] = content;
-          }
-        }
+        // Step 3: Read and upload dist/ files using dedicated function
+        console.log('[Builder] Build succeeded, reading dist files...');
+        const distFiles = await readDistFiles();
 
         if (Object.keys(distFiles).length > 0) {
           console.log('[Builder] Uploading', Object.keys(distFiles).length, 'dist files');
           await saveProjectFilesImmediate(project.id, distFiles);
+        } else {
+          console.warn('[Builder] No dist files found after build');
         }
       } else {
         console.warn('[Builder] Build failed with exit code:', buildExitCode);
@@ -987,7 +982,7 @@ export function BuilderPage({
       // Continue to publish modal anyway
     }
     setShowPublishModal(true);
-  }, [project.id, readAllFiles, runCommand]);
+  }, [project.id, readAllFiles, readDistFiles, runCommand]);
 
   // Handle add credits (placeholder)
   const handleAddCredits = useCallback(() => {

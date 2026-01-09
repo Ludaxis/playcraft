@@ -7,6 +7,7 @@ import {
   writeFile,
   readFile,
   readAllProjectFiles,
+  readDistFiles,
   mkdir,
   rm,
   spawn,
@@ -58,6 +59,7 @@ export interface UseWebContainerReturn {
   writeProjectFile: (path: string, contents: string) => Promise<void>;
   readProjectFile: (path: string) => Promise<string>;
   readAllFiles: () => Promise<Record<string, string>>;
+  readDistFiles: () => Promise<Record<string, string>>;
   deleteFile: (path: string) => Promise<void>;
   createDirectory: (path: string) => Promise<void>;
   install: (projectId?: string) => Promise<void>;
@@ -255,6 +257,17 @@ export function useWebContainer(): UseWebContainerReturn {
       return await readAllProjectFiles();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to read all files';
+      setError(message);
+      throw err;
+    }
+  }, []);
+
+  // Read dist files (for publishing)
+  const readDistFilesCallback = useCallback(async (): Promise<Record<string, string>> => {
+    try {
+      return await readDistFiles();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to read dist files';
       setError(message);
       throw err;
     }
@@ -534,6 +547,7 @@ export function useWebContainer(): UseWebContainerReturn {
     writeProjectFile,
     readProjectFile,
     readAllFiles,
+    readDistFiles: readDistFilesCallback,
     deleteFile,
     createDirectory,
     install,

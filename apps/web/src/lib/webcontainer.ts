@@ -338,6 +338,44 @@ export async function readAllProjectFiles(): Promise<Record<string, string>> {
 }
 
 /**
+ * Read all files from the dist/ folder after a production build.
+ * Returns a map of file paths to their contents.
+ */
+export async function readDistFiles(): Promise<Record<string, string>> {
+  const instance = await bootWebContainer();
+  const files: Record<string, string> = {};
+
+  async function readDirRecursive(dirPath: string): Promise<void> {
+    try {
+      const entries = await instance.fs.readdir(dirPath, { withFileTypes: true });
+
+      for (const entry of entries) {
+        const fullPath = `${dirPath}/${entry.name}`;
+
+        if (entry.isDirectory()) {
+          await readDirRecursive(fullPath);
+        } else if (entry.isFile()) {
+          try {
+            // Read as binary for non-text files (images, fonts, etc.)
+            const content = await instance.fs.readFile(fullPath, 'utf-8');
+            files[fullPath] = content;
+          } catch {
+            // Failed to read file, skip
+          }
+        }
+      }
+    } catch {
+      // Directory doesn't exist or can't be read
+    }
+  }
+
+  await readDirRecursive('/dist');
+
+  console.log(`[WebContainer] Read ${Object.keys(files).length} dist files`);
+  return files;
+}
+
+/**
  * Create a directory in the WebContainer filesystem.
  */
 export async function mkdir(path: string): Promise<void> {
