@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, Wand2 } from 'lucide-react';
+import { Button } from '../components/ui/button';
 import {
   HeroBanner,
   CategorySection,
@@ -155,9 +156,21 @@ export function PlaygroundPage() {
             <LogoIcon size={28} />
             <span className="text-xl font-bold">Playground</span>
           </button>
-          <div className="flex items-center gap-2 text-content-secondary">
-            <Gamepad2 className="h-5 w-5" />
-            <span className="hidden text-sm sm:inline">Discover amazing games</span>
+          <div className="flex items-center gap-4">
+            <div className="hidden items-center gap-2 text-content-secondary sm:flex">
+              <Gamepad2 className="h-5 w-5" />
+              <span className="text-sm">Discover amazing games</span>
+            </div>
+            <Button
+              onClick={() => navigate('/')}
+              variant="accent"
+              size="sm"
+              className="gap-2"
+            >
+              <Wand2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Create Game</span>
+              <span className="sm:hidden">Create</span>
+            </Button>
           </div>
         </div>
       </header>
