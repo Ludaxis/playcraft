@@ -55,7 +55,3 @@ verify_jwt = false
 [functions.publish-runner]
 # Gateway JWT verification disabled - auth enforced internally
 verify_jwt = false
-
-[functions.generate-missing-icons]
-# One-time script - no JWT needed
-verify_jwt = false
