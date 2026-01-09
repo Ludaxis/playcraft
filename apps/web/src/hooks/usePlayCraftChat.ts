@@ -131,32 +131,63 @@ function convertToDisplayMessages(
 }
 
 /**
- * Extract game name from generated files (looks for <title> tag)
+ * Extract game name from generated files
+ * Looks for: <title> tag, h1 headings, component titles, comments
  */
 function extractGameName(files: Array<{ path: string; content: string }>): string | null {
-  // Look for index.html first
+  // Skip default/placeholder titles
+  const defaultTitles = [
+    'PlayCraft Game', 'Vite + React + TS', 'Vite App', 'React App',
+    'Game', 'My Game', 'New Game', 'Untitled', 'Untitled Game'
+  ];
+
+  const isValidTitle = (title: string) => {
+    const trimmed = title.trim();
+    return trimmed.length >= 3 &&
+           trimmed.length <= 60 &&
+           !defaultTitles.includes(trimmed) &&
+           !/^(index|app|main|game)$/i.test(trimmed);
+  };
+
+  // 1. Look for index.html <title> tag
   const indexHtml = files.find(f => f.path.includes('index.html'));
   if (indexHtml) {
     const titleMatch = indexHtml.content.match(/<title>([^<]+)<\/title>/i);
-    if (titleMatch && titleMatch[1]) {
-      const title = titleMatch[1].trim();
-      // Skip default titles
-      if (title !== 'PlayCraft Game' && title !== 'Vite + React + TS' && title !== 'Vite App') {
-        return title;
-      }
+    if (titleMatch && titleMatch[1] && isValidTitle(titleMatch[1])) {
+      return titleMatch[1].trim();
     }
   }
 
-  // Look for a game title in Index.tsx comments or component
-  const indexTsx = files.find(f => f.path.includes('Index.tsx') || f.path.includes('App.tsx'));
-  if (indexTsx) {
-    // Look for /* Game: GameName */ or // GameName - A game...
-    const commentMatch = indexTsx.content.match(/\/[/*]\s*(?:Game:|Title:)?\s*([A-Z][^*\n]+?)(?:\s*[-–—]\s*|\s*\*\/|\n)/);
-    if (commentMatch && commentMatch[1]) {
-      const name = commentMatch[1].trim();
-      if (name.length > 2 && name.length < 50) {
-        return name;
-      }
+  // 2. Look for h1 in main component (Index.tsx, App.tsx, Game.tsx)
+  const mainFiles = files.filter(f =>
+    /\/(Index|App|Game|Main)\.tsx$/i.test(f.path)
+  );
+
+  for (const file of mainFiles) {
+    // Look for <h1>Game Title</h1> or className="title">Game Title<
+    const h1Match = file.content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+    if (h1Match && h1Match[1] && isValidTitle(h1Match[1])) {
+      return h1Match[1].trim();
+    }
+
+    // Look for title in JSX: title="Game Name" or gameTitle="..."
+    const titlePropMatch = file.content.match(/(?:title|gameTitle|gameName)\s*[=:]\s*["']([^"']+)["']/i);
+    if (titlePropMatch && titlePropMatch[1] && isValidTitle(titlePropMatch[1])) {
+      return titlePropMatch[1].trim();
+    }
+
+    // Look for GAME_TITLE constant
+    const constMatch = file.content.match(/(?:GAME_TITLE|GAME_NAME|APP_TITLE)\s*=\s*["']([^"']+)["']/i);
+    if (constMatch && constMatch[1] && isValidTitle(constMatch[1])) {
+      return constMatch[1].trim();
+    }
+  }
+
+  // 3. Look for title in comments: /* Game: GameName */ or // GameName - A game
+  for (const file of mainFiles) {
+    const commentMatch = file.content.match(/\/[/*]\s*(?:Game:|Title:)?\s*([A-Z][^*\n]+?)(?:\s*[-–—]\s*|\s*\*\/|\n)/);
+    if (commentMatch && commentMatch[1] && isValidTitle(commentMatch[1])) {
+      return commentMatch[1].trim();
     }
   }
 
