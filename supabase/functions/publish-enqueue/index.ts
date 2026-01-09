@@ -24,8 +24,11 @@ interface EnqueueResponse {
 }
 
 Deno.serve(async (req: Request) => {
+  console.log('[publish-enqueue] Request received:', req.method, req.url);
+
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
+  console.log('[publish-enqueue] Origin:', origin);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
