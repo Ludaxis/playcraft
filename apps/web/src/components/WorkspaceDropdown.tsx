@@ -35,15 +35,16 @@ interface WorkspaceDropdownProps {
   onSelectWorkspace?: (workspaceId: string | null) => void;
   onCreateWorkspace?: () => void;
   isLoadingWorkspaces?: boolean;
+  isLoading?: boolean;
 }
 
 export function WorkspaceDropdown({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   user,
-  studioName = 'My Studio',
+  studioName,
   plan = 'free',
-  creditsRemaining = 50,
-  totalCredits = 50,
+  creditsRemaining,
+  totalCredits,
   isOpen,
   onToggle,
   onOpenSettings,
@@ -55,6 +56,7 @@ export function WorkspaceDropdown({
   onSelectWorkspace,
   onCreateWorkspace,
   isLoadingWorkspaces = false,
+  isLoading = false,
 }: WorkspaceDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showCreditsDetail, setShowCreditsDetail] = useState(false);
@@ -70,9 +72,11 @@ export function WorkspaceDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onToggle]);
 
-  const usagePercentage = totalCredits > 0 ? ((totalCredits - creditsRemaining) / totalCredits) * 100 : 0;
+  const safeCreditsRemaining = creditsRemaining ?? 0;
+  const safeTotalCredits = totalCredits ?? 50;
+  const usagePercentage = safeTotalCredits > 0 ? ((safeTotalCredits - safeCreditsRemaining) / safeTotalCredits) * 100 : 0;
   const selectedWorkspace = workspaces.find((w) => w.workspace.id === activeWorkspaceId);
-  const workspaceLabel = selectedWorkspace?.workspace.name || studioName;
+  const workspaceLabel = selectedWorkspace?.workspace.name || studioName || 'My Studio';
   const initials = workspaceLabel.charAt(0).toUpperCase();
 
   return (
@@ -80,29 +84,44 @@ export function WorkspaceDropdown({
       {/* Trigger Button */}
       <button
         onClick={onToggle}
+        disabled={isLoading}
         className={`flex w-full items-center gap-2 rounded-lg bg-surface-overlay px-3 py-2 text-left transition-colors hover:bg-surface-elevated ${
           collapsed ? 'justify-center px-2' : ''
         }`}
       >
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-content"
-          style={{ backgroundColor: getColorFromString(workspaceLabel) }}
-        >
-          {initials}
-        </div>
-        {!collapsed && (
+        {isLoading ? (
           <>
-            <div className="flex-1 min-w-0">
-              <p className="truncate text-sm font-medium text-content">{workspaceLabel}</p>
-              <p className="text-xs text-content-subtle">
-                {plan === 'pro' ? 'Pro Plan' : 'Free Plan'} • {workspaces.length || 1} member{(workspaces.length || 1) === 1 ? '' : 's'}
-              </p>
+            <div className="h-8 w-8 shrink-0 animate-pulse rounded-lg bg-surface-elevated" />
+            {!collapsed && (
+              <div className="flex-1 min-w-0">
+                <div className="h-4 w-24 animate-pulse rounded bg-surface-elevated" />
+                <div className="mt-1 h-3 w-32 animate-pulse rounded bg-surface-elevated" />
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-content"
+              style={{ backgroundColor: getColorFromString(workspaceLabel) }}
+            >
+              {initials}
             </div>
-            <ChevronDown
-              className={`h-4 w-4 shrink-0 text-content-subtle transition-transform ${
-                isOpen ? 'rotate-180' : ''
-              }`}
-            />
+            {!collapsed && (
+              <>
+                <div className="flex-1 min-w-0">
+                  <p className="truncate text-sm font-medium text-content">{workspaceLabel}</p>
+                  <p className="text-xs text-content-subtle">
+                    {plan === 'pro' ? 'Pro Plan' : 'Free Plan'} • {workspaces.length || 1} member{(workspaces.length || 1) === 1 ? '' : 's'}
+                  </p>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 shrink-0 text-content-subtle transition-transform ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </>
+            )}
           </>
         )}
       </button>

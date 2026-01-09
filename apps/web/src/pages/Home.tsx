@@ -78,9 +78,9 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
   }, []);
 
   // Data fetching with TanStack Query
-  const { data: projects = [] } = useProjects(workspaceId ?? undefined);
-  const { data: settings } = useUserSettings();
-  const { data: usageStats } = useUsageStats();
+  const { data: projects = [], isLoading: isLoadingProjects } = useProjects(workspaceId ?? undefined);
+  const { data: settings, isLoading: isLoadingSettings } = useUserSettings();
+  const { data: usageStats, isLoading: isLoadingUsageStats } = useUsageStats();
   const { data: workspaces = [], isLoading: isLoadingWorkspaces } = useWorkspaces();
   const createProjectMutation = useCreateProject();
   const deleteProjectMutation = useDeleteProject();
@@ -114,7 +114,8 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
 
   // Derived state
   const activeWorkspace = workspaces.find((w) => w.workspace.id === workspaceId)?.workspace ?? null;
-  const studioName = activeWorkspace?.name || settings?.studio_name || 'My Studio';
+  const isLoadingSidebar = isLoadingWorkspaces || isLoadingSettings;
+  const studioName = isLoadingSidebar ? '' : (activeWorkspace?.name || settings?.studio_name || 'My Studio');
   const isCreatingProject = createProjectMutation.isPending;
   const isDeletingProject = deleteProjectMutation.isPending;
 
@@ -221,14 +222,15 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
         showUserMenu={showUserMenu}
         onToggleUserMenu={() => setShowUserMenu(!showUserMenu)}
         studioName={studioName}
-        creditsRemaining={usageStats?.creditsRemaining ?? 50}
-        totalCredits={usageStats?.totalCredits ?? 50}
+        creditsRemaining={isLoadingUsageStats ? undefined : (usageStats?.creditsRemaining ?? 50)}
+        totalCredits={isLoadingUsageStats ? undefined : (usageStats?.totalCredits ?? 50)}
         onUpgrade={() => setShowSettings(true)}
         workspaces={workspaces}
         activeWorkspaceId={workspaceId}
         onSelectWorkspace={(id) => setWorkspaceId(id)}
         onCreateWorkspace={handleCreateWorkspace}
         isLoadingWorkspaces={isLoadingWorkspaces || createWorkspaceMutation.isPending}
+        isLoadingStudio={isLoadingSidebar}
       />
 
       {/* Main content */}
@@ -315,8 +317,22 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                 </span>
               </button>
 
+              {/* Loading Skeletons */}
+              {isLoadingProjects && Array.from({ length: 3 }).map((_, i) => (
+                <div key={`skeleton-${i}`} className="animate-pulse">
+                  <div className="aspect-[4/3] rounded-xl bg-surface-elevated" />
+                  <div className="mt-3 flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-full bg-surface-elevated" />
+                    <div className="flex-1">
+                      <div className="h-4 w-32 rounded bg-surface-elevated" />
+                      <div className="mt-2 h-3 w-24 rounded bg-surface-elevated" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
               {/* Project Cards */}
-              {visibleProjects.map((project) => (
+              {!isLoadingProjects && visibleProjects.map((project) => (
                 <div key={project.id} className="group relative">
                   <button
                     onClick={(e) => {

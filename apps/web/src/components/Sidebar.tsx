@@ -47,6 +47,7 @@ interface SidebarProps {
   onSelectWorkspace?: (workspaceId: string | null) => void;
   onCreateWorkspace?: () => void;
   isLoadingWorkspaces?: boolean;
+  isLoadingStudio?: boolean;
 }
 
 export function Sidebar({
@@ -61,16 +62,17 @@ export function Sidebar({
   onSignOut,
   showUserMenu,
   onToggleUserMenu,
-  studioName = 'My Studio',
+  studioName,
   plan = 'free',
-  creditsRemaining = 50,
-  totalCredits = 50,
+  creditsRemaining,
+  totalCredits,
   onUpgrade,
   workspaces = [],
   activeWorkspaceId = null,
   onSelectWorkspace,
   onCreateWorkspace,
   isLoadingWorkspaces = false,
+  isLoadingStudio = false,
 }: SidebarProps) {
   return (
     <aside
@@ -129,6 +131,7 @@ export function Sidebar({
           onSelectWorkspace={onSelectWorkspace}
           onCreateWorkspace={onCreateWorkspace}
           isLoadingWorkspaces={isLoadingWorkspaces}
+          isLoading={isLoadingStudio}
         />
       </div>
 
