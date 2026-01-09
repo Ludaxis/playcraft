@@ -177,10 +177,10 @@ export function Sidebar({
         <SidebarSection title="Resources" collapsed={isCollapsed}>
           <SidebarItem
             icon={Compass}
-            label="Discover"
+            label="Playground"
             active={activeNav === 'discover'}
             collapsed={isCollapsed}
-            onClick={() => onNavChange('discover')}
+            onClick={() => window.location.href = '/playground'}
           />
           <SidebarItem
             icon={Gamepad2}

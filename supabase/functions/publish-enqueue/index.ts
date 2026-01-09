@@ -24,11 +24,8 @@ interface EnqueueResponse {
 }
 
 Deno.serve(async (req: Request) => {
-  console.log('[publish-enqueue] Request received:', req.method, req.url);
-
   const origin = req.headers.get('Origin');
   const corsHeaders = getCorsHeaders(origin);
-  console.log('[publish-enqueue] Origin:', origin);
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
@@ -43,10 +40,8 @@ Deno.serve(async (req: Request) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
-    console.log('[publish-enqueue] Auth header present:', !!authHeader);
 
     if (!authHeader) {
-      console.log('[publish-enqueue] No auth header');
       return new Response(JSON.stringify({ error: 'No authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -57,7 +52,6 @@ Deno.serve(async (req: Request) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('[publish-enqueue] Missing env vars:', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey });
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -69,10 +63,8 @@ Deno.serve(async (req: Request) => {
     });
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    console.log('[publish-enqueue] getUser result:', { userId: user?.id, error: userError?.message });
 
     if (userError || !user) {
-      console.log('[publish-enqueue] Auth failed:', userError?.message);
       return new Response(JSON.stringify({ error: 'Unauthorized', details: userError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

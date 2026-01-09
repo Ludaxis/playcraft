@@ -12,9 +12,12 @@ interface IconContextResult {
 }
 
 const BASE_ICON_STYLE = [
-  'Isometric game app icon, premium mobile game quality',
-  'clean silhouette, bold focal object, no text, no borders',
-  'soft rim light, simple gradient backdrop, crisp edges, high contrast',
+  'iOS app icon style, symbolic abstract design',
+  'bold geometric shapes, clean minimal composition',
+  'smooth gradient background, no text, no borders',
+  'professional glossy finish, centered focal element',
+  'Apple design language, premium mobile quality',
+  'single bold color palette with subtle shading',
 ].join(', ');
 
 async function fetchProjectMeta(projectId: string): Promise<ProjectMeta | null> {

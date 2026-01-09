@@ -5,6 +5,7 @@ import {
   listPublishVersions,
   promoteVersion,
   getProjectPublishState,
+  triggerPublishRunner,
   type PublishJob,
   type PublishVersion,
 } from '../publishV2Service';
@@ -164,5 +165,86 @@ describe('publishV2Service', () => {
     const state = await getProjectPublishState('proj-1');
     expect(state?.primary_version_id).toBe('v1');
     expect(state?.domains[0].domain).toContain('playcraft');
+  });
+
+  it('triggers publish runner with specific job id', async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: { success: true, jobId: 'job-123', message: 'Job started' },
+      error: null,
+    });
+
+    const ok = await triggerPublishRunner('job-123');
+    expect(ok).toBe(true);
+    expect(invokeMock).toHaveBeenCalledWith('publish-runner', {
+      body: { jobId: 'job-123' },
+    });
+  });
+
+  it('triggers publish runner without job id to process oldest queued', async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: { success: true, jobId: 'job-456', message: 'Job started' },
+      error: null,
+    });
+
+    const ok = await triggerPublishRunner();
+    expect(ok).toBe(true);
+    expect(invokeMock).toHaveBeenCalledWith('publish-runner', {
+      body: {},
+    });
+  });
+
+  it('returns false when runner invocation fails', async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'Network error' },
+    });
+
+    const ok = await triggerPublishRunner('job-123');
+    expect(ok).toBe(false);
+  });
+
+  it('returns false when runner returns failure response', async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: { success: false, error: 'No queued jobs' },
+      error: null,
+    });
+
+    const ok = await triggerPublishRunner();
+    expect(ok).toBe(false);
+  });
+
+  it('returns null when enqueue fails', async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: { success: false, error: 'Project not found' },
+      error: null,
+    });
+
+    const job = await enqueuePublishJob('invalid-proj', 'production');
+    expect(job).toBeNull();
+  });
+
+  it('returns null when job status lookup fails', async () => {
+    // Reset the table to simulate error
+    tables.publish_jobs = null;
+
+    const job = await getPublishJobStatus('non-existent');
+    expect(job).toBeNull();
+  });
+
+  it('returns empty array when no versions exist', async () => {
+    tables.publish_versions = [];
+
+    const versions = await listPublishVersions('proj-1');
+    expect(versions).toEqual([]);
+  });
+
+  it('returns false when promote fails', async () => {
+    invokeMock.mockResolvedValueOnce({
+      data: { success: false, error: 'Version not found' },
+      error: null,
+    });
+
+    const ok = await promoteVersion('proj-1', 'invalid-ver');
+    expect(ok).toBe(false);
   });
 });

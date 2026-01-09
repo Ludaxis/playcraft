@@ -8,6 +8,7 @@ import { AuthPage } from './pages/Auth';
 import { HomePage } from './pages/Home';
 import { FeedbackPage } from './pages/Feedback';
 import { PlayPage } from './pages/Play';
+import { PlaygroundPage } from './pages/Playground';
 import { PitchPage } from './pages/Pitch';
 import { PitchFaPage } from './pages/PitchFa';
 import { PitchArPage } from './pages/PitchAr';
@@ -237,6 +238,11 @@ function AppRoutes() {
     if (gameId) {
       return <PlayPage gameId={gameId} />;
     }
+  }
+
+  // Handle /playground route - PUBLIC, no auth required
+  if (location.pathname === '/playground') {
+    return <PlaygroundPage />;
   }
 
   // Handle /feedback route - accessible to authenticated users

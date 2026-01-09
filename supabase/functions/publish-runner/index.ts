@@ -278,6 +278,129 @@ function generateSlug(gameName: string, projectId: string): string {
   return `${slug}-${suffix}`;
 }
 
+// iOS-style app icon prompt
+const IOS_ICON_STYLE = [
+  'iOS app icon style, symbolic abstract design',
+  'bold geometric shapes, clean minimal composition',
+  'smooth gradient background, no text, no borders',
+  'professional glossy finish, centered focal element',
+  'Apple design language, premium mobile quality',
+  'single bold color palette with subtle shading',
+].join(', ');
+
+interface IconGenerationResult {
+  success: boolean;
+  url?: string;
+  error?: string;
+}
+
+async function generateAppIcon(
+  supabase: ReturnType<typeof createClient>,
+  projectId: string,
+  userId: string,
+  projectName: string,
+  projectDescription: string | null,
+  geminiApiKey: string
+): Promise<IconGenerationResult> {
+  // Build context-aware prompt
+  const conceptParts: string[] = [];
+  if (projectName) conceptParts.push(projectName);
+  if (projectDescription) conceptParts.push(projectDescription);
+
+  const conceptPrompt = conceptParts.join('. ');
+  const fullPrompt = conceptPrompt
+    ? `${IOS_ICON_STYLE}, game concept: ${conceptPrompt}`
+    : IOS_ICON_STYLE;
+
+  try {
+    // Call Gemini Image API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+          generationConfig: {
+            responseModalities: ['IMAGE'],
+            imageConfig: { aspectRatio: '1:1', imageSize: '1K' },
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      return { success: false, error: `API error: ${response.status}` };
+    }
+
+    const data = await response.json();
+
+    // Extract image from response
+    let imagePart: { data: string; mimeType?: string } | null = null;
+    const candidates = data.candidates || [];
+    for (const candidate of candidates) {
+      const parts = candidate?.content?.parts || [];
+      for (const part of parts) {
+        if (part?.inlineData?.data) {
+          imagePart = {
+            data: part.inlineData.data as string,
+            mimeType: part.inlineData.mimeType as string | undefined,
+          };
+          break;
+        }
+      }
+      if (imagePart) break;
+    }
+
+    if (!imagePart) {
+      return { success: false, error: 'No image generated' };
+    }
+
+    // Upload to published-games bucket (public)
+    const mimeType = imagePart.mimeType || 'image/png';
+    const extension = mimeType.includes('png') ? 'png' : 'jpg';
+    const fileName = `${userId}/${projectId}/icons/app-icon-${Date.now()}.${extension}`;
+
+    // Decode base64 to binary
+    const binaryString = atob(imagePart.data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from('published-games')
+      .upload(fileName, bytes, {
+        upsert: true,
+        contentType: mimeType,
+      });
+
+    if (uploadError) {
+      return { success: false, error: `Upload failed: ${uploadError.message}` };
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('published-games')
+      .getPublicUrl(fileName);
+
+    return { success: true, url: urlData.publicUrl };
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return { success: false, error: 'Icon generation timed out' };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
+
 /**
  * Publish runner
  * - Claims queued publish_jobs
@@ -377,6 +500,49 @@ Deno.serve(async (req: Request) => {
       .eq('id', claimedJobId);
 
     return new Response(JSON.stringify({ success: false, error: 'Failed to create version' }), { status: 500 });
+  }
+
+  // Start icon generation in parallel (if needed)
+  let iconGenerationPromise: Promise<void> | null = null;
+  const geminiImageKey = Deno.env.get('GEMINI_IMAGE_API_KEY');
+
+  // Fetch project data to check if icon exists
+  const { data: projectDataForIcon } = await supabase
+    .from('playcraft_projects')
+    .select('name, description, thumbnail_url')
+    .eq('id', jobCandidate.project_id)
+    .maybeSingle();
+
+  const needsIcon = !projectDataForIcon?.thumbnail_url;
+
+  if (needsIcon && geminiImageKey && projectDataForIcon) {
+    console.log('[publish-runner] Starting icon generation for project:', jobCandidate.project_id);
+
+    iconGenerationPromise = (async () => {
+      try {
+        const result = await generateAppIcon(
+          supabase,
+          jobCandidate.project_id as string,
+          jobCandidate.user_id as string,
+          projectDataForIcon.name || 'Game',
+          projectDataForIcon.description,
+          geminiImageKey
+        );
+
+        if (result.success && result.url) {
+          await supabase
+            .from('playcraft_projects')
+            .update({ thumbnail_url: result.url })
+            .eq('id', jobCandidate.project_id);
+
+          console.log('[publish-runner] Icon generated successfully:', result.url);
+        } else {
+          console.warn('[publish-runner] Icon generation failed:', result.error);
+        }
+      } catch (err) {
+        console.warn('[publish-runner] Icon generation error:', err);
+      }
+    })();
   }
 
   // Build artifacts
@@ -565,6 +731,13 @@ Deno.serve(async (req: Request) => {
       status: 'published',
     })
     .eq('id', jobCandidate.project_id);
+
+  // Wait for icon generation to complete (non-blocking - failures are ignored)
+  if (iconGenerationPromise) {
+    await iconGenerationPromise.catch(() => {
+      // Silently ignore - icon failure shouldn't affect publish
+    });
+  }
 
   // Mark job complete
   await supabase

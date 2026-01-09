@@ -618,6 +618,7 @@ export async function getPublishedGames(limit = 10): Promise<PublishedGame[]> {
         id,
         name,
         description,
+        thumbnail_url,
         published_url,
         published_at,
         play_count,
@@ -637,7 +638,7 @@ export async function getPublishedGames(limit = 10): Promise<PublishedGame[]> {
       id: game.id,
       name: game.name,
       description: game.description,
-      thumbnail_url: null,
+      thumbnail_url: game.thumbnail_url || null,
       published_url: game.published_url,
       published_at: game.published_at,
       play_count: game.play_count || 0,
@@ -664,6 +665,7 @@ export async function getPublishedGame(gameId: string): Promise<PublishedGame | 
         id,
         name,
         description,
+        thumbnail_url,
         published_url,
         published_at,
         play_count,
@@ -682,7 +684,7 @@ export async function getPublishedGame(gameId: string): Promise<PublishedGame | 
       id: data.id,
       name: data.name,
       description: data.description,
-      thumbnail_url: null,
+      thumbnail_url: data.thumbnail_url || null,
       published_url: data.published_url,
       published_at: data.published_at,
       play_count: data.play_count || 0,
@@ -718,4 +720,159 @@ export function getGameStorageUrl(userId: string, projectId: string): string {
     .from('published-games')
     .getPublicUrl(`${userId}/${projectId}/index.html`);
   return data.publicUrl;
+}
+
+/**
+ * Get featured games (most played overall)
+ */
+export async function getFeaturedGames(limit = 5): Promise<PublishedGame[]> {
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase
+      .from('playcraft_projects')
+      .select(`
+        id,
+        name,
+        description,
+        thumbnail_url,
+        published_url,
+        published_at,
+        play_count,
+        user_id
+      `)
+      .eq('status', 'published')
+      .eq('is_public', true)
+      .order('play_count', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('[publishService] Failed to fetch featured games:', error);
+      return [];
+    }
+
+    return (data || []).map((game) => ({
+      id: game.id,
+      name: game.name,
+      description: game.description,
+      thumbnail_url: game.thumbnail_url || null,
+      published_url: game.published_url,
+      published_at: game.published_at,
+      play_count: game.play_count || 0,
+      user_id: game.user_id,
+      author_name: 'PlayCraft Creator',
+      author_avatar: null,
+    }));
+  } catch (err) {
+    console.error('[publishService] Error fetching featured games:', err);
+    return [];
+  }
+}
+
+/**
+ * Get trending games (most played in recent period)
+ */
+export async function getTrendingGames(limit = 12): Promise<PublishedGame[]> {
+  // For now, use same logic as featured - can be enhanced with time-based analytics later
+  return getFeaturedGames(limit);
+}
+
+/**
+ * Get new releases (recently published)
+ */
+export async function getNewReleases(limit = 12): Promise<PublishedGame[]> {
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase
+      .from('playcraft_projects')
+      .select(`
+        id,
+        name,
+        description,
+        thumbnail_url,
+        published_url,
+        published_at,
+        play_count,
+        user_id
+      `)
+      .eq('status', 'published')
+      .eq('is_public', true)
+      .order('published_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('[publishService] Failed to fetch new releases:', error);
+      return [];
+    }
+
+    return (data || []).map((game) => ({
+      id: game.id,
+      name: game.name,
+      description: game.description,
+      thumbnail_url: game.thumbnail_url || null,
+      published_url: game.published_url,
+      published_at: game.published_at,
+      play_count: game.play_count || 0,
+      user_id: game.user_id,
+      author_name: 'PlayCraft Creator',
+      author_avatar: null,
+    }));
+  } catch (err) {
+    console.error('[publishService] Error fetching new releases:', err);
+    return [];
+  }
+}
+
+/**
+ * Search games by name or description
+ */
+export async function searchGames(query: string, limit = 20): Promise<PublishedGame[]> {
+  if (!query || query.trim().length < 2) {
+    return [];
+  }
+
+  const supabase = getSupabase();
+  const searchTerm = `%${query.trim().toLowerCase()}%`;
+
+  try {
+    const { data, error } = await supabase
+      .from('playcraft_projects')
+      .select(`
+        id,
+        name,
+        description,
+        thumbnail_url,
+        published_url,
+        published_at,
+        play_count,
+        user_id
+      `)
+      .eq('status', 'published')
+      .eq('is_public', true)
+      .or(`name.ilike.${searchTerm},description.ilike.${searchTerm}`)
+      .order('play_count', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('[publishService] Failed to search games:', error);
+      return [];
+    }
+
+    return (data || []).map((game) => ({
+      id: game.id,
+      name: game.name,
+      description: game.description,
+      thumbnail_url: game.thumbnail_url || null,
+      published_url: game.published_url,
+      published_at: game.published_at,
+      play_count: game.play_count || 0,
+      user_id: game.user_id,
+      author_name: 'PlayCraft Creator',
+      author_avatar: null,
+    }));
+  } catch (err) {
+    console.error('[publishService] Error searching games:', err);
+    return [];
+  }
 }

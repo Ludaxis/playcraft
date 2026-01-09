@@ -510,12 +510,12 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     <LogoIcon size={16} />
                     <h2 className="text-sm font-medium text-content">Made with PlayCraft</h2>
                   </div>
-                  <button
-                    onClick={() => setActiveNav('discover')}
+                  <a
+                    href="/playground"
                     className="text-sm text-accent transition-colors hover:text-accent-light"
                   >
                     Explore all →
-                  </button>
+                  </a>
                 </div>
                 {/* iOS-style icon grid */}
                 <div className="flex justify-center gap-8">

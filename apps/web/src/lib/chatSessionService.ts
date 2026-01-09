@@ -169,60 +169,129 @@ export async function generateProjectName(prompt: string): Promise<string> {
     });
 
     if (error) {
-      console.warn('[generateProjectName] Edge function error:', error);
       return extractNameFromPrompt(prompt);
     }
 
     if (data?.name) {
-      console.log('[generateProjectName] AI generated name:', data.name);
       return data.name;
     }
 
     return extractNameFromPrompt(prompt);
-  } catch (err) {
-    console.warn('[generateProjectName] Failed, using fallback:', err);
+  } catch {
     return extractNameFromPrompt(prompt);
   }
 }
 
 /**
- * Extract a reasonable name from a prompt using pattern matching (fallback)
+ * Game genres with keywords and creative name parts
+ */
+const GAME_GENRES: Record<string, { keywords: string[]; prefixes: string[]; suffixes: string[] }> = {
+  shooter: {
+    keywords: ['shoot', 'shooter', 'gun', 'bullet', 'blast', 'fire', 'weapon', 'enemy', 'battle'],
+    prefixes: ['Cosmic', 'Stellar', 'Neon', 'Hyper', 'Mega', 'Ultra'],
+    suffixes: ['Blaster', 'Strike', 'Storm', 'Force', 'Fury', 'Assault'],
+  },
+  platformer: {
+    keywords: ['jump', 'platform', 'run', 'hop', 'climb', 'mario', 'side-scroll'],
+    prefixes: ['Super', 'Pixel', 'Retro', 'Epic', 'Wild'],
+    suffixes: ['Quest', 'Run', 'Dash', 'Jump', 'Adventure', 'World'],
+  },
+  puzzle: {
+    keywords: ['puzzle', 'match', 'solve', 'logic', 'brain', 'tetris', 'block', 'tile'],
+    prefixes: ['Mind', 'Logic', 'Brain', 'Puzzle', 'Smart'],
+    suffixes: ['Master', 'Quest', 'Challenge', 'Logic', 'Twist', 'Box'],
+  },
+  racing: {
+    keywords: ['race', 'racing', 'car', 'speed', 'drive', 'fast', 'vehicle', 'track'],
+    prefixes: ['Turbo', 'Speed', 'Nitro', 'Hyper', 'Ultra'],
+    suffixes: ['Racer', 'Rush', 'Drift', 'Chase', 'Sprint', 'Rally'],
+  },
+  rpg: {
+    keywords: ['rpg', 'adventure', 'quest', 'hero', 'dragon', 'magic', 'sword', 'fantasy', 'dungeon'],
+    prefixes: ['Epic', 'Legend', 'Shadow', 'Crystal', 'Dragon'],
+    suffixes: ['Quest', 'Saga', 'Chronicles', 'Legend', 'Tale', 'Journey'],
+  },
+  arcade: {
+    keywords: ['arcade', 'retro', 'classic', 'score', 'endless', 'survival'],
+    prefixes: ['Retro', 'Pixel', 'Neon', 'Classic', 'Hyper'],
+    suffixes: ['Arcade', 'Mania', 'Frenzy', 'Zone', 'Rush', 'Blast'],
+  },
+  space: {
+    keywords: ['space', 'alien', 'star', 'galaxy', 'asteroid', 'ship', 'cosmic', 'orbit'],
+    prefixes: ['Cosmic', 'Stellar', 'Galaxy', 'Star', 'Astro', 'Nova'],
+    suffixes: ['Voyager', 'Explorer', 'Odyssey', 'Command', 'Fleet', 'Station'],
+  },
+  defense: {
+    keywords: ['tower', 'defense', 'defend', 'protect', 'wave', 'enemy', 'base'],
+    prefixes: ['Tower', 'Castle', 'Kingdom', 'Fort', 'Realm'],
+    suffixes: ['Defense', 'Guard', 'Fortress', 'Siege', 'Stand', 'War'],
+  },
+  sports: {
+    keywords: ['sport', 'ball', 'soccer', 'football', 'basketball', 'tennis', 'golf'],
+    prefixes: ['Pro', 'Super', 'Ultimate', 'Champion', 'All-Star'],
+    suffixes: ['League', 'Champion', 'Pro', 'Masters', 'Cup', 'Tournament'],
+  },
+  action: {
+    keywords: ['action', 'fight', 'combat', 'attack', 'warrior', 'ninja', 'samurai'],
+    prefixes: ['Shadow', 'Storm', 'Thunder', 'Iron', 'Steel', 'Dark'],
+    suffixes: ['Warriors', 'Strike', 'Combat', 'Clash', 'Arena', 'Fighters'],
+  },
+};
+
+const GENERIC_PREFIXES = ['Epic', 'Super', 'Pixel', 'Neon', 'Retro', 'Hyper', 'Mega', 'Ultra'];
+const GENERIC_SUFFIXES = ['Quest', 'Adventure', 'Challenge', 'Mania', 'Rush', 'World', 'Zone', 'Arena'];
+
+/**
+ * Extract a creative game name from a prompt using pattern matching (fallback)
  */
 function extractNameFromPrompt(prompt: string): string {
-  const cleaned = prompt.trim().toLowerCase();
+  const lowerPrompt = prompt.toLowerCase();
 
-  // Common patterns to extract game type
-  const patterns = [
-    /(?:make|create|build|design)\s+(?:a|an|me)?\s*(.+?)(?:\s+game|\s+app|\s+with|$)/i,
-    /(.+?)\s+(?:game|simulator|adventure)/i,
-    /(?:game|app)\s+(?:about|with|featuring)\s+(.+)/i,
+  // Try to detect genre from prompt
+  let detectedGenre: string | null = null;
+  let maxMatches = 0;
+
+  for (const [genre, data] of Object.entries(GAME_GENRES)) {
+    const matches = data.keywords.filter(keyword => lowerPrompt.includes(keyword)).length;
+    if (matches > maxMatches) {
+      maxMatches = matches;
+      detectedGenre = genre;
+    }
+  }
+
+  // Get prefixes and suffixes based on detected genre or use generic
+  const genreData = detectedGenre ? GAME_GENRES[detectedGenre] : null;
+  const prefixes = genreData?.prefixes || GENERIC_PREFIXES;
+  const suffixes = genreData?.suffixes || GENERIC_SUFFIXES;
+
+  // Try to extract a subject from the prompt
+  const subjectPatterns = [
+    /(?:about|with|featuring)\s+(?:a|an)?\s*(\w+)/i,
+    /(\w+)\s+(?:game|adventure|quest)/i,
+    /(?:make|create|build)\s+(?:a|an)?\s*(\w+)/i,
   ];
 
-  for (const pattern of patterns) {
-    const match = cleaned.match(pattern);
-    if (match && match[1]) {
-      const extracted = match[1]
-        .replace(/\b(a|an|the|my|with|that|like|similar|to)\b/gi, '')
-        .trim()
-        .split(/\s+/)
-        .filter(w => w.length > 2)
-        .slice(0, 3)
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
-
-      if (extracted.length >= 3) {
-        return extracted;
+  let subject: string | null = null;
+  for (const pattern of subjectPatterns) {
+    const match = lowerPrompt.match(pattern);
+    if (match && match[1] && match[1].length > 2) {
+      const word = match[1];
+      // Skip common words
+      if (!['game', 'the', 'this', 'that', 'with', 'like', 'make', 'create', 'build', 'simple'].includes(word)) {
+        subject = word.charAt(0).toUpperCase() + word.slice(1);
+        break;
       }
     }
   }
 
-  // Fallback: Take first meaningful words
-  const words = cleaned
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter(w => w.length > 3 && !['make', 'create', 'build', 'game', 'want', 'like', 'with', 'that'].includes(w))
-    .slice(0, 3)
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1));
+  // Generate name: [Prefix] [Subject?] [Suffix]
+  const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+  const suffix = suffixes[Math.floor(Math.random() * suffixes.length)];
 
-  return words.length > 0 ? words.join(' ') : 'Untitled Game';
+  if (subject) {
+    // Use subject in name - either "Prefix Subject" or "Subject Suffix"
+    return Math.random() > 0.5 ? `${prefix} ${subject}` : `${subject} ${suffix}`;
+  }
+
+  return `${prefix} ${suffix}`;
 }

@@ -333,7 +333,6 @@ export async function readAllProjectFiles(): Promise<Record<string, string>> {
     await readDirRecursive(dir);
   }
 
-  console.log(`[WebContainer] Read ${Object.keys(files).length} project files`);
   return files;
 }
 
@@ -371,7 +370,6 @@ export async function readDistFiles(): Promise<Record<string, string>> {
 
   await readDirRecursive('/dist');
 
-  console.log(`[WebContainer] Read ${Object.keys(files).length} dist files`);
   return files;
 }
 
@@ -769,7 +767,6 @@ export async function startDevServer(
   onOutput?: (data: string) => void,
   onServerReady?: (port: number, url: string) => void
 ): Promise<string> {
-  console.log('[WebContainer] startDevServer called');
   const instance = await bootWebContainer();
 
   // Store callback for server-ready event
@@ -777,9 +774,7 @@ export async function startDevServer(
 
   // Register server-ready listener only once (avoid duplicates)
   if (!serverReadyListenerRegistered && onServerReady) {
-    console.log('[WebContainer] Registering server-ready event listener');
     instance.on('server-ready', (port, url) => {
-      console.log('[WebContainer] server-ready event fired:', { port, url });
       if (currentServerReadyCallback) {
         currentServerReadyCallback(port, url);
       }
@@ -787,10 +782,8 @@ export async function startDevServer(
     serverReadyListenerRegistered = true;
   }
 
-  console.log('[WebContainer] Spawning npm run dev...');
   const process = await spawn('npm', ['run', 'dev']);
   const processId = trackProcess(process, 'npm run dev');
-  console.log('[WebContainer] Dev server process started with ID:', processId);
 
   if (onOutput) {
     process.output.pipeTo(
@@ -802,11 +795,10 @@ export async function startDevServer(
     );
   }
 
-  // Also monitor process exit for errors
+  // Monitor process exit for errors
   process.exit.then((exitCode) => {
-    console.log('[WebContainer] Dev server process exited with code:', exitCode);
     if (exitCode !== 0) {
-      console.error('[WebContainer] Dev server exited with non-zero exit code');
+      console.error('[WebContainer] Dev server exited with code:', exitCode);
     }
   }).catch((err) => {
     console.error('[WebContainer] Dev server process error:', err);

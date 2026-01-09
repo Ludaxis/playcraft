@@ -194,6 +194,5 @@ export async function triggerPublishRunner(jobId?: string): Promise<boolean> {
     return false;
   }
 
-  console.log('[publishV2] runner started for job:', data.jobId || jobId);
   return true;
 }
