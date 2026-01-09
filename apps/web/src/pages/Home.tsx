@@ -470,51 +470,27 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
           <>
             {/* Gradient background area */}
             <div
-              className="relative flex flex-1 flex-col items-center justify-center overflow-hidden bg-[#0a0a12]"
+              className="relative flex flex-1 flex-col items-center justify-center overflow-hidden"
+              style={{
+                background: `
+                  radial-gradient(ellipse 50% 40% at 50% 90%, rgba(0, 212, 255, 0.35) 0%, transparent 60%),
+                  radial-gradient(ellipse 80% 50% at 50% 70%, rgba(236, 72, 153, 0.5) 0%, transparent 60%),
+                  linear-gradient(180deg, #0a1628 0%, #1a1040 35%, #3d1a5c 55%, #6b2a6b 75%, #1a1040 100%)
+                `,
+              }}
             >
-              {/* Animated gradient orbs */}
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                {/* Primary cyan orb - slow drift */}
-                <div
-                  className="absolute h-[600px] w-[600px] rounded-full opacity-40 blur-[120px]"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(0, 212, 255, 0.8) 0%, transparent 70%)',
-                    left: '30%',
-                    top: '50%',
-                    animation: 'gradient-float-1 20s ease-in-out infinite',
-                  }}
-                />
-                {/* Secondary pink/magenta orb */}
-                <div
-                  className="absolute h-[700px] w-[700px] rounded-full opacity-50 blur-[100px]"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, transparent 70%)',
-                    right: '20%',
-                    top: '60%',
-                    animation: 'gradient-float-2 25s ease-in-out infinite',
-                  }}
-                />
-                {/* Tertiary purple orb */}
-                <div
-                  className="absolute h-[500px] w-[500px] rounded-full opacity-30 blur-[80px]"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, transparent 70%)',
-                    left: '60%',
-                    top: '30%',
-                    animation: 'gradient-float-3 18s ease-in-out infinite',
-                  }}
-                />
-                {/* Accent teal orb */}
-                <div
-                  className="absolute h-[400px] w-[400px] rounded-full opacity-25 blur-[60px]"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(20, 184, 166, 0.9) 0%, transparent 70%)',
-                    left: '70%',
-                    top: '70%',
-                    animation: 'gradient-float-4 22s ease-in-out infinite',
-                  }}
-                />
-              </div>
+              {/* Animated gradient overlay - fade in with subtle inward movement */}
+              <div
+                className="pointer-events-none absolute inset-0"
+                style={{
+                  background: `
+                    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 70%),
+                    radial-gradient(ellipse 70% 60% at 30% 70%, rgba(0, 212, 255, 0.1) 0%, transparent 60%),
+                    radial-gradient(ellipse 70% 60% at 70% 30%, rgba(236, 72, 153, 0.1) 0%, transparent 60%)
+                  `,
+                  animation: 'gradient-fade-in 1.5s ease-out forwards, gradient-breathe 8s ease-in-out infinite 1.5s',
+                }}
+              />
 
               {/* Content */}
               <div className="relative z-10 w-full max-w-2xl px-6">
