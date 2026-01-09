@@ -580,3 +580,59 @@
     color: #8b5cf6 !important;
   }
 }
+
+/* ========================================================================
+   HOME PAGE ANIMATED GRADIENT ORBS
+   Smooth floating animation for gradient backgrounds
+   ======================================================================== */
+
+@keyframes gradient-float-1 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  25% {
+    transform: translate(-45%, -55%) scale(1.1);
+  }
+  50% {
+    transform: translate(-55%, -45%) scale(0.95);
+  }
+  75% {
+    transform: translate(-48%, -52%) scale(1.05);
+  }
+}
+
+@keyframes gradient-float-2 {
+  0%, 100% {
+    transform: translate(50%, -50%) scale(1);
+  }
+  33% {
+    transform: translate(45%, -45%) scale(1.15);
+  }
+  66% {
+    transform: translate(55%, -55%) scale(0.9);
+  }
+}
+
+@keyframes gradient-float-3 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-40%, -60%) scale(1.2);
+  }
+}
+
+@keyframes gradient-float-4 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  25% {
+    transform: translate(-55%, -45%) scale(0.9);
+  }
+  50% {
+    transform: translate(-45%, -55%) scale(1.1);
+  }
+  75% {
+    transform: translate(-52%, -48%) scale(1.05);
+  }
+}

@@ -481,8 +481,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     background: 'radial-gradient(circle, rgba(0, 212, 255, 0.8) 0%, transparent 70%)',
                     left: '30%',
                     top: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    animation: 'float1 20s ease-in-out infinite',
+                    animation: 'gradient-float-1 20s ease-in-out infinite',
                   }}
                 />
                 {/* Secondary pink/magenta orb */}
@@ -492,8 +491,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     background: 'radial-gradient(circle, rgba(236, 72, 153, 0.7) 0%, transparent 70%)',
                     right: '20%',
                     top: '60%',
-                    transform: 'translate(50%, -50%)',
-                    animation: 'float2 25s ease-in-out infinite',
+                    animation: 'gradient-float-2 25s ease-in-out infinite',
                   }}
                 />
                 {/* Tertiary purple orb */}
@@ -503,8 +501,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     background: 'radial-gradient(circle, rgba(139, 92, 246, 0.8) 0%, transparent 70%)',
                     left: '60%',
                     top: '30%',
-                    transform: 'translate(-50%, -50%)',
-                    animation: 'float3 18s ease-in-out infinite',
+                    animation: 'gradient-float-3 18s ease-in-out infinite',
                   }}
                 />
                 {/* Accent teal orb */}
@@ -514,36 +511,10 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     background: 'radial-gradient(circle, rgba(20, 184, 166, 0.9) 0%, transparent 70%)',
                     left: '70%',
                     top: '70%',
-                    transform: 'translate(-50%, -50%)',
-                    animation: 'float4 22s ease-in-out infinite',
+                    animation: 'gradient-float-4 22s ease-in-out infinite',
                   }}
                 />
               </div>
-
-              {/* Keyframes for animations */}
-              <style>{`
-                @keyframes float1 {
-                  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-                  25% { transform: translate(-45%, -55%) scale(1.1); }
-                  50% { transform: translate(-55%, -45%) scale(0.95); }
-                  75% { transform: translate(-48%, -52%) scale(1.05); }
-                }
-                @keyframes float2 {
-                  0%, 100% { transform: translate(50%, -50%) scale(1); }
-                  33% { transform: translate(45%, -45%) scale(1.15); }
-                  66% { transform: translate(55%, -55%) scale(0.9); }
-                }
-                @keyframes float3 {
-                  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-                  50% { transform: translate(-40%, -60%) scale(1.2); }
-                }
-                @keyframes float4 {
-                  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-                  25% { transform: translate(-55%, -45%) scale(0.9); }
-                  50% { transform: translate(-45%, -55%) scale(1.1); }
-                  75% { transform: translate(-52%, -48%) scale(1.05); }
-                }
-              `}</style>
 
               {/* Content */}
               <div className="relative z-10 w-full max-w-2xl px-6">
