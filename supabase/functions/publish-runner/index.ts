@@ -551,7 +551,7 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   const slug = projectRow?.slug || generateSlug(projectRow?.name || 'game', jobCandidate.project_id as string);
-  const subdomainUrl = `https://${slug}.play.playcraft.games`;
+  const subdomainUrl = `https://${slug}.playcraft.games`;
   const publishedUrl = subdomainUrl;
 
   await supabase

@@ -123,9 +123,30 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const jobId = job.id as string;
+
+    // Trigger publish-runner to start processing the job (fire-and-forget)
+    // This is a server-to-server call so it bypasses any client auth restrictions
+    const supabaseServiceUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (supabaseServiceUrl && serviceRoleKey) {
+      // Fire and forget - don't await, let it run in background
+      fetch(`${supabaseServiceUrl}/functions/v1/publish-runner`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ jobId }),
+      }).catch((err) => {
+        console.error('[publish-enqueue] Failed to trigger runner:', err);
+      });
+    }
+
     const response: EnqueueResponse = {
       success: true,
-      jobId: job.id as string,
+      jobId,
     };
 
     return new Response(JSON.stringify(response), {

@@ -1,0 +1,17 @@
+name = "playcraft-game-proxy"
+main = "game-proxy.ts"
+compatibility_date = "2024-01-01"
+account_id = "76b240e7d38e2dd2dd2145718ef4b347"  # Joyixir
+
+# Route configuration - *.playcraft.games (covered by free SSL)
+[[routes]]
+pattern = "*.playcraft.games/*"
+zone_name = "playcraft.games"
+
+# Environment variables (set these in Cloudflare Dashboard or via wrangler secret)
+# SUPABASE_URL = "https://tbmodwkwqierftffbfdi.supabase.co"
+# SUPABASE_SERVICE_ROLE_KEY = "your-service-role-key"
+
+[vars]
+# Non-sensitive vars can go here
+# SUPABASE_URL = "https://tbmodwkwqierftffbfdi.supabase.co"

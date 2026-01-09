@@ -48,7 +48,7 @@ export interface ProjectPublishState {
 }
 
 /**
- * Enqueue a publish job. Currently a stub that hits Supabase RPC placeholder.
+ * Enqueue a publish job. The server automatically triggers the runner to start processing.
  */
 export async function enqueuePublishJob(projectId: string, target: PublishTarget): Promise<PublishJob | null> {
   const supabase = getSupabase();
@@ -66,7 +66,8 @@ export async function enqueuePublishJob(projectId: string, target: PublishTarget
     return null;
   }
 
-  // Only id is known at enqueue time; caller should poll for status
+  // Return job with initial status; caller should poll for updates
+  // The server triggers the runner automatically
   return {
     id: data.jobId,
     project_id: projectId,
@@ -164,5 +165,35 @@ export async function promoteVersion(projectId: string, versionId: string): Prom
     return false;
   }
 
+  return true;
+}
+
+/**
+ * Trigger the publish runner to process a specific job or the oldest queued job.
+ * This is called automatically after enqueuing to start the build process.
+ */
+export async function triggerPublishRunner(jobId?: string): Promise<boolean> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase.functions.invoke<{
+    success: boolean;
+    jobId?: string;
+    message?: string;
+    error?: string;
+  }>('publish-runner', {
+    body: jobId ? { jobId } : {},
+  });
+
+  if (error) {
+    console.error('[publishV2] runner trigger failed:', error);
+    return false;
+  }
+
+  if (!data?.success) {
+    console.error('[publishV2] runner returned failure:', data?.error || data?.message);
+    return false;
+  }
+
+  console.log('[publishV2] runner started for job:', data.jobId || jobId);
   return true;
 }
