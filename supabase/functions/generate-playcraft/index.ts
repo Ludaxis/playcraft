@@ -753,13 +753,14 @@ OUTPUT FORMAT (FILE MODE):
     // Build generation config - thinkingConfig only supported by Gemini 3 models
     const generationConfig: Record<string, unknown> = {
       temperature: 1.0,
+      topP: 0.9,
       maxOutputTokens: 65536,
       responseMimeType: 'application/json',
     };
 
     // Only add thinkingConfig for Gemini 3 models
     if (isGemini3Model(GEMINI_CODE_MODEL)) {
-      generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+      generationConfig.thinkingConfig = { thinkingLevel: 'minimal' };
     }
 
     response = await fetch(
@@ -1886,12 +1887,13 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
     const generationConfig: Record<string, unknown> = {
       maxOutputTokens: 32768,
       temperature: 1.0,
+      topP: 0.9,
       responseMimeType: 'application/json',
     };
 
     // Only add thinkingConfig for Gemini 3 models
     if (isGemini3Model(GEMINI_CODE_MODEL)) {
-      generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+      generationConfig.thinkingConfig = { thinkingLevel: 'minimal' };
     }
 
     response = await fetch(
@@ -2230,25 +2232,18 @@ Examples of good names:
 
 Name:`;
 
-        // Build generation config for name generation
-        const nameGenConfig: Record<string, unknown> = {
-          temperature: 1.0,
-          maxOutputTokens: 50,
-        };
-
-        // Only add thinkingConfig for Gemini 3 models
-        if (isGemini3Model(GEMINI_CODE_MODEL)) {
-          nameGenConfig.thinkingConfig = { thinkingLevel: 'low' };
-        }
-
+        // Use fast lite model for simple name generation (no thinking needed)
         const nameResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${geminiApiKey}`,
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + geminiApiKey,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: namePrompt }] }],
-              generationConfig: nameGenConfig,
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 50,
+              },
             }),
           }
         );
