@@ -811,7 +811,7 @@ const AI_PROVIDER = Deno.env.get('AI_PROVIDER') || 'gemini';
 
 // Gemini model for code generation - configurable via environment variable
 // Supported models: gemini-3-flash-preview, gemini-2.0-flash, gemini-1.5-pro, etc.
-const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3-flash-preview';
+const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-2.0-flash';
 
 // Claude model for code generation (when AI_PROVIDER is 'claude')
 const CLAUDE_CODE_MODEL = Deno.env.get('CLAUDE_MODEL') || 'claude-sonnet-4-20250514';
