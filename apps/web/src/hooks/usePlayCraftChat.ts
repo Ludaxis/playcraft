@@ -143,10 +143,18 @@ function extractGameName(files: Array<{ path: string; content: string }>): strin
 
   const isValidTitle = (title: string) => {
     const trimmed = title.trim();
-    return trimmed.length >= 3 &&
-           trimmed.length <= 60 &&
-           !defaultTitles.includes(trimmed) &&
-           !/^(index|app|main|game)$/i.test(trimmed);
+    // Skip default titles
+    if (defaultTitles.includes(trimmed)) return false;
+    // Skip generic file names
+    if (/^(index|app|main|game)$/i.test(trimmed)) return false;
+    // Skip prompt-like text (user requests, not game titles)
+    if (/^(I want|I need|Make|Create|Build|Add|Please|Can you|Could you|Help me|A |An |The |Let's|Let me)/i.test(trimmed)) return false;
+    // Skip if it looks like a description (too many words, has "with", "that", "and")
+    const wordCount = trimmed.split(/\s+/).length;
+    if (wordCount > 5) return false;
+    if (/\b(with|that|and|but|like|using|featuring)\b/i.test(trimmed) && wordCount > 3) return false;
+    // Must be reasonable length
+    return trimmed.length >= 3 && trimmed.length <= 60;
   };
 
   // 1. Look for index.html <title> tag
@@ -183,9 +191,9 @@ function extractGameName(files: Array<{ path: string; content: string }>): strin
     }
   }
 
-  // 3. Look for title in comments: /* Game: GameName */ or // GameName - A game
+  // 3. Look for explicit game title comments: /* Game: GameName */ (must have "Game:" or "Title:" prefix)
   for (const file of mainFiles) {
-    const commentMatch = file.content.match(/\/[/*]\s*(?:Game:|Title:)?\s*([A-Z][^*\n]+?)(?:\s*[-–—]\s*|\s*\*\/|\n)/);
+    const commentMatch = file.content.match(/\/[/*]\s*(?:Game|Title):\s*([A-Z][^*\n]{2,40})(?:\s*[-–—]\s*|\s*\*\/|\n)/);
     if (commentMatch && commentMatch[1] && isValidTitle(commentMatch[1])) {
       return commentMatch[1].trim();
     }
