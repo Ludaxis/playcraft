@@ -50,14 +50,14 @@ PlayCraft is an AI-powered platform that lets anyone create browser-based games 
 
 | Page | URL | Description |
 |------|-----|-------------|
-| Landing | https://playcraft.dev/ | Main entry point, game creation interface |
-| Playground | https://playcraft.dev/playground | Browse and discover published games |
-| Play Game | https://playcraft.dev/play/{gameId} | Play individual published games |
-| FAQ | https://playcraft.dev/faq | Frequently asked questions |
-| How It Works | https://playcraft.dev/how-it-works | Step-by-step guide |
-| Pitch (EN) | https://playcraft.dev/pitch | Company pitch deck |
-| Pitch (FA) | https://playcraft.dev/pitch-fa | Pitch deck in Persian |
-| Pitch (AR) | https://playcraft.dev/pitch-ar | Pitch deck in Arabic |
+| Landing | https://playcraft.games/ | Main entry point, game creation interface |
+| Playground | https://playcraft.games/playground | Browse and discover published games |
+| Play Game | https://playcraft.games/play/{gameId} | Play individual published games |
+| FAQ | https://playcraft.games/faq | Frequently asked questions |
+| How It Works | https://playcraft.games/how-it-works | Step-by-step guide |
+| Pitch (EN) | https://playcraft.games/pitch | Company pitch deck |
+| Pitch (FA) | https://playcraft.games/pitch-fa | Pitch deck in Persian |
+| Pitch (AR) | https://playcraft.games/pitch-ar | Pitch deck in Arabic |
 
 ## API Endpoints
 
@@ -87,7 +87,7 @@ Click the "Publish" button in the builder. Your game will be available at a uniq
 
 ## Contact
 
-- Website: https://playcraft.dev
+- Website: https://playcraft.games
 - Support: Available through in-app feedback
 
 ## Last Updated

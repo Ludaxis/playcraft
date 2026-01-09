@@ -1,5 +1,5 @@
 # PlayCraft Robots.txt
-# https://playcraft.dev
+# https://playcraft.games
 
 User-agent: *
 Allow: /
@@ -41,7 +41,7 @@ User-agent: cohere-ai
 Allow: /
 
 # Sitemap location
-Sitemap: https://playcraft.dev/sitemap.xml
+Sitemap: https://playcraft.games/sitemap.xml
 
 # LLMs.txt for AI crawlers
-# See: https://playcraft.dev/llms.txt
+# See: https://playcraft.games/llms.txt

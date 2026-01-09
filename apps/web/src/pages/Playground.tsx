@@ -31,6 +31,16 @@ const FEATURED_CREATOR = {
 export function PlaygroundPage() {
   const navigate = useNavigate();
 
+  // Enable page scrolling (override global overflow:hidden on html)
+  useEffect(() => {
+    const html = document.documentElement;
+    const originalOverflow = html.style.overflow;
+    html.style.overflow = 'auto';
+    return () => {
+      html.style.overflow = originalOverflow;
+    };
+  }, []);
+
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [activeGenre, setActiveGenre] = useState<GenreFilter>('all');
@@ -136,7 +146,7 @@ export function PlaygroundPage() {
 
   return (
     <div
-      className="flex min-h-screen flex-col overflow-y-auto"
+      className="min-h-screen"
       style={{
         background: `
           radial-gradient(ellipse 50% 30% at 50% 0%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),

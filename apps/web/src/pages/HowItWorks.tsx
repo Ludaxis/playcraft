@@ -109,7 +109,7 @@ function generateHowToSchema(): string {
       position: index + 1,
       name: step.title,
       text: step.description,
-      url: `https://playcraft.dev/how-it-works#step-${step.number}`,
+      url: `https://playcraft.games/how-it-works#step-${step.number}`,
     })),
   };
   return JSON.stringify(schema);

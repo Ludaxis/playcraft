@@ -9,7 +9,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
 
-const BASE_URL = 'https://playcraft.dev';
+const BASE_URL = 'https://playcraft.games';
 
 // Static pages with their priorities and change frequencies
 const STATIC_PAGES = [
