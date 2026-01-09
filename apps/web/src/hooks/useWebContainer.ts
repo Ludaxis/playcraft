@@ -134,6 +134,16 @@ export function useWebContainer(): UseWebContainerReturn {
   const tryRestoreProject = useCallback((projectId: string): boolean => {
     const existingState = getProjectState();
 
+    // Only restore if we have valid state AND the container is actually booted
+    // After page refresh, the WebContainer needs to be re-booted even if sessionStorage has state
+    const container = getWebContainer();
+    if (!container) {
+      console.log('[useWebContainer] Cannot restore - WebContainer not booted yet');
+      // Clear stale state from sessionStorage
+      clearProjectState();
+      return false;
+    }
+
     if (existingState && existingState.projectId === projectId && existingState.isReady) {
       console.log('[useWebContainer] Restoring existing project state for:', projectId);
 
