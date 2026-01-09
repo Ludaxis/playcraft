@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Play, Gamepad2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useBlobUrl } from '../../hooks/useBlobUrl';
 import { Button } from '../ui/button';
 import type { PublishedGame } from '../../types';
 
@@ -54,6 +55,8 @@ export function HeroBanner({
   }
 
   const activeGame = games[activeIndex];
+  // Fetch thumbnail as blob to bypass COEP restrictions
+  const thumbnailUrl = useBlobUrl(activeGame.thumbnail_url);
 
   return (
     <div className="relative mx-4 overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated md:mx-8">
@@ -71,12 +74,11 @@ export function HeroBanner({
 
       {/* Game thumbnail with gradient overlay */}
       <div className="relative aspect-[16/9] md:aspect-[21/9]">
-        {activeGame.thumbnail_url ? (
+        {thumbnailUrl ? (
           <img
-            src={activeGame.thumbnail_url}
+            src={thumbnailUrl}
             alt={activeGame.name}
             className="h-full w-full object-cover transition-opacity duration-500"
-            crossOrigin="anonymous"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">

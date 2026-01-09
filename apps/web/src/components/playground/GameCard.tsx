@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Play, Gamepad2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useBlobUrl } from '../../hooks/useBlobUrl';
 import type { PublishedGame } from '../../types';
 
 interface GameCardProps {
@@ -45,6 +46,8 @@ function formatPlayCount(count: number): string {
 
 export function GameCard({ game, size = 'md', className }: GameCardProps) {
   const config = sizeConfig[size];
+  // Fetch thumbnail as blob to bypass COEP restrictions
+  const thumbnailUrl = useBlobUrl(game.thumbnail_url);
 
   return (
     <Link
@@ -64,14 +67,18 @@ export function GameCard({ game, size = 'md', className }: GameCardProps) {
         )}
       >
         {/* Thumbnail */}
-        {game.thumbnail_url ? (
+        {thumbnailUrl ? (
           <img
-            src={game.thumbnail_url}
+            src={thumbnailUrl}
             alt={game.name}
             className="h-full w-full object-cover"
             loading="lazy"
-            crossOrigin="anonymous"
           />
+        ) : game.thumbnail_url ? (
+          // Loading state - show placeholder while fetching
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/30 via-secondary/20 to-surface-elevated">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          </div>
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/30 via-secondary/20 to-surface-elevated">
             <Gamepad2 className={cn('text-content-muted', config.fallbackIcon)} />
