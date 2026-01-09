@@ -5,6 +5,11 @@ import { BrowserRouter } from 'react-router-dom';
 import { HeroBanner } from '../HeroBanner';
 import type { PublishedGame } from '../../../types';
 
+// Mock useBlobUrl to return the URL directly (bypasses async blob fetching in tests)
+vi.mock('../../../hooks/useBlobUrl', () => ({
+  useBlobUrl: (url: string | null | undefined) => url,
+}));
+
 const mockGames: PublishedGame[] = [
   {
     id: 'featured-1',

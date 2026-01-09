@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { GameCard } from '../GameCard';
 import type { PublishedGame } from '../../../types';
+
+// Mock useBlobUrl to return the URL directly (bypasses async blob fetching in tests)
+vi.mock('../../../hooks/useBlobUrl', () => ({
+  useBlobUrl: (url: string | null | undefined) => url,
+}));
 
 const mockGame: PublishedGame = {
   id: 'test-game-123',

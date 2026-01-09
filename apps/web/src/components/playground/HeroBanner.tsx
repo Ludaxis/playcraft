@@ -46,17 +46,18 @@ export function HeroBanner({
     return () => clearInterval(interval);
   }, [games.length, autoRotateMs, nextSlide]);
 
+  // Get active game (may be undefined if no games)
+  const activeGame = games[activeIndex];
+  // Fetch thumbnail as blob to bypass COEP restrictions (hook must be called unconditionally)
+  const thumbnailUrl = useBlobUrl(activeGame?.thumbnail_url);
+
   if (isLoading) {
     return <LoadingSkeleton />;
   }
 
-  if (games.length === 0) {
+  if (games.length === 0 || !activeGame) {
     return null;
   }
-
-  const activeGame = games[activeIndex];
-  // Fetch thumbnail as blob to bypass COEP restrictions
-  const thumbnailUrl = useBlobUrl(activeGame.thumbnail_url);
 
   return (
     <div className="relative mx-4 overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated md:mx-8">
