@@ -36,7 +36,8 @@ export const PublishModal = memo(function PublishModal({
   const [isPublishing, setIsPublishing] = useState(false);
   const [progress, setProgress] = useState<string | null>(null);
   const [job, setJob] = useState<PublishJob | null>(null);
-  const [publishedUrl, setPublishedUrl] = useState<string | null>(existingUrl || null);
+  // Don't initialize with existingUrl - that would skip showing the "Update" button
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [logText, setLogText] = useState<string>('');
