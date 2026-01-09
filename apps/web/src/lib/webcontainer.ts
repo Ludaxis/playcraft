@@ -230,9 +230,22 @@ export async function mountFiles(files: FileSystemTree): Promise<void> {
 
 /**
  * Write a single file to the WebContainer filesystem.
+ * Automatically creates parent directories if they don't exist.
  */
 export async function writeFile(path: string, contents: string): Promise<void> {
   const instance = await bootWebContainer();
+
+  // Extract parent directory and create if needed
+  const lastSlash = path.lastIndexOf('/');
+  if (lastSlash > 0) {
+    const dir = path.substring(0, lastSlash);
+    try {
+      await instance.fs.mkdir(dir, { recursive: true });
+    } catch {
+      // Directory might already exist, ignore error
+    }
+  }
+
   await instance.fs.writeFile(path, contents);
 }
 

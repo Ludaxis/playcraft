@@ -1,31 +1,13 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'https://playcraft.app',
-  'https://playcraft.games',
-  'https://www.playcraft.games',
-  'https://www.playcraft.app',
-  'https://playcraft.vercel.app',
-];
-
-const ALLOWED_PREVIEW_PATTERN = /^https:\/\/playcraft-[a-z0-9-]+\.vercel\.app$/;
-
 function getCorsHeaders(origin: string | null): Record<string, string> {
-  let allowedOrigin = ALLOWED_ORIGINS[0];
-  if (origin) {
-    if (ALLOWED_ORIGINS.includes(origin)) {
-      allowedOrigin = origin;
-    } else if (ALLOWED_PREVIEW_PATTERN.test(origin)) {
-      allowedOrigin = origin;
-    }
-  }
+  const allowedOrigin = origin || '*';
   return {
     'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Client-Info, apikey',
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
   };
 }
