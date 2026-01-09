@@ -312,21 +312,24 @@ async function generateAppIcon(
     ? `${IOS_ICON_STYLE}, game concept: ${conceptPrompt}`
     : IOS_ICON_STYLE;
 
+  console.log('[generateAppIcon] Generating icon with prompt:', fullPrompt.substring(0, 100) + '...');
+
   try {
-    // Call Gemini Image API with timeout
+    // Call Imagen 3 API with timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
-          generationConfig: {
-            responseModalities: ['IMAGE'],
-            imageConfig: { aspectRatio: '1:1', imageSize: '1K' },
+          instances: [{ prompt: fullPrompt }],
+          parameters: {
+            sampleCount: 1,
+            aspectRatio: '1:1',
+            outputOptions: { mimeType: 'image/png' },
           },
         }),
         signal: controller.signal,
@@ -336,52 +339,50 @@ async function generateAppIcon(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
-      return { success: false, error: `API error: ${response.status}` };
+      const errorText = await response.text();
+      console.error('[generateAppIcon] API error:', response.status, errorText);
+      return { success: false, error: `API error: ${response.status} - ${errorText.substring(0, 200)}` };
     }
 
     const data = await response.json();
+    console.log('[generateAppIcon] API response keys:', Object.keys(data));
 
-    // Extract image from response
-    let imagePart: { data: string; mimeType?: string } | null = null;
-    const candidates = data.candidates || [];
-    for (const candidate of candidates) {
-      const parts = candidate?.content?.parts || [];
-      for (const part of parts) {
-        if (part?.inlineData?.data) {
-          imagePart = {
-            data: part.inlineData.data as string,
-            mimeType: part.inlineData.mimeType as string | undefined,
-          };
-          break;
-        }
+    // Extract image from Imagen response
+    let imageData: string | null = null;
+    const predictions = data.predictions || [];
+    for (const prediction of predictions) {
+      if (prediction?.bytesBase64Encoded) {
+        imageData = prediction.bytesBase64Encoded as string;
+        break;
       }
-      if (imagePart) break;
     }
 
-    if (!imagePart) {
+    if (!imageData) {
+      console.error('[generateAppIcon] No image in response:', JSON.stringify(data).substring(0, 500));
       return { success: false, error: 'No image generated' };
     }
 
     // Upload to published-games bucket (public)
-    const mimeType = imagePart.mimeType || 'image/png';
-    const extension = mimeType.includes('png') ? 'png' : 'jpg';
-    const fileName = `${userId}/${projectId}/icons/app-icon-${Date.now()}.${extension}`;
+    const fileName = `${userId}/${projectId}/icons/app-icon-${Date.now()}.png`;
 
     // Decode base64 to binary
-    const binaryString = atob(imagePart.data);
+    const binaryString = atob(imageData);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
+    console.log('[generateAppIcon] Uploading icon to:', fileName, 'size:', bytes.length);
+
     const { error: uploadError } = await supabase.storage
       .from('published-games')
       .upload(fileName, bytes, {
         upsert: true,
-        contentType: mimeType,
+        contentType: 'image/png',
       });
 
     if (uploadError) {
+      console.error('[generateAppIcon] Upload failed:', uploadError);
       return { success: false, error: `Upload failed: ${uploadError.message}` };
     }
 
@@ -389,8 +390,10 @@ async function generateAppIcon(
       .from('published-games')
       .getPublicUrl(fileName);
 
+    console.log('[generateAppIcon] Icon uploaded successfully:', urlData.publicUrl);
     return { success: true, url: urlData.publicUrl };
   } catch (error) {
+    console.error('[generateAppIcon] Error:', error);
     if (error instanceof Error && error.name === 'AbortError') {
       return { success: false, error: 'Icon generation timed out' };
     }
@@ -514,6 +517,12 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
 
   const needsIcon = !projectDataForIcon?.thumbnail_url;
+  console.log('[publish-runner] Icon check:', {
+    needsIcon,
+    hasApiKey: !!geminiImageKey,
+    hasProjectData: !!projectDataForIcon,
+    currentThumbnail: projectDataForIcon?.thumbnail_url || null,
+  });
 
   if (needsIcon && geminiImageKey && projectDataForIcon) {
     console.log('[publish-runner] Starting icon generation for project:', jobCandidate.project_id);
