@@ -2232,18 +2232,23 @@ Examples of good names:
 
 Name:`;
 
-        // Use fast lite model for simple name generation (no thinking needed)
+        // Use Gemini 3 with minimal thinking for fast name generation
+        const nameGenConfig: Record<string, unknown> = {
+          temperature: 0.7,
+          maxOutputTokens: 50,
+        };
+        if (isGemini3Model(GEMINI_CODE_MODEL)) {
+          nameGenConfig.thinkingConfig = { thinkingLevel: 'minimal' };
+        }
+
         const nameResponse = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=' + geminiApiKey,
+          `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CODE_MODEL}:generateContent?key=${geminiApiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ parts: [{ text: namePrompt }] }],
-              generationConfig: {
-                temperature: 0.7,
-                maxOutputTokens: 50,
-              },
+              generationConfig: nameGenConfig,
             }),
           }
         );
