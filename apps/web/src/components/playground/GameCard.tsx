@@ -70,6 +70,7 @@ export function GameCard({ game, size = 'md', className }: GameCardProps) {
             alt={game.name}
             className="h-full w-full object-cover"
             loading="lazy"
+            crossOrigin="anonymous"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/30 via-secondary/20 to-surface-elevated">

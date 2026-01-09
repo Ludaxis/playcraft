@@ -76,6 +76,7 @@ export function HeroBanner({
             src={activeGame.thumbnail_url}
             alt={activeGame.name}
             className="h-full w-full object-cover transition-opacity duration-500"
+            crossOrigin="anonymous"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
