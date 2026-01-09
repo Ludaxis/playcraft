@@ -726,18 +726,18 @@ export function PitchFaPage() {
               href="https://www.linkedin.com/in/reza-h/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-accent/50 transition-colors group"
+              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-teal-500/50 transition-colors group"
             >
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-accent/20">
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-teal-500/20">
                 <img src="/founders/REza.png" alt="رضا حسن‌زاده" className="w-full h-full object-cover" />
               </div>
               <h3 className="text-xs md:text-lg font-semibold text-content-primary mb-0.5">رضا حسن‌زاده</h3>
-              <p className="text-accent mb-1 md:mb-2 text-xs md:text-sm font-medium">مدیر محصول</p>
+              <p className="text-teal-400 mb-1 md:mb-2 text-xs md:text-sm font-medium">مدیر محصول</p>
               <p className="text-content-secondary text-xs hidden md:block leading-relaxed">
                 +۱۰ سال در گیمینگ. بنیان‌گذار استودیو، +۱۰ عنوان با +۲۵ میلیون بازیکن.
               </p>
               <p className="text-content-tertiary text-xs md:hidden">+۲۵M بازیکن</p>
-              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-accent transition-colors">
+              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-teal-400 transition-colors">
                 <Linkedin className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-xs hidden md:inline">LinkedIn</span>
               </div>
@@ -748,18 +748,18 @@ export function PitchFaPage() {
               href="https://www.linkedin.com/in/erfankouzehgaran/"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-secondary/50 transition-colors group"
+              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-violet-500/50 transition-colors group"
             >
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-secondary/20">
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-violet-500/20">
                 <img src="/founders/erfan.png" alt="عرفان کوزه‌گران" className="w-full h-full object-cover" />
               </div>
               <h3 className="text-xs md:text-lg font-semibold text-content-primary mb-0.5">عرفان کوزه‌گران</h3>
-              <p className="text-secondary mb-1 md:mb-2 text-xs md:text-sm font-medium">مدیر مارکتینگ</p>
+              <p className="text-violet-400 mb-1 md:mb-2 text-xs md:text-sm font-medium">مدیر مارکتینگ</p>
               <p className="text-content-secondary text-xs hidden md:block leading-relaxed">
                 متخصص رشد. کمپین‌های UA با +۲۰۰K کاربر iOS در ۳ ماه.
               </p>
               <p className="text-content-tertiary text-xs md:hidden">+۲۰۰K UA</p>
-              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-secondary transition-colors">
+              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-violet-400 transition-colors">
                 <Linkedin className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-xs hidden md:inline">LinkedIn</span>
               </div>
@@ -792,18 +792,18 @@ export function PitchFaPage() {
               href="https://www.linkedin.com/in/ayazdan13"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-purple-500/50 transition-colors group"
+              className="bg-surface-elevated border border-border-muted rounded-xl md:rounded-2xl p-2 md:p-6 text-center hover:border-blue-500/50 transition-colors group"
             >
-              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-purple-500/20">
+              <div className="w-14 h-14 md:w-20 md:h-20 rounded-full mx-auto mb-2 md:mb-3 overflow-hidden bg-blue-500/20">
                 <img src="/founders/ahmad.png" alt="احمد یزدان‌مهر" className="w-full h-full object-cover" />
               </div>
               <h3 className="text-xs md:text-lg font-semibold text-content-primary mb-0.5">احمد یزدان‌مهر</h3>
-              <p className="text-purple-400 mb-1 md:mb-2 text-xs md:text-sm font-medium">مدیر کسب‌وکار</p>
+              <p className="text-blue-400 mb-1 md:mb-2 text-xs md:text-sm font-medium">مدیر کسب‌وکار</p>
               <p className="text-content-secondary text-xs hidden md:block leading-relaxed">
                 مؤسس فین‌تک و متخصص مالی. +۱۰ سال در مدیریت ثروت و استراتژی کسب‌وکار.
               </p>
               <p className="text-content-tertiary text-xs md:hidden">مؤسس فین‌تک</p>
-              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-purple-400 transition-colors">
+              <div className="mt-1 md:mt-2 flex items-center justify-center gap-1 text-content-tertiary group-hover:text-blue-400 transition-colors">
                 <Linkedin className="w-3 h-3 md:w-4 md:h-4" />
                 <span className="text-xs hidden md:inline">LinkedIn</span>
               </div>
