@@ -43,3 +43,15 @@ secret = "env(GITHUB_CLIENT_SECRET)"
 # Gateway JWT verification disabled due to Supabase sync issue
 # Auth is still enforced internally via supabase.auth.getUser()
 verify_jwt = false
+
+[functions.publish-enqueue]
+# Gateway JWT verification disabled - auth enforced internally
+verify_jwt = false
+
+[functions.publish-promote]
+# Gateway JWT verification disabled - auth enforced internally
+verify_jwt = false
+
+[functions.publish-runner]
+# Gateway JWT verification disabled - auth enforced internally
+verify_jwt = false
