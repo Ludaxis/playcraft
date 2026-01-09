@@ -44,7 +44,7 @@ export function FilterBar({
         className
       )}
     >
-      <div className="flex flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:px-8">
+      <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4 md:flex-row md:items-center md:px-8">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-content-muted" />

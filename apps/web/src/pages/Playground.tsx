@@ -136,7 +136,7 @@ export function PlaygroundPage() {
 
   return (
     <div
-      className="min-h-screen"
+      className="flex min-h-screen flex-col overflow-y-auto"
       style={{
         background: `
           radial-gradient(ellipse 50% 30% at 50% 0%, rgba(20, 184, 166, 0.15) 0%, transparent 50%),
@@ -148,7 +148,7 @@ export function PlaygroundPage() {
     >
       {/* Header */}
       <header className="border-b border-border-muted bg-surface/80 backdrop-blur-md">
-        <div className="flex items-center justify-between px-4 py-4 md:px-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-8">
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-2 text-content transition-colors hover:text-accent"
@@ -186,7 +186,7 @@ export function PlaygroundPage() {
       />
 
       {/* Main Content */}
-      <main className="pb-16">
+      <main className="mx-auto w-full max-w-5xl flex-1 pb-16">
         {showFilteredView ? (
           /* Filtered/Search Results View */
           <div className="px-4 py-8 md:px-8">
@@ -345,7 +345,7 @@ export function PlaygroundPage() {
 
       {/* Footer */}
       <footer className="border-t border-border-muted bg-surface/80 py-6 text-center backdrop-blur-md">
-        <div className="flex items-center justify-center gap-2 text-content-muted">
+        <div className="mx-auto flex max-w-5xl items-center justify-center gap-2 text-content-muted">
           <LogoIcon size={16} />
           <span className="text-sm">Made with PlayCraft</span>
         </div>

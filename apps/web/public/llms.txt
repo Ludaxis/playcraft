@@ -1,0 +1,94 @@
+# PlayCraft - AI Game Builder
+> Create browser games using natural language with AI assistance
+
+## About PlayCraft
+
+PlayCraft is an AI-powered platform that lets anyone create browser-based games without coding experience. Users describe their game idea in plain English, and AI generates fully playable HTML5 games in seconds.
+
+## Core Value Proposition
+
+- **No coding required**: Describe your game in natural language
+- **Instant results**: See your game running in real-time as you describe it
+- **Full customization**: Edit and iterate with AI assistance
+- **One-click publishing**: Share your games with the world instantly
+
+## Key Features
+
+### Game Creation
+- Natural language game descriptions
+- AI-powered code generation using advanced LLMs
+- Real-time preview with hot reloading
+- Support for 2D and 3D games (Three.js)
+- Multiple game templates (platformers, shooters, puzzles, etc.)
+
+### Asset Generation
+- AI-generated sprites and characters
+- Background and environment generation
+- Multiple art styles: pixel-art, cartoon, realistic, anime, fantasy
+- Automatic icon generation for published games
+
+### Publishing
+- One-click game publishing
+- Custom game URLs (slug-based)
+- Play count tracking
+- Social sharing support
+
+### Discovery
+- Game playground to browse community games
+- Category filtering (action, puzzle, adventure, arcade)
+- Search functionality
+- Trending and new releases sections
+
+## Technology Stack
+
+- Frontend: React, TypeScript, Vite
+- Backend: Supabase (PostgreSQL, Edge Functions)
+- AI: Gemini for code generation and image generation
+- Deployment: Vercel
+
+## Public Pages
+
+| Page | URL | Description |
+|------|-----|-------------|
+| Landing | https://playcraft.dev/ | Main entry point, game creation interface |
+| Playground | https://playcraft.dev/playground | Browse and discover published games |
+| Play Game | https://playcraft.dev/play/{gameId} | Play individual published games |
+| FAQ | https://playcraft.dev/faq | Frequently asked questions |
+| How It Works | https://playcraft.dev/how-it-works | Step-by-step guide |
+| Pitch (EN) | https://playcraft.dev/pitch | Company pitch deck |
+| Pitch (FA) | https://playcraft.dev/pitch-fa | Pitch deck in Persian |
+| Pitch (AR) | https://playcraft.dev/pitch-ar | Pitch deck in Arabic |
+
+## API Endpoints
+
+Games are served via Edge Functions:
+- Game files: `/api/game/{gameId}/index.html`
+- Game assets: `/api/game/{gameId}/{asset}`
+
+## Common Questions
+
+### What is PlayCraft?
+PlayCraft is an AI-powered game builder that lets you create browser games by describing them in natural language. No coding experience needed.
+
+### How do I create a game?
+Simply type a description of your game idea (e.g., "Create a space shooter where I defend Earth from asteroids") and PlayCraft's AI will generate a playable game instantly.
+
+### Is PlayCraft free?
+Yes, PlayCraft offers a free tier that lets you create and publish games. Premium features are available for advanced users.
+
+### What types of games can I create?
+You can create various browser-based games including platformers, shooters, puzzle games, arcade games, RPGs, and even 3D games using Three.js.
+
+### Can I edit the generated code?
+Yes, PlayCraft provides a full code editor where you can view and modify the generated code. You can also ask the AI to make specific changes.
+
+### How do I publish my game?
+Click the "Publish" button in the builder. Your game will be available at a unique URL that you can share with anyone.
+
+## Contact
+
+- Website: https://playcraft.dev
+- Support: Available through in-app feedback
+
+## Last Updated
+January 2026

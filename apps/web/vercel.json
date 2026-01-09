@@ -34,6 +34,10 @@
   ],
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap.xml"
+    },
+    {
       "source": "/api/game/:slug/:path*",
       "destination": "/api/game/[...path]"
     },

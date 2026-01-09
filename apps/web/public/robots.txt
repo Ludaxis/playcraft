@@ -1,0 +1,47 @@
+# PlayCraft Robots.txt
+# https://playcraft.dev
+
+User-agent: *
+Allow: /
+Allow: /play/
+Allow: /playground
+Allow: /pitch
+Allow: /pitch-fa
+Allow: /pitch-ar
+Allow: /faq
+Allow: /how-it-works
+Disallow: /builder/
+Disallow: /projects
+Disallow: /auth
+Disallow: /feedback
+
+# AI Crawlers - explicitly allowed for AEO
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+# Sitemap location
+Sitemap: https://playcraft.dev/sitemap.xml
+
+# LLMs.txt for AI crawlers
+# See: https://playcraft.dev/llms.txt

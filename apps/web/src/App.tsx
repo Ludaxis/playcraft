@@ -10,6 +10,8 @@ import { FeedbackPage } from './pages/Feedback';
 import { PlayPage } from './pages/Play';
 import { PlaygroundPage } from './pages/Playground';
 import { PitchPage } from './pages/Pitch';
+import { FAQPage } from './pages/FAQ';
+import { HowItWorksPage } from './pages/HowItWorks';
 import { PitchFaPage } from './pages/PitchFa';
 import { PitchArPage } from './pages/PitchAr';
 import { ErrorBoundary } from './components';
@@ -243,6 +245,16 @@ function AppRoutes() {
   // Handle /playground route - PUBLIC, no auth required
   if (location.pathname === '/playground') {
     return <PlaygroundPage />;
+  }
+
+  // Handle /faq route - PUBLIC, SEO optimized FAQ page
+  if (location.pathname === '/faq') {
+    return <FAQPage />;
+  }
+
+  // Handle /how-it-works route - PUBLIC, SEO optimized How-To page
+  if (location.pathname === '/how-it-works') {
+    return <HowItWorksPage />;
   }
 
   // Handle /feedback route - accessible to authenticated users
