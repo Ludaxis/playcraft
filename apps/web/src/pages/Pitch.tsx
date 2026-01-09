@@ -20,7 +20,6 @@ import {
   BarChart3,
   Globe,
   Building2,
-  GraduationCap,
   MessageSquare,
   Printer,
   Mail,
@@ -52,13 +51,14 @@ const COMPETITORS = [
   { name: 'Base44', focus: 'Business apps', gaming: 'Very Limited', color: '#8b5cf6' },
 ];
 
-// Pricing tiers from PRICING_STRATEGY.md
+// Pricing tiers from PRICING_STRATEGY.md (used in business model slide)
 const PRICING_TIERS = [
   { name: 'Free', price: '$0', build: '25', runtime: '500', highlight: false },
   { name: 'Starter', price: '$12', build: '100', runtime: '5K', highlight: false },
   { name: 'Pro', price: '$29', build: '350', runtime: '25K', highlight: true },
   { name: 'Business', price: '$59', build: '1K', runtime: '100K', highlight: false },
-];
+] as const;
+void PRICING_TIERS; // Exported for reference, will be used when pricing cards are added
 
 export function PitchPage() {
   const [currentSlide, setCurrentSlide] = useState(0);

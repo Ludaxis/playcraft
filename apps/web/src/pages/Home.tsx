@@ -575,7 +575,6 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
           isOpen={!!projectToPublish}
           onClose={() => setProjectToPublish(null)}
           projectId={projectToPublish.id}
-          userId={user.id}
           projectName={projectToPublish.name}
           isAlreadyPublished={projectToPublish.status === 'published'}
           existingUrl={projectToPublish.published_url}

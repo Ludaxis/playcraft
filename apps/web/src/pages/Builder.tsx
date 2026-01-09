@@ -1314,7 +1314,6 @@ export function BuilderPage({
         isOpen={showPublishModal}
         onClose={() => setShowPublishModal(false)}
         projectId={project.id}
-        userId={user.id}
         projectName={project.name}
         isAlreadyPublished={project.status === 'published'}
         existingUrl={project.published_url}

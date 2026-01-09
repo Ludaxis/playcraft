@@ -18,7 +18,6 @@ interface PublishModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
-  userId: string;
   projectName: string;
   isAlreadyPublished?: boolean;
   existingUrl?: string | null;
@@ -29,7 +28,6 @@ export const PublishModal = memo(function PublishModal({
   isOpen,
   onClose,
   projectId,
-  userId,
   projectName,
   isAlreadyPublished = false,
   existingUrl,
