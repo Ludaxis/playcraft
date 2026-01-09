@@ -57,10 +57,14 @@ interface ProjectData {
   user_id: string;
   slug: string | null;
   name: string;
+  primary_version_id?: string | null;
+  preview_version_id?: string | null;
+  status?: string | null;
 }
 
 export default async function handler(request: Request): Promise<Response> {
   const url = new URL(request.url);
+  const hostname = url.hostname;
 
   // Extract slug/id and path from URL
   // Format: /api/game/[slug-or-id]/[...path]
@@ -77,38 +81,70 @@ export default async function handler(request: Request): Promise<Response> {
   // Initialize Supabase client
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     console.error('Missing Supabase credentials');
     return new Response('Server configuration error', { status: 500 });
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  // Prefer service role for server-side fetch (required to read publish_versions under RLS)
+  const supabase = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
 
   try {
+    // Check for domain mapping first (custom domain support)
+    let mappedProjectId: string | null = null;
+    let mappedVersionId: string | null = null;
+
+    const { data: domainRecord } = await supabase
+      .from('game_domains')
+      .select('project_id, target_version')
+      .eq('domain', hostname)
+      .maybeSingle();
+
+    if (domainRecord?.project_id) {
+      mappedProjectId = domainRecord.project_id as string;
+      mappedVersionId = domainRecord.target_version as string | null;
+    }
+
     // Look up project by slug first
     let project: ProjectData | null = null;
 
-    const { data: slugProject } = await supabase
-      .from('playcraft_projects')
-      .select('id, user_id, slug, name')
-      .eq('slug', slugOrId)
-      .eq('status', 'published')
-      .single();
-
-    if (slugProject) {
-      project = slugProject as ProjectData;
-    } else {
-      // Try looking up by project ID as fallback
-      const { data: idProject } = await supabase
+    if (mappedProjectId) {
+      const { data: mapped } = await supabase
         .from('playcraft_projects')
-        .select('id, user_id, slug, name')
-        .eq('id', slugOrId)
-        .eq('status', 'published')
-        .single();
+        .select('id, user_id, slug, name, primary_version_id, preview_version_id, status')
+        .eq('id', mappedProjectId)
+        .maybeSingle();
 
-      if (idProject) {
-        project = idProject as ProjectData;
+      if (mapped && mapped.status === 'published') {
+        project = mapped as ProjectData;
+        if (mappedVersionId) {
+          project.primary_version_id = mappedVersionId;
+        }
+      }
+    }
+
+    if (!project) {
+      const { data: slugProject } = await supabase
+        .from('playcraft_projects')
+        .select('id, user_id, slug, name, primary_version_id, preview_version_id, status')
+        .eq('slug', slugOrId)
+        .maybeSingle();
+
+      if (slugProject && slugProject.status === 'published') {
+        project = slugProject as ProjectData;
+      } else {
+        // Try looking up by project ID as fallback
+        const { data: idProject } = await supabase
+          .from('playcraft_projects')
+          .select('id, user_id, slug, name, primary_version_id, preview_version_id, status')
+          .eq('id', slugOrId)
+          .maybeSingle();
+
+        if (idProject && idProject.status === 'published') {
+          project = idProject as ProjectData;
+        }
       }
     }
 
@@ -147,35 +183,77 @@ async function serveGameFile(
 ): Promise<Response> {
   const basePath = `${project.user_id}/${project.id}`;
 
-  // Use requested file path or default to index.html
-  const filePath = requestedFile || 'index.html';
+  // Resolve version from primary pointer if available
+  let storagePrefix: string | null = null;
+  let entrypoint = 'index.html';
+  let manifestFiles: Record<string, { contentType: string }> = {};
 
-  // Try to get latest version info
-  let storagePath: string;
+  if (project.primary_version_id) {
+    const { data: version } = await supabase
+      .from('publish_versions')
+      .select('storage_prefix, entrypoint')
+      .eq('id', project.primary_version_id)
+      .maybeSingle();
 
-  try {
-    const { data: latestData } = await supabase.storage
-      .from('published-games')
-      .download(`${basePath}/latest.json`);
-
-    if (latestData) {
-      const text = await latestData.text();
-      const latest = JSON.parse(text);
-
-      if (latest.path) {
-        // Versioned path: replace index.html with requested file
-        const versionDir = latest.path.replace('/index.html', '');
-        storagePath = `${versionDir}/${filePath}`;
-      } else {
-        storagePath = `${basePath}/${filePath}`;
-      }
-    } else {
-      storagePath = `${basePath}/${filePath}`;
+    if (version?.storage_prefix) {
+      storagePrefix = version.storage_prefix.replace(/\/$/, '');
+      entrypoint = version.entrypoint || 'index.html';
     }
-  } catch {
-    // No latest.json, use legacy direct path
-    storagePath = `${basePath}/${filePath}`;
   }
+
+  // Fallback to latest.json if no version pointer
+  if (!storagePrefix) {
+    try {
+      const { data: latestData } = await supabase.storage
+        .from('published-games')
+        .download(`${basePath}/latest.json`);
+
+      if (latestData) {
+        const text = await latestData.text();
+        const latest = JSON.parse(text);
+
+        if (latest.path) {
+          const versionDir = latest.path.replace(/\/index\.html$/, '');
+          storagePrefix = versionDir;
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Default to legacy direct path
+  const rootPrefix = storagePrefix || basePath;
+  let filePath = requestedFile || entrypoint;
+
+  // Try to load manifest for content-type awareness
+  if (storagePrefix) {
+    try {
+      const { data: manifestData } = await supabase.storage
+        .from('published-games')
+        .download(`${rootPrefix}/manifest.json`);
+
+      if (manifestData) {
+        const text = await manifestData.text();
+        const manifest = JSON.parse(text) as { files?: Array<{ path: string; contentType?: string }>; entrypoint?: string };
+        if (manifest.entrypoint) entrypoint = manifest.entrypoint;
+        if (Array.isArray(manifest.files)) {
+          manifestFiles = manifest.files.reduce((acc, file) => {
+            acc[file.path] = { contentType: file.contentType || getContentType(file.path) };
+            return acc;
+          }, {} as Record<string, { contentType: string }>);
+        }
+      }
+    } catch {
+      // ignore manifest failures
+    }
+  }
+
+  if (Object.keys(manifestFiles).length > 0 && filePath !== entrypoint && !manifestFiles[filePath]) {
+    filePath = entrypoint;
+  }
+
+  const storagePath = `${rootPrefix}/${filePath}`;
 
   // Fetch file from storage
   const { data: fileData, error: fileError } = await supabase.storage
@@ -183,25 +261,28 @@ async function serveGameFile(
     .download(storagePath);
 
   if (fileError || !fileData) {
-    // Try falling back to index.html for SPA routing
-    if (filePath !== 'index.html') {
-      return serveGameFile(supabase, project, 'index.html');
+    // Try falling back to entrypoint for SPA routing
+    if (filePath !== entrypoint) {
+      return serveGameFile(supabase, project, entrypoint);
     }
 
     return new Response('File not found', { status: 404 });
   }
 
-  // Get content type
-  const contentType = getContentType(filePath);
+  const contentType = manifestFiles[filePath]?.contentType || getContentType(filePath);
+  const isHtml = contentType.startsWith('text/html');
+  const cacheControl = isHtml
+    ? 'no-cache, must-revalidate'
+    : 'public, max-age=31536000, immutable';
 
-  // Serve with appropriate headers - NO X-Frame-Options!
   return new Response(fileData, {
     status: 200,
     headers: {
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=31536000, immutable',
+      'Cache-Control': cacheControl,
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'X-Content-Type-Options': 'nosniff',
       // Explicitly NOT setting X-Frame-Options - this allows iframe embedding!
     },
   });

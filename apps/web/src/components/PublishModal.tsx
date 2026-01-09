@@ -3,9 +3,16 @@
  * Modal for publishing games with progress tracking
  */
 
-import { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useEffect } from 'react';
 import { X, Rocket, Loader2, Check, Copy, ExternalLink, AlertCircle, Globe } from 'lucide-react';
-import { publishGame, type PublishProgress } from '../lib/publishService';
+import {
+  enqueuePublishJob,
+  getPublishJobStatus,
+  listPublishVersions,
+  promoteVersion,
+  type PublishJob,
+  type PublishVersion,
+} from '../lib/publishV2Service';
 
 interface PublishModalProps {
   isOpen: boolean;
@@ -29,34 +36,28 @@ export const PublishModal = memo(function PublishModal({
   onPublishSuccess,
 }: PublishModalProps) {
   const [isPublishing, setIsPublishing] = useState(false);
-  const [progress, setProgress] = useState<PublishProgress | null>(null);
-  const [buildOutput, setBuildOutput] = useState<string[]>([]);
+  const [progress, setProgress] = useState<string | null>(null);
+  const [job, setJob] = useState<PublishJob | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(existingUrl || null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [logText, setLogText] = useState<string>('');
+  const [versions, setVersions] = useState<PublishVersion[]>([]);
 
   const handlePublish = useCallback(async () => {
     setIsPublishing(true);
     setError(null);
-    setBuildOutput([]);
     setPublishedUrl(null);
 
-    const result = await publishGame({
-      userId,
-      projectId,
-      onProgress: (p) => setProgress(p),
-      onBuildOutput: (output) => setBuildOutput((prev) => [...prev.slice(-100), output]),
-    });
-
-    setIsPublishing(false);
-
-    if (result.success && result.url) {
-      setPublishedUrl(result.url);
-      onPublishSuccess?.(result.url);
-    } else {
-      setError(result.error || 'Publishing failed');
+    const jobResult = await enqueuePublishJob(projectId, 'production');
+    if (!jobResult) {
+      setIsPublishing(false);
+      setError('Failed to enqueue publish job');
+      return;
     }
-  }, [userId, projectId, onPublishSuccess]);
+    setJob(jobResult);
+    setProgress('Queued for publish...');
+  }, [projectId, onPublishSuccess]);
 
   const handleCopyUrl = useCallback(async () => {
     if (publishedUrl) {
@@ -69,15 +70,76 @@ export const PublishModal = memo(function PublishModal({
   const handleClose = useCallback(() => {
     if (!isPublishing) {
       setProgress(null);
-      setBuildOutput([]);
+      setJob(null);
       setError(null);
       onClose();
     }
   }, [isPublishing, onClose]);
 
+  // Poll job status while publishing
+  useEffect(() => {
+    if (!job || job.status === 'published' || job.status === 'failed') return;
+
+    let isMounted = true;
+    const interval = setInterval(async () => {
+      const status = await getPublishJobStatus(job.id);
+      if (!status || !isMounted) return;
+
+      setJob(status);
+      setProgress(status.message || `${status.status}...`);
+      if (status.log_url) {
+        try {
+          const res = await fetch(status.log_url);
+          if (res.ok) {
+            const text = await res.text();
+            setLogText(text);
+          }
+        } catch {
+          // ignore log fetch errors
+        }
+      }
+
+      if (status.status === 'published') {
+        const url = existingUrl || `/play/${projectId}`;
+        setPublishedUrl(url);
+        onPublishSuccess?.(url);
+        setIsPublishing(false);
+        const fetchedVersions = await listPublishVersions(projectId);
+        setVersions(fetchedVersions);
+        clearInterval(interval);
+      } else if (status.status === 'failed') {
+        setError(status.message || 'Publishing failed');
+        setIsPublishing(false);
+        clearInterval(interval);
+      }
+    }, 2000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [job, existingUrl, projectId, onPublishSuccess]);
+
+  const handlePromote = useCallback(
+    async (versionId: string) => {
+      const ok = await promoteVersion(projectId, versionId);
+      if (ok) {
+        const updated = await listPublishVersions(projectId);
+        setVersions(updated);
+      }
+    },
+    [projectId]
+  );
+
+  useEffect(() => {
+    if (isOpen && isAlreadyPublished) {
+      listPublishVersions(projectId).then(setVersions).catch(() => {});
+    }
+  }, [isOpen, isAlreadyPublished, projectId]);
+
   if (!isOpen) return null;
 
-  const progressPercent = progress?.progress || 0;
+  const progressPercent = job?.progress || 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -163,6 +225,33 @@ export const PublishModal = memo(function PublishModal({
                   Close
                 </button>
               </div>
+
+              {versions.length > 0 && (
+                <div className="mt-6 rounded-xl border border-border bg-surface-overlay p-4 text-left">
+                  <p className="mb-2 text-sm font-medium text-content">Versions</p>
+                  <div className="space-y-2">
+                    {versions.map((v, idx) => (
+                      <div key={v.id} className="flex items-center justify-between rounded-lg border border-border-muted px-3 py-2 text-sm">
+                        <div>
+                          <p className="font-medium text-content">
+                            {v.version_tag} {idx === 0 && <span className="text-accent">(latest)</span>}
+                          </p>
+                          <p className="text-xs text-content-muted">
+                            {new Date(v.built_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handlePromote(v.id)}
+                          disabled={idx === 0}
+                          className="rounded-lg border border-border px-3 py-1 text-xs text-content-muted transition-colors hover:bg-surface-overlay disabled:opacity-50"
+                        >
+                          {idx === 0 ? 'Current' : 'Promote'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : isPublishing ? (
             /* Publishing State */
@@ -172,14 +261,15 @@ export const PublishModal = memo(function PublishModal({
                   <Loader2 className="h-5 w-5 animate-spin text-accent" />
                 </div>
                 <div>
-                  <p className="font-medium text-content">{progress?.message}</p>
-                  <p className="text-sm text-content-muted">
-                    {progress?.stage === 'building' && 'Creating production build...'}
-                    {progress?.stage === 'uploading' && 'Uploading to servers...'}
-                    {progress?.stage === 'finalizing' && 'Almost done...'}
-                  </p>
+                    <p className="font-medium text-content">{progress || 'Publishing...'}</p>
+                    <p className="text-sm text-content-muted">
+                      {job?.status === 'queued' && 'Waiting for worker...'}
+                      {job?.status === 'building' && 'Creating production build...'}
+                      {job?.status === 'uploading' && 'Uploading assets...'}
+                      {job?.status === 'finalizing' && 'Almost done...'}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
               {/* Progress Bar */}
               <div className="mb-4 h-2 overflow-hidden rounded-full bg-surface-overlay">
@@ -189,16 +279,12 @@ export const PublishModal = memo(function PublishModal({
                 />
               </div>
 
-              {/* Build Output */}
-              {buildOutput.length > 0 && (
-                <div className="max-h-40 overflow-auto rounded-xl bg-surface-elevated p-4 font-mono text-xs text-content-muted">
-                  {buildOutput.slice(-15).map((line, i) => (
-                    <div key={i} className="whitespace-pre-wrap break-all">
-                      {line}
-                    </div>
-                  ))}
+              {logText && (
+                <div className="max-h-32 overflow-auto rounded-xl bg-surface-elevated p-3 font-mono text-xs text-content-muted">
+                  <pre className="whitespace-pre-wrap">{logText}</pre>
                 </div>
               )}
+
             </div>
           ) : error ? (
             /* Error State */
@@ -208,17 +294,6 @@ export const PublishModal = memo(function PublishModal({
               </div>
               <p className="mb-2 font-medium text-content">Publishing Failed</p>
               <p className="mb-6 text-sm text-content-muted">{error}</p>
-
-              {/* Show build output on error */}
-              {buildOutput.length > 0 && (
-                <div className="mb-6 max-h-32 overflow-auto rounded-xl bg-surface-elevated p-4 text-left font-mono text-xs text-content-muted">
-                  {buildOutput.slice(-10).map((line, i) => (
-                    <div key={i} className="whitespace-pre-wrap break-all">
-                      {line}
-                    </div>
-                  ))}
-                </div>
-              )}
 
               <div className="flex gap-3">
                 <button

@@ -95,6 +95,19 @@ export function PlayPage({ gameId }: PlayPageProps) {
     fetchGame();
   }, [gameId]);
 
+  // Redirect shim: if slug/subdomain exists, redirect away from /play/:id
+  useEffect(() => {
+    if (!game) return;
+
+    const slugUrl = game.slug ? `https://${game.slug}.play.playcraft.games` : null;
+    const target = game.subdomain_url || slugUrl;
+
+    // If we have a target domain and we're on /play/:id, redirect once
+    if (target && window.location.pathname.startsWith('/play/')) {
+      window.location.replace(target);
+    }
+  }, [game]);
+
   // Get the game URL - use Edge Function to serve without X-Frame-Options
   const getGameUrl = useCallback(() => {
     if (!game) return null;

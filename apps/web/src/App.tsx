@@ -8,6 +8,9 @@ import { AuthPage } from './pages/Auth';
 import { HomePage } from './pages/Home';
 import { FeedbackPage } from './pages/Feedback';
 import { PlayPage } from './pages/Play';
+import { PitchPage } from './pages/Pitch';
+import { PitchFaPage } from './pages/PitchFa';
+import { PitchArPage } from './pages/PitchAr';
 import { ErrorBoundary } from './components';
 import { createProject, getProject, type PlayCraftProject } from './lib/projectService';
 import { useAppStore } from './stores/appStore';
@@ -211,6 +214,21 @@ function AppRoutes() {
         </div>
       </div>
     );
+  }
+
+  // Handle /pitch route - PUBLIC, no auth required (investor pitch deck)
+  if (location.pathname === '/pitch') {
+    return <PitchPage />;
+  }
+
+  // Handle /pitch-fa route - PUBLIC, Persian/Farsi version
+  if (location.pathname === '/pitch-fa') {
+    return <PitchFaPage />;
+  }
+
+  // Handle /pitch-ar route - PUBLIC, Arabic version
+  if (location.pathname === '/pitch-ar') {
+    return <PitchArPage />;
   }
 
   // Handle /play/:gameId route - PUBLIC, no auth required

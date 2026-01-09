@@ -488,3 +488,95 @@
     }
   }
 }
+
+/* ========================================================================
+   PRINT STYLES - Pitch Deck Export
+   Forces dark theme colors for PDF export
+   ======================================================================== */
+
+@media print {
+  /* Force color printing */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Reset page margins */
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+
+  /* Hide navigation and UI elements */
+  .pitch-nav,
+  .pitch-progress,
+  .pitch-counter,
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  /* Pitch deck specific - show all slides for print */
+  .pitch-deck {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .pitch-slide {
+    display: flex !important;
+    opacity: 1 !important;
+    position: relative !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    background-color: #0d0d14 !important;
+  }
+
+  .pitch-slide:last-child {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Force dark backgrounds */
+  body {
+    background-color: #0d0d14 !important;
+  }
+
+  .bg-surface,
+  .bg-surface-base {
+    background-color: #0d0d14 !important;
+  }
+
+  .bg-surface-elevated {
+    background-color: #111118 !important;
+  }
+
+  /* Force text colors */
+  .text-content-primary {
+    color: #f8fafc !important;
+  }
+
+  .text-content-secondary {
+    color: #94a3b8 !important;
+  }
+
+  .text-content-tertiary {
+    color: #64748b !important;
+  }
+
+  .text-accent {
+    color: #14b8a6 !important;
+  }
+
+  /* Force border colors */
+  .border-border-muted {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  /* Gradient text needs special handling for print */
+  .text-gradient-gaming {
+    -webkit-text-fill-color: #8b5cf6 !important;
+    color: #8b5cf6 !important;
+  }
+}
