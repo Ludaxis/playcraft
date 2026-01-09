@@ -14,6 +14,7 @@ import type { PlayCraftProject } from '../lib/projectService';
 import { useProjects, useCreateProject, useDeleteProject } from '../hooks/useProjects';
 import { useAppStore } from '../stores/appStore';
 import { Logo } from '../components/Logo';
+import { BlobImage } from '../components/BlobImage';
 import { generateProjectIcon } from '../lib/imageGenerationService';
 import { useUpdateProject } from '../hooks/useProjects';
 
@@ -221,10 +222,11 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
                 {/* Thumbnail or placeholder */}
                 <div className="mb-4 flex h-32 items-center justify-center rounded-lg bg-surface-overlay">
                   {project.thumbnail_url ? (
-                    <img
+                    <BlobImage
                       src={project.thumbnail_url}
                       alt={project.name}
                       className="h-full w-full rounded-lg object-cover"
+                      fallback={<Folder className="h-12 w-12 text-content-tertiary" />}
                     />
                   ) : (
                     <Folder className="h-12 w-12 text-content-tertiary" />
@@ -352,7 +354,7 @@ export function ProjectsPage({ user, onSignOut, onSelectProject }: ProjectsPageP
 
             {iconPreview && (
               <div className="mt-4 overflow-hidden rounded-lg border border-border-muted bg-surface-overlay">
-                <img src={iconPreview} alt="Generated icon" className="h-40 w-full object-contain" />
+                <BlobImage src={iconPreview} alt="Generated icon" className="h-40 w-full object-contain" />
               </div>
             )}
 

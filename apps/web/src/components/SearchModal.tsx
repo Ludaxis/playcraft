@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, Gamepad2 } from 'lucide-react';
 import type { PlayCraftProject } from '../lib/projectService';
 import { Avatar } from './Avatar';
+import { BlobImage } from './BlobImage';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -134,10 +135,15 @@ export function SearchModal({
                     {/* Thumbnail */}
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-border bg-gradient-to-br from-accent/30 to-secondary/20">
                       {project.thumbnail_url ? (
-                        <img
+                        <BlobImage
                           src={project.thumbnail_url}
                           alt=""
                           className="h-full w-full object-cover"
+                          fallback={
+                            <div className="flex h-full w-full items-center justify-center">
+                              <Gamepad2 className="h-6 w-6 text-content-subtle" />
+                            </div>
+                          }
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">

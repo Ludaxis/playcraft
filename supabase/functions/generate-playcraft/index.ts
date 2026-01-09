@@ -821,6 +821,14 @@ const isGemini3Model = (model: string): boolean => {
   return model.includes('gemini-3') || model.includes('gemini-3.0');
 };
 
+// Get appropriate thinking level for Gemini 3 models
+// - Flash: 'minimal' for speed (supports minimal, low, high)
+// - Pro: 'high' for best code quality (supports low, high only)
+const getGemini3ThinkingLevel = (model: string): string => {
+  const isFlash = model.toLowerCase().includes('flash');
+  return isFlash ? 'minimal' : 'high';
+};
+
 async function callGeminiWithPlan(
   planPrompt: string,
   apiKey: string,
@@ -854,9 +862,9 @@ OUTPUT FORMAT (FILE MODE):
   "needsThreeJs": false
 }`}`;
 
-  // Add timeout to prevent gateway timeout (504)
+  // Add timeout - increased for Gemini 3 Pro with high thinking level
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout for high quality thinking
 
   let response: Response;
   try {
@@ -870,9 +878,9 @@ OUTPUT FORMAT (FILE MODE):
       responseMimeType: 'application/json',
     };
 
-    // Only add thinkingConfig for Gemini 3 models
+    // Add thinkingConfig for Gemini 3 models - 'high' for Pro (best quality), 'minimal' for Flash (speed)
     if (isGemini3Model(GEMINI_CODE_MODEL)) {
-      generationConfig.thinkingConfig = { thinkingLevel: 'minimal' };
+      generationConfig.thinkingConfig = { thinkingLevel: getGemini3ThinkingLevel(GEMINI_CODE_MODEL) };
     }
 
     response = await fetch(
@@ -893,8 +901,8 @@ OUTPUT FORMAT (FILE MODE):
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === 'AbortError') {
-      logger.error('Gemini 3 API timeout (with plan)', { timeoutMs: 50000 });
-      throw new Error('Gemini API request timed out after 50 seconds');
+      logger.error('Gemini 3 API timeout (with plan)', { timeoutMs: 120000 });
+      throw new Error('Gemini API request timed out after 120 seconds');
     }
     throw err;
   }
@@ -1969,9 +1977,9 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   // Start timer for AI generation
   logger.startTimer('geminiApi');
 
-  // Add timeout to prevent gateway timeout (504)
+  // Add timeout - increased for Gemini 3 Pro with high thinking level
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50s timeout (gateway is ~60s)
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // 120s timeout for high quality thinking (gateway is ~60s)
 
   let response: Response;
   try {
@@ -2003,9 +2011,9 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
       responseMimeType: 'application/json',
     };
 
-    // Only add thinkingConfig for Gemini 3 models
+    // Add thinkingConfig for Gemini 3 models - 'high' for Pro (best quality), 'minimal' for Flash (speed)
     if (isGemini3Model(GEMINI_CODE_MODEL)) {
-      generationConfig.thinkingConfig = { thinkingLevel: 'minimal' };
+      generationConfig.thinkingConfig = { thinkingLevel: getGemini3ThinkingLevel(GEMINI_CODE_MODEL) };
     }
 
     response = await fetch(
@@ -2029,8 +2037,8 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === 'AbortError') {
-      logger.error('Gemini 3 API timeout', { timeoutMs: 50000 });
-      throw new Error('Gemini API request timed out after 50 seconds');
+      logger.error('Gemini 3 API timeout', { timeoutMs: 120000 });
+      throw new Error('Gemini API request timed out after 120 seconds');
     }
     throw err;
   }

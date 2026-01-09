@@ -16,7 +16,7 @@ import { ChatInput } from '../components/builder/ChatInput';
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
 import { ensureDraftPool } from '../lib/projectService';
-import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon, PublishModal } from '../components';
+import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon, PublishModal, BlobImage } from '../components';
 import { useSidebar } from '../hooks';
 import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from '../hooks/useProjects';
 import { useWorkspaces, useCreateWorkspace } from '../hooks/useWorkspaces';
@@ -375,10 +375,15 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                     {/* Thumbnail */}
                     <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border-muted bg-gradient-to-br from-accent-muted/30 via-secondary-muted/20 to-surface-elevated transition-all group-hover:border-accent/50 group-hover:shadow-glow-sm">
                       {project.thumbnail_url ? (
-                        <img
+                        <BlobImage
                           src={project.thumbnail_url}
                           alt={project.name}
                           className="h-full w-full object-cover"
+                          fallback={
+                            <div className="flex h-full w-full items-center justify-center">
+                              <Gamepad2 className="h-16 w-16 text-border" />
+                            </div>
+                          }
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
@@ -522,8 +527,9 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                   {(featuredGames.length > 0 ? featuredGames : FEATURED_GAMES).map((game) => {
                     const isRealGame = 'published_url' in game;
                     const thumbnail = isRealGame
-                      ? (game.thumbnail_url || 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop')
+                      ? game.thumbnail_url
                       : (game as typeof FEATURED_GAMES[0]).thumbnail;
+                    const fallbackThumbnail = 'https://images.unsplash.com/photo-1614732414444-096e5f1122d5?w=400&h=400&fit=crop';
 
                     return (
                       <a
@@ -533,11 +539,19 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                       >
                         {/* iOS-style app icon */}
                         <div className="relative h-[72px] w-[72px] overflow-hidden rounded-[16px] bg-surface-elevated shadow-lg transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
-                          <img
-                            src={thumbnail}
-                            alt={game.name}
-                            className="h-full w-full object-cover"
-                          />
+                          {isRealGame ? (
+                            <BlobImage
+                              src={thumbnail || fallbackThumbnail}
+                              alt={game.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <img
+                              src={thumbnail || fallbackThumbnail}
+                              alt={game.name}
+                              className="h-full w-full object-cover"
+                            />
+                          )}
                           {/* Subtle shine overlay like iOS */}
                           <div className="pointer-events-none absolute inset-0 rounded-[16px] ring-1 ring-inset ring-white/10" />
                         </div>

@@ -1,4 +1,5 @@
 export { Avatar } from './Avatar';
+export { BlobImage } from './BlobImage';
 export { FileTree } from './FileTree';
 export { CodeEditor } from './CodeEditor';
 export { Preview } from './Preview';

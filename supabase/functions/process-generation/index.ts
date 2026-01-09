@@ -208,6 +208,8 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
             maxOutputTokens: 32768,
             temperature: 0.4,
             responseMimeType: 'application/json',
+            // Gemini 3 Pro requires thinkingConfig - 'low' is supported (not 'minimal')
+            thinkingConfig: { thinkingLevel: 'low' },
           },
         }),
         signal: controller.signal,
