@@ -331,18 +331,7 @@ async function serveGameFile(
     ? 'no-cache, must-revalidate'
     : 'public, max-age=31536000, immutable';
 
-  // For HTML files, inject a script to fix BrowserRouter games
-  // The script MUST run before React loads and reads window.location
-  let responseBody: Blob | string = fileData;
-  if (isHtml) {
-    const htmlText = await fileData.text();
-    // Inject script at the VERY BEGINNING of the HTML, before doctype
-    // This ensures it runs before any other scripts including React
-    const fixScript = `<script>if(location.pathname!=='/'){history.replaceState(null,'','/')}</script>`;
-    responseBody = fixScript + htmlText;
-  }
-
-  return new Response(responseBody, {
+  return new Response(fileData, {
     status: 200,
     headers: {
       'Content-Type': contentType,
