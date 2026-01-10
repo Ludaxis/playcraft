@@ -278,14 +278,14 @@ function generateSlug(gameName: string, projectId: string): string {
   return `${slug}-${suffix}`;
 }
 
-// iOS-style app icon prompt
+// iOS-style app icon prompt - varied colors based on game theme
 const IOS_ICON_STYLE = [
-  'iOS app icon style, symbolic abstract design',
-  'bold geometric shapes, clean minimal composition',
-  'smooth gradient background, no text, no borders',
-  'professional glossy finish, centered focal element',
+  'iOS app icon style, symbolic design representing the game theme',
+  'bold shapes, clean minimal composition, visually striking',
+  'vibrant colorful gradient background matching game mood',
+  'professional glossy finish, centered iconic element',
   'Apple design language, premium mobile quality',
-  'single bold color palette with subtle shading',
+  'use colors that match the game theme: warm reds/oranges for action, greens for nature/adventure, purples for mystery, yellows for fun/casual, varied palette NOT just blue',
 ].join(', ');
 
 interface IconGenerationResult {
