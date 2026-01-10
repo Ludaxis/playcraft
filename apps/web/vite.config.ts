@@ -14,6 +14,14 @@ export default defineConfig({
       'Cross-Origin-Embedder-Policy': 'require-corp',
       'Cross-Origin-Opener-Policy': 'same-origin',
     },
+    // Proxy for game serving in development
+    proxy: {
+      '/api/game': {
+        target: 'https://playcraft.games',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
   },
   preview: {
     headers: {

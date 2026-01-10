@@ -282,6 +282,7 @@ async function serveGameFile(
       'Cache-Control': cacheControl,
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
       'X-Content-Type-Options': 'nosniff',
       // Explicitly NOT setting X-Frame-Options - this allows iframe embedding!
     },
