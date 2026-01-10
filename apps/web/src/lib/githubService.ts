@@ -450,3 +450,172 @@ export async function validateGitHubConnection(): Promise<boolean> {
     return false;
   }
 }
+
+// ============================================================================
+// Database Persistence Functions
+// ============================================================================
+
+import type {
+  GitHubConnection,
+  CreateGitHubConnectionInput,
+  UpdateGitHubConnectionInput,
+} from '../types';
+
+/**
+ * Get the GitHub connection for a project
+ */
+export async function getGitHubConnection(
+  projectId: string
+): Promise<GitHubConnection | null> {
+  const supabase = getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const { data, error } = await supabase
+    .from('project_github_connections')
+    .select('*')
+    .eq('project_id', projectId)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows returned
+      return null;
+    }
+    throw error;
+  }
+
+  return data as GitHubConnection;
+}
+
+/**
+ * Create a new GitHub connection for a project
+ */
+export async function createGitHubConnection(
+  input: CreateGitHubConnectionInput
+): Promise<GitHubConnection> {
+  const supabase = getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const { data, error } = await supabase
+    .from('project_github_connections')
+    .insert({
+      ...input,
+      user_id: user.id,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as GitHubConnection;
+}
+
+/**
+ * Update an existing GitHub connection
+ */
+export async function updateGitHubConnection(
+  projectId: string,
+  input: UpdateGitHubConnectionInput
+): Promise<GitHubConnection> {
+  const supabase = getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const { data, error } = await supabase
+    .from('project_github_connections')
+    .update(input)
+    .eq('project_id', projectId)
+    .eq('user_id', user.id)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data as GitHubConnection;
+}
+
+/**
+ * Delete a GitHub connection for a project
+ */
+export async function deleteGitHubConnection(projectId: string): Promise<void> {
+  const supabase = getSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Not authenticated');
+  }
+
+  const { error } = await supabase
+    .from('project_github_connections')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('user_id', user.id);
+
+  if (error) {
+    throw error;
+  }
+}
+
+/**
+ * Record a push operation and update sync state
+ */
+export async function recordPush(
+  projectId: string,
+  commitSha: string
+): Promise<GitHubConnection> {
+  return updateGitHubConnection(projectId, {
+    last_sync_sha: commitSha,
+    last_sync_at: new Date().toISOString(),
+    last_push_at: new Date().toISOString(),
+  });
+}
+
+/**
+ * Record a pull operation and update sync state
+ */
+export async function recordPull(
+  projectId: string,
+  commitSha: string
+): Promise<GitHubConnection> {
+  return updateGitHubConnection(projectId, {
+    last_sync_sha: commitSha,
+    last_sync_at: new Date().toISOString(),
+    last_pull_at: new Date().toISOString(),
+  });
+}
+
+/**
+ * Create a connection from a GitHubRepository object
+ * Helper to convert from API response to database input
+ */
+export function connectionInputFromRepository(
+  projectId: string,
+  repo: GitHubRepository,
+  owner: string
+): CreateGitHubConnectionInput {
+  return {
+    project_id: projectId,
+    repository_owner: owner,
+    repository_name: repo.name,
+    repository_full_name: repo.fullName,
+    repository_url: repo.url,
+    repository_private: repo.private,
+    default_branch: repo.defaultBranch,
+    current_branch: repo.defaultBranch,
+  };
+}

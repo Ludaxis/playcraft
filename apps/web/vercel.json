@@ -19,7 +19,7 @@
       ]
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/((?!api/|play/|playground).*)",
       "headers": [
         {
           "key": "Cross-Origin-Embedder-Policy",

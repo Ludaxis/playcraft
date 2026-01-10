@@ -92,4 +92,13 @@ export const queryKeys = {
       [...queryKeys.assets.all, 'manifest', projectId] as const,
     usage: (projectId: string) => [...queryKeys.assets.all, 'usage', projectId] as const,
   },
+  github: {
+    all: ['github'] as const,
+    connection: (projectId: string) =>
+      [...queryKeys.github.all, 'connection', projectId] as const,
+    repositories: () => [...queryKeys.github.all, 'repositories'] as const,
+    branches: (owner: string, repo: string) =>
+      [...queryKeys.github.all, 'branches', owner, repo] as const,
+    user: () => [...queryKeys.github.all, 'user'] as const,
+  },
 } as const;

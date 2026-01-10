@@ -231,6 +231,78 @@ export interface WorkspaceWithMembership {
 }
 
 // ============================================================================
+// GitHub Integration Types
+// ============================================================================
+
+export type SyncDirection = 'push_only' | 'pull_only' | 'bidirectional';
+
+export interface GitHubConnection {
+  id: string;
+  project_id: string;
+  user_id: string;
+
+  // Repository info
+  repository_owner: string;
+  repository_name: string;
+  repository_full_name: string;
+  repository_url: string;
+  repository_private: boolean;
+
+  // Branch info
+  default_branch: string;
+  current_branch: string;
+
+  // Sync state
+  last_sync_sha: string | null;
+  last_sync_at: string | null;
+  last_push_at: string | null;
+  last_pull_at: string | null;
+
+  // Sync settings
+  sync_direction: SyncDirection;
+  auto_sync: boolean;
+  auto_push_on_save: boolean;
+
+  // Metadata
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateGitHubConnectionInput {
+  project_id: string;
+  repository_owner: string;
+  repository_name: string;
+  repository_full_name: string;
+  repository_url: string;
+  repository_private?: boolean;
+  default_branch?: string;
+  current_branch?: string;
+  sync_direction?: SyncDirection;
+  auto_sync?: boolean;
+  auto_push_on_save?: boolean;
+}
+
+export interface UpdateGitHubConnectionInput {
+  current_branch?: string;
+  last_sync_sha?: string;
+  last_sync_at?: string;
+  last_push_at?: string;
+  last_pull_at?: string;
+  sync_direction?: SyncDirection;
+  auto_sync?: boolean;
+  auto_push_on_save?: boolean;
+}
+
+export interface GitHubSyncStatus {
+  connected: boolean;
+  connection: GitHubConnection | null;
+  hasLocalChanges: boolean;
+  hasRemoteChanges: boolean;
+  isSyncing: boolean;
+  lastError: string | null;
+}
+
+// ============================================================================
 // Usage & Stats Types
 // ============================================================================
 
