@@ -7,7 +7,6 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Play as PlayIcon, Maximize2, Share2, ArrowLeft, Loader2, Gamepad2 } from 'lucide-react';
 import { incrementPlayCount, getPublishedGames } from '../lib/publishService';
 import { getSupabase } from '../lib/supabase';
@@ -26,7 +25,6 @@ interface PlayPageProps {
 }
 
 export function PlayPage({ gameId }: PlayPageProps) {
-  const navigate = useNavigate();
   const [game, setGame] = useState<PublishedGameWithSubdomain | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
