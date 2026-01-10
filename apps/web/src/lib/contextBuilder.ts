@@ -1103,7 +1103,13 @@ export async function buildContext(
 ): Promise<ContextPackage> {
   // Log input files for debugging
   const fileCount = Object.keys(files).length;
-  console.log(`[ContextBuilder] buildContext called with ${fileCount} files:`, Object.keys(files).slice(0, 10).join(', '));
+  const mainFileExists = !!files['/src/pages/Index.tsx'];
+  console.log(`[ContextBuilder] buildContext called with ${fileCount} files, mainFileExists=${mainFileExists}:`, Object.keys(files).slice(0, 10).join(', '));
+
+  // CRITICAL: If no files are passed, we can't build proper context
+  if (fileCount === 0) {
+    console.error('[ContextBuilder] WARNING: No files passed to buildContext! AI will generate from scratch.');
+  }
 
   // Analyze user intent
   const intent = analyzeUserIntent(prompt);
@@ -1224,6 +1230,30 @@ export async function buildContext(
 
     if (relevantFiles.length >= maxFiles) break;
   }
+
+  // SAFEGUARD: If no files were selected but main files exist, force-include them
+  // This prevents the AI from generating from scratch when files exist
+  if (relevantFiles.length === 0) {
+    console.warn('[ContextBuilder] No files selected by scoring! Attempting to include main files as fallback...');
+    const mainFiles = ['/src/pages/Index.tsx', '/src/pages/GameplayPage.tsx', '/src/App.tsx'];
+    for (const mainPath of mainFiles) {
+      const content = files[mainPath];
+      if (content) {
+        console.log(`[ContextBuilder] Force-including fallback file: ${mainPath}`);
+        relevantFiles.push({
+          path: mainPath,
+          content: content,
+          relevanceScore: 1.0,
+          relevanceReason: 'main file (fallback)',
+          isOutline: false,
+        });
+        tokenEstimate += Math.ceil(content.length / CHARS_PER_TOKEN);
+        if (relevantFiles.length >= 3) break;
+      }
+    }
+  }
+
+  console.log(`[ContextBuilder] Final context: ${relevantFiles.length} files selected`);
 
   // Get recent messages (fewer for simple actions)
   const recentMessageCount = intent.action === 'explain' ? 3 : 5;
