@@ -134,7 +134,12 @@ export function BuilderPage({
 
   // Log project info on mount (no state update needed - useState already has initialProject)
   useEffect(() => {
-    console.log('[Builder] Project mounted with', Object.keys(initialProject.files || {}).length, 'files');
+    const fileCount = Object.keys(initialProject.files || {}).length;
+    const filePaths = Object.keys(initialProject.files || {}).slice(0, 5);
+    console.log('[Builder] Project mounted with', fileCount, 'files:', filePaths.join(', '));
+    if (fileCount === 0) {
+      console.error('[Builder] WARNING: Project has no files! AI will generate from scratch.');
+    }
   }, []);
 
   // Load Voyage API key from settings for semantic search
