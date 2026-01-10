@@ -771,10 +771,14 @@ export async function startDevServer(
 
   // Store callback for server-ready event
   currentServerReadyCallback = onServerReady || null;
+  console.log('[WebContainer] startDevServer called, callback:', !!onServerReady);
 
   // Register server-ready listener only once (avoid duplicates)
-  if (!serverReadyListenerRegistered && onServerReady) {
+  // Always register if not already registered - callback is stored separately
+  if (!serverReadyListenerRegistered) {
+    console.log('[WebContainer] Registering server-ready listener');
     instance.on('server-ready', (port, url) => {
+      console.log('[WebContainer] server-ready event fired:', { port, url, hasCallback: !!currentServerReadyCallback });
       if (currentServerReadyCallback) {
         currentServerReadyCallback(port, url);
       }

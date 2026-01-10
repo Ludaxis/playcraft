@@ -171,13 +171,24 @@ export function useWebContainer(): UseWebContainerReturn {
     return false;
   }, [resetForNewProject]);
 
+  // Track ongoing boot promise
+  const bootPromiseRef = useRef<Promise<void> | null>(null);
+
   // Boot the WebContainer
   const boot = useCallback(async () => {
-    // Use ref for synchronous lock (React state is async)
-    if (isBootingRef.current || containerRef.current) {
-      console.log('[useWebContainer] Boot skipped - already booting or booted');
+    // If already booted, return immediately
+    if (containerRef.current) {
+      console.log('[useWebContainer] Boot skipped - already booted');
       return;
     }
+
+    // If boot is in progress, wait for it
+    if (bootPromiseRef.current) {
+      console.log('[useWebContainer] Boot in progress - waiting for completion');
+      await bootPromiseRef.current;
+      return;
+    }
+
     if (status !== 'idle') return;
 
     isBootingRef.current = true;
@@ -185,19 +196,26 @@ export function useWebContainer(): UseWebContainerReturn {
     setError(null);
     appendOutput('Booting WebContainer...\n');
 
-    try {
-      const container = await bootWebContainer();
-      containerRef.current = container;
-      setStatus('ready');
-      appendOutput('WebContainer ready!\n');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to boot WebContainer';
-      setError(message);
-      setStatus('error');
-      appendOutput(`Error: ${message}\n`);
-    } finally {
-      isBootingRef.current = false;
-    }
+    // Create and store the boot promise
+    bootPromiseRef.current = (async () => {
+      try {
+        const container = await bootWebContainer();
+        containerRef.current = container;
+        setStatus('ready');
+        appendOutput('WebContainer ready!\n');
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to boot WebContainer';
+        setError(message);
+        setStatus('error');
+        appendOutput(`Error: ${message}\n`);
+        throw err;
+      } finally {
+        isBootingRef.current = false;
+        bootPromiseRef.current = null;
+      }
+    })();
+
+    await bootPromiseRef.current;
   }, [status, appendOutput]);
 
   // Current project ID ref for caching
@@ -205,8 +223,14 @@ export function useWebContainer(): UseWebContainerReturn {
 
   // Mount project files
   const mountProject = useCallback(async (files: FileSystemTree, projectId?: string) => {
-    if (!containerRef.current && status !== 'ready') {
+    // Ensure WebContainer is booted before mounting
+    if (!containerRef.current) {
+      console.log('[useWebContainer] Container not ready, booting before mount...');
       await boot();
+      // Double-check container is available after boot
+      if (!containerRef.current) {
+        throw new Error('WebContainer failed to boot');
+      }
     }
 
     // Set project ID for cache scoping
