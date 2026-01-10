@@ -155,7 +155,7 @@ function AppRoutes() {
     navigate('/');
   };
 
-  const handleSelectProject = (project: PlayCraftProject) => {
+  const handleSelectProject = async (project: PlayCraftProject) => {
     // Check if selecting the same project - just navigate, don't reset state
     if (currentProject?.id === project.id) {
       console.log('[App] Returning to same project:', project.id);
@@ -164,11 +164,31 @@ function AppRoutes() {
     }
 
     console.log('[App] Switching to project:', project.id);
-    setCurrentProject(project);
-    setInitialPrompt(null);
+    setLoadingProject(true);
     loadedProjectIdRef.current = project.id;
-    localStorage.setItem(LAST_PROJECT_CACHE_KEY, project.id);
-    navigate(`/builder/${project.id}`);
+
+    try {
+      // IMPORTANT: Load full project data including files from Storage
+      // The project from the list doesn't include files from Storage
+      const fullProject = await getProject(project.id);
+      if (fullProject) {
+        console.log('[App] Loaded full project with', Object.keys(fullProject.files || {}).length, 'files');
+        setCurrentProject(fullProject);
+        setInitialPrompt(null);
+        localStorage.setItem(LAST_PROJECT_CACHE_KEY, fullProject.id);
+        navigate(`/builder/${fullProject.id}`);
+      } else {
+        console.warn('[App] Project not found:', project.id);
+        loadedProjectIdRef.current = null;
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('[App] Failed to load project:', err);
+      loadedProjectIdRef.current = null;
+      navigate('/');
+    } finally {
+      setLoadingProject(false);
+    }
   };
 
   const handleStartNewProject = async (prompt: string) => {
