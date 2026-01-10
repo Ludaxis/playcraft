@@ -35,12 +35,12 @@ const STYLE_PROMPTS: Record<string, string> = {
 };
 
 const CATEGORY_PROMPTS: Record<string, string> = {
-  'character': 'game character sprite, full body, transparent background, suitable for 2D game',
-  'background': 'game background, seamless where appropriate, atmospheric, high quality',
-  'item': 'game item icon, centered, transparent background, clean design',
-  'ui': 'game UI element, clean design, transparent background, modern look',
-  'tile': 'game tileset piece, seamless edges, suitable for tiling, consistent style',
-  'effect': 'game visual effect, particle or magic effect, transparent background',
+  'character': 'game character sprite, full body front-facing view, transparent background, suitable for 2D game, centered in frame',
+  'background': 'game background scene, wide landscape view, atmospheric lighting, seamless edges where appropriate, high quality digital art',
+  'item': 'game item icon, centered object, transparent background, clean isolated design, front-facing view, no shadows on edges',
+  'ui': 'flat 2D game UI element, front-facing orthographic view, clean vector-style design, suitable for game interface, transparent background, crisp edges, no perspective distortion, no 3D effects, directly usable as game button or panel',
+  'tile': 'game tile texture, TOP-DOWN orthographic view from directly above, perfectly square, seamless tileable edges, flat 2D perspective, suitable for puzzle games like 2048 or match-3, no side angles, no isometric view',
+  'effect': 'game visual effect sprite, particle or magic effect, transparent background, suitable for animation frames',
 };
 
 function buildImagePrompt(
