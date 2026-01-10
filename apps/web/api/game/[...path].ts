@@ -331,7 +331,28 @@ async function serveGameFile(
     ? 'no-cache, must-revalidate'
     : 'public, max-age=31536000, immutable';
 
-  return new Response(fileData, {
+  // For HTML files, inject a script to fix BrowserRouter games
+  // This script navigates to "/" if the game uses BrowserRouter and path isn't "/"
+  let responseBody: Blob | string = fileData;
+  if (isHtml) {
+    const htmlText = await fileData.text();
+    // Inject a script that will navigate to "/" for BrowserRouter games
+    // This runs before React loads and uses history.replaceState to "fix" the path
+    const fixScript = `<script>
+(function() {
+  // Only run if we're at a non-root path (BrowserRouter games)
+  if (window.location.pathname !== '/' && !window.location.hash) {
+    // Use replaceState to change the visible URL to "/" without reload
+    // This makes BrowserRouter think we're at "/"
+    window.history.replaceState({}, '', '/');
+  }
+})();
+</script>`;
+    // Insert the script right after <head> to run as early as possible
+    responseBody = htmlText.replace(/<head>/i, '<head>' + fixScript);
+  }
+
+  return new Response(responseBody, {
     status: 200,
     headers: {
       'Content-Type': contentType,
