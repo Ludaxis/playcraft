@@ -70,15 +70,18 @@ describe('HeroBanner', () => {
 
     it('renders Play Now button', () => {
       renderWithRouter(<HeroBanner games={mockGames} />);
-      expect(screen.getByRole('link', { name: /Play Now/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Play Now/i })).toBeInTheDocument();
     });
 
-    it('links to correct play page', () => {
-      renderWithRouter(<HeroBanner games={mockGames} />);
-      expect(screen.getByRole('link', { name: /Play Now/i })).toHaveAttribute(
-        'href',
-        '/play/featured-1'
-      );
+    it('calls onGameClick with current game when Play Now is clicked', async () => {
+      vi.useRealTimers();
+      const handleGameClick = vi.fn();
+      const user = userEvent.setup();
+      renderWithRouter(<HeroBanner games={mockGames} onGameClick={handleGameClick} autoRotateMs={0} />);
+
+      await user.click(screen.getByRole('button', { name: /Play Now/i }));
+
+      expect(handleGameClick).toHaveBeenCalledWith(mockGames[0]);
     });
 
     it('renders author name when provided', () => {

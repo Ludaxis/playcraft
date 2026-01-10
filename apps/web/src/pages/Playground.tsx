@@ -8,7 +8,6 @@ import {
   MiniBanner,
   FilterBar,
   GameCard,
-  GamePlayerModal,
 } from '../components/playground';
 import type { SortOption, GenreFilter } from '../components/playground';
 import { LogoIcon } from '../components';
@@ -56,22 +55,10 @@ export function PlaygroundPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Game player modal state
-  const [selectedGame, setSelectedGame] = useState<PublishedGame | null>(null);
-  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
-
-  // Handle game click - open in modal
+  // Handle game click - navigate to play page
   const handleGameClick = useCallback((game: PublishedGame) => {
-    setSelectedGame(game);
-    setIsPlayerOpen(true);
-  }, []);
-
-  // Close game player
-  const handleClosePlayer = useCallback(() => {
-    setIsPlayerOpen(false);
-    // Delay clearing selected game to allow animation
-    setTimeout(() => setSelectedGame(null), 300);
-  }, []);
+    navigate(`/play/${game.id}`);
+  }, [navigate]);
 
   // Fetch initial data
   useEffect(() => {
@@ -386,13 +373,6 @@ export function PlaygroundPage() {
           <span className="text-sm">Made with PlayCraft</span>
         </div>
       </footer>
-
-      {/* Game Player Modal */}
-      <GamePlayerModal
-        game={selectedGame}
-        isOpen={isPlayerOpen}
-        onClose={handleClosePlayer}
-      />
     </div>
   );
 }

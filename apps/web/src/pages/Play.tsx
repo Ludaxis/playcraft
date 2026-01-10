@@ -7,10 +7,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Play as PlayIcon, Maximize2, Share2, ArrowLeft, Loader2, Gamepad2 } from 'lucide-react';
-import { incrementPlayCount } from '../lib/publishService';
+import { incrementPlayCount, getPublishedGames } from '../lib/publishService';
 import { getSupabase } from '../lib/supabase';
 import { LogoIcon, Logo } from '../components/Logo';
+import { GameDiscoverySidebar } from '../components/playground/GameDiscoverySidebar';
 import type { PublishedGame } from '../types';
 
 // Extended type to include subdomain fields
@@ -24,11 +26,13 @@ interface PlayPageProps {
 }
 
 export function PlayPage({ gameId }: PlayPageProps) {
+  const navigate = useNavigate();
   const [game, setGame] = useState<PublishedGameWithSubdomain | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [, setIsFullscreen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [relatedGames, setRelatedGames] = useState<PublishedGame[]>([]);
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -107,6 +111,19 @@ export function PlayPage({ gameId }: PlayPageProps) {
       window.location.replace(target);
     }
   }, [game]);
+
+  // Fetch related games for sidebar
+  useEffect(() => {
+    async function fetchRelatedGames() {
+      try {
+        const games = await getPublishedGames(20);
+        setRelatedGames(games);
+      } catch (err) {
+        console.error('[PlayPage] Failed to fetch related games:', err);
+      }
+    }
+    fetchRelatedGames();
+  }, []);
 
   // Get the game URL - use Edge Function to serve without X-Frame-Options
   const getGameUrl = useCallback(() => {
@@ -243,73 +260,95 @@ export function PlayPage({ gameId }: PlayPageProps) {
 
       {/* Game Container */}
       <main className="mx-auto max-w-7xl px-4 py-6">
-        {/* Game Info */}
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-content">{game.name}</h1>
-          {game.description && (
-            <p className="mt-1 text-content-muted">{game.description}</p>
-          )}
-          <div className="mt-2 flex items-center gap-4 text-sm text-content-subtle">
-            <span>by {game.author_name}</span>
-            <span className="flex items-center gap-1">
-              <PlayIcon className="h-3 w-3" />
-              {game.play_count.toLocaleString()} plays
-            </span>
-          </div>
-        </div>
+        {/* Two-column layout: Game + Sidebar */}
+        <div className="flex flex-col gap-6 lg:flex-row">
+          {/* Left: Game + Info */}
+          <div className="min-w-0 flex-1">
+            {/* Game Info */}
+            <div className="mb-4">
+              <h1 className="text-2xl font-bold text-content">{game.name}</h1>
+              {game.description && (
+                <p className="mt-1 text-content-muted">{game.description}</p>
+              )}
+              <div className="mt-2 flex items-center gap-4 text-sm text-content-subtle">
+                <span>by {game.author_name}</span>
+                <span className="flex items-center gap-1">
+                  <PlayIcon className="h-3 w-3" />
+                  {game.play_count.toLocaleString()} plays
+                </span>
+              </div>
+            </div>
 
-        {/* Game iframe */}
-        <div className="relative aspect-video overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated shadow-lg">
-          {gameUrl ? (
-            <>
-              <iframe
-                id="game-iframe"
-                src={gameUrl}
-                className="h-full w-full"
-                title={game.name}
-                allow="fullscreen; autoplay; encrypted-media"
-                onError={() => console.log('[PlayPage] iframe error')}
-              />
-              {/* Fallback overlay - shows if iframe fails to load */}
-              <div
-                id="iframe-fallback"
-                className="absolute inset-0 flex flex-col items-center justify-center bg-surface-elevated/95 opacity-0 pointer-events-none transition-opacity"
-                style={{ opacity: 0 }}
-              >
-                <Gamepad2 className="h-16 w-16 text-content-muted mb-4" />
-                <p className="text-content-muted mb-4">Game preview unavailable</p>
+            {/* Game iframe */}
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-border-muted bg-surface-elevated shadow-lg">
+              {gameUrl ? (
+                <>
+                  <iframe
+                    id="game-iframe"
+                    src={gameUrl}
+                    className="h-full w-full"
+                    title={game.name}
+                    allow="fullscreen; autoplay; encrypted-media"
+                    onError={() => console.log('[PlayPage] iframe error')}
+                  />
+                  {/* Fallback overlay - shows if iframe fails to load */}
+                  <div
+                    id="iframe-fallback"
+                    className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center bg-surface-elevated/95 opacity-0 transition-opacity"
+                    style={{ opacity: 0 }}
+                  >
+                    <Gamepad2 className="mb-4 h-16 w-16 text-content-muted" />
+                    <p className="mb-4 text-content-muted">Game preview unavailable</p>
+                    <a
+                      href={gameUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-secondary px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+                    >
+                      <PlayIcon className="h-4 w-4" />
+                      Open Game in New Tab
+                    </a>
+                  </div>
+                </>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-content-muted">Loading game...</p>
+                </div>
+              )}
+            </div>
+
+            {/* Direct play link */}
+            {gameUrl && (
+              <div className="mt-4 text-center">
                 <a
                   href={gameUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-secondary px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+                  className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
                 >
                   <PlayIcon className="h-4 w-4" />
-                  Open Game in New Tab
+                  Open game in new tab
                 </a>
               </div>
-            </>
-          ) : (
-            <div className="flex h-full items-center justify-center">
-              <p className="text-content-muted">Loading game...</p>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Right: Sidebar - Desktop only */}
+          <GameDiscoverySidebar
+            games={relatedGames}
+            currentGameId={gameId}
+            className="hidden w-[320px] shrink-0 lg:block"
+          />
         </div>
 
-        {/* Direct play link */}
-        {gameUrl && (
-          <div className="mt-4 text-center">
-            <a
-              href={gameUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-accent hover:underline"
-            >
-              <PlayIcon className="h-4 w-4" />
-              Open game in new tab
-            </a>
-          </div>
-        )}
+        {/* Mobile: More Games Section */}
+        <div className="mt-8 lg:hidden">
+          <GameDiscoverySidebar
+            games={relatedGames}
+            currentGameId={gameId}
+            title="More Games"
+          />
+        </div>
 
         {/* CTA Section */}
         <div className="mt-12 rounded-2xl border border-border-muted bg-surface-elevated p-8 text-center">
