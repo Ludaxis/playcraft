@@ -78,6 +78,7 @@ interface UsePlayCraftChatOptions {
   hasThreeJs?: boolean; // Whether Three.js template is already loaded
   useSmartContext?: boolean; // Enable smart context system (default: true if projectId provided)
   initialMessages?: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>; // Restore previous conversation
+  initialFiles?: Record<string, string>; // Initial project files from database (fallback if WebContainer not ready)
   runTypeCheck?: () => Promise<string>; // Run TypeScript check, return error output
   runESLint?: () => Promise<string>; // Run ESLint, return JSON output
   enableAutoFix?: boolean; // Enable automatic error fixing (default: true)
@@ -216,6 +217,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     hasThreeJs = false,
     useSmartContext,
     initialMessages,
+    initialFiles,
     runTypeCheck,
     runESLint,
     enableAutoFix = true,
@@ -303,7 +305,16 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   }, [initialMessages]);
 
   // Keep track of generated files for context
-  const filesRef = useRef<Record<string, string>>({});
+  // Initialize with initialFiles from database to ensure context is available immediately
+  const filesRef = useRef<Record<string, string>>(initialFiles || {});
+
+  // Update filesRef when initialFiles changes (e.g., when project is loaded)
+  useEffect(() => {
+    if (initialFiles && Object.keys(initialFiles).length > 0) {
+      console.log('[usePlayCraftChat] Initializing filesRef with', Object.keys(initialFiles).length, 'files from database');
+      filesRef.current = { ...filesRef.current, ...initialFiles };
+    }
+  }, [initialFiles]);
 
   // Track message count for summarization
   const messageCountRef = useRef(0);
@@ -403,8 +414,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
                 total: Object.keys(currentFiles).length,
                 completed: 0,
               });
-            } catch {
-              // Fall back to cached files
+            } catch (err) {
+              // Fall back to cached files (includes initialFiles from database)
+              console.warn('[usePlayCraftChat] Failed to read from WebContainer, using cached files:', err);
+              console.log('[usePlayCraftChat] Falling back to', Object.keys(currentFiles).length, 'cached files');
             }
           } else if (selectedFile && readFile) {
             // At minimum, read the selected file

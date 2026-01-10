@@ -413,6 +413,7 @@ export function BuilderPage({
       hasThreeJs,
       onNeedsThreeJs: upgradeToThreeJs,
       initialMessages: activeSessionMessages,
+      initialFiles: project.files, // Pass DB files as fallback if WebContainer not ready
       runTypeCheck,
       runESLint,
       enableAutoFix: true,
