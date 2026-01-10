@@ -332,35 +332,38 @@ async function serveGameFile(
     : 'public, max-age=31536000, immutable';
 
   // For HTML files, inject a script to fix BrowserRouter games
-  // This script triggers a navigation to "/" after React Router mounts
+  // This script clicks the "Go Home" link after React renders the 404 page
   let responseBody: Blob | string = fileData;
   if (isHtml) {
     const htmlText = await fileData.text();
-    // Inject a script that navigates to "/" using the History API
-    // This triggers after React mounts and dispatches popstate to notify React Router
+    // Inject a script that finds and clicks the home link
     const fixScript = `<script>
 (function() {
   // Skip if already at root or has hash (HashRouter)
   if (window.location.pathname === '/' || window.location.hash) return;
 
-  // Wait for DOM and React to be ready, then navigate to "/"
-  function navigateToRoot() {
-    // Push "/" to history and dispatch popstate to trigger React Router
-    window.history.replaceState({}, '', '/');
-    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+  function clickHomeLink() {
+    // Find the "Go Home" link or any link to "/"
+    var link = document.querySelector('a[href="/"]');
+    if (link) {
+      link.click();
+      return true;
+    }
+    return false;
   }
 
-  // Try immediately, then retry after React likely mounts
-  if (document.readyState === 'complete') {
-    setTimeout(navigateToRoot, 50);
-  } else {
-    window.addEventListener('load', function() {
-      setTimeout(navigateToRoot, 50);
-    });
-  }
+  // Try multiple times as React may take time to render
+  var attempts = 0;
+  var maxAttempts = 20;
+  var interval = setInterval(function() {
+    attempts++;
+    if (clickHomeLink() || attempts >= maxAttempts) {
+      clearInterval(interval);
+    }
+  }, 50);
 })();
 </script>`;
-    // Insert the script right after <head> to run as early as possible
+    // Insert the script right after <head>
     responseBody = htmlText.replace(/<head>/i, '<head>' + fixScript);
   }
 
