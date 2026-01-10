@@ -229,6 +229,7 @@ export function BuilderPage({
   const [inputValue, setInputValue] = useState('');
   const [showExportModal, setShowExportModal] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [isPublishPreparing, setIsPublishPreparing] = useState(false);
   const [projectReady, setProjectReady] = useState(false);
   const [hasThreeJs, setHasThreeJs] = useState(project.has_three_js);
   const [isSettingUp, setIsSettingUp] = useState(false);
@@ -952,6 +953,7 @@ export function BuilderPage({
 
   // Handle publish - build, save files, then open modal
   const handlePublish = useCallback(async () => {
+    setIsPublishPreparing(true);
     try {
       // Step 1: Save source files to Storage
       const currentFiles = await readAllFiles();
@@ -982,6 +984,8 @@ export function BuilderPage({
     } catch (err) {
       console.error('[Builder] Failed to prepare for publish:', err);
       // Continue to publish modal anyway
+    } finally {
+      setIsPublishPreparing(false);
     }
     setShowPublishModal(true);
   }, [project.id, readAllFiles, readDistFiles, runCommand]);
@@ -1262,6 +1266,7 @@ export function BuilderPage({
         onRefresh={handleRefresh}
         isRefreshing={status === 'installing' || status === 'booting'}
         isPublished={project.status === 'published'}
+        isPublishLoading={isPublishPreparing}
         publishedUrl={project.published_url}
       />
 

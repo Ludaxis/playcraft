@@ -9,6 +9,7 @@ import {
   Crown,
   ExternalLink,
   Plus,
+  Loader2,
 } from 'lucide-react';
 import type { WebContainerStatus } from '../../hooks/useWebContainer';
 import { Avatar } from '../Avatar';
@@ -22,6 +23,7 @@ interface PreviewHeaderProps {
   onPublish?: () => void;
   onUpgrade?: () => void;
   isPublished?: boolean;
+  isPublishLoading?: boolean;
   publishedUrl?: string;
   // View mode and device toggles
   viewMode: BuilderViewMode;
@@ -39,6 +41,7 @@ export function PreviewHeader({
   onPublish,
   onUpgrade,
   isPublished = false,
+  isPublishLoading = false,
   publishedUrl,
   viewMode,
   onViewModeChange,
@@ -105,10 +108,11 @@ export function PreviewHeader({
         {/* Publish/Update button */}
         <button
           onClick={onPublish}
-          disabled={status !== 'running'}
-          className="rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={status !== 'running' || isPublishLoading}
+          className="flex items-center gap-2 rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isPublished ? 'Update' : 'Publish'}
+          {isPublishLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+          {isPublishLoading ? 'Preparing...' : isPublished ? 'Update' : 'Publish'}
         </button>
 
         {/* View Live button (shown when published) */}

@@ -12,6 +12,7 @@ import {
   Crown,
   ExternalLink,
   HelpCircle,
+  Loader2,
 } from 'lucide-react';
 import type { WebContainerStatus } from '../../hooks/useWebContainer';
 import { Avatar } from '../Avatar';
@@ -29,6 +30,7 @@ interface BuilderHeaderProps {
   onUpgrade?: () => void;
   onOpenHelp?: () => void;
   isPublished?: boolean;
+  isPublishLoading?: boolean;
   publishedUrl?: string;
   // View mode and device toggles
   viewMode: BuilderViewMode;
@@ -65,6 +67,7 @@ export function BuilderHeader({
   onUpgrade,
   onOpenHelp,
   isPublished = false,
+  isPublishLoading = false,
   publishedUrl,
   viewMode,
   onViewModeChange,
@@ -220,11 +223,15 @@ export function BuilderHeader({
         ) : (
           <button
             onClick={onPublish}
-            disabled={status !== 'running'}
+            disabled={status !== 'running' || isPublishLoading}
             className="flex items-center gap-2 rounded-lg bg-accent px-4 py-1.5 text-sm font-medium text-content transition-colors hover:bg-accent-light disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Rocket className="h-4 w-4" />
-            Publish
+            {isPublishLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Rocket className="h-4 w-4" />
+            )}
+            {isPublishLoading ? 'Preparing...' : 'Publish'}
           </button>
         )}
 
