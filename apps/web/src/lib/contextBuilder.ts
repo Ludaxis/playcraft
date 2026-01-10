@@ -1101,6 +1101,10 @@ export async function buildContext(
   conversationSummaries: ConversationSummary[],
   hybridOptions?: HybridRetrievalOptions
 ): Promise<ContextPackage> {
+  // Log input files for debugging
+  const fileCount = Object.keys(files).length;
+  console.log(`[ContextBuilder] buildContext called with ${fileCount} files:`, Object.keys(files).slice(0, 10).join(', '));
+
   // Analyze user intent
   const intent = analyzeUserIntent(prompt);
 

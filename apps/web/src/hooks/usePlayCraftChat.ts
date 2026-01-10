@@ -457,7 +457,8 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           );
           console.log(
             `[usePlayCraftChat] Preflight: intent=${estimate.intent}, budget=${estimate.tokenBudget}, ` +
-            `est=${estimate.estimatedTokens}, mode=${estimate.recommendedMode}`
+            `est=${estimate.estimatedTokens}, mode=${estimate.recommendedMode}, ` +
+            `inputFiles=${Object.keys(currentFiles).length}`
           );
           updateProgress(
             'preparing',
@@ -490,6 +491,10 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           // Log context efficiency
           console.log(
             `[usePlayCraftChat] Smart context: ${contextPackage.relevantFiles.length} files, ~${contextPackage.estimatedTokens} tokens`
+          );
+          console.log(
+            `[usePlayCraftChat] Files in context:`,
+            contextPackage.relevantFiles.map(f => `${f.path} (${f.isOutline ? 'outline' : 'full'})`).join(', ')
           );
 
           // Update progress to analyzing (Gemini)
