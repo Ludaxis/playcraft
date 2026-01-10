@@ -116,7 +116,9 @@ export function PlayPage({ gameId }: PlayPageProps) {
 
     // Use the Edge Function to serve the game
     // This proxies Supabase Storage but without X-Frame-Options header
-    const edgeFunctionUrl = `/api/game/${game.id}/index.html`;
+    // Append #/ to ensure HashRouter games start at root route
+    // For BrowserRouter games, the "Go Home" link will navigate to / anyway
+    const edgeFunctionUrl = `/api/game/${game.id}/index.html#/`;
 
     console.log('[PlayPage] Using Edge Function URL:', edgeFunctionUrl);
     return edgeFunctionUrl;
