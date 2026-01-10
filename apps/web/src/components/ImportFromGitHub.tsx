@@ -14,11 +14,9 @@ import {
   Globe,
   Loader2,
   AlertCircle,
-  Check,
   FolderGit2,
   ExternalLink,
   Clock,
-  Star,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
