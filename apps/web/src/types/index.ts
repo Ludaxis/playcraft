@@ -127,11 +127,14 @@ export interface PublishedGame {
   id: string;
   name: string;
   description: string | null;
-  thumbnail_url?: string | null; // Optional - column doesn't exist in DB yet
+  thumbnail_url?: string | null;
   published_url: string;
   published_at: string;
   play_count: number;
   user_id: string;
+  // Subdomain fields for game hosting
+  slug?: string;
+  subdomain_url?: string;
   // Author info (joined from user_settings)
   author_name?: string;
   author_avatar?: string | null;

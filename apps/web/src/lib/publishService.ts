@@ -622,7 +622,9 @@ export async function getPublishedGames(limit = 10): Promise<PublishedGame[]> {
         published_url,
         published_at,
         play_count,
-        user_id
+        user_id,
+        slug,
+        subdomain_url
       `)
       .eq('status', 'published')
       .eq('is_public', true)
@@ -643,6 +645,8 @@ export async function getPublishedGames(limit = 10): Promise<PublishedGame[]> {
       published_at: game.published_at,
       play_count: game.play_count || 0,
       user_id: game.user_id,
+      slug: game.slug || undefined,
+      subdomain_url: game.subdomain_url || undefined,
       author_name: 'PlayCraft Creator',
       author_avatar: null,
     }));
@@ -739,7 +743,9 @@ export async function getFeaturedGames(limit = 5): Promise<PublishedGame[]> {
         published_url,
         published_at,
         play_count,
-        user_id
+        user_id,
+        slug,
+        subdomain_url
       `)
       .eq('status', 'published')
       .eq('is_public', true)
@@ -760,6 +766,8 @@ export async function getFeaturedGames(limit = 5): Promise<PublishedGame[]> {
       published_at: game.published_at,
       play_count: game.play_count || 0,
       user_id: game.user_id,
+      slug: game.slug || undefined,
+      subdomain_url: game.subdomain_url || undefined,
       author_name: 'PlayCraft Creator',
       author_avatar: null,
     }));
@@ -794,7 +802,9 @@ export async function getNewReleases(limit = 12): Promise<PublishedGame[]> {
         published_url,
         published_at,
         play_count,
-        user_id
+        user_id,
+        slug,
+        subdomain_url
       `)
       .eq('status', 'published')
       .eq('is_public', true)
@@ -815,6 +825,8 @@ export async function getNewReleases(limit = 12): Promise<PublishedGame[]> {
       published_at: game.published_at,
       play_count: game.play_count || 0,
       user_id: game.user_id,
+      slug: game.slug || undefined,
+      subdomain_url: game.subdomain_url || undefined,
       author_name: 'PlayCraft Creator',
       author_avatar: null,
     }));
@@ -846,7 +858,9 @@ export async function searchGames(query: string, limit = 20): Promise<PublishedG
         published_url,
         published_at,
         play_count,
-        user_id
+        user_id,
+        slug,
+        subdomain_url
       `)
       .eq('status', 'published')
       .eq('is_public', true)
@@ -868,6 +882,8 @@ export async function searchGames(query: string, limit = 20): Promise<PublishedG
       published_at: game.published_at,
       play_count: game.play_count || 0,
       user_id: game.user_id,
+      slug: game.slug || undefined,
+      subdomain_url: game.subdomain_url || undefined,
       author_name: 'PlayCraft Creator',
       author_avatar: null,
     }));

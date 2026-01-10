@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import { Play, Gamepad2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useBlobUrl } from '../../hooks/useBlobUrl';
@@ -10,6 +9,7 @@ interface HeroBannerProps {
   games: PublishedGame[];
   autoRotateMs?: number;
   isLoading?: boolean;
+  onGameClick?: (game: PublishedGame) => void;
 }
 
 function LoadingSkeleton() {
@@ -30,6 +30,7 @@ export function HeroBanner({
   games,
   autoRotateMs = 5000,
   isLoading,
+  onGameClick,
 }: HeroBannerProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -106,11 +107,12 @@ export function HeroBanner({
           </p>
         )}
         <div className="mt-4 flex items-center gap-4">
-          <Button asChild className="bg-gradient-to-r from-accent to-secondary hover:shadow-glow-sm">
-            <Link to={`/play/${activeGame.id}`}>
-              <Play className="mr-2 h-4 w-4" />
-              Play Now
-            </Link>
+          <Button
+            onClick={() => onGameClick?.(activeGame)}
+            className="bg-gradient-to-r from-accent to-secondary hover:shadow-glow-sm"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Play Now
           </Button>
           {activeGame.author_name && (
             <span className="text-sm text-content-tertiary">

@@ -9,6 +9,7 @@ interface CategorySectionProps {
   games: PublishedGame[];
   isLoading?: boolean;
   onSeeAll?: () => void;
+  onGameClick?: (game: PublishedGame) => void;
   cardSize?: 'sm' | 'md' | 'lg';
   className?: string;
 }
@@ -31,6 +32,7 @@ export function CategorySection({
   games,
   isLoading,
   onSeeAll,
+  onGameClick,
   cardSize = 'md',
   className,
 }: CategorySectionProps) {
@@ -87,7 +89,7 @@ export function CategorySection({
             <LoadingSkeleton />
           ) : (
             games.map((game) => (
-              <GameCard key={game.id} game={game} size={cardSize} />
+              <GameCard key={game.id} game={game} size={cardSize} onClick={onGameClick} />
             ))
           )}
         </div>

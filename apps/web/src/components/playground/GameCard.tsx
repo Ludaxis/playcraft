@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Play, Gamepad2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useBlobUrl } from '../../hooks/useBlobUrl';
@@ -8,6 +7,7 @@ interface GameCardProps {
   game: PublishedGame;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  onClick?: (game: PublishedGame) => void;
 }
 
 const sizeConfig = {
@@ -44,14 +44,19 @@ function formatPlayCount(count: number): string {
   return count.toString();
 }
 
-export function GameCard({ game, size = 'md', className }: GameCardProps) {
+export function GameCard({ game, size = 'md', className, onClick }: GameCardProps) {
   const config = sizeConfig[size];
   // Fetch thumbnail as blob to bypass COEP restrictions
   const thumbnailUrl = useBlobUrl(game.thumbnail_url);
 
+  const handleClick = () => {
+    onClick?.(game);
+  };
+
   return (
-    <Link
-      to={`/play/${game.id}`}
+    <button
+      type="button"
+      onClick={handleClick}
       className={cn(
         'group flex shrink-0 flex-col items-center gap-2',
         className
@@ -113,6 +118,6 @@ export function GameCard({ game, size = 'md', className }: GameCardProps) {
       >
         {game.name}
       </span>
-    </Link>
+    </button>
   );
 }

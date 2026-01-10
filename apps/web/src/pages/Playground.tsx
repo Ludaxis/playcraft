@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Gamepad2, Wand2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
@@ -8,6 +8,7 @@ import {
   MiniBanner,
   FilterBar,
   GameCard,
+  GamePlayerModal,
 } from '../components/playground';
 import type { SortOption, GenreFilter } from '../components/playground';
 import { LogoIcon } from '../components';
@@ -54,6 +55,23 @@ export function PlaygroundPage() {
   const [searchResults, setSearchResults] = useState<PublishedGame[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Game player modal state
+  const [selectedGame, setSelectedGame] = useState<PublishedGame | null>(null);
+  const [isPlayerOpen, setIsPlayerOpen] = useState(false);
+
+  // Handle game click - open in modal
+  const handleGameClick = useCallback((game: PublishedGame) => {
+    setSelectedGame(game);
+    setIsPlayerOpen(true);
+  }, []);
+
+  // Close game player
+  const handleClosePlayer = useCallback(() => {
+    setIsPlayerOpen(false);
+    // Delay clearing selected game to allow animation
+    setTimeout(() => setSelectedGame(null), 300);
+  }, []);
 
   // Fetch initial data
   useEffect(() => {
@@ -218,7 +236,7 @@ export function PlaygroundPage() {
             ) : filteredGames.length > 0 ? (
               <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
                 {filteredGames.map((game) => (
-                  <GameCard key={game.id} game={game} />
+                  <GameCard key={game.id} game={game} onClick={handleGameClick} />
                 ))}
               </div>
             ) : (
@@ -238,7 +256,7 @@ export function PlaygroundPage() {
           <>
             {/* Hero Banner */}
             <div className="py-6">
-              <HeroBanner games={featuredGames} isLoading={isLoading} />
+              <HeroBanner games={featuredGames} isLoading={isLoading} onGameClick={handleGameClick} />
             </div>
 
             {/* Trending Now */}
@@ -246,6 +264,7 @@ export function PlaygroundPage() {
               title="Trending Now"
               games={trendingGames}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => {
                 setSortBy('plays');
                 setActiveGenre('all');
@@ -261,6 +280,7 @@ export function PlaygroundPage() {
               title="New Releases"
               games={newReleases}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => {
                 setSortBy('newest');
                 setActiveGenre('all');
@@ -276,6 +296,7 @@ export function PlaygroundPage() {
               title="Editor's Picks"
               games={featuredGames}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
             />
 
             {/* Action Games */}
@@ -288,6 +309,7 @@ export function PlaygroundPage() {
                 );
               })}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => setActiveGenre('action')}
             />
 
@@ -310,6 +332,7 @@ export function PlaygroundPage() {
                 );
               })}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => setActiveGenre('puzzle')}
             />
 
@@ -323,6 +346,7 @@ export function PlaygroundPage() {
                 );
               })}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => setActiveGenre('adventure')}
             />
 
@@ -336,6 +360,7 @@ export function PlaygroundPage() {
                 );
               })}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => setActiveGenre('arcade')}
             />
 
@@ -344,6 +369,7 @@ export function PlaygroundPage() {
               title="All Games"
               games={allGames.slice(0, 20)}
               isLoading={isLoading}
+              onGameClick={handleGameClick}
               onSeeAll={() => {
                 setActiveGenre('all');
                 setSortBy('plays');
@@ -360,6 +386,13 @@ export function PlaygroundPage() {
           <span className="text-sm">Made with PlayCraft</span>
         </div>
       </footer>
+
+      {/* Game Player Modal */}
+      <GamePlayerModal
+        game={selectedGame}
+        isOpen={isPlayerOpen}
+        onClose={handleClosePlayer}
+      />
     </div>
   );
 }
