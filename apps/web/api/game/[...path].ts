@@ -332,39 +332,14 @@ async function serveGameFile(
     : 'public, max-age=31536000, immutable';
 
   // For HTML files, inject a script to fix BrowserRouter games
-  // This script clicks the "Go Home" link after React renders the 404 page
+  // The script MUST run before React loads and reads window.location
   let responseBody: Blob | string = fileData;
   if (isHtml) {
     const htmlText = await fileData.text();
-    // Inject a script that finds and clicks the home link
-    const fixScript = `<script>
-(function() {
-  // Skip if already at root or has hash (HashRouter)
-  if (window.location.pathname === '/' || window.location.hash) return;
-
-  function clickHomeLink() {
-    // Find the "Go Home" link or any link to "/"
-    var link = document.querySelector('a[href="/"]');
-    if (link) {
-      link.click();
-      return true;
-    }
-    return false;
-  }
-
-  // Try multiple times as React may take time to render
-  var attempts = 0;
-  var maxAttempts = 20;
-  var interval = setInterval(function() {
-    attempts++;
-    if (clickHomeLink() || attempts >= maxAttempts) {
-      clearInterval(interval);
-    }
-  }, 50);
-})();
-</script>`;
-    // Insert the script right after <head>
-    responseBody = htmlText.replace(/<head>/i, '<head>' + fixScript);
+    // Inject script at the VERY BEGINNING of the HTML, before doctype
+    // This ensures it runs before any other scripts including React
+    const fixScript = `<script>if(location.pathname!=='/'){history.replaceState(null,'','/')}</script>`;
+    responseBody = fixScript + htmlText;
   }
 
   return new Response(responseBody, {
