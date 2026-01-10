@@ -141,6 +141,47 @@ async function downloadProjectFiles(
   return fileMap;
 }
 
+/**
+ * Migrate project files to use HashRouter instead of BrowserRouter.
+ * This ensures games work when served from /api/game/{id}/ paths.
+ */
+function migrateToHashRouter(fileMap: Record<string, Uint8Array>): Record<string, Uint8Array> {
+  const textDecoder = new TextDecoder();
+  const textEncoder = new TextEncoder();
+  const migratedMap: Record<string, Uint8Array> = {};
+
+  for (const [path, bytes] of Object.entries(fileMap)) {
+    // Only process TypeScript/JavaScript files that might contain router imports
+    if (path.endsWith('.tsx') || path.endsWith('.ts') || path.endsWith('.jsx') || path.endsWith('.js')) {
+      let content = textDecoder.decode(bytes);
+
+      // Replace BrowserRouter with HashRouter in imports and JSX
+      if (content.includes('BrowserRouter')) {
+        content = content
+          .replace(/import\s*\{\s*([^}]*)\bBrowserRouter\b([^}]*)\}\s*from\s*['"]react-router-dom['"]/g,
+            (match, before, after) => {
+              const parts = [before, after].join('').trim();
+              if (parts) {
+                return `import { ${before}HashRouter${after}} from 'react-router-dom'`;
+              }
+              return `import { HashRouter } from 'react-router-dom'`;
+            })
+          .replace(/<BrowserRouter>/g, '<HashRouter>')
+          .replace(/<\/BrowserRouter>/g, '</HashRouter>')
+          .replace(/<BrowserRouter\s+/g, '<HashRouter ');
+
+        console.log(`[migrateToHashRouter] Patched ${path}`);
+        migratedMap[path] = textEncoder.encode(content);
+        continue;
+      }
+    }
+
+    migratedMap[path] = bytes;
+  }
+
+  return migratedMap;
+}
+
 async function writeFilesToTemp(fileMap: Record<string, Uint8Array>): Promise<{ tempDir: string; entryCandidates: string[] }> {
   const tempDir = await Deno.makeTempDir({ prefix: 'publish-build-' });
   const entryCandidates: string[] = [];
@@ -560,7 +601,7 @@ Deno.serve(async (req: Request) => {
   let buildLog = '';
 
   try {
-    const projectFiles = await downloadProjectFiles(
+    let projectFiles = await downloadProjectFiles(
       supabase,
       jobCandidate.user_id as string,
       jobCandidate.project_id as string
@@ -569,6 +610,9 @@ Deno.serve(async (req: Request) => {
     if (Object.keys(projectFiles).length === 0) {
       throw new Error('No project files found to build');
     }
+
+    // Migrate BrowserRouter to HashRouter for compatibility with /api/game/{id}/ serving
+    projectFiles = migrateToHashRouter(projectFiles);
 
     const { tempDir, entryCandidates } = await writeFilesToTemp(projectFiles);
     const entry = resolveEntry(entryCandidates);
