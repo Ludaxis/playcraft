@@ -30,18 +30,18 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );`,
 
-  '/src/App.tsx': `import { BrowserRouter, Routes, Route } from 'react-router-dom';
+  '/src/App.tsx': `import { HashRouter, Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }`,
 
