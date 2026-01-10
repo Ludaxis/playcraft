@@ -88,6 +88,12 @@ export default async function handler(request: Request): Promise<Response> {
     return new Response('Server configuration error', { status: 500 });
   }
 
+  // Log which key we're using
+  console.log('[handler] Supabase auth:', {
+    hasServiceKey: !!supabaseServiceKey,
+    usingKey: supabaseServiceKey ? 'service_role' : 'anon',
+  });
+
   // Prefer service role for server-side fetch (required to read publish_versions under RLS)
   const supabase = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
 
@@ -183,17 +189,33 @@ async function serveGameFile(
 ): Promise<Response> {
   const basePath = `${project.user_id}/${project.id}`;
 
+  // Debug logging
+  console.log('[serveGameFile] Starting:', {
+    projectId: project.id,
+    projectName: project.name,
+    basePath,
+    requestedFile,
+    primary_version_id: project.primary_version_id || 'null',
+  });
+
   // Resolve version from primary pointer if available
   let storagePrefix: string | null = null;
   let entrypoint = 'index.html';
   let manifestFiles: Record<string, { contentType: string }> = {};
 
   if (project.primary_version_id) {
-    const { data: version } = await supabase
+    const { data: version, error: versionError } = await supabase
       .from('publish_versions')
       .select('storage_prefix, entrypoint')
       .eq('id', project.primary_version_id)
       .maybeSingle();
+
+    console.log('[serveGameFile] publish_versions query:', {
+      versionId: project.primary_version_id,
+      found: !!version,
+      storage_prefix: version?.storage_prefix || 'null',
+      error: versionError?.message || 'none',
+    });
 
     if (version?.storage_prefix) {
       storagePrefix = version.storage_prefix.replace(/\/$/, '');
@@ -203,28 +225,52 @@ async function serveGameFile(
 
   // Fallback to latest.json if no version pointer
   if (!storagePrefix) {
+    const latestPath = `${basePath}/latest.json`;
+    console.log('[serveGameFile] Trying latest.json fallback:', latestPath);
+
     try {
-      const { data: latestData } = await supabase.storage
+      const { data: latestData, error: latestError } = await supabase.storage
         .from('published-games')
-        .download(`${basePath}/latest.json`);
+        .download(latestPath);
+
+      console.log('[serveGameFile] latest.json result:', {
+        found: !!latestData,
+        error: latestError?.message || 'none',
+      });
 
       if (latestData) {
         const text = await latestData.text();
         const latest = JSON.parse(text);
 
+        console.log('[serveGameFile] latest.json content:', latest);
+
         if (latest.path) {
-          const versionDir = latest.path.replace(/\/index\.html$/, '');
-          storagePrefix = versionDir;
+          // Extract version directory from path (remove filename at end)
+          // Handle both /index.html and other entrypoints
+          const lastSlashIdx = latest.path.lastIndexOf('/');
+          if (lastSlashIdx > 0) {
+            storagePrefix = latest.path.substring(0, lastSlashIdx);
+          } else {
+            storagePrefix = latest.path.replace(/\/index\.html$/, '');
+          }
+          console.log('[serveGameFile] Resolved storagePrefix from latest.json:', storagePrefix);
         }
       }
-    } catch {
-      // ignore
+    } catch (e) {
+      console.log('[serveGameFile] latest.json fallback failed:', e instanceof Error ? e.message : 'unknown');
     }
   }
 
   // Default to legacy direct path
   const rootPrefix = storagePrefix || basePath;
   let filePath = requestedFile || entrypoint;
+
+  console.log('[serveGameFile] Path resolution:', {
+    storagePrefix: storagePrefix || 'null (using basePath)',
+    rootPrefix,
+    filePath,
+    entrypoint,
+  });
 
   // Try to load manifest for content-type awareness
   if (storagePrefix) {
@@ -243,6 +289,7 @@ async function serveGameFile(
             return acc;
           }, {} as Record<string, { contentType: string }>);
         }
+        console.log('[serveGameFile] Manifest loaded:', { entrypoint, fileCount: manifest.files?.length || 0 });
       }
     } catch {
       // ignore manifest failures
@@ -254,6 +301,7 @@ async function serveGameFile(
   }
 
   const storagePath = `${rootPrefix}/${filePath}`;
+  console.log('[serveGameFile] Attempting to download:', storagePath);
 
   // Fetch file from storage
   const { data: fileData, error: fileError } = await supabase.storage
@@ -261,13 +309,21 @@ async function serveGameFile(
     .download(storagePath);
 
   if (fileError || !fileData) {
+    console.log('[serveGameFile] Download failed:', {
+      storagePath,
+      error: fileError?.message || 'no data returned',
+    });
+
     // Try falling back to entrypoint for SPA routing
     if (filePath !== entrypoint) {
+      console.log('[serveGameFile] Retrying with entrypoint:', entrypoint);
       return serveGameFile(supabase, project, entrypoint);
     }
 
     return new Response('File not found', { status: 404 });
   }
+
+  console.log('[serveGameFile] File downloaded successfully:', storagePath);
 
   const contentType = manifestFiles[filePath]?.contentType || getContentType(filePath);
   const isHtml = contentType.startsWith('text/html');
