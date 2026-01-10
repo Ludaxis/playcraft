@@ -206,8 +206,11 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
           ],
           generationConfig: {
             maxOutputTokens: 32768,
-            temperature: 0.4,
+            temperature: 1.0,
             responseMimeType: 'application/json',
+            thinkingConfig: {
+              thinkingLevel: 'low',
+            },
           },
         }),
         signal: controller.signal,
