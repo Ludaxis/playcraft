@@ -114,16 +114,21 @@ export async function getProject(id: string): Promise<PlayCraftProject | null> {
   }
 
   // If using Storage, fetch files from there instead of JSON blob
-  console.log('[projectService] getProject: use_storage =', data.use_storage, 'user_id =', data.user_id);
-
   if (data.use_storage) {
     try {
-      console.log('[projectService] Fetching files from Storage for project:', id);
+      logger.debug('Fetching files from Storage', {
+        component: 'projectService',
+        action: 'getProject',
+        projectId: id,
+      });
 
       const files = await downloadProjectFiles(data.user_id, id);
       data.files = files;
 
-      console.log('[projectService] Downloaded', Object.keys(files).length, 'files from Storage');
+      logger.debug(`Loaded ${Object.keys(files).length} files from Storage`, {
+        component: 'projectService',
+        projectId: id,
+      });
 
       // If no files found but project was published, check for recovery option
       if (Object.keys(files).length === 0 && data.status === 'published') {

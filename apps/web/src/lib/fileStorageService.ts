@@ -207,8 +207,6 @@ export async function downloadProjectFiles(
   const supabase = getSupabase();
   const prefix = `${userId}/${projectId}/`;
 
-  console.log('[fileStorageService] downloadProjectFiles: listing from bucket', BUCKET_NAME, 'prefix:', prefix.slice(0, -1));
-
   // List all files in the project folder
   const { data: fileList, error: listError } = await supabase.storage
     .from(BUCKET_NAME)
@@ -216,12 +214,6 @@ export async function downloadProjectFiles(
       limit: 1000, // Max files per project
       sortBy: { column: 'name', order: 'asc' },
     });
-
-  console.log('[fileStorageService] Storage list result:', {
-    error: listError?.message || null,
-    fileCount: fileList?.length || 0,
-    files: fileList?.map(f => f.name).slice(0, 5) || [],
-  });
 
   if (listError) {
     logger.error('Failed to list project files', listError, {
@@ -233,7 +225,6 @@ export async function downloadProjectFiles(
   }
 
   if (!fileList || fileList.length === 0) {
-    console.log('[fileStorageService] No files found in storage for project:', projectId);
     return {};
   }
 
