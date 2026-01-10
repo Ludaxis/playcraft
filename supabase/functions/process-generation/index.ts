@@ -192,7 +192,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: {
@@ -208,8 +208,6 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
             maxOutputTokens: 32768,
             temperature: 0.4,
             responseMimeType: 'application/json',
-            // Gemini 3 Pro requires thinkingConfig - 'low' is supported (not 'minimal')
-            thinkingConfig: { thinkingLevel: 'low' },
           },
         }),
         signal: controller.signal,
@@ -338,7 +336,7 @@ async function processJob(
         },
         completed_at: new Date().toISOString(),
         duration_ms: duration,
-        model_used: 'gemini-3-pro-preview',
+        model_used: 'gemini-3-flash-preview',
       })
       .eq('id', job.id);
 
