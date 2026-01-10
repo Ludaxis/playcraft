@@ -1644,6 +1644,13 @@ MANDATORY RULES:
 6. NEVER rewrite the entire file from scratch
 7. PRESERVE: useEffect hooks, useState calls, game loop, collision detection, scoring, etc.
 
+🎨 VISUAL STYLE PRESERVATION:
+- KEEP the existing color palette, art style, and visual design unless explicitly asked to change
+- PRESERVE existing colors (hex values, Tailwind classes, CSS variables)
+- MAINTAIN the game's visual identity - don't change fonts, spacing, or layout randomly
+- If changing ONE color, keep the rest of the color scheme intact
+- PRESERVE gradients, shadows, animations, and visual effects unless specifically asked to modify
+
 RESPONSE FORMAT CHOICE:
 - For SMALL changes (colors, values, text, simple tweaks): Use EDIT MODE with "edits" array
 - For LARGE changes (new features, structural changes): Use FILE MODE with "files" array

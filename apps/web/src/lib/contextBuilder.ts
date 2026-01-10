@@ -461,10 +461,10 @@ const TOKEN_BUDGETS: Record<IntentAction, number> = {
   modify: 10000,   // General modifications
   debug: 8000,     // Debugging needs focused context
   remove: 6000,    // Removing features needs less
-  style: 5000,     // Style changes are targeted
+  style: 10000,    // Style changes need full context to preserve existing design
   explain: 4000,   // Explanations don't need as much code
   rename: 3000,    // Renaming is very targeted
-  tweak: 2000,     // Simple tweaks need minimal context
+  tweak: 5000,     // Tweaks need some context to avoid breaking things
 };
 
 // Reserved tokens for system prompt, response buffer, etc.
@@ -1120,9 +1120,10 @@ export async function buildContext(
   }
 
   // ============================================
-  // OUTLINE MODE for style/explain actions
+  // OUTLINE MODE - only for explain actions
+  // Style changes need FULL context to preserve existing colors/design
   // ============================================
-  const useOutlines = intent.action === 'style' || intent.action === 'explain';
+  const useOutlines = intent.action === 'explain';
 
   // Score all files with keyword matching
   let fileScores = await scoreFiles(
@@ -1169,8 +1170,8 @@ export async function buildContext(
   console.log(`[ContextBuilder] Token budget for "${intent.action}": ${tokenBudget} (${fileTokenBudget} for files)`);
 
   // Determine max files based on action
+  // Style changes need MORE files to see the full design context
   const maxFiles = intent.action === 'debug' ? 5 :
-                   intent.action === 'style' ? 3 :
                    intent.action === 'explain' ? 2 : 8;
 
   // Track if we've included the main game file with full content
