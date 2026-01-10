@@ -332,19 +332,31 @@ async function serveGameFile(
     : 'public, max-age=31536000, immutable';
 
   // For HTML files, inject a script to fix BrowserRouter games
-  // This script navigates to "/" if the game uses BrowserRouter and path isn't "/"
+  // This script triggers a navigation to "/" after React Router mounts
   let responseBody: Blob | string = fileData;
   if (isHtml) {
     const htmlText = await fileData.text();
-    // Inject a script that will navigate to "/" for BrowserRouter games
-    // This runs before React loads and uses history.replaceState to "fix" the path
+    // Inject a script that navigates to "/" using the History API
+    // This triggers after React mounts and dispatches popstate to notify React Router
     const fixScript = `<script>
 (function() {
-  // Only run if we're at a non-root path (BrowserRouter games)
-  if (window.location.pathname !== '/' && !window.location.hash) {
-    // Use replaceState to change the visible URL to "/" without reload
-    // This makes BrowserRouter think we're at "/"
+  // Skip if already at root or has hash (HashRouter)
+  if (window.location.pathname === '/' || window.location.hash) return;
+
+  // Wait for DOM and React to be ready, then navigate to "/"
+  function navigateToRoot() {
+    // Push "/" to history and dispatch popstate to trigger React Router
     window.history.replaceState({}, '', '/');
+    window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+  }
+
+  // Try immediately, then retry after React likely mounts
+  if (document.readyState === 'complete') {
+    setTimeout(navigateToRoot, 50);
+  } else {
+    window.addEventListener('load', function() {
+      setTimeout(navigateToRoot, 50);
+    });
   }
 })();
 </script>`;
