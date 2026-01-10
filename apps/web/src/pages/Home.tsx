@@ -11,12 +11,13 @@ import {
   X,
   AlertTriangle,
   Star,
+  FolderGit2,
 } from 'lucide-react';
 import { ChatInput } from '../components/builder/ChatInput';
 import type { PlayCraftProject } from '../lib/projectService';
 import { getPublishedGames } from '../lib/publishService';
 import { ensureDraftPool } from '../lib/projectService';
-import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon, PublishModal, BlobImage } from '../components';
+import { SettingsModal, SearchModal, Avatar, Sidebar, CreateWorkspaceModal, LogoIcon, PublishModal, BlobImage, ImportFromGitHub } from '../components';
 import { useSidebar } from '../hooks';
 import { useProjects, useCreateProject, useDeleteProject, useUpdateProject } from '../hooks/useProjects';
 import { useWorkspaces, useCreateWorkspace } from '../hooks/useWorkspaces';
@@ -59,6 +60,7 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
   const [starringProjectId, setStarringProjectId] = useState<string | null>(null);
   const [showCreateWorkspace, setShowCreateWorkspace] = useState(false);
   const [projectToPublish, setProjectToPublish] = useState<PlayCraftProject | null>(null);
+  const [showImportGitHub, setShowImportGitHub] = useState(false);
   const draftPoolInitializedRef = useRef(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -314,6 +316,19 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
                 </div>
                 <span className="mt-4 text-sm font-medium text-content-muted transition-colors group-hover:text-content">
                   {isCreatingProject ? 'Creating...' : 'Create new project'}
+                </span>
+              </button>
+
+              {/* Import from GitHub Card */}
+              <button
+                onClick={() => setShowImportGitHub(true)}
+                className="group flex aspect-[4/3] flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-transparent transition-all hover:border-content-subtle hover:bg-surface-elevated/50"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-content-subtle text-content-subtle transition-colors group-hover:border-content-muted group-hover:text-content-muted">
+                  <FolderGit2 className="h-6 w-6" />
+                </div>
+                <span className="mt-4 text-sm font-medium text-content-muted transition-colors group-hover:text-content">
+                  Import from GitHub
                 </span>
               </button>
 
@@ -580,6 +595,12 @@ export function HomePage({ user, onSignOut, onSelectProject, onStartNewProject, 
         isOpen={showCreateWorkspace}
         onClose={() => setShowCreateWorkspace(false)}
         onCreated={handleWorkspaceCreated}
+      />
+
+      {/* Import from GitHub Modal */}
+      <ImportFromGitHub
+        open={showImportGitHub}
+        onOpenChange={setShowImportGitHub}
       />
 
       {/* Publish from home */}

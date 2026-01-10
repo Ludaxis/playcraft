@@ -5,6 +5,8 @@ import {
   uploadProjectFiles,
   downloadProjectFiles,
   deleteAllProjectFiles,
+  hasPublishedVersions,
+  downloadPublishedFiles,
 } from './fileStorageService';
 
 export interface PlayCraftProject {
@@ -127,6 +129,20 @@ export async function getProject(id: string): Promise<PlayCraftProject | null> {
         component: 'projectService',
         projectId: id,
       });
+
+      // If no files found but project was published, check for recovery option
+      if (Object.keys(files).length === 0 && data.status === 'published') {
+        const hasPublished = await hasPublishedVersions(data.user_id, id);
+        if (hasPublished) {
+          logger.info('Project has no source files but published version exists - recovery possible', {
+            component: 'projectService',
+            action: 'getProject',
+            projectId: id,
+          });
+          // Add flag to indicate recovery is possible
+          (data as PlayCraftProject & { recoveryAvailable?: boolean }).recoveryAvailable = true;
+        }
+      }
     } catch (err) {
       logger.error('Failed to fetch files from Storage, falling back to JSON', err instanceof Error ? err : new Error(String(err)), {
         component: 'projectService',
@@ -753,5 +769,43 @@ export async function updateProjectStatus(
 
   if (error) {
     throw new Error(`Failed to update status: ${error.message}`);
+  }
+}
+
+/**
+ * Recover project files from published version
+ * This downloads the built files from the published-games bucket
+ * Note: These are compiled files, not source - user should regenerate from chat history
+ */
+export async function recoverProjectFromPublished(
+  projectId: string,
+  userId: string
+): Promise<{ files: Record<string, string>; recovered: boolean }> {
+  try {
+    const files = await downloadPublishedFiles(userId, projectId);
+
+    if (Object.keys(files).length === 0) {
+      logger.warn('No published files found for recovery', {
+        component: 'projectService',
+        action: 'recoverProjectFromPublished',
+        projectId,
+      });
+      return { files: {}, recovered: false };
+    }
+
+    logger.info(`Recovered ${Object.keys(files).length} files from published version`, {
+      component: 'projectService',
+      action: 'recoverProjectFromPublished',
+      projectId,
+    });
+
+    return { files, recovered: true };
+  } catch (err) {
+    logger.error('Failed to recover project from published version', err instanceof Error ? err : new Error(String(err)), {
+      component: 'projectService',
+      action: 'recoverProjectFromPublished',
+      projectId,
+    });
+    return { files: {}, recovered: false };
   }
 }

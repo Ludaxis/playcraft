@@ -631,8 +631,16 @@ export function BuilderPage({
     const hasSavedFiles = Object.keys(project.files || {}).length > 0;
     console.log('[Builder] hasSavedFiles:', hasSavedFiles, 'files count:', Object.keys(project.files || {}).length);
 
+    // Check if this is a data loss situation (project was published/has history but no files)
+    const hasConversationHistory = activeSessionMessages.length > 0;
+    const isPublishedButNoFiles = project.status === 'published' && !hasSavedFiles;
+    const isDataLoss = !hasSavedFiles && hasConversationHistory;
+
     if (hasSavedFiles) {
       addSystemMessage('Restoring your project...');
+    } else if (isDataLoss || isPublishedButNoFiles) {
+      console.warn('[Builder] Data loss detected - project has history but no files');
+      addSystemMessage('Your project source files are missing. This can happen if the browser was closed before files were saved.');
     } else {
       addSystemMessage('Setting up your game development environment...');
     }
@@ -714,6 +722,12 @@ export function BuilderPage({
 
       if (hasSavedFiles) {
         addSystemMessage('Project restored! Continue building your game.');
+      } else if (isDataLoss || isPublishedButNoFiles) {
+        // Give user guidance on how to recover
+        addSystemMessage(
+          'To recover your game, you can ask me to "regenerate the game based on our conversation history" ' +
+          'or describe your game again. Your published version is still live!'
+        );
       } else {
         addSystemMessage('Ready! Describe the game you want to build.');
       }
@@ -739,9 +753,11 @@ export function BuilderPage({
     startDev,
     project.id,
     project.files,
+    project.status,
     addSystemMessage,
     tryRestoreProject,
     refreshFileTree,
+    activeSessionMessages,
   ]);
 
   // Auto-start project on page load (restore saved files or use fresh template)

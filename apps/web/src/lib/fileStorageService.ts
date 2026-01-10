@@ -433,3 +433,144 @@ export async function hasStorageFiles(
 
   return data !== null && data.length > 0;
 }
+
+// =============================================================================
+// PUBLISHED GAME RECOVERY
+// =============================================================================
+// Functions to recover project files from published versions
+
+const PUBLISHED_BUCKET = 'published-games';
+
+/**
+ * Check if a project has published versions available for recovery
+ */
+export async function hasPublishedVersions(
+  userId: string,
+  projectId: string
+): Promise<boolean> {
+  const supabase = getSupabase();
+  const prefix = `${userId}/${projectId}/versions`;
+
+  const { data, error } = await supabase.storage
+    .from(PUBLISHED_BUCKET)
+    .list(prefix, { limit: 1 });
+
+  if (error) {
+    logger.warn('Failed to check published versions', {
+      component: 'fileStorageService',
+      action: 'hasPublishedVersions',
+      error: error.message,
+    });
+    return false;
+  }
+
+  return data !== null && data.length > 0;
+}
+
+/**
+ * Get the latest published version tag for a project
+ */
+export async function getLatestPublishedVersion(
+  userId: string,
+  projectId: string
+): Promise<string | null> {
+  const supabase = getSupabase();
+  const latestPath = `${userId}/${projectId}/latest.json`;
+
+  try {
+    const { data, error } = await supabase.storage
+      .from(PUBLISHED_BUCKET)
+      .download(latestPath);
+
+    if (error || !data) {
+      return null;
+    }
+
+    const content = await data.text();
+    const latest = JSON.parse(content);
+    return latest.versionTag || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Download published game files for recovery
+ * Returns the built HTML/JS/CSS files from the published version
+ */
+export async function downloadPublishedFiles(
+  userId: string,
+  projectId: string,
+  versionTag?: string
+): Promise<Record<string, string>> {
+  const supabase = getSupabase();
+
+  // Get version tag if not provided
+  if (!versionTag) {
+    versionTag = await getLatestPublishedVersion(userId, projectId) ?? undefined;
+  }
+
+  if (!versionTag) {
+    logger.warn('No published version found', {
+      component: 'fileStorageService',
+      action: 'downloadPublishedFiles',
+      projectId,
+    });
+    return {};
+  }
+
+  const prefix = `${userId}/${projectId}/versions/${versionTag}`;
+
+  // List all files in the published version
+  const { data: fileList, error: listError } = await supabase.storage
+    .from(PUBLISHED_BUCKET)
+    .list(prefix, { limit: 1000 });
+
+  if (listError || !fileList || fileList.length === 0) {
+    logger.warn('No files in published version', {
+      component: 'fileStorageService',
+      action: 'downloadPublishedFiles',
+      projectId,
+      versionTag,
+    });
+    return {};
+  }
+
+  const files: Record<string, string> = {};
+
+  // Download each file
+  for (const item of fileList) {
+    // Skip directories and manifest
+    if (item.id === null || item.name === 'manifest.json') continue;
+
+    const filePath = `${prefix}/${item.name}`;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from(PUBLISHED_BUCKET)
+        .download(filePath);
+
+      if (error || !data) continue;
+
+      // Store with path relative to dist (these are built files)
+      const content = await data.text();
+      files[`/dist/${item.name}`] = content;
+    } catch (err) {
+      logger.warn('Failed to download published file', {
+        component: 'fileStorageService',
+        filePath,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      });
+    }
+  }
+
+  logger.info('Downloaded published files for recovery', {
+    component: 'fileStorageService',
+    action: 'downloadPublishedFiles',
+    projectId,
+    versionTag,
+    fileCount: Object.keys(files).length,
+  });
+
+  return files;
+}

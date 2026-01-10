@@ -17,3 +17,4 @@ export { FAQModal } from './FAQModal';
 export { AuthModal } from './AuthModal';
 export { Logo, LogoIcon, LogoMark } from './Logo';
 export { ChatInput, type ChatMode } from './builder/ChatInput';
+export { ImportFromGitHub } from './ImportFromGitHub';

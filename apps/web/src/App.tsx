@@ -14,6 +14,7 @@ import { FAQPage } from './pages/FAQ';
 import { HowItWorksPage } from './pages/HowItWorks';
 import { PitchFaPage } from './pages/PitchFa';
 import { PitchArPage } from './pages/PitchAr';
+import { GitHubImportPage } from './pages/GitHubImport';
 import { ErrorBoundary } from './components';
 import { createProject, getProject, type PlayCraftProject } from './lib/projectService';
 import { useAppStore } from './stores/appStore';
@@ -249,6 +250,12 @@ function AppRoutes() {
   // Handle /how-it-works route - PUBLIC, SEO optimized How-To page
   if (location.pathname === '/how-it-works') {
     return <HowItWorksPage />;
+  }
+
+  // Handle /github/:owner/:repo route - GitHub import (like Bolt.new)
+  const githubMatch = location.pathname.match(/^\/github\/([^/]+)\/([^/]+)(\/.*)?$/);
+  if (githubMatch) {
+    return <GitHubImportPage />;
   }
 
   // Handle /feedback route - accessible to authenticated users

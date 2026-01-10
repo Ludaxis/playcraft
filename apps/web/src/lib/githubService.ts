@@ -6,6 +6,11 @@
  */
 
 import { getSupabase } from './supabase';
+import type {
+  GitHubConnection,
+  CreateGitHubConnectionInput,
+  UpdateGitHubConnectionInput,
+} from '../types';
 
 export interface GitHubRepository {
   id: number;
@@ -455,12 +460,6 @@ export async function validateGitHubConnection(): Promise<boolean> {
 // Database Persistence Functions
 // ============================================================================
 
-import type {
-  GitHubConnection,
-  CreateGitHubConnectionInput,
-  UpdateGitHubConnectionInput,
-} from '../types';
-
 /**
  * Get the GitHub connection for a project
  */
@@ -618,4 +617,289 @@ export function connectionInputFromRepository(
     default_branch: repo.defaultBranch,
     current_branch: repo.defaultBranch,
   };
+}
+
+// ============================================================================
+// GitHub Import Functions
+// ============================================================================
+
+export interface ImportProgress {
+  stage: 'fetching' | 'creating' | 'writing' | 'connecting' | 'complete';
+  message: string;
+  filesProcessed?: number;
+  totalFiles?: number;
+}
+
+export type ImportProgressCallback = (progress: ImportProgress) => void;
+
+/**
+ * Parse a GitHub URL to extract owner and repo
+ * Supports formats:
+ * - https://github.com/owner/repo
+ * - github.com/owner/repo
+ * - owner/repo
+ */
+export function parseGitHubUrl(input: string): { owner: string; repo: string } | null {
+  // Remove trailing .git if present
+  const cleaned = input.replace(/\.git$/, '').trim();
+
+  // Try full URL format
+  const urlMatch = cleaned.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+)\/([^/]+)/);
+  if (urlMatch) {
+    return { owner: urlMatch[1], repo: urlMatch[2] };
+  }
+
+  // Try owner/repo format
+  const shortMatch = cleaned.match(/^([^/]+)\/([^/]+)$/);
+  if (shortMatch) {
+    return { owner: shortMatch[1], repo: shortMatch[2] };
+  }
+
+  return null;
+}
+
+/**
+ * Get repository info from owner/repo
+ */
+export async function getRepository(
+  owner: string,
+  repo: string
+): Promise<GitHubRepository | null> {
+  try {
+    const response = await githubFetch(`/repos/${owner}/${repo}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error('Failed to fetch repository');
+    }
+
+    const data = await response.json();
+    return {
+      id: data.id,
+      name: data.name,
+      fullName: data.full_name,
+      description: data.description,
+      private: data.private,
+      url: data.html_url,
+      cloneUrl: data.clone_url,
+      defaultBranch: data.default_branch,
+      updatedAt: data.updated_at,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Fetch all files from a GitHub repository
+ * Recursively fetches directory contents, skipping ignored paths
+ */
+export async function fetchRepositoryFiles(
+  owner: string,
+  repo: string,
+  branch: string,
+  onProgress?: ImportProgressCallback
+): Promise<Record<string, string>> {
+  const files: Record<string, string> = {};
+  let filesProcessed = 0;
+
+  // Paths to ignore during import
+  const ignorePaths = [
+    'node_modules',
+    '.git',
+    'dist',
+    'build',
+    '.next',
+    '.cache',
+    'coverage',
+    '.DS_Store',
+    'Thumbs.db',
+  ];
+
+  // File extensions to skip (binary files)
+  const binaryExtensions = [
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.webp',
+    '.woff', '.woff2', '.ttf', '.eot', '.otf',
+    '.mp3', '.wav', '.ogg', '.mp4', '.webm', '.mov',
+    '.pdf', '.zip', '.tar', '.gz', '.rar',
+    '.exe', '.dll', '.so', '.dylib',
+  ];
+
+  async function fetchDir(path: string = ''): Promise<void> {
+    const ref = `?ref=${branch}`;
+    const response = await githubFetch(`/repos/${owner}/${repo}/contents/${path}${ref}`);
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        return; // Empty directory or doesn't exist
+      }
+      throw new Error(`Failed to fetch contents at ${path}`);
+    }
+
+    const items = await response.json();
+    const itemsArray = Array.isArray(items) ? items : [items];
+
+    for (const item of itemsArray) {
+      // Skip ignored paths
+      if (ignorePaths.some((ignore) => item.path.includes(ignore))) {
+        continue;
+      }
+
+      if (item.type === 'file') {
+        // Skip binary files
+        const ext = item.name.toLowerCase().match(/\.[^.]+$/)?.[0] || '';
+        if (binaryExtensions.includes(ext)) {
+          continue;
+        }
+
+        // Skip large files (> 1MB)
+        if (item.size > 1024 * 1024) {
+          console.warn(`Skipping large file: ${item.path} (${item.size} bytes)`);
+          continue;
+        }
+
+        // Fetch file content
+        try {
+          const contentResponse = await githubFetch(
+            `/repos/${owner}/${repo}/contents/${item.path}${ref}`
+          );
+
+          if (contentResponse.ok) {
+            const contentData = await contentResponse.json();
+            if (contentData.content && contentData.encoding === 'base64') {
+              try {
+                // Decode base64 content
+                const content = atob(contentData.content.replace(/\n/g, ''));
+                files[`/${item.path}`] = content;
+                filesProcessed++;
+
+                onProgress?.({
+                  stage: 'fetching',
+                  message: `Fetching ${item.path}...`,
+                  filesProcessed,
+                });
+              } catch {
+                console.warn(`Failed to decode file: ${item.path}`);
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`Failed to fetch file ${item.path}:`, err);
+        }
+      } else if (item.type === 'dir') {
+        // Recursively fetch directory contents
+        await fetchDir(item.path);
+      }
+    }
+  }
+
+  await fetchDir();
+
+  return files;
+}
+
+/**
+ * Import a GitHub repository as a new PlayCraft project
+ * Returns the created project ID
+ */
+export async function importFromGitHub(
+  owner: string,
+  repo: string,
+  branch?: string,
+  onProgress?: ImportProgressCallback
+): Promise<{ projectId: string; filesCount: number }> {
+  // Dynamic import to avoid circular dependency
+  const { createProject, updateProject } = await import('./projectService');
+  const { createGitHubConnection } = await import('./githubService');
+
+  onProgress?.({
+    stage: 'fetching',
+    message: 'Fetching repository information...',
+  });
+
+  // Get repository info
+  const repository = await getRepository(owner, repo);
+  if (!repository) {
+    throw new Error(`Repository ${owner}/${repo} not found or not accessible`);
+  }
+
+  const targetBranch = branch || repository.defaultBranch;
+
+  // Fetch all files from the repository
+  onProgress?.({
+    stage: 'fetching',
+    message: 'Fetching repository files...',
+    filesProcessed: 0,
+  });
+
+  const files = await fetchRepositoryFiles(owner, repo, targetBranch, onProgress);
+  const filesCount = Object.keys(files).length;
+
+  if (filesCount === 0) {
+    throw new Error('No files found in repository');
+  }
+
+  onProgress?.({
+    stage: 'creating',
+    message: 'Creating project...',
+    filesProcessed: filesCount,
+    totalFiles: filesCount,
+  });
+
+  // Create a new project
+  const project = await createProject({
+    name: repository.name,
+    description: repository.description || `Imported from GitHub: ${repository.fullName}`,
+    reuseDraft: false, // Always create fresh for imports
+  });
+
+  onProgress?.({
+    stage: 'writing',
+    message: 'Writing files to project...',
+    filesProcessed: filesCount,
+    totalFiles: filesCount,
+  });
+
+  // Update project with imported files
+  // Detect if project uses Three.js
+  const hasThreeJs = Object.keys(files).some(
+    (path) =>
+      files[path].includes('three') ||
+      files[path].includes('THREE') ||
+      path.includes('three')
+  );
+
+  await updateProject(project.id, {
+    files,
+    has_three_js: hasThreeJs,
+    status: 'ready',
+  });
+
+  onProgress?.({
+    stage: 'connecting',
+    message: 'Connecting to GitHub repository...',
+  });
+
+  // Create GitHub connection
+  await createGitHubConnection({
+    project_id: project.id,
+    repository_owner: owner,
+    repository_name: repository.name,
+    repository_full_name: repository.fullName,
+    repository_url: repository.url,
+    repository_private: repository.private,
+    default_branch: repository.defaultBranch,
+    current_branch: targetBranch,
+  });
+
+  onProgress?.({
+    stage: 'complete',
+    message: `Imported ${filesCount} files successfully!`,
+    filesProcessed: filesCount,
+    totalFiles: filesCount,
+  });
+
+  return { projectId: project.id, filesCount };
 }

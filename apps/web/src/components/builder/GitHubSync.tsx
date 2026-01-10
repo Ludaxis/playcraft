@@ -3,9 +3,11 @@
  *
  * Provides GitHub repository sync functionality in the Builder.
  * Allows pushing project changes and pulling updates from GitHub.
+ *
+ * Uses database-backed connection storage for persistence.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Github,
   Cloud,
@@ -42,16 +44,18 @@ import {
 import { Switch } from '../ui/switch';
 import { ScrollArea } from '../ui/scroll-area';
 import {
-  listRepositories,
-  createRepository,
-  listBranches,
-  pushToGitHub,
-  pullFromGitHub,
-  validateGitHubConnection,
-  getGitHubUser,
-  type GitHubRepository,
-  type GitHubBranch,
-} from '../../lib/githubService';
+  useGitHubConnection,
+  useGitHubUser,
+  useGitHubConnected,
+  useGitHubRepositories,
+  useGitHubBranches,
+  useConnectToRepository,
+  useDeleteGitHubConnection,
+  usePushToGitHub,
+  usePullFromGitHub,
+  useUpdateGitHubConnection,
+} from '../../hooks/useGitHubConnection';
+import { createRepository, type GitHubRepository } from '../../lib/githubService';
 import { connectGitHub } from '../../lib/settingsService';
 
 interface GitHubSyncProps {
@@ -61,13 +65,6 @@ interface GitHubSyncProps {
   onFilesUpdated?: (files: Record<string, string>) => void;
 }
 
-interface SyncState {
-  connected: boolean;
-  repository: GitHubRepository | null;
-  branch: string;
-  lastSyncSha: string | null;
-}
-
 export function GitHubSync({
   projectId,
   projectName,
@@ -75,19 +72,28 @@ export function GitHubSync({
   onFilesUpdated,
 }: GitHubSyncProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [userName, setUserName] = useState<string | null>(null);
-  const [repositories, setRepositories] = useState<GitHubRepository[]>([]);
-  const [branches, setBranches] = useState<GitHubBranch[]>([]);
-  const [syncState, setSyncState] = useState<SyncState>({
-    connected: false,
-    repository: null,
-    branch: 'main',
-    lastSyncSha: null,
-  });
 
-  // Create repo dialog
+  // Query hooks for GitHub state
+  const { data: connection, isLoading: isLoadingConnection } = useGitHubConnection(projectId);
+  const { data: isGitHubConnected, isLoading: isCheckingAuth } = useGitHubConnected();
+  const { data: githubUser } = useGitHubUser();
+  const { data: repositories = [], isLoading: isLoadingRepos } = useGitHubRepositories(
+    isOpen && !!isGitHubConnected
+  );
+  const { data: branches = [] } = useGitHubBranches(
+    connection?.repository_owner,
+    connection?.repository_name,
+    !!connection
+  );
+
+  // Mutation hooks
+  const connectToRepo = useConnectToRepository();
+  const disconnectRepo = useDeleteGitHubConnection();
+  const pushToGitHub = usePushToGitHub();
+  const pullFromGitHub = usePullFromGitHub();
+  const updateConnection = useUpdateGitHubConnection();
+
+  // Create repo dialog state
   const [showCreateRepo, setShowCreateRepo] = useState(false);
   const [newRepoName, setNewRepoName] = useState('');
   const [newRepoDescription, setNewRepoDescription] = useState('');
@@ -95,93 +101,49 @@ export function GitHubSync({
   const [isCreatingRepo, setIsCreatingRepo] = useState(false);
 
   // Sync status
-  const [isSyncing, setIsSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<{
     type: 'success' | 'error';
     text: string;
   } | null>(null);
 
-  // Load saved sync state from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem(`github-sync-${projectId}`);
-    if (saved) {
-      try {
-        setSyncState(JSON.parse(saved));
-      } catch {
-        // Invalid saved state
-      }
-    }
-  }, [projectId]);
-
-  // Save sync state to localStorage
-  useEffect(() => {
-    if (syncState.repository) {
-      localStorage.setItem(`github-sync-${projectId}`, JSON.stringify(syncState));
-    }
-  }, [projectId, syncState]);
-
-  // Check connection status
-  useEffect(() => {
-    async function checkConnection() {
-      setIsLoading(true);
-      try {
-        const connected = await validateGitHubConnection();
-        setIsConnected(connected);
-
-        if (connected) {
-          const user = await getGitHubUser();
-          setUserName(user.login);
-          const repos = await listRepositories();
-          setRepositories(repos);
-        }
-      } catch {
-        setIsConnected(false);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    if (isOpen) {
-      checkConnection();
-    }
-  }, [isOpen]);
-
-  // Load branches when repository changes
-  useEffect(() => {
-    async function loadBranches() {
-      if (!syncState.repository || !userName) return;
-
-      try {
-        const branchList = await listBranches(userName, syncState.repository.name);
-        setBranches(branchList);
-      } catch {
-        setBranches([]);
-      }
-    }
-
-    loadBranches();
-  }, [syncState.repository, userName]);
+  const isLoading = isLoadingConnection || isCheckingAuth || isLoadingRepos;
+  const isSyncing = pushToGitHub.isPending || pullFromGitHub.isPending;
 
   const handleConnect = useCallback(() => {
     connectGitHub();
   }, []);
 
-  const handleSelectRepository = useCallback((repoName: string) => {
-    const repo = repositories.find((r) => r.name === repoName);
-    if (repo) {
-      setSyncState((prev) => ({
-        ...prev,
-        repository: repo,
-        branch: repo.defaultBranch,
-        connected: true,
-      }));
-    }
-  }, [repositories]);
+  const handleSelectRepository = useCallback(
+    async (repoName: string) => {
+      const repo = repositories.find((r) => r.name === repoName);
+      if (repo && githubUser) {
+        try {
+          await connectToRepo.mutateAsync({
+            projectId,
+            repository: repo,
+            owner: githubUser.login,
+          });
+          setSyncMessage({
+            type: 'success',
+            text: `Connected to ${repo.name}`,
+          });
+        } catch (error) {
+          setSyncMessage({
+            type: 'error',
+            text: error instanceof Error ? error.message : 'Failed to connect',
+          });
+        }
+      }
+    },
+    [repositories, githubUser, projectId, connectToRepo]
+  );
 
   const handleCreateRepository = useCallback(async () => {
-    if (!newRepoName.trim()) return;
+    if (!newRepoName.trim() || !githubUser) return;
 
     setIsCreatingRepo(true);
+    setSyncMessage(null);
+
     try {
       const repo = await createRepository(
         newRepoName.trim(),
@@ -189,16 +151,20 @@ export function GitHubSync({
         newRepoPrivate
       );
 
-      setRepositories((prev) => [repo, ...prev]);
-      setSyncState((prev) => ({
-        ...prev,
+      // Connect to the newly created repo
+      await connectToRepo.mutateAsync({
+        projectId,
         repository: repo,
-        branch: repo.defaultBranch,
-        connected: true,
-      }));
+        owner: githubUser.login,
+      });
+
       setShowCreateRepo(false);
       setNewRepoName('');
       setNewRepoDescription('');
+      setSyncMessage({
+        type: 'success',
+        text: `Created and connected to ${repo.name}`,
+      });
     } catch (error) {
       setSyncMessage({
         type: 'error',
@@ -207,28 +173,22 @@ export function GitHubSync({
     } finally {
       setIsCreatingRepo(false);
     }
-  }, [newRepoName, newRepoDescription, newRepoPrivate, projectName]);
+  }, [newRepoName, newRepoDescription, newRepoPrivate, projectName, githubUser, projectId, connectToRepo]);
 
   const handlePush = useCallback(async () => {
-    if (!syncState.repository || !userName) return;
+    if (!connection) return;
 
-    setIsSyncing(true);
     setSyncMessage(null);
 
     try {
-      const result = await pushToGitHub(
-        userName,
-        syncState.repository.name,
-        syncState.branch,
-        projectFiles,
-        `Update from PlayCraft: ${new Date().toLocaleString()}`
-      );
+      const result = await pushToGitHub.mutateAsync({
+        projectId,
+        connection,
+        files: projectFiles,
+        message: `Update from PlayCraft: ${new Date().toLocaleString()}`,
+      });
 
       if (result.success) {
-        setSyncState((prev) => ({
-          ...prev,
-          lastSyncSha: result.commitSha || null,
-        }));
         setSyncMessage({
           type: 'success',
           text: `Pushed ${result.filesChanged} files successfully`,
@@ -244,29 +204,21 @@ export function GitHubSync({
         type: 'error',
         text: error instanceof Error ? error.message : 'Push failed',
       });
-    } finally {
-      setIsSyncing(false);
     }
-  }, [syncState.repository, syncState.branch, userName, projectFiles]);
+  }, [connection, projectId, projectFiles, pushToGitHub]);
 
   const handlePull = useCallback(async () => {
-    if (!syncState.repository || !userName) return;
+    if (!connection) return;
 
-    setIsSyncing(true);
     setSyncMessage(null);
 
     try {
-      const result = await pullFromGitHub(
-        userName,
-        syncState.repository.name,
-        syncState.branch
-      );
+      const result = await pullFromGitHub.mutateAsync({
+        projectId,
+        connection,
+      });
 
       if (result) {
-        setSyncState((prev) => ({
-          ...prev,
-          lastSyncSha: result.sha,
-        }));
         onFilesUpdated?.(result.files);
         setSyncMessage({
           type: 'success',
@@ -283,20 +235,35 @@ export function GitHubSync({
         type: 'error',
         text: error instanceof Error ? error.message : 'Pull failed',
       });
-    } finally {
-      setIsSyncing(false);
     }
-  }, [syncState.repository, syncState.branch, userName, onFilesUpdated]);
+  }, [connection, projectId, pullFromGitHub, onFilesUpdated]);
 
-  const handleDisconnect = useCallback(() => {
-    setSyncState({
-      connected: false,
-      repository: null,
-      branch: 'main',
-      lastSyncSha: null,
-    });
-    localStorage.removeItem(`github-sync-${projectId}`);
-  }, [projectId]);
+  const handleDisconnect = useCallback(async () => {
+    try {
+      await disconnectRepo.mutateAsync(projectId);
+      setSyncMessage(null);
+    } catch (error) {
+      setSyncMessage({
+        type: 'error',
+        text: error instanceof Error ? error.message : 'Failed to disconnect',
+      });
+    }
+  }, [projectId, disconnectRepo]);
+
+  const handleBranchChange = useCallback(
+    async (branch: string) => {
+      if (!connection) return;
+      try {
+        await updateConnection.mutateAsync({
+          projectId,
+          updates: { current_branch: branch },
+        });
+      } catch (error) {
+        console.error('Failed to update branch:', error);
+      }
+    },
+    [connection, projectId, updateConnection]
+  );
 
   return (
     <>
@@ -307,8 +274,8 @@ export function GitHubSync({
         className="gap-2"
       >
         <Github className="h-4 w-4" />
-        {syncState.connected ? 'Synced' : 'GitHub'}
-        {syncState.connected && <Check className="h-3 w-3 text-success" />}
+        {connection ? 'Synced' : 'GitHub'}
+        {connection && <Check className="h-3 w-3 text-success" />}
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -327,7 +294,7 @@ export function GitHubSync({
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-content-muted" />
             </div>
-          ) : !isConnected ? (
+          ) : !isGitHubConnected ? (
             <div className="flex flex-col items-center gap-4 py-8">
               <CloudOff className="h-12 w-12 text-content-muted" />
               <p className="text-center text-sm text-content-muted">
@@ -344,12 +311,12 @@ export function GitHubSync({
               <div className="flex items-center gap-2 rounded-lg bg-surface-overlay p-3">
                 <Cloud className="h-4 w-4 text-success" />
                 <span className="text-sm text-content">
-                  Connected as <strong>@{userName}</strong>
+                  Connected as <strong>@{githubUser?.login}</strong>
                 </span>
               </div>
 
               {/* Repository selection */}
-              {!syncState.connected ? (
+              {!connection ? (
                 <div className="flex flex-col gap-4">
                   <div className="grid gap-2">
                     <Label>Select Repository</Label>
@@ -359,7 +326,7 @@ export function GitHubSync({
                       </SelectTrigger>
                       <SelectContent>
                         <ScrollArea className="max-h-48">
-                          {repositories.map((repo) => (
+                          {repositories.map((repo: GitHubRepository) => (
                             <SelectItem key={repo.id} value={repo.name}>
                               <div className="flex items-center gap-2">
                                 {repo.private ? (
@@ -402,14 +369,19 @@ export function GitHubSync({
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium text-content">
-                          {syncState.repository?.name}
+                          {connection.repository_name}
                         </p>
                         <p className="text-sm text-content-muted">
-                          Branch: {syncState.branch}
+                          Branch: {connection.current_branch}
                         </p>
+                        {connection.last_sync_at && (
+                          <p className="text-xs text-content-muted">
+                            Last sync: {new Date(connection.last_sync_at).toLocaleString()}
+                          </p>
+                        )}
                       </div>
                       <a
-                        href={syncState.repository?.url}
+                        href={connection.repository_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-content-muted hover:text-content"
@@ -424,10 +396,8 @@ export function GitHubSync({
                     <div className="grid gap-2">
                       <Label>Branch</Label>
                       <Select
-                        value={syncState.branch}
-                        onValueChange={(v) =>
-                          setSyncState((prev) => ({ ...prev, branch: v }))
-                        }
+                        value={connection.current_branch}
+                        onValueChange={handleBranchChange}
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -450,7 +420,7 @@ export function GitHubSync({
                       disabled={isSyncing}
                       className="flex-1"
                     >
-                      {isSyncing ? (
+                      {pushToGitHub.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <Upload className="mr-2 h-4 w-4" />
@@ -463,7 +433,7 @@ export function GitHubSync({
                       disabled={isSyncing}
                       className="flex-1"
                     >
-                      {isSyncing ? (
+                      {pullFromGitHub.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <Download className="mr-2 h-4 w-4" />
@@ -496,6 +466,7 @@ export function GitHubSync({
                     size="sm"
                     onClick={handleDisconnect}
                     className="text-content-muted"
+                    disabled={disconnectRepo.isPending}
                   >
                     <RefreshCw className="mr-2 h-3 w-3" />
                     Change Repository
