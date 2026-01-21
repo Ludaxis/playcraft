@@ -13,7 +13,10 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 };
 
-const currentLevel = import.meta.env.DEV ? 'debug' : 'info';
+// In production, only log errors to reduce console noise and improve performance
+// In development, show all logs for debugging
+const isProduction = import.meta.env.PROD;
+const currentLevel: LogLevel = isProduction ? 'error' : 'debug';
 
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];

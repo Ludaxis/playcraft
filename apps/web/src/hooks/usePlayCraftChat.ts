@@ -2,10 +2,13 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   generateCode,
   generateCodeWithContext,
+  generateCodeWithTimeout,
+  generateCodeSimplified,
   type GenerateRequest,
   type ContextAwareRequest,
   type ImageAttachment,
 } from '../lib/playcraftService';
+import { TimeoutMonitor, TIMEOUT_THRESHOLDS, type TimeoutStatus } from '../lib/aiTimeoutService';
 import { buildContext, preflightEstimate, type ContextPackage } from '../lib/contextBuilder';
 import type { FileEdit } from '../lib/editApplyService';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';
@@ -33,7 +36,8 @@ import {
   extractPredictionContext,
   getInitialSuggestions,
 } from '../lib/nextStepPredictionService';
-import type { ChatMessage, GenerationStage, GenerationProgress } from '../types';
+import type { ChatMessage, GenerationStage, GenerationProgress, FileChangeInfo } from '../types';
+import { logger } from '../lib/logger';
 
 // Re-export ChatMessage for backwards compatibility
 export type { ChatMessage } from '../types';
@@ -519,8 +523,94 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           };
 
           updateProgress('generating', 'AI is drafting code...');
-          response = await generateCodeWithContext(request);
+
+          // Use timeout-aware generation with status callbacks
+          let retryCount = 0;
+          const maxTimeoutRetries = 2;
+
+          while (retryCount <= maxTimeoutRetries) {
+            try {
+              if (retryCount === 0) {
+                // First attempt - use full context with timeout monitoring
+                response = await generateCodeWithTimeout({
+                  request,
+                  onProgress: (partialProgress) => {
+                    // Update progress with timeout info
+                    setGenerationProgress(prev => prev ? {
+                      ...prev,
+                      ...partialProgress,
+                    } : null);
+                  },
+                  onTimeout: (status: TimeoutStatus) => {
+                    logger.warn('Generation timeout', {
+                      component: 'usePlayCraftChat',
+                      stage: status.stage,
+                      elapsed: status.elapsed,
+                    });
+                  },
+                  timeoutMs: TIMEOUT_THRESHOLDS.HARD,
+                });
+              } else {
+                // Retry with simplified context
+                updateProgress('retrying', `Retrying with simplified context (attempt ${retryCount})...`);
+                response = await generateCodeSimplified(request, (partialProgress) => {
+                  setGenerationProgress(prev => prev ? {
+                    ...prev,
+                    ...partialProgress,
+                  } : null);
+                });
+              }
+              break; // Success - exit retry loop
+            } catch (err) {
+              const errorMessage = err instanceof Error ? err.message : String(err);
+
+              // Check if it's a timeout error
+              if (errorMessage.includes('timed out') && retryCount < maxTimeoutRetries) {
+                retryCount++;
+                logger.warn('Generation timed out, retrying', {
+                  component: 'usePlayCraftChat',
+                  attempt: retryCount,
+                  maxRetries: maxTimeoutRetries,
+                });
+                continue;
+              }
+
+              // Not a timeout or max retries exceeded - throw
+              throw err;
+            }
+          }
+
           updateProgress('processing', 'Parsing AI response...');
+
+          // Track file changes from response
+          const fileChanges: FileChangeInfo[] = [];
+          if (response.files) {
+            response.files.forEach(f => {
+              fileChanges.push({
+                path: f.path,
+                type: 'create',
+                status: 'pending',
+              });
+            });
+          }
+          if (response.edits) {
+            response.edits.forEach(e => {
+              if (!fileChanges.some(fc => fc.path === e.path)) {
+                fileChanges.push({
+                  path: e.path,
+                  type: 'modify',
+                  status: 'pending',
+                });
+              }
+            });
+          }
+
+          if (fileChanges.length > 0) {
+            setGenerationProgress(prev => prev ? {
+              ...prev,
+              fileChanges,
+            } : null);
+          }
 
           // Update memory from response (background)
           updateMemoryFromResponse(projectId, prompt, response, selectedFile).catch(err => {
@@ -694,14 +784,39 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
         // Handle full file replacements
         if (response.files && response.files.length > 0) {
+          // Update file change statuses as we apply
+          const updateFileStatus = (path: string, status: FileChangeInfo['status']) => {
+            setGenerationProgress(prev => {
+              if (!prev?.fileChanges) return prev;
+              return {
+                ...prev,
+                fileChanges: prev.fileChanges.map(fc =>
+                  fc.path === path ? { ...fc, status } : fc
+                ),
+              };
+            });
+          };
+
           updateProgress('applying', `Writing ${response.files.length} file(s)...`, {
-            completed: response.files.length,
+            completed: 0,
             total: response.files.length,
           });
-          // Update our file cache
-          for (const file of response.files) {
+
+          // Update our file cache and track progress
+          for (let i = 0; i < response.files.length; i++) {
+            const file = response.files[i];
             const normalizedPath = file.path.startsWith('/') ? file.path : `/${file.path}`;
             filesRef.current[normalizedPath] = file.content;
+
+            // Update status to applying
+            updateFileStatus(file.path, 'applying');
+
+            // Update progress count
+            setGenerationProgress(prev => prev ? {
+              ...prev,
+              completed: i + 1,
+              activeItem: file.path,
+            } : null);
           }
 
           // Apply files if callback provided
@@ -709,11 +824,16 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
             await onFilesGenerated(response.files);
             filesApplied = response.files.length;
 
+            // Mark all files as applied
+            for (const file of response.files) {
+              updateFileStatus(file.path, 'applied');
+            }
+
             // Try to detect game name from generated files
             if (onGameNameDetected) {
               const detectedName = extractGameName(response.files);
               if (detectedName) {
-                console.log('[usePlayCraftChat] Detected game name:', detectedName);
+                logger.debug('Detected game name', { component: 'usePlayCraftChat', name: detectedName });
                 onGameNameDetected(detectedName);
               }
             }

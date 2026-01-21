@@ -3,6 +3,8 @@
  * Runs TypeScript checks and captures errors for AI auto-fix
  */
 
+import { parseJsonOrNull, ESLintResultsSchema } from './jsonValidation';
+
 export interface CodeError {
   file: string;
   line: number;
@@ -109,62 +111,40 @@ export function parseRuntimeErrors(output: string): CodeError[] {
 }
 
 /**
- * ESLint JSON output format
- */
-interface ESLintMessage {
-  ruleId: string | null;
-  severity: 1 | 2; // 1 = warning, 2 = error
-  message: string;
-  line: number;
-  column: number;
-  nodeType: string;
-  endLine?: number;
-  endColumn?: number;
-}
-
-interface ESLintFileResult {
-  filePath: string;
-  messages: ESLintMessage[];
-  errorCount: number;
-  warningCount: number;
-}
-
-/**
  * Parse ESLint JSON output into structured errors
  */
 export function parseESLintErrors(jsonOutput: string): CodeError[] {
   const errors: CodeError[] = [];
 
-  try {
-    // ESLint outputs an array of file results
-    const results: ESLintFileResult[] = JSON.parse(jsonOutput);
+  // Use validated JSON parsing
+  const results = parseJsonOrNull(jsonOutput, ESLintResultsSchema);
 
-    for (const fileResult of results) {
-      for (const msg of fileResult.messages) {
-        // Normalize file path
-        let filePath = fileResult.filePath;
-        // Remove absolute path prefix if present
-        const srcIndex = filePath.indexOf('/src/');
-        if (srcIndex !== -1) {
-          filePath = filePath.slice(srcIndex);
-        } else if (!filePath.startsWith('/')) {
-          filePath = `/${filePath}`;
-        }
+  if (!results) {
+    // JSON parsing or validation failed
+    return errors;
+  }
 
-        errors.push({
-          file: filePath,
-          line: msg.line || 1,
-          column: msg.column || 1,
-          severity: msg.severity === 2 ? 'error' : 'warning',
-          code: msg.ruleId || 'ESLINT',
-          message: msg.message,
-        });
+  for (const fileResult of results) {
+    for (const msg of fileResult.messages) {
+      // Normalize file path
+      let filePath = fileResult.filePath;
+      // Remove absolute path prefix if present
+      const srcIndex = filePath.indexOf('/src/');
+      if (srcIndex !== -1) {
+        filePath = filePath.slice(srcIndex);
+      } else if (!filePath.startsWith('/')) {
+        filePath = `/${filePath}`;
       }
+
+      errors.push({
+        file: filePath,
+        line: msg.line || 1,
+        column: msg.column || 1,
+        severity: msg.severity === 2 ? 'error' : 'warning',
+        code: msg.ruleId || 'ESLINT',
+        message: msg.message,
+      });
     }
-  } catch {
-    // JSON parsing failed - try to extract from text output
-    // ESLint might output text if JSON fails
-    console.warn('[codeValidator] Failed to parse ESLint JSON output');
   }
 
   return errors;

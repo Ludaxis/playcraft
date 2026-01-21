@@ -7,6 +7,7 @@
 
 import { getSupabase } from './supabase';
 import { logger } from './logger';
+import { parseJsonOrNull, LatestVersionSchema } from './jsonValidation';
 
 const BUCKET_NAME = 'project-files';
 const MAX_CONCURRENT_UPLOADS = 5;
@@ -487,8 +488,8 @@ export async function getLatestPublishedVersion(
     }
 
     const content = await data.text();
-    const latest = JSON.parse(content);
-    return latest.versionTag || null;
+    const latest = parseJsonOrNull(content, LatestVersionSchema);
+    return latest?.versionTag || null;
   } catch {
     return null;
   }

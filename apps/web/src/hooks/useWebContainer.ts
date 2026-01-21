@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { WebContainer, FileSystemTree } from '@webcontainer/api';
+import { logger } from '../lib/logger';
 import {
   bootWebContainer,
   getWebContainer,
@@ -77,6 +78,8 @@ export interface UseWebContainerReturn {
   dismissOutdated: () => void;
 }
 
+const COMPONENT = 'useWebContainer';
+
 export function useWebContainer(): UseWebContainerReturn {
   const [status, setStatus] = useState<WebContainerStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +119,7 @@ export function useWebContainer(): UseWebContainerReturn {
     // Kill any running processes (dev server, etc.)
     const killed = killAllProcesses();
     if (killed > 0) {
-      console.log(`[useWebContainer] Reset: killed ${killed} process(es)`);
+      logger.debug(`Reset: killed ${killed} process(es)`, { component: COMPONENT, action: 'reset' });
     }
     devServerProcessIdRef.current = null;
     currentProjectIdRef.current = null;
@@ -140,14 +143,14 @@ export function useWebContainer(): UseWebContainerReturn {
     // After page refresh, the WebContainer needs to be re-booted even if sessionStorage has state
     const container = getWebContainer();
     if (!container) {
-      console.log('[useWebContainer] Cannot restore - WebContainer not booted yet');
+      logger.debug('Cannot restore - WebContainer not booted yet', { component: COMPONENT });
       // Clear stale state from sessionStorage
       clearProjectState();
       return false;
     }
 
     if (existingState && existingState.projectId === projectId && existingState.isReady) {
-      console.log('[useWebContainer] Restoring existing project state for:', projectId);
+      logger.debug('Restoring existing project state', { component: COMPONENT, projectId });
 
       // Restore the state
       currentProjectIdRef.current = projectId;
@@ -163,7 +166,7 @@ export function useWebContainer(): UseWebContainerReturn {
 
     // Check if switching to a different project
     if (currentProjectIdRef.current && currentProjectIdRef.current !== projectId) {
-      console.log('[useWebContainer] Switching from project', currentProjectIdRef.current, 'to', projectId);
+      logger.debug('Switching projects', { component: COMPONENT, from: currentProjectIdRef.current, to: projectId });
       resetForNewProject();
     }
 
@@ -178,13 +181,13 @@ export function useWebContainer(): UseWebContainerReturn {
   const boot = useCallback(async () => {
     // If already booted, return immediately
     if (containerRef.current) {
-      console.log('[useWebContainer] Boot skipped - already booted');
+      logger.debug('Boot skipped - already booted', { component: COMPONENT });
       return;
     }
 
     // If boot is in progress, wait for it
     if (bootPromiseRef.current) {
-      console.log('[useWebContainer] Boot in progress - waiting for completion');
+      logger.debug('Boot in progress - waiting for completion', { component: COMPONENT });
       await bootPromiseRef.current;
       return;
     }
@@ -225,7 +228,7 @@ export function useWebContainer(): UseWebContainerReturn {
   const mountProject = useCallback(async (files: FileSystemTree, projectId?: string) => {
     // Ensure WebContainer is booted before mounting
     if (!containerRef.current) {
-      console.log('[useWebContainer] Container not ready, booting before mount...');
+      logger.debug('Container not ready, booting before mount', { component: COMPONENT });
       await boot();
       // Double-check container is available after boot
       if (!containerRef.current) {
@@ -323,20 +326,20 @@ export function useWebContainer(): UseWebContainerReturn {
 
   // Install dependencies (uses cache when available)
   const install = useCallback(async (projectId?: string) => {
-    console.log('[useWebContainer] install called with projectId:', projectId);
+    logger.debug('Install called', { component: COMPONENT, projectId });
 
     // Use provided projectId or fall back to ref
     const currentProjectId = projectId || projectIdRef.current;
-    console.log('[useWebContainer] currentProjectId:', currentProjectId);
+    logger.debug('Current project ID', { component: COMPONENT, currentProjectId });
 
     // Check if we can skip install
     const alreadyInstalled = await hasNodeModules();
-    console.log('[useWebContainer] alreadyInstalled:', alreadyInstalled);
+    logger.debug('Already installed check', { component: COMPONENT, alreadyInstalled });
 
     if (alreadyInstalled) {
       appendOutput('\nDependencies already installed, skipping npm install...\n');
       setStatus('ready');
-      console.log('[useWebContainer] Skipping install - already installed');
+      logger.debug('Skipping install - already installed', { component: COMPONENT });
       return;
     }
 
@@ -345,13 +348,13 @@ export function useWebContainer(): UseWebContainerReturn {
     // Try to restore from IndexedDB cache first
     if (currentProjectId) {
       appendOutput('\nChecking dependency cache...\n');
-      console.log('[useWebContainer] Attempting cache restore...');
+      logger.debug('Attempting cache restore', { component: COMPONENT });
       const restored = await restoreFromCache(currentProjectId, appendOutput);
-      console.log('[useWebContainer] Cache restore result:', restored);
+      logger.debug('Cache restore result', { component: COMPONENT, restored });
       if (restored) {
         appendOutput('\nDependencies restored from cache!\n');
         setStatus('ready');
-        console.log('[useWebContainer] Dependencies restored from cache, status set to ready');
+        logger.debug('Dependencies restored from cache', { component: COMPONENT });
         await refreshFileTree();
         return;
       }
@@ -359,11 +362,11 @@ export function useWebContainer(): UseWebContainerReturn {
 
     // No cache - do full npm install
     appendOutput('\n$ npm install\n');
-    console.log('[useWebContainer] Starting full npm install...');
+    logger.debug('Starting full npm install', { component: COMPONENT });
 
     try {
       const exitCode = await installDependencies(appendOutput);
-      console.log('[useWebContainer] npm install exit code:', exitCode);
+      logger.debug('npm install completed', { component: COMPONENT, exitCode });
 
       if (exitCode !== 0) {
         throw new Error(`npm install failed with exit code ${exitCode}`);
@@ -378,13 +381,13 @@ export function useWebContainer(): UseWebContainerReturn {
         try {
           await saveToCache(currentProjectId, appendOutput);
         } catch (err) {
-          console.warn('[Cache] Caching failed (non-blocking):', err);
+          logger.warn('Caching failed (non-blocking)', { component: COMPONENT, error: err instanceof Error ? err.message : 'Unknown' });
         }
       }
 
       await refreshFileTree();
     } catch (err) {
-      console.error('[useWebContainer] install error:', err);
+      logger.error('Install error', err instanceof Error ? err : new Error(String(err)), { component: COMPONENT });
       const message = err instanceof Error ? err.message : 'Failed to install dependencies';
       setError(message);
       setStatus('error');
@@ -395,14 +398,14 @@ export function useWebContainer(): UseWebContainerReturn {
 
   // Start dev server
   const startDev = useCallback(async () => {
-    console.log('[useWebContainer] startDev called');
+    logger.debug('startDev called', { component: COMPONENT });
 
     // Check if project is already running with dev server
     const existingState = getProjectState();
     if (existingState?.projectId === currentProjectIdRef.current &&
         existingState.isReady &&
         existingState.previewUrl) {
-      console.log('[useWebContainer] Dev server already running, skipping start');
+      logger.debug('Dev server already running, skipping start', { component: COMPONENT });
       setPreviewUrl(existingState.previewUrl);
       setStatus('running');
       return;
@@ -412,7 +415,7 @@ export function useWebContainer(): UseWebContainerReturn {
     // This handles zombie processes from page refreshes
     const killed = killAllProcesses();
     if (killed > 0) {
-      console.log('[useWebContainer] Killed', killed, 'existing process(es) before starting dev server');
+      logger.debug('Killed existing processes before starting dev server', { component: COMPONENT, killed });
     }
     devServerProcessIdRef.current = null;
 
@@ -420,11 +423,11 @@ export function useWebContainer(): UseWebContainerReturn {
     appendOutput('\n$ npm run dev\n');
 
     try {
-      console.log('[useWebContainer] Calling startDevServer...');
+      logger.debug('Calling startDevServer', { component: COMPONENT });
       const processId = await startDevServer(
         appendOutput,
         (port, url) => {
-          console.log('[useWebContainer] Server ready callback received:', { port, url });
+          logger.debug('Server ready callback received', { component: COMPONENT, port, url });
           setPreviewUrl(url);
           appendOutput(`\nServer running at ${url}\n`);
 
@@ -436,14 +439,14 @@ export function useWebContainer(): UseWebContainerReturn {
               previewUrl: url,
               devServerProcessId: processId,
             });
-            console.log('[useWebContainer] Saved project state for:', currentProjectIdRef.current);
+            logger.debug('Saved project state', { component: COMPONENT, projectId: currentProjectIdRef.current });
           }
         }
       );
       devServerProcessIdRef.current = processId;
-      console.log('[useWebContainer] Dev server started, processId:', processId);
+      logger.debug('Dev server started', { component: COMPONENT, processId });
     } catch (err) {
-      console.error('[useWebContainer] startDevServer error:', err);
+      logger.error('startDevServer error', err instanceof Error ? err : new Error(String(err)), { component: COMPONENT });
       const message = err instanceof Error ? err.message : 'Failed to start dev server';
       setError(message);
       setStatus('error');
@@ -459,7 +462,7 @@ export function useWebContainer(): UseWebContainerReturn {
       setFileTree(tree as FileNode[]);
     } catch (err) {
       // Silently fail - file tree might not be ready yet
-      console.warn('Failed to refresh file tree:', err);
+      logger.warn('Failed to refresh file tree', { component: COMPONENT, error: err instanceof Error ? err.message : 'Unknown' });
     }
   }, []);
 
@@ -493,7 +496,7 @@ export function useWebContainer(): UseWebContainerReturn {
       return output;
     } catch (err) {
       // Timeout or other error - return empty string (no errors to report)
-      console.warn('[useWebContainer] TypeScript check failed:', err);
+      logger.warn('TypeScript check failed', { component: COMPONENT, error: err instanceof Error ? err.message : 'Unknown' });
       return '';
     }
   }, []);
@@ -509,7 +512,7 @@ export function useWebContainer(): UseWebContainerReturn {
       return output;
     } catch (err) {
       // ESLint not available or timed out - return empty array
-      console.warn('[useWebContainer] ESLint check failed:', err);
+      logger.warn('ESLint check failed', { component: COMPONENT, error: err instanceof Error ? err.message : 'Unknown' });
       return '[]';
     }
   }, []);
@@ -530,7 +533,7 @@ export function useWebContainer(): UseWebContainerReturn {
       const result = await checkDependencies();
       setOutdatedDeps(result.outdated);
     } catch (err) {
-      console.error('Failed to check dependencies:', err);
+      logger.error('Failed to check dependencies', err instanceof Error ? err : new Error(String(err)), { component: COMPONENT });
     } finally {
       setIsCheckingDeps(false);
     }

@@ -12,6 +12,12 @@
 import { getSupabase } from './supabase';
 import { spawn, readFile, readDir } from './webcontainer';
 import type { PublishedGame } from '../types';
+import {
+  parseJsonOrNull,
+  PublishedVersionsArraySchema,
+  PackageJsonSchema,
+  type PublishedVersion,
+} from './jsonValidation';
 
 // ============================================================================
 // Types
@@ -48,12 +54,6 @@ export type TypeScriptError = CodeError;
 // ============================================================================
 
 const BUILD_TIMEOUT_MS = 90000; // 90 second timeout (generous for WebContainer)
-
-interface PublishedVersion {
-  id: string;
-  createdAt: string;
-  path: string;
-}
 
 interface BuildResult {
   success: boolean;
@@ -323,9 +323,9 @@ async function uploadToStorage(
         .download(`${basePath}/versions.json`);
       if (existing.data) {
         const text = await existing.data.text();
-        const parsed = JSON.parse(text);
-        if (Array.isArray(parsed)) {
-          versions = parsed as PublishedVersion[];
+        const parsed = parseJsonOrNull(text, PublishedVersionsArraySchema);
+        if (parsed) {
+          versions = parsed;
         }
       }
     } catch {
@@ -414,9 +414,9 @@ async function getGameName(projectId: string): Promise<string> {
 
   try {
     // Fallback to package.json name
-    const packageJson = await readFile('/package.json');
-    const pkg = JSON.parse(packageJson);
-    if (pkg.name && pkg.name !== 'vite-project') {
+    const packageJsonContent = await readFile('/package.json');
+    const pkg = parseJsonOrNull(packageJsonContent, PackageJsonSchema);
+    if (pkg?.name && pkg.name !== 'vite-project') {
       return pkg.name;
     }
   } catch {

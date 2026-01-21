@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+# Run TypeScript type checking before commit
+echo "Running TypeScript type check..."
+pnpm typecheck

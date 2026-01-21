@@ -405,12 +405,27 @@ export interface GenerationProgress {
   message: string;
   startedAt: number;
   detail?: string;
-   // Rich progress metadata for UI
+  // Rich progress metadata for UI
   log?: string[];               // Recent progress lines
   activeItem?: string;          // Current file/task being processed
   completed?: number;           // Work units completed
   total?: number;               // Total work units (for progress bar)
   etaMs?: number;               // Optional ETA hint
+  // Timeout tracking
+  timeoutWarning?: boolean;     // Show warning that request is taking long
+  timeoutMessage?: string;      // Message about timeout status
+  canRetry?: boolean;           // Whether user can retry
+  // File changes tracking
+  fileChanges?: FileChangeInfo[];  // Files being modified
+}
+
+// File change info for tracking during generation
+export interface FileChangeInfo {
+  path: string;
+  type: 'create' | 'modify' | 'delete';
+  status: 'pending' | 'applying' | 'applied' | 'error';
+  linesChanged?: number;
+  error?: string;
 }
 
 // Stage configuration for UI display

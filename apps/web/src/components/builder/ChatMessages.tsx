@@ -5,9 +5,10 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen, Search, RefreshCw } from 'lucide-react';
-import type { ChatMessage, GenerationProgress } from '../../types';
+import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen, Search, RefreshCw, Clock, FileCode, FilePlus, FileEdit } from 'lucide-react';
+import type { ChatMessage, GenerationProgress, FileChangeInfo } from '../../types';
 import { NextStepsCards } from './NextStepsCards';
+import { cn } from '../../lib/utils';
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -102,9 +103,54 @@ function MessageBubble({
   );
 }
 
-// Progress indicator component with animated stages
+// File change item component
+function FileChangeItem({ change }: { change: FileChangeInfo }) {
+  const getIcon = () => {
+    if (change.status === 'applying') {
+      return <Loader2 className="h-3 w-3 animate-spin text-accent" />;
+    }
+    if (change.status === 'applied') {
+      return <Check className="h-3 w-3 text-success" />;
+    }
+    if (change.status === 'error') {
+      return <AlertCircle className="h-3 w-3 text-error" />;
+    }
+    switch (change.type) {
+      case 'create':
+        return <FilePlus className="h-3 w-3 text-success" />;
+      case 'modify':
+        return <FileEdit className="h-3 w-3 text-info" />;
+      default:
+        return <FileCode className="h-3 w-3 text-content-subtle" />;
+    }
+  };
+
+  const fileName = change.path.split('/').pop() || change.path;
+
+  return (
+    <div
+      className={cn(
+        'flex items-center gap-2 px-2 py-1 rounded text-xs',
+        change.status === 'applying' && 'bg-accent/10',
+        change.status === 'applied' && 'bg-success/10',
+        change.status === 'error' && 'bg-error/10'
+      )}
+    >
+      {getIcon()}
+      <span className="truncate text-content-muted">{fileName}</span>
+      {change.linesChanged !== undefined && (
+        <span className="text-content-subtle ml-auto">
+          {change.linesChanged > 0 ? '+' : ''}{change.linesChanged}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Progress indicator component with animated stages, timeout warnings, and file changes
 function GenerationProgressIndicator({ progress }: { progress: GenerationProgress }) {
   const [elapsed, setElapsed] = useState(0);
+  const [showFiles, setShowFiles] = useState(true);
 
   // Update elapsed time every 100ms
   useEffect(() => {
@@ -116,6 +162,11 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
 
   // Get icon based on stage
   const getIcon = () => {
+    // Show clock icon if timeout warning
+    if (progress.timeoutWarning) {
+      return <Clock className="h-4 w-4 text-warning animate-pulse" />;
+    }
+
     switch (progress.stage) {
       case 'preparing':
         return <FolderOpen className="h-4 w-4 text-accent animate-pulse" />;
@@ -156,28 +207,49 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
       ? Math.min(100, Math.round((progress.completed / progress.total) * 100))
       : null;
 
+  // Determine message to show (timeout message takes priority)
+  const displayMessage = progress.timeoutMessage || progress.message;
+
   return (
     <div className="flex gap-3">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-secondary">
         <Sparkles className="h-4 w-4 text-content" />
       </div>
-      <div className="flex flex-col gap-2 rounded-2xl bg-surface-overlay px-4 py-3">
+      <div className={cn(
+        "flex flex-col gap-2 rounded-2xl px-4 py-3 w-full max-w-md",
+        progress.timeoutWarning ? "bg-warning/10 border border-warning/20" : "bg-surface-overlay"
+      )}>
+        {/* Main status line */}
         <div className="flex items-center gap-2">
           {getIcon()}
-          <span className="text-sm text-content-muted">{progress.message}</span>
+          <span className={cn(
+            "text-sm",
+            progress.timeoutWarning ? "text-warning" : "text-content-muted"
+          )}>
+            {displayMessage}
+          </span>
           {elapsedText && (
             <span className="text-xs text-content-subtle">({elapsedText})</span>
           )}
         </div>
+
+        {/* Active item being processed */}
         {progress.activeItem && (
           <span className="text-xs text-content-subtle ml-6 truncate">
             {progress.activeItem}
           </span>
         )}
+
+        {/* Progress bar */}
         {percentComplete !== null ? (
           <div className="ml-6 mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated/60">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-accent to-secondary transition-all duration-300"
+              className={cn(
+                "h-full rounded-full transition-all duration-300",
+                progress.timeoutWarning
+                  ? "bg-warning"
+                  : "bg-gradient-to-r from-accent to-secondary"
+              )}
               style={{ width: `${percentComplete}%` }}
             />
           </div>
@@ -185,10 +257,17 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
           progress.stage !== 'complete' &&
           progress.stage !== 'error' && (
             <div className="ml-6 mt-1 h-1.5 w-full overflow-hidden rounded-full bg-surface-elevated/60">
-              <div className="h-full w-1/3 animate-pulse rounded-full bg-gradient-to-r from-accent to-secondary" />
+              <div className={cn(
+                "h-full w-1/3 animate-pulse rounded-full",
+                progress.timeoutWarning
+                  ? "bg-warning"
+                  : "bg-gradient-to-r from-accent to-secondary"
+              )} />
             </div>
           )
         )}
+
+        {/* Detail/log section */}
         <div className="ml-6 flex flex-col gap-1">
           {progress.detail && (!progress.log || progress.log.length === 0) && (
             <span className="text-xs text-content-subtle">{progress.detail}</span>
@@ -203,6 +282,36 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
             </ul>
           )}
         </div>
+
+        {/* File changes section */}
+        {progress.fileChanges && progress.fileChanges.length > 0 && (
+          <div className="ml-6 mt-2 border-t border-border/30 pt-2">
+            <button
+              onClick={() => setShowFiles(!showFiles)}
+              className="flex items-center gap-1 text-xs text-content-subtle hover:text-content-muted transition-colors"
+            >
+              <FileCode className="h-3 w-3" />
+              <span>
+                {progress.fileChanges.length} file{progress.fileChanges.length !== 1 ? 's' : ''} changing
+              </span>
+              <span className="ml-1">{showFiles ? '▼' : '▶'}</span>
+            </button>
+            {showFiles && (
+              <div className="mt-1.5 space-y-1 max-h-32 overflow-y-auto">
+                {progress.fileChanges.map((change) => (
+                  <FileChangeItem key={change.path} change={change} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Retry suggestion for timeout */}
+        {progress.canRetry && progress.timeoutWarning && (
+          <div className="ml-6 mt-2 text-xs text-warning">
+            Tip: Try breaking your request into smaller steps
+          </div>
+        )}
       </div>
     </div>
   );

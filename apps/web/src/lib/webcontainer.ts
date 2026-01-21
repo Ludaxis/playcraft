@@ -4,6 +4,14 @@ import {
   cacheNodeModules,
   restoreNodeModules,
 } from './indexedDBCache';
+import {
+  parseJsonOrNull,
+  ProjectStateSchema,
+  NpmOutdatedOutputSchema,
+} from './jsonValidation';
+import { logger } from './logger';
+
+const COMPONENT = 'webcontainer';
 
 let webcontainerInstance: WebContainer | null = null;
 let bootPromise: Promise<WebContainer> | null = null;
@@ -16,12 +24,7 @@ let nodeModulesInstalled = false;
 // =============================================================================
 // Track state per project to avoid re-setup when navigating back
 
-interface ProjectState {
-  projectId: string;
-  isReady: boolean;
-  previewUrl: string | null;
-  devServerProcessId: string | null;
-}
+import type { ProjectState } from './jsonValidation';
 
 let currentProjectState: ProjectState | null = null;
 const PROJECT_STATE_KEY = 'playcraft_project_state';
@@ -39,9 +42,11 @@ export function getProjectState(): ProjectState | null {
   try {
     const stored = sessionStorage.getItem(PROJECT_STATE_KEY);
     if (stored) {
-      const state = JSON.parse(stored) as ProjectState;
-      currentProjectState = state;
-      return state;
+      const state = parseJsonOrNull(stored, ProjectStateSchema);
+      if (state) {
+        currentProjectState = state;
+        return state;
+      }
     }
   } catch {
     // sessionStorage not available or corrupted
@@ -137,7 +142,7 @@ export function killProcess(id: string): boolean {
       runningProcesses.delete(id);
       return true;
     } catch (e) {
-      console.warn(`Failed to kill process ${id}:`, e);
+      logger.warn(`Failed to kill process ${id}`, { component: COMPONENT, error: e instanceof Error ? e.message : 'Unknown' });
       runningProcesses.delete(id);
       return false;
     }
@@ -155,7 +160,7 @@ export function killAllProcesses(): number {
       tracked.process.kill();
       killed++;
     } catch (e) {
-      console.warn(`Failed to kill process ${id}:`, e);
+      logger.warn(`Failed to kill process ${id}`, { component: COMPONENT, error: e instanceof Error ? e.message : 'Unknown' });
     }
     runningProcesses.delete(id);
   }
@@ -197,7 +202,7 @@ export async function bootWebContainer(): Promise<WebContainer> {
     } catch (err) {
       // Handle "already booted" error gracefully
       if (err instanceof Error && err.message.includes('single WebContainer instance')) {
-        console.warn('[WebContainer] Boot race condition detected, waiting for existing instance...');
+        logger.warn('Boot race condition detected, waiting for existing instance', { component: COMPONENT });
         // Wait a bit and retry - the other boot should complete
         await new Promise(resolve => setTimeout(resolve, 100));
         if (webcontainerInstance) {
@@ -577,7 +582,7 @@ export async function restoreFromCache(
         restoredCount++;
       } catch (e) {
         // Skip files that fail to restore
-        console.warn(`[Cache] Failed to restore ${path}:`, e);
+        logger.warn(`Failed to restore ${path}`, { component: COMPONENT, error: e instanceof Error ? e.message : 'Unknown' });
       }
     }
 
@@ -594,18 +599,18 @@ export async function restoreFromCache(
       if (exitCode === 0) {
         onOutput?.('[Cache] Rebuild complete!\n');
       } else {
-        console.warn('[Cache] npm rebuild exited with code:', exitCode);
+        logger.warn('npm rebuild exited with non-zero code', { component: COMPONENT, exitCode });
         // Still mark as installed - might work anyway
       }
     } catch (rebuildErr) {
-      console.error('[Cache] npm rebuild failed:', rebuildErr);
+      logger.error('npm rebuild failed', rebuildErr instanceof Error ? rebuildErr : new Error(String(rebuildErr)), { component: COMPONENT });
       // Continue anyway - the cache restore might still work
     }
 
     nodeModulesInstalled = true;
     return true;
   } catch (err) {
-    console.error('[Cache] Failed to restore from cache:', err);
+    logger.error('Failed to restore from cache', err instanceof Error ? err : new Error(String(err)), { component: COMPONENT });
     onOutput?.(`[Cache] Restore failed: ${err}\n`);
     return false;
   }
@@ -668,7 +673,7 @@ export async function saveToCache(
       onOutput?.(`[Cache] Saved ${files.size} files to cache\n`);
     }
   } catch (err) {
-    console.error('[Cache] Failed to save cache:', err);
+    logger.error('Failed to save cache', err instanceof Error ? err : new Error(String(err)), { component: COMPONENT });
     // Don't throw - caching is optional
   }
 }
@@ -710,24 +715,21 @@ export async function checkDependencies(): Promise<{
       return { outdated: [], hasUpdates: false };
     }
 
-    try {
-      const parsed = JSON.parse(output);
-      const outdated: OutdatedDependency[] = Object.entries(parsed).map(
-        ([name, info]: [string, unknown]) => {
-          const dep = info as { current: string; wanted: string; latest: string; type: string };
-          return {
-            name,
-            current: dep.current || 'unknown',
-            wanted: dep.wanted || dep.current,
-            latest: dep.latest || dep.current,
-            type: (dep.type === 'devDependencies' ? 'devDependencies' : 'dependencies') as 'dependencies' | 'devDependencies',
-          };
-        }
-      );
-      return { outdated, hasUpdates: outdated.length > 0 };
-    } catch {
+    const parsed = parseJsonOrNull(output, NpmOutdatedOutputSchema);
+    if (!parsed) {
       return { outdated: [], hasUpdates: false };
     }
+
+    const outdated: OutdatedDependency[] = Object.entries(parsed).map(
+      ([name, info]) => ({
+        name,
+        current: info.current || 'unknown',
+        wanted: info.wanted || info.current || 'unknown',
+        latest: info.latest || info.current || 'unknown',
+        type: (info.type === 'devDependencies' ? 'devDependencies' : 'dependencies') as 'dependencies' | 'devDependencies',
+      })
+    );
+    return { outdated, hasUpdates: outdated.length > 0 };
   } catch {
     // npm outdated might not be available or fail
     return { outdated: [], hasUpdates: false };
@@ -771,14 +773,14 @@ export async function startDevServer(
 
   // Store callback for server-ready event
   currentServerReadyCallback = onServerReady || null;
-  console.log('[WebContainer] startDevServer called, callback:', !!onServerReady);
+  logger.debug('startDevServer called', { component: COMPONENT, hasCallback: !!onServerReady });
 
   // Register server-ready listener only once (avoid duplicates)
   // Always register if not already registered - callback is stored separately
   if (!serverReadyListenerRegistered) {
-    console.log('[WebContainer] Registering server-ready listener');
+    logger.debug('Registering server-ready listener', { component: COMPONENT });
     instance.on('server-ready', (port, url) => {
-      console.log('[WebContainer] server-ready event fired:', { port, url, hasCallback: !!currentServerReadyCallback });
+      logger.debug('server-ready event fired', { component: COMPONENT, port, url, hasCallback: !!currentServerReadyCallback });
       if (currentServerReadyCallback) {
         currentServerReadyCallback(port, url);
       }
@@ -802,10 +804,10 @@ export async function startDevServer(
   // Monitor process exit for errors
   process.exit.then((exitCode) => {
     if (exitCode !== 0) {
-      console.error('[WebContainer] Dev server exited with code:', exitCode);
+      logger.error('Dev server exited with non-zero code', new Error(`Exit code: ${exitCode}`), { component: COMPONENT, exitCode });
     }
   }).catch((err) => {
-    console.error('[WebContainer] Dev server process error:', err);
+    logger.error('Dev server process error', err instanceof Error ? err : new Error(String(err)), { component: COMPONENT });
   });
 
   return processId;
