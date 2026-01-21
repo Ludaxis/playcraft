@@ -1,14 +1,13 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   generateCode,
-  generateCodeWithContext,
   generateCodeWithTimeout,
   generateCodeSimplified,
   type GenerateRequest,
   type ContextAwareRequest,
   type ImageAttachment,
 } from '../lib/playcraftService';
-import { TimeoutMonitor, TIMEOUT_THRESHOLDS, type TimeoutStatus } from '../lib/aiTimeoutService';
+import { TIMEOUT_THRESHOLDS, type TimeoutStatus } from '../lib/aiTimeoutService';
 import { buildContext, preflightEstimate, type ContextPackage } from '../lib/contextBuilder';
 import type { FileEdit } from '../lib/editApplyService';
 import { getProjectMemory, initializeProjectMemory } from '../lib/projectMemoryService';

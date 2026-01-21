@@ -5,7 +5,7 @@
  * Displays which files are being modified/created and their status.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   FileCode,
   FilePlus,
@@ -14,7 +14,6 @@ import {
   Loader2,
   ChevronDown,
   ChevronRight,
-  Clock,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 

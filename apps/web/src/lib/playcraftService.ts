@@ -8,7 +8,6 @@ import {
   TimeoutMonitor,
   TIMEOUT_THRESHOLDS,
   type TimeoutStatus,
-  type TimeoutCallbacks,
 } from './aiTimeoutService';
 
 interface FileContent {
