@@ -9,7 +9,7 @@ import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
 import { CreditsPanel } from './CreditsPanel';
 import { ChatHistory } from './ChatHistory';
-import type { ChatMessage, ChatSession } from '../../types';
+import type { ChatMessage, ChatSession, GenerationProgress } from '../../types';
 import type { BuilderViewMode } from './HeaderTabs';
 
 type LeftPanelTab = 'chat' | 'history';
@@ -23,6 +23,8 @@ interface LeftPanelProps {
   // Chat props
   messages: ChatMessage[];
   isGenerating: boolean;
+  generationProgress?: GenerationProgress | null;
+  onCancelGeneration?: () => void;
   projectReady: boolean;
   isSettingUp: boolean;
   inputValue: string;
@@ -50,6 +52,8 @@ export function LeftPanel({
   // Chat
   messages,
   isGenerating,
+  generationProgress,
+  onCancelGeneration,
   projectReady,
   isSettingUp,
   inputValue,
@@ -135,9 +139,11 @@ export function LeftPanel({
                 <ChatMessages
                   messages={messages}
                   isGenerating={isGenerating}
+                  generationProgress={generationProgress || null}
                   projectReady={projectReady}
                   isSettingUp={isSettingUp}
                   onSuggestionClick={handleSuggestionClick}
+                  onCancelGeneration={onCancelGeneration}
                 />
 
                 {/* Credits panel */}

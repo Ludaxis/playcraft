@@ -5,7 +5,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen, Search, RefreshCw, Clock, FileCode, FilePlus, FileEdit } from 'lucide-react';
+import { Loader2, Sparkles, User, Check, Brain, Code, Save, AlertCircle, FolderOpen, Search, RefreshCw, Clock, FileCode, FilePlus, FileEdit, StopCircle } from 'lucide-react';
 import type { ChatMessage, GenerationProgress, FileChangeInfo } from '../../types';
 import { NextStepsCards } from './NextStepsCards';
 import { cn } from '../../lib/utils';
@@ -17,6 +17,7 @@ interface ChatMessagesProps {
   projectReady: boolean;
   isSettingUp: boolean;
   onSuggestionClick?: (prompt: string) => void;
+  onCancelGeneration?: () => void;
 }
 
 function FeatureList({ features }: { features: string[] }) {
@@ -148,7 +149,13 @@ function FileChangeItem({ change }: { change: FileChangeInfo }) {
 }
 
 // Progress indicator component with animated stages, timeout warnings, and file changes
-function GenerationProgressIndicator({ progress }: { progress: GenerationProgress }) {
+function GenerationProgressIndicator({
+  progress,
+  onCancel
+}: {
+  progress: GenerationProgress;
+  onCancel?: () => void;
+}) {
   const [elapsed, setElapsed] = useState(0);
   const [showFiles, setShowFiles] = useState(true);
 
@@ -312,6 +319,32 @@ function GenerationProgressIndicator({ progress }: { progress: GenerationProgres
             Tip: Try breaking your request into smaller steps
           </div>
         )}
+
+        {/* Cancel button - always visible during generation */}
+        {onCancel && progress.stage !== 'complete' && progress.stage !== 'error' && (
+          <div className="ml-6 mt-3 pt-2 border-t border-border/30">
+            <button
+              onClick={onCancel}
+              className="flex items-center gap-1.5 text-xs text-content-subtle hover:text-error transition-colors px-2 py-1 rounded hover:bg-error/10"
+            >
+              <StopCircle className="h-3.5 w-3.5" />
+              <span>Cancel generation</span>
+            </button>
+          </div>
+        )}
+
+        {/* Error details section */}
+        {progress.stage === 'error' && progress.detail && (
+          <div className="ml-6 mt-2 p-2 rounded bg-error/10 border border-error/20">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-3.5 w-3.5 text-error mt-0.5 shrink-0" />
+              <div className="text-xs text-error">
+                <p className="font-medium">Error details:</p>
+                <p className="mt-1 text-error/80">{progress.detail}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -324,6 +357,7 @@ export function ChatMessages({
   projectReady,
   isSettingUp,
   onSuggestionClick,
+  onCancelGeneration,
 }: ChatMessagesProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -347,7 +381,10 @@ export function ChatMessages({
 
         {/* Generating indicator with progress stages */}
         {isGenerating && generationProgress && (
-          <GenerationProgressIndicator progress={generationProgress} />
+          <GenerationProgressIndicator
+            progress={generationProgress}
+            onCancel={onCancelGeneration}
+          />
         )}
 
         {/* Fallback generating indicator (no progress available) */}

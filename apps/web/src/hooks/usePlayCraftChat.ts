@@ -98,6 +98,8 @@ export interface UsePlayCraftChatReturn {
   error: string | null;
   /** Send a message to the AI. Set chatOnly=true for discussion without code edits. images for vision analysis. */
   sendMessage: (prompt: string, selectedFile?: string, chatOnly?: boolean, images?: ImageAttachment[]) => Promise<void>;
+  /** Cancel the current generation */
+  cancelGeneration: () => void;
   clearMessages: () => void;
   addSystemMessage: (content: string) => void;
   /** Current suggestions for the chatbox (from last assistant message or initial) */
@@ -321,6 +323,24 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
   // Track message count for summarization
   const messageCountRef = useRef(0);
+
+  // AbortController for cancelling generation
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cancel generation function
+  const cancelGeneration = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsGenerating(false);
+    setGenerationProgress(prev => prev ? {
+      ...prev,
+      stage: 'error',
+      message: 'Generation cancelled',
+      detail: 'You cancelled the generation. You can try again with a different prompt.',
+    } : null);
+  }, []);
 
   // Initialize project memory when project ID is set
   useEffect(() => {
@@ -1116,19 +1136,44 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           });
         }
       } catch (err) {
+        // Check if it was cancelled
+        if (err instanceof Error && err.name === 'AbortError') {
+          logger.debug('Generation was cancelled', { component: 'usePlayCraftChat' });
+          return;
+        }
+
         const errorMessage = err instanceof Error ? err.message : 'Failed to generate code';
         setError(errorMessage);
-        updateProgress('error', errorMessage);
+
+        // Provide more detailed error info in progress
+        let errorDetail = errorMessage;
+        if (errorMessage.includes('500') || errorMessage.includes('non-2xx')) {
+          errorDetail = 'The AI service returned an error. This could be due to high demand or a temporary issue. Try again in a moment, or simplify your request.';
+        } else if (errorMessage.includes('timed out')) {
+          errorDetail = 'The request took too long to complete. Try breaking your request into smaller, simpler steps.';
+        } else if (errorMessage.includes('network') || errorMessage.includes('CORS')) {
+          errorDetail = 'Network error. Check your internet connection and try again.';
+        }
+
+        setGenerationProgress(prev => ({
+          stage: 'error',
+          message: 'Generation failed',
+          startedAt: prev?.startedAt || Date.now(),
+          detail: errorDetail,
+          canRetry: true,
+        }));
+
         addMessage({
           role: 'system',
-          content: `Error: ${errorMessage}. If this keeps happening, check CORS/network and Supabase function logs.`,
+          content: `Error: ${errorMessage}`,
         });
       } finally {
         setIsGenerating(false);
-        // Reset progress after a brief delay to show completion
+        abortControllerRef.current = null;
+        // Don't reset progress immediately so user can see the error
         setTimeout(() => {
           updateProgress('idle');
-        }, 1000);
+        }, 5000); // Give user 5 seconds to see error details
       }
     },
     [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, onFirstPrompt, onGameNameDetected, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
@@ -1154,6 +1199,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     generationProgress,
     error,
     sendMessage,
+    cancelGeneration,
     clearMessages,
     addSystemMessage,
     suggestions,

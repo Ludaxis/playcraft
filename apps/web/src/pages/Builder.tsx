@@ -410,7 +410,7 @@ export function BuilderPage({
   }, [hasThreeJs, runCommand, project.id]);
 
   // AI Chat hook with file generation callback
-  const { messages, isGenerating, generationProgress, sendMessage: sendAiMessage, addSystemMessage, suggestions } =
+  const { messages, isGenerating, generationProgress, sendMessage: sendAiMessage, cancelGeneration, addSystemMessage, suggestions } =
     usePlayCraftChat({
       projectId: project.id,
       readFile: readProjectFile,
@@ -1222,6 +1222,7 @@ export function BuilderPage({
             projectReady={projectReady}
             isSettingUp={isSettingUp}
             onSuggestionClick={handleChatSuggestionClick}
+            onCancelGeneration={cancelGeneration}
           />
 
           {/* Credits panel */}
