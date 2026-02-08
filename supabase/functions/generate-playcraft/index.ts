@@ -659,7 +659,7 @@ async function callClaudeOrchestrator(
 ): Promise<ClaudePlan> {
   logger.startTimer('claudeOrchestrator');
 
-  // Build context for Claude
+  // Build context for orchestrator
   const contextParts: string[] = [];
 
   // Project files with full content for understanding
@@ -712,23 +712,24 @@ async function callClaudeOrchestrator(
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-5-sonnet-latest',
-        max_tokens: 2000,
-        system: CLAUDE_ORCHESTRATOR_PROMPT,
-        messages: [
-          { role: 'user', content: fullContext }
-        ],
-      }),
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            { role: 'user', parts: [{ text: fullContext }] }
+          ],
+          systemInstruction: { parts: [{ text: CLAUDE_ORCHESTRATOR_PROMPT }] },
+          generationConfig: {
+            maxOutputTokens: 2000,
+            thinkingConfig: { thinkingLevel: 'minimal' },
+          },
+        }),
+        signal: controller.signal,
+      }
+    );
 
     clearTimeout(timeoutId);
 
@@ -736,12 +737,12 @@ async function callClaudeOrchestrator(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error('Claude API error', { status: response.status, error: errorText, durationMs: duration });
-      throw new Error(`Claude API error: ${response.status}`);
+      logger.error('Gemini orchestrator API error', { status: response.status, error: errorText, durationMs: duration });
+      throw new Error(`Gemini orchestrator API error: ${response.status}`);
     }
 
     const data = await response.json();
-    const responseText = data.content?.[0]?.text || '';
+    const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
     // Parse JSON response
     let plan: ClaudePlan;
@@ -754,7 +755,7 @@ async function callClaudeOrchestrator(
         throw new Error('No JSON found in response');
       }
     } catch {
-      logger.warn('Failed to parse Claude response as JSON, using defaults', { responsePreview: responseText.slice(0, 200) });
+      logger.warn('Failed to parse orchestrator response as JSON, using defaults', { responsePreview: responseText.slice(0, 200) });
       // Default plan if parsing fails
       plan = {
         understanding: prompt,
@@ -770,7 +771,7 @@ async function callClaudeOrchestrator(
       };
     }
 
-    logger.info('Claude orchestrator completed', {
+    logger.info('Gemini orchestrator completed', {
       changeType: plan.changeType,
       responseMode: plan.responseMode,
       filesToModify: plan.filesToModify.length,
@@ -779,8 +780,8 @@ async function callClaudeOrchestrator(
 
     return plan;
   } catch (err) {
-    logger.error('Claude orchestrator failed', { error: err instanceof Error ? err.message : 'Unknown' });
-    // Return a basic plan so we can still try Gemini
+    logger.error('Gemini orchestrator failed', { error: err instanceof Error ? err.message : 'Unknown' });
+    // Return a basic plan so we can still try code generation
     return {
       understanding: prompt,
       projectState: 'Failed to analyze',
@@ -791,13 +792,13 @@ async function callClaudeOrchestrator(
       taskDescription: prompt,
       preserveFeatures: [],
       specificChanges: [prompt],
-      warnings: ['Claude analysis failed, proceeding with basic context'],
+      warnings: ['Orchestrator analysis failed, proceeding with basic context'],
     };
   }
 }
 
 /**
- * Call Gemini with a plan from Claude orchestrator
+ * Call Gemini with a plan from orchestrator
  * This is a simplified code-generation-focused call
  */
 // =============================================================================
@@ -805,16 +806,16 @@ async function callClaudeOrchestrator(
 // =============================================================================
 // AI_PROVIDER options:
 //   - 'gemini' (default): Gemini only for code generation
-//   - 'claude': Claude only for code generation
-//   - 'dual': Claude for planning/orchestration + Gemini for code generation
+//   - 'claude': Gemini Flash for code generation
+//   - 'dual': Gemini Flash for planning/orchestration + Gemini Pro for code generation
 const AI_PROVIDER = Deno.env.get('AI_PROVIDER') || 'gemini';
 
 // Gemini model for code generation - configurable via environment variable
-// Supported models: gemini-3-flash-preview, gemini-2.0-flash, gemini-1.5-pro, etc.
-const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-2.0-flash';
+// Supported models: gemini-3-pro-preview, gemini-3-flash-preview, gemini-2.0-flash, etc.
+const GEMINI_CODE_MODEL = Deno.env.get('GEMINI_MODEL') || 'gemini-3-pro-preview';
 
-// Claude model for code generation (when AI_PROVIDER is 'claude')
-const CLAUDE_CODE_MODEL = Deno.env.get('CLAUDE_MODEL') || 'claude-sonnet-4-20250514';
+// Gemini model for code generation (when AI_PROVIDER is 'claude' mode - now also uses Gemini)
+const CLAUDE_CODE_MODEL = 'gemini-3-flash-preview';
 
 // Check if model supports thinkingConfig (only Gemini 3 models)
 const isGemini3Model = (model: string): boolean => {
@@ -983,7 +984,7 @@ OUTPUT FORMAT (FILE MODE):
 }
 
 /**
- * Build Gemini prompt using Claude's plan
+ * Build Gemini prompt using orchestrator's plan
  */
 function buildGeminiPromptFromPlan(
   plan: ClaudePlan,
@@ -992,7 +993,7 @@ function buildGeminiPromptFromPlan(
 ): string {
   const parts: string[] = [];
 
-  // 1. Task from Claude
+  // 1. Task from orchestrator
   parts.push(`=== TASK FROM ORCHESTRATOR ===`);
   parts.push(`Understanding: ${plan.understanding}`);
   parts.push(`Project State: ${plan.projectState}`);
@@ -1673,7 +1674,7 @@ Return valid JSON with needsThreeJs boolean.`);
 }
 
 /**
- * Call Claude for code generation (when AI_PROVIDER is 'claude')
+ * Call Gemini Flash for code generation (when AI_PROVIDER is 'claude')
  */
 async function callClaude(
   prompt: string,
@@ -1696,7 +1697,7 @@ async function callClaude(
   if (contextPackage && contextPackage.relevantFiles.length > 0) {
     userPrompt = buildSmartContextPrompt(contextPackage, prompt, hasThreeJs);
 
-    logger.info('Using smart context for Claude', {
+    logger.info('Using smart context for Gemini code gen', {
       filesCount: contextPackage.relevantFiles.length,
       estimatedTokens: contextPackage.estimatedTokens
     });
@@ -1761,48 +1762,50 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
 
   let response: Response;
   try {
-    logger.debug('Calling Claude', { model: CLAUDE_CODE_MODEL, hasImages: !!(images && images.length > 0) });
+    logger.debug('Calling Gemini (code gen)', { model: CLAUDE_CODE_MODEL, hasImages: !!(images && images.length > 0) });
 
-    // Build content array - text first, then images if provided
-    const content: Array<{ type: string; text?: string; source?: { type: string; media_type: string; data: string } }> = [
-      { type: 'text', text: userPrompt }
+    // Build parts array - text first, then images if provided
+    const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [
+      { text: userPrompt }
     ];
 
     // Add images for vision AI analysis
     if (images && images.length > 0) {
-      logger.info('Including images in Claude request', { imageCount: images.length });
+      logger.info('Including images in Gemini request', { imageCount: images.length });
       for (const image of images) {
-        content.push({
-          type: 'image',
-          source: {
-            type: 'base64',
-            media_type: image.mimeType,
+        parts.push({
+          inlineData: {
+            mimeType: image.mimeType,
             data: image.data,
           }
         });
       }
     }
 
-    response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: CLAUDE_CODE_MODEL,
-        max_tokens: 32768,
-        system: systemPrompt,
-        messages: [{ role: 'user', content }],
-      }),
-      signal: controller.signal,
-    });
+    const codeGenConfig: Record<string, unknown> = {
+      maxOutputTokens: 65536,
+      responseMimeType: 'application/json',
+      thinkingConfig: { thinkingLevel: 'minimal' },
+    };
+
+    response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${CLAUDE_CODE_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          generationConfig: codeGenConfig,
+        }),
+        signal: controller.signal,
+      }
+    );
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error && err.name === 'AbortError') {
-      logger.error('Claude API timeout', { timeoutMs: 55000 });
-      throw new Error('Claude API request timed out after 55 seconds');
+      logger.error('Gemini code gen API timeout', { timeoutMs: 55000 });
+      throw new Error('Gemini API request timed out after 55 seconds');
     }
     throw err;
   }
@@ -1812,21 +1815,21 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
 
   if (!response.ok) {
     const errorText = await response.text();
-    logger.error('Claude API error', {
+    logger.error('Gemini code gen API error', {
       status: response.status,
       statusText: response.statusText,
       error: errorText.slice(0, 500),
       durationMs: apiDuration
     });
-    throw new Error(`Claude API request failed: ${response.status} - ${errorText.slice(0, 200)}`);
+    throw new Error(`Gemini API request failed: ${response.status} - ${errorText.slice(0, 200)}`);
   }
 
   const data = await response.json();
-  const responseText = data.content?.[0]?.text || '';
+  const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   if (!responseText) {
-    logger.error('Claude returned empty response', { durationMs: apiDuration });
-    throw new Error('Claude returned empty response');
+    logger.error('Gemini returned empty response', { durationMs: apiDuration });
+    throw new Error('Gemini returned empty response');
   }
 
   // Parse JSON response
@@ -1837,11 +1840,11 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
     // Try to extract JSON from response
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      logger.error('Failed to parse Claude JSON response', {
+      logger.error('Failed to parse Gemini JSON response', {
         responsePreview: responseText.slice(0, 200),
         durationMs: apiDuration
       });
-      throw new Error('Claude did not return valid JSON');
+      throw new Error('Gemini did not return valid JSON');
     }
     parsed = JSON.parse(jsonMatch[0]);
   }
@@ -1869,7 +1872,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   // For plan/explanation modes, files/edits are optional
   const isNonCodeMode = mode === 'plan' || mode === 'explanation';
   if (!parsed.message || (!hasFiles && !hasEdits && !isNonCodeMode && !hasDebugAnalysis)) {
-    logger.error('Claude response missing required fields', {
+    logger.error('Gemini response missing required fields', {
       hasMessage: !!parsed.message,
       hasFiles,
       hasEdits,
@@ -1882,7 +1885,7 @@ Generate the code changes needed. Return ONLY valid JSON with needsThreeJs boole
   // Determine response mode
   const useEditMode = hasEdits && !hasFiles;
 
-  logger.info('Claude API call successful', {
+  logger.info('Gemini code gen API call successful', {
     mode,
     filesGenerated: hasFiles ? parsed.files.length : 0,
     editsGenerated: hasEdits ? parsed.edits.length : 0,
@@ -2264,31 +2267,18 @@ Deno.serve(async (req: Request) => {
     // API KEY CHECK (based on AI_PROVIDER setting)
     // ==========================================================================
     const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    const claudeApiKey = Deno.env.get('ANTHROPIC_API_KEY');
 
-    // Validate required API keys based on provider
-    if (AI_PROVIDER === 'gemini' || AI_PROVIDER === 'dual') {
-      if (!geminiApiKey) {
-        logger.error('Gemini API key not configured', { provider: AI_PROVIDER });
-        return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
-        });
-      }
+    // Validate required API keys - all modes now use Gemini
+    if (!geminiApiKey) {
+      logger.error('Gemini API key not configured', { provider: AI_PROVIDER });
+      return new Response(JSON.stringify({ error: 'Gemini API key not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
+      });
     }
 
-    if (AI_PROVIDER === 'claude' || AI_PROVIDER === 'dual') {
-      if (!claudeApiKey) {
-        logger.error('Claude API key not configured', { provider: AI_PROVIDER });
-        return new Response(JSON.stringify({ error: 'Claude API key not configured' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Request-Id': requestId },
-        });
-      }
-    }
-
-    // Determine if we should use dual model mode
-    const useDualModel = AI_PROVIDER === 'dual' && !!claudeApiKey && !!geminiApiKey;
+    // Determine if we should use dual model mode (Flash for orchestration + Pro for code gen)
+    const useDualModel = AI_PROVIDER === 'dual' && !!geminiApiKey;
 
     logger.info('AI Provider configured', { provider: AI_PROVIDER, useDualModel });
 
@@ -2359,9 +2349,9 @@ Examples of good names:
 
 Name:`;
 
-        // Use Gemini 2 Flash for fast name generation (simple task, no thinking needed)
+        // Use Gemini 3 Flash for fast name generation (simple task)
         const nameResponse = await fetch(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + geminiApiKey,
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=' + geminiApiKey,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2507,15 +2497,15 @@ Name:`;
     let generated: GeneratedResponse;
 
     if (AI_PROVIDER === 'claude') {
-      // Claude-only mode: Use Claude for code generation
-      logger.info('Using Claude-only flow for code generation', { model: CLAUDE_CODE_MODEL });
+      // Gemini flash code generation mode
+      logger.info('Using Gemini flash flow for code generation', { model: CLAUDE_CODE_MODEL });
 
       generated = await callClaude(
         prompt,
         currentFiles,
         selectedFile,
         conversationHistory,
-        claudeApiKey!,
+        geminiApiKey!,
         hasThreeJs,
         templateId,
         useSmartContext ? contextPackage : undefined,
@@ -2523,26 +2513,26 @@ Name:`;
         images
       );
     } else if (useDualModel && useSmartContext && contextPackage && contextPackage.relevantFiles.length > 0) {
-      // Dual-model flow: Claude plans, Gemini generates
-      logger.info('Using dual-model flow: Claude (orchestrator) + Gemini (code generator)');
+      // Dual-model flow: Gemini Flash plans, Gemini Pro generates
+      logger.info('Using dual-model flow: Gemini Flash (orchestrator) + Gemini Pro (code generator)');
 
-      // Step 1: Claude analyzes and plans
+      // Step 1: Gemini Flash analyzes and plans
       const plan = await callClaudeOrchestrator(
         prompt,
         contextPackage,
         conversationHistory,
-        claudeApiKey!,
+        geminiApiKey!,
         logger
       );
 
-      logger.info('Claude plan received', {
+      logger.info('Gemini orchestrator plan received', {
         changeType: plan.changeType,
         responseMode: plan.responseMode,
         filesToModify: plan.filesToModify,
         preserveFeatures: plan.preserveFeatures.length,
       });
 
-      // Step 2: Build targeted prompt for Gemini using Claude's plan
+      // Step 2: Build targeted prompt for Gemini Pro using orchestrator's plan
       const geminiPrompt = buildGeminiPromptFromPlan(plan, contextPackage, hasThreeJs);
 
       // Step 3: Gemini generates code following the plan
@@ -2553,14 +2543,14 @@ Name:`;
         logger
       );
 
-      // Include Claude's understanding in the response
+      // Include orchestrator's understanding in the response
       if (plan.understanding) {
         generated.explanation = `${plan.understanding}\n\n${generated.explanation || ''}`;
       }
     } else {
       // Gemini-only flow (default)
       if (useDualModel && (!contextPackage || contextPackage.relevantFiles.length === 0)) {
-        logger.info('Skipping Claude orchestrator: no existing files to analyze');
+        logger.info('Skipping orchestrator: no existing files to analyze');
       } else {
         logger.info('Using Gemini-only flow', { model: GEMINI_CODE_MODEL });
       }

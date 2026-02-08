@@ -356,12 +356,12 @@ async function generateAppIcon(
   console.log('[generateAppIcon] Generating icon with prompt:', fullPrompt.substring(0, 100) + '...');
 
   try {
-    // Call Gemini 2.5 Flash Image model
+    // Call Gemini 3 Pro Image model
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000);
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
