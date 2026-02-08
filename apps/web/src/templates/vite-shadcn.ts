@@ -307,18 +307,19 @@ createRoot(document.getElementById('root')!).render(
         file: {
           contents: `import { Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
+import ErrorBoundary from '@/components/ErrorBoundary'
 import Index from '@/pages/Index'
 import NotFound from '@/pages/NotFound'
 
 function App() {
   return (
-    <>
+    <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
-    </>
+    </ErrorBoundary>
   )
 }
 
@@ -429,6 +430,118 @@ export default function NotFound() {
       },
       components: {
         directory: {
+          'ErrorBoundary.tsx': {
+            file: {
+              contents: `import React from 'react'
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean
+  error: Error | null
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // Send error to parent frame so auto-fix can detect it
+    try {
+      window.parent.postMessage({
+        type: 'playcraft-runtime-error',
+        payload: {
+          level: 'error',
+          message: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+          timestamp: Date.now(),
+        },
+      }, '*')
+    } catch {
+      // Ignore postMessage errors
+    }
+  }
+
+  handleRetry = () => {
+    this.setState({ hasError: false, error: null })
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '2rem',
+          backgroundColor: '#0a0a0a',
+          color: '#fafafa',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        }}>
+          <div style={{
+            maxWidth: '28rem',
+            width: '100%',
+            textAlign: 'center',
+          }}>
+            <div style={{
+              fontSize: '2.5rem',
+              marginBottom: '1rem',
+            }}>
+              ⚠️
+            </div>
+            <h2 style={{
+              fontSize: '1.25rem',
+              fontWeight: 600,
+              marginBottom: '0.5rem',
+            }}>
+              Something went wrong
+            </h2>
+            <p style={{
+              fontSize: '0.875rem',
+              color: '#a1a1aa',
+              marginBottom: '1.5rem',
+              lineHeight: 1.5,
+            }}>
+              {this.state.error?.message || 'An unexpected error occurred'}
+            </p>
+            <button
+              onClick={this.handleRetry}
+              style={{
+                padding: '0.5rem 1.5rem',
+                backgroundColor: '#7c3aed',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+export default ErrorBoundary
+`,
+            },
+          },
           ui: {
             directory: {
               'button.tsx': {

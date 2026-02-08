@@ -272,6 +272,20 @@ export function createErrorFixPrompt(
 ): string {
   const errorContext = formatErrorsForAI(errors, fileContents);
 
+  // Detect if we have runtime errors and add specific guidance
+  const hasRuntimeErrors = errors.some(e =>
+    e.code === 'RUNTIME_ERROR' || e.code === 'UNHANDLED_REJECTION' || e.code === 'CONSOLE_ERROR'
+  );
+
+  const runtimeInstructions = hasRuntimeErrors ? `
+6. RUNTIME ERROR FIXES:
+   - Add null/undefined checks before accessing properties (use optional chaining ?. and nullish coalescing ??)
+   - Ensure all state variables are initialized with valid default values (empty arrays [], 0 for numbers, '' for strings)
+   - Verify that objects exist before calling methods on them
+   - Add default values for function parameters that could be undefined
+   - If accessing array elements, check array length first
+   - Wrap potentially failing operations in try/catch blocks` : '';
+
   return `The previous code generation resulted in errors. Please fix them while maintaining the intended functionality.
 
 ORIGINAL REQUEST:
@@ -285,7 +299,7 @@ INSTRUCTIONS:
 2. Keep the original intended functionality
 3. Don't make unnecessary changes beyond fixing the errors
 4. Ensure the code compiles without TypeScript errors
-5. Use proper type annotations to prevent type errors`;
+5. Use proper type annotations to prevent type errors${runtimeInstructions}`;
 }
 
 /**

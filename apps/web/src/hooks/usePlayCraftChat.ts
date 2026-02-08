@@ -321,6 +321,12 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
     }
   }, [initialFiles]);
 
+  // Ref to access previewErrors without stale closures
+  const previewErrorsRef = useRef<PreviewError[]>(previewErrors);
+  useEffect(() => {
+    previewErrorsRef.current = previewErrors;
+  }, [previewErrors]);
+
   // Track message count for summarization
   const messageCountRef = useRef(0);
 
@@ -368,6 +374,40 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
   const clearMessages = useCallback(() => {
     setMessages([DEFAULT_WELCOME_MESSAGE]);
     filesRef.current = {};
+  }, []);
+
+  /**
+   * Wait for runtime errors to appear from the preview iframe.
+   * Vite HMR takes 1-3s to recompile; this polls previewErrorsRef for up to 3s
+   * with a 500ms settle time (no new errors for 500ms before returning).
+   * Only returns errors with timestamps after `sinceTimestamp`.
+   */
+  const waitForRuntimeErrors = useCallback(async (sinceTimestamp: number): Promise<PreviewError[]> => {
+    const maxWaitMs = 3000;
+    const settleMs = 500;
+    const pollIntervalMs = 200;
+    const deadline = Date.now() + maxWaitMs;
+
+    let lastErrorCount = 0;
+    let lastChangeTime = Date.now();
+
+    while (Date.now() < deadline) {
+      const freshErrors = previewErrorsRef.current.filter(e => e.timestamp > sinceTimestamp);
+      if (freshErrors.length > 0) {
+        if (freshErrors.length !== lastErrorCount) {
+          // New errors appeared, reset settle timer
+          lastErrorCount = freshErrors.length;
+          lastChangeTime = Date.now();
+        } else if (Date.now() - lastChangeTime >= settleMs) {
+          // Errors have settled — no new ones for settleMs
+          return freshErrors;
+        }
+      }
+      await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+    }
+
+    // Return whatever we have after timeout
+    return previewErrorsRef.current.filter(e => e.timestamp > sinceTimestamp);
   }, []);
 
   // Backfill nextSteps for restored assistant messages when missing
@@ -768,6 +808,9 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
           // Continue to apply any fixes (edits) if provided
         }
 
+        // Capture timestamp before applying files so we can filter runtime errors
+        const preApplyTimestamp = Date.now();
+
         // Track what was applied
         let filesApplied = 0;
         let editsApplied = 0;
@@ -890,11 +933,12 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
               }
             }
 
-            // Collect runtime/preview errors
-            if (previewErrors.length > 0) {
-              runtimeErrors = parsePreviewErrors(previewErrors).filter(e => e.severity === 'error');
+            // Wait for runtime/preview errors (Vite HMR takes 1-3s to recompile)
+            const freshPreviewErrors = await waitForRuntimeErrors(preApplyTimestamp);
+            if (freshPreviewErrors.length > 0) {
+              runtimeErrors = parsePreviewErrors(freshPreviewErrors).filter(e => e.severity === 'error');
               if (runtimeErrors.length > 0) {
-                console.log('[Chat] Found', runtimeErrors.length, 'runtime errors');
+                console.log('[Chat] Found', runtimeErrors.length, 'runtime errors after waiting');
               }
             }
 
@@ -969,6 +1013,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
 
                   // Clear preview errors after applying fixes (they may be stale)
                   clearPreviewErrors?.();
+                  const postFixTimestamp = Date.now();
 
                   // Re-validate TypeScript
                   updateProgress('validating', `Verifying fix ${autoFixAttempts}...`);
@@ -978,6 +1023,16 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
                     const revalidateOutput = await runTypeCheck();
                     const revalidateResult = validateCode(revalidateOutput);
                     revalidateErrors = revalidateResult.errors;
+                  }
+
+                  // Also wait for runtime errors after fix
+                  const postFixPreviewErrors = await waitForRuntimeErrors(postFixTimestamp);
+                  if (postFixPreviewErrors.length > 0) {
+                    const postFixRuntimeErrors = parsePreviewErrors(postFixPreviewErrors).filter(e => e.severity === 'error');
+                    if (postFixRuntimeErrors.length > 0) {
+                      console.log('[Chat] Found', postFixRuntimeErrors.length, 'runtime errors after fix attempt', autoFixAttempts);
+                      revalidateErrors = [...revalidateErrors, ...postFixRuntimeErrors];
+                    }
                   }
 
                   if (revalidateErrors.length === 0) {
@@ -1176,7 +1231,7 @@ export function usePlayCraftChat(options: UsePlayCraftChatOptions = {}): UsePlay
         }, 5000); // Give user 5 seconds to see error details
       }
     },
-    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, onFirstPrompt, onGameNameDetected, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, previewErrors, clearPreviewErrors]
+    [isGenerating, messages, addMessage, onFilesGenerated, onEditsGenerated, onFirstPrompt, onGameNameDetected, readFile, readAllFiles, projectId, templateId, hasThreeJs, enableSmartContext, onNeedsThreeJs, updateProgress, runTypeCheck, runESLint, enableAutoFix, maxRetries, clearPreviewErrors, waitForRuntimeErrors]
   );
 
   // Compute current suggestions for the chatbox
